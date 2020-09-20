@@ -1,0 +1,18 @@
+
+# ビルド
+spago bundle-app --main Incentknow.Main --to public/index.js
+
+cd functions
+npm run build
+cd ../
+# sh sh/buildf
+
+# コピー
+cp -f index.html public/index.html
+
+open http://localhost:5000
+
+
+export GOOGLE_APPLICATION_CREDENTIALS=iam.json
+
+firebase serve --only functions,hosting

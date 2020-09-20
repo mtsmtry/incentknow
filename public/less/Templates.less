@@ -1,0 +1,213 @@
+.tmp-section{
+    .section;
+}
+
+.tmp-main {
+    >.header {
+        background: #47494d;
+        color     : white;
+    }
+
+    >.body {
+        background: #F6F9FA;
+        padding   : 30px 0px;
+        min-height: 80vh;
+
+        >div {
+            display  : flex;
+            margin   : 0px auto;
+        
+            >.side {
+                flex: 2;
+                >div {
+                    padding: 0px 20px;
+                }
+            }
+        
+            >.main {
+                flex     : 5;
+                min-width: 700px;
+                max-width: 900px;
+            }
+        }
+    }
+
+    >.footer {
+        background      : white;
+        border-top-color: #DDDDDD;
+        border-top-width: 2px;
+        border-top-style: solid;
+    }
+
+    .tmp-main_section {}
+
+    .tmp-main_centerize {
+        display  : flex;
+        margin   : 0px auto;
+
+        >.side {
+            flex: 2;
+        }
+
+        >.main {
+            flex     : 5;
+            min-width: 700px;
+            max-width: 900px;
+        }
+    }
+
+    .tmp-main_message {
+        margin-bottom: 15px;
+    }
+
+    @media only screen and (max-device-width: 600px) {
+        >.header {
+            padding-left: 10px;
+        }
+
+        >.footer {
+            padding-left: 10px;
+        }
+
+        .tmp-main_centerize {
+            >.side {
+                flex: 0;
+            }
+
+            >.main {
+                flex: 1;
+            }
+        }
+    }
+}
+
+.tmp-entity {
+    >.title {
+        font-size: 26px;
+    }
+
+    >.subtitle {
+        font-size: 20px;
+    }
+
+    >.body {}
+}
+
+.tmp-tab-page {
+    >.header {
+        .section;
+        padding: 0px;
+
+        >.top {
+            padding: 25px;
+        }
+
+        >.menu {
+            padding-left: 15px;
+            display     : flex;
+
+            >.tab-item {
+                .unselectable;
+                color       : #000;
+                cursor      : pointer;
+                text-align  : center;
+                padding     : 8px 10px;
+                margin-left : 5px;
+                margin-right: 5px;
+                margin-top  : auto;
+                border-bottom: 3px solid transparent;
+                font-size: 15px;
+
+                &:hover:not(.selected) {
+                    border-bottom: 3px solid #d1d5da;
+                    transition   : .2s ease;
+                }
+            }
+
+            >.selected {
+                border-bottom: 3px solid #008abc;
+                color        : #008abc;
+            }
+
+            >.space {
+                flex-grow: 1;
+            }
+
+            >.ext-menu {
+                padding: 5px;
+            }
+        }
+    }
+
+    >.body {
+        margin-top: 20px;
+    }
+}
+
+.tmp-tab-grouping {
+    >.tabs {
+        display: flex;
+        height : 40px;
+
+        >.tab {
+            .unselectable;
+
+            background-color: #fbfbfb;
+            border          : 1px solid #dedfe0;
+            border-radius   : 2px 2px 0 0;
+            color           : rgba(0, 0, 0, .4);
+            cursor          : pointer;
+            flex            : 0 0 auto;
+            margin-right    : 8px;
+            opacity         : .8;
+            padding         : 8px 24px;
+
+            border-top-right-radius: 5px;
+            border-top-left-radius: 5px;
+        }
+
+        >.tab_active {
+            border-bottom-color: #fbfbfb;
+            color              : #000;
+            font-weight        : 500;
+            opacity            : 1;
+
+            border-bottom-color: #fbfbfb;
+        }
+    }
+
+    >.bar {
+        height          : 60px;
+        background-color: #fbfbfb;
+        border          : 1px solid #fbfbfb;
+
+        //box-shadow: 0 1.3px 3px rgba(0, 0, 0, 0.2);
+        //border: 0.7px solid rgba(0, 0, 0, 0.22);
+    }
+
+    >.body {
+        padding: 0px 1px;
+
+        >div {
+            border-top-left-radius: 0px;
+            border-top-right-radius: 0px;
+        }
+    }
+}
+
+.tmp-creation-page {
+    .section;
+    
+    >.title {
+        font-size: 24px;
+    }
+
+    >.desc {
+        font-size: 14px;
+        color: rgb(88, 96, 105);
+    }
+
+    >.body {
+        
+    }
+}

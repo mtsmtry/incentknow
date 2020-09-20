@@ -1,0 +1,4 @@
+cd functions
+npm run shell
+npm run emurate
+cd ../

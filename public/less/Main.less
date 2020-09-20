@@ -1,0 +1,76 @@
+.unselectable {
+    -webkit-user-select: none;
+    -moz-user-select   : none;
+    -ms-user-select    : none;
+    user-select        : none;
+}
+
+.section {
+    //box-shadow       : 0 0 0 1px rgba(0, 0, 0, .15), 0 2px 3px rgba(0, 0, 0, .2);
+    //  border       : 1px solid #DEDFE0;
+
+    // margin: -1px;
+    box-shadow: 0 1.3px 3px rgba(0, 0, 0, .2);
+    border    : 0.7px solid rgba(0, 0, 0, .22);
+
+    background   : white;
+    border-radius: 5px;
+    padding      : 25px;
+}
+
+@import "Loading";
+@import "Atoms";
+@import "Molecules";
+@import "Templates";
+@import "Organisms";
+@import "Pages";
+@import "Widgets";
+
+@font-face {
+    font-family: 'bluefish';
+    src        : url(/assets/fonts/bluefish-light.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'play';
+    src        : url(/assets/fonts/play-regular.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'atlasgrotesk';
+    src        : url(/assets/fonts/atlasgrotesk-medium.woff) format('woff');
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    overflow-y: scroll;
+}
+
+body {
+    margin     : 0px;
+    font-family: Inter, sans-serif;
+}
+
+a {
+    text-decoration: none;
+    color          : inherit;
+}
+
+
+.ace_editor {
+    box-shadow: 0 0 0 2px #DDD;
+}
+
+.ace_editor-variable-height {
+    height: 100%;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+}

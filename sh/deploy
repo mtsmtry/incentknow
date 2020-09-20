@@ -1,0 +1,14 @@
+
+# コピー
+cp -f html/index.html public/index.html
+
+# ビルド
+spago bundle-app --main Incentknow.Main --to public/index.js
+uglifyjs --compress --mangle -b beautify=false,ascii_only=true -o public/index.js -- public/index.js
+
+sh sh/buildf
+
+# LESSのコンパイル
+lessc -x public/less/Main.less public/index.css
+
+firebase deploy

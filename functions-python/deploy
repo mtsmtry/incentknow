@@ -1,0 +1,1 @@
+gcloud functions deploy subscribeCrawlingTask --trigger-topic crawling --runtime python3

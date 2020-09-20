@@ -1,0 +1,156 @@
+.mol-select-menu {
+    max-width: 400px;
+    width    : 100%;
+    position : relative;
+    height   : 32px;
+
+    >.value {
+        .atom-button;
+        padding: 2px;
+        display: flex;
+        height : 100%;
+        cursor : pointer;
+        padding: 0px 7px;
+
+        >.name {
+            width      : 100%;
+            align-items: center;
+            display    : flex;
+        }
+
+        >.crossmark {
+            align-items: center;
+            display    : flex;
+
+            width           : 13px;
+            height          : 13px;
+            margin          : auto 0px auto auto;
+            background-image: url("/assets/imgs/crossmark.svg");
+            background-size : 100% 100%;
+
+            &:hover {
+                background-image: url("/assets/imgs/crossmark_hover.svg");
+            }
+        }
+    }
+
+    >.filter {
+        height          : 100%;
+        vertical-align  : middle;
+        line-height     : 20px;
+        font-size       : 16px;
+        width           : 100%;
+        box-sizing      : border-box;
+        background-color: #fafbfc;
+        border          : 1px solid #d1d5da;
+        border-radius   : 3px;
+        box-shadow      : inset 0 1px 2px rgba(27, 31, 35, .075);
+        resize          : none;
+        padding         : 4px 6px;
+
+        &:focus {
+            outline: none;
+        }
+    }
+
+    >.listbox {
+        border       : 1px solid #d1d5da;
+        border-radius: 3px;
+        box-shadow   : 0 1px 5px rgba(27, 31, 35, .15);
+        background   : #fff;
+
+        max-height        : 300px;
+        width             : 100%;
+        overflow          : auto;
+        z-index           : 100;
+        position          : absolute;
+        margin-block-start: 0px;
+        margin-block-end  : 0px;
+        padding           : 0px;
+        box-sizing        : border-box;
+
+        >.item {
+            border-top-color: #eaeded;
+            color           : #545b64;
+
+            list-style      : none;
+            border-top-style: solid;
+            border-top-width: 1px;
+            padding         : 5px 8px;
+            cursor          : pointer;
+
+            .name {
+                font-size: 14px;
+            }
+
+            &:hover {
+                background-color: #f6f8fa;
+            }
+        }
+    }
+
+    &.disabled {
+        >.value {
+            background-color: #edeff2;
+            box-shadow      : inset 0 1px 0 rgba(225, 228, 232, .2);
+            transition      : none;
+            cursor: default;
+        }
+    }
+}
+
+.mol-tab-menu {
+    display: flex;
+
+    >.tab-item {
+        color              : #586069;
+        border-top-color   : #fafbfc;
+        border-bottom-color: gray;
+        background         : #fafbfc;
+
+        cursor    : pointer;
+        text-align: center;
+        padding   : 5px 10px;
+    }
+
+    >.selected {
+        color              : #24292e;
+        border-left        : 1px solid gray;
+        border-right       : 1px solid gray;
+        border-top-color   : gray;
+        border-bottom-color: white;
+        border-radius      : 3px 3px 0 0;
+        background         : #fff;
+    }
+
+    >.space {
+        flex-grow: 1;
+    }
+}
+
+.mol-danger-change {
+    width           : 448px;
+    margin-right    : auto;
+    margin-left     : auto;
+    background-color: #fff;
+    background-clip : padding-box;
+    border-color    : #444d56;
+    box-shadow      : 0 0 18px rgba(0, 0, 0, .4);
+
+    position  : fixed;
+    margin    : 10vh auto;
+    left      : 50%;
+    transform : translateX(-50%);
+    z-index   : 1000;
+    max-height: 80vh;
+    max-width : 90vw;
+    width     : 448px;
+}
+
+.mol-display-id {
+    .available {}
+
+    .checking {}
+
+    .used {}
+}

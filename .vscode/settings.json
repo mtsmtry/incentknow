@@ -1,0 +1,9 @@
+{
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+
+    "tslint.configFile": "functions/tslint.json",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.tslint": true
+    }
+}

@@ -1,0 +1,40 @@
+function toContent(x) {
+    const info = x.volumeInfo;
+    if (!info || !info.industryIdentifiers || !info.title || !info.authors || !info.description) {
+        return null;
+    }
+    const ids = x.volumeInfo.industryIdentifiers.reduce(function(map, obj) {
+        map[obj.type] = obj.identifier;
+        return map;
+    }, {});
+    const isbn = ids["ISBN_13"];
+    if (!isbn) {
+        return null;
+    }
+    return {
+        title: info.title,
+        authors: info.authors,
+        description: info.description,
+        isbn: isbn,
+        image: info.imageLinks.thumbnail,
+        publisher: info.publisher ? info.publisher : null,
+        pageCount: info.pageCount,
+        subtitle: info.subtitle ? info.subtitle : null
+    };
+}
+
+const url = "https://www.googleapis.com/books/v1/volumes";
+
+exports.get = async isbn => {
+    const obj = await request(url + "?q=isbn:" + isbn);
+    return toContent(obj.items[0]);
+};
+
+exports.list = async (words, conds) => {
+    const obj = await request(url + "?q=" + encodeURI(words));
+    if (obj.items) {
+        return obj.items.map(toContent).filter(x => x);
+    } else {
+        return [];
+    }
+};

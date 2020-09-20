@@ -1,0 +1,1 @@
+spago repl --purs-args '--port 3200'

@@ -1,0 +1,5 @@
+
+cd functions-purescript
+spago bundle-app --main Incentknow.Server --to ../functions/purescript-index.js
+echo "exports.PS = PS[\"Incentknow.Server\"];" >> ../functions/purescript-index.js
+cd ..

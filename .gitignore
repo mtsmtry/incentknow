@@ -1,0 +1,11 @@
+bower_components/
+node_modules/
+output/
+
+.cache/
+.ionide/
+.firebase/
+.psc-package/
+.spago/
+
+/index.js
