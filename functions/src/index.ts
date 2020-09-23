@@ -390,7 +390,7 @@ export const createFormat = onCall<{
         semanticId: null,
         usage: data.usage,
         generator: "none",
-        relations: [],
+        relations: PS.getStructureRelations(data.structure),
         contentPage: { relations: [] },
         collectionPage: { compositions: [] }
     };
@@ -1203,7 +1203,8 @@ export const updateFormatStructure = onCall<{
         const newFormat = {
             updatedAt: timestamp(),
             updaterUserId: context.auth.uid,
-            defaultStructureId: newVersion
+            defaultStructureId: newVersion,
+            relations: PS.getStructureRelations(data.properties)
         };
         const batch = new DB.Batch();
         batch.create(formatRef.structures.doc(newVersion), structure);
@@ -1212,11 +1213,12 @@ export const updateFormatStructure = onCall<{
         return {};
     } else if (changeType == "minor") {
         const newStructure = {
-            properties: properties
+            properties: properties,
         };
         const newFormat = {
             updatedAt: timestamp(),
-            updaterUserId: context.auth.uid
+            updaterUserId: context.auth.uid,
+            relations: PS.getStructureRelations(data.properties)
         };
         const batch = new DB.Batch();
         batch.update(structureRef, newStructure);

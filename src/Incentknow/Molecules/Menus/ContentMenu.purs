@@ -15,7 +15,7 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (Content, Format, getContent, getContents, getContentsByFormat)
+import Incentknow.Api (Content, Format, defaultCondition, getContent, getContents, getContentsByFormat)
 import Incentknow.Api.Utils (Fetch, executeApi, fetchApi, forFetchItem)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Content (ContentSemanticData, getContentSemanticData)
@@ -111,7 +111,7 @@ handleAction = case _ of
     for_ state.initialContentId \contentId -> do
       fetchApi FetchedInitialContent $ getContent contentId
     case state.spaceId of
-      Just spaceId -> fetchApi FetchedContents $ getContents spaceId state.formatId
+      Just spaceId -> fetchApi FetchedContents $ getContents spaceId state.formatId defaultCondition
       Nothing -> fetchApi FetchedContents $ getContentsByFormat state.formatId
   FetchedInitialContent fetch ->
     forFetchItem fetch \content->

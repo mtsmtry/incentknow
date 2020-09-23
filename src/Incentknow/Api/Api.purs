@@ -1,12 +1,13 @@
 module Incentknow.Api where
 
 import Prelude
+
 import Control.Promise (Promise)
 import Data.Argonaut.Core (Json)
 import Data.Either (Either(..), either)
 import Data.Map (Map)
 import Data.Maybe (Maybe(..))
-import Data.Nullable (Nullable)
+import Data.Nullable (Nullable, null)
 import Effect (Effect)
 import Effect.Aff (Aff, attempt, never)
 import Effect.Aff.Class (class MonadAff, liftAff)
@@ -239,6 +240,22 @@ type CrawlerCache
     , timestamp :: Number
     }
 
+type FirestoreFilter
+  = { fieldPath :: String
+    , opStr :: String
+    , value :: forall a. a
+    }
+
+type FirestoreCondition
+  = { filters :: Array FirestoreFilter
+    , orderBy :: Nullable String
+    }
+
+defaultCondition :: FirestoreCondition
+defaultCondition = { filters: [], orderBy: null }
+
+foreign import applyFirestoreCondition :: forall a. FirestoreCondition -> a -> a
+
 foreign import defaultIconUrl :: String
 
 --foreign import getAccount :: {} -> Promise (Nullable Account)
@@ -289,11 +306,9 @@ foreign import getAllSpaceContents :: SpaceId -> Option -> Promise (Array Conten
 -- Snapshotは不変
 foreign import getSnapshot :: WorkId -> ChangeId -> SnapshotId -> Promise Snapshot
 
-foreign import getContents :: SpaceId -> FormatId -> Option -> Promise (Array Content)
+foreign import getContents :: SpaceId -> FormatId -> FirestoreCondition -> Option -> Promise (Array Content)
 
 foreign import getContentsByFormat :: FormatId -> Option -> Promise (Array Content)
-
-foreign import getContentsByQuery :: { formatId :: FormatId, property :: String, contentId :: ContentId } -> Option -> Promise (Array Content)
 
 foreign import getFormats :: SpaceId -> Option -> Promise (Array Format)
 

@@ -6,4 +6,5 @@ export namespace PS {
     export function normalizeStructure(props: DB.Property[]): DB.Property[];
     export function getMaxLargeIndex(props: DB.Property[]): number;
     export function getContentIndexes(args: { props: DB.Property[], data: DB.Data }): DB.Indexes;
+    export function getStructureRelations(props: DB.Property[]): string[];
 }

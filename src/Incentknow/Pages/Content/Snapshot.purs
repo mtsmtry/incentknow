@@ -14,7 +14,7 @@ import Effect.Aff.Class (class MonadAff)
 import Halogen (SubscriptionId)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Content, Format, Snapshot, Work, getContentsByQuery, getSnapshot, onSnapshotContent, onSnapshotWork)
+import Incentknow.Api (Content, Format, Snapshot, Work, getSnapshot, onSnapshotContent, onSnapshotWork)
 import Incentknow.Api.Utils (executeApi, subscribeApi)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Inputs (button)

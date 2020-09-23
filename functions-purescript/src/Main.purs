@@ -91,6 +91,7 @@ getStructureRelations props = getStructureRelationsImpl $ L.fromFoldable $ map t
   getPropertyRelation :: Type -> Array FormatId
   getPropertyRelation = case _ of
     ContentType args -> singleton args.format
+    EntityType args -> singleton args.format
     ArrayType args -> getPropertyRelation args.type
     ObjectType args -> getStructureRelationsImpl $ L.fromFoldable args.properties
     _ -> []

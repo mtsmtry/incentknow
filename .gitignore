@@ -9,3 +9,5 @@ output/
 .spago/
 
 /index.js
+
+.DS_Store

@@ -20,6 +20,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
 const getParams = { source: "cache" };
+const fromServer = { source: "server" };
 
 const defaultIconUrl = "/assets/imgs/default_icon.jpg";
 
@@ -566,12 +567,20 @@ const mkContents = async function (contentSnaps, containerSnap) {
     return contents;
 };
 
-const getContents = async function (spaceId, formatId, options) {
+const getContents = async function (spaceId, formatId, conds, options) {
+    function applyFilter(collection, filter) {
+        return collection.where(filter.fieldPath, filter.opStr, filter.value);
+    }
+
     const containerSnap = await getContainer(spaceId, formatId, options);
     if (!containerSnap) {
         return [];
     } else {
-        const contentsSnap = await containerSnap.ref.collection("items").get();
+        let ref = conds.filters.reduce(applyFilter, containerSnap.ref.collection("items"));
+        if (conds.orderBy) {
+            ref = ref.orderBy(conds.orderBy);
+        }
+        const contentsSnap = await ref.get();
         const contents = await mkContents(contentsSnap, containerSnap);
         return contents;
     }
@@ -579,8 +588,10 @@ const getContents = async function (spaceId, formatId, options) {
 
 exports.getContents = spaceId => {
     return formatId => {
-        return async options => {
-            return await getContents(spaceId, formatId, options);
+        return conds => {
+            return async options => {
+                return await getContents(spaceId, formatId, conds, options);
+            };
         };
     };
 };
@@ -589,18 +600,8 @@ exports.getContentsByFormat = formatId => {
     return async options => {
         const formatSnap = await db.collection("formats").doc(formatId).get(options);
         const format = formatSnap.data();
-        return await getContents(format.spaceId, formatId, options);
-    };
-};
-
-exports.getContentsByQuery = req => {
-    return async options => {
-        const formatSnap = await db.collection("formats").doc(req.formatId).get(options);
-        const format = formatSnap.data();
-        const containerSnap = await getContainer(format.spaceId, req.formatId, options);
-        const contentSnaps = await containerSnap.ref.collection("items").where("data." + req.property, "==", req.contentId).get(options);
-        const contents = mkContents(contentSnaps, containerSnap);
-        return contents;
+        const conds = { filters: [], orderBy: null };
+        return await getContents(format.spaceId, formatId, conds, options);
     };
 };
 
@@ -972,7 +973,7 @@ exports.onLoadContentBySemanticId = formatId => {
 exports.getContentsByReactor = async req => {
     const formatSnap = await db.collection("formats").doc(req.formatId).get();
     const format = formatSnap.data();
-    const containerSnap = await getContainer(format.spaceId, req.formatId, options);
+    const containerSnap = await getContainer(format.spaceId, req.formatId, fromServer);
     const contentResults = await functions.httpsCallable("getContentsByReactor")(req).then(receive);
     const contentSnaps = contentResults.map(contentResult => {
         return {
@@ -1066,5 +1067,54 @@ exports.getCrawler = crawlerId => {
     return async options => {
         const crawlerSnap = await db.collection("crawlers").doc(crawlerId).get(options);
         return mkCrawler(crawlerSnap);
+    };
+};
+
+exports.applyFirestoreCondition = conds => {
+    return contents => {
+        function getField(content, fieldPath) {
+            const paths = fieldPath.split(".");
+            let field = content;
+            paths.forEach(path => {
+                field = field[path];
+            });
+            return field;
+        }
+
+        function matchFilter(content, cond) {
+            const field = getField(content, cond.fieldPath);
+            switch (cond.opStr) {
+                case "==":
+                    return field == cond.value;
+                case "!=":
+                    return field != cond.value;
+                case "<=":
+                    return field <= cond.value;
+                case "<":
+                    return field < cond.value;
+                case ">=":
+                    return field >= cond.value;
+                case ">":
+                    return field > cond.value;
+                case "in":
+                    return cond.value.includes(field);
+                case "array-contains":
+                    return field.includes(cond.value);
+                case "array-contains-any":
+                    return cond.value.map(vl => field.includes(vl)).includes(true);
+            }
+            throw "opStr is invaild";
+        }
+
+        function matchFilters(content) {
+            for(const filter in conds.filters) {
+                if(!matchFilter(content, filter)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        return contents.filter(matchFilters);
     };
 };

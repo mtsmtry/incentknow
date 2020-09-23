@@ -13,7 +13,7 @@ import Effect.Aff.Class (class MonadAff)
 import Halogen (SubscriptionId)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Content, getContentsByQuery, onLoadContentBySemanticId, onSnapshotContent)
+import Incentknow.Api (Content, onLoadContentBySemanticId, onSnapshotContent)
 import Incentknow.Api.Utils (Fetch, Remote, callbackApi, executeApi, fetchApi, forFetch, subscribeApi)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute, pushState)
 import Incentknow.Atoms.Icon (remoteWith)
@@ -164,5 +164,6 @@ handleAction = case _ of
       for_ state.content \content -> do
         when (not (M.member tab state.relationalContents)) do
           for_ (index content.format.contentPage.relations id) \relation -> do
-            fetchApi (FetchedRelationalContents tab) $ getContentsByQuery { formatId: relation.formatId, property: relation.property, contentId: content.contentId }
+            pure unit
+            --fetchApi (FetchedRelationalContents tab) $ getContentsByQuery { formatId: relation.formatId, property: relation.property, contentId: content.contentId }
             

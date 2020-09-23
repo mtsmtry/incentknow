@@ -1,0 +1,1 @@
+cloc src functions/src functions-purescript/src functions-python
