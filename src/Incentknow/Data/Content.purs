@@ -119,7 +119,7 @@ data FilterOperation a
 
 type ContentFilter
   = { propertyIds :: Array String
-    , operation :: forall a. FilterOperation a
+    , operation :: FilterOperation Json
     }
 
 type ContentCondition

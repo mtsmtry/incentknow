@@ -243,7 +243,7 @@ type CrawlerCache
 type FirestoreFilter
   = { fieldPath :: String
     , opStr :: String
-    , value :: forall a. a
+    , value :: Json
     }
 
 type FirestoreCondition
@@ -254,7 +254,7 @@ type FirestoreCondition
 defaultCondition :: FirestoreCondition
 defaultCondition = { filters: [], orderBy: null }
 
-foreign import applyFirestoreCondition :: forall a. FirestoreCondition -> a -> a
+foreign import applyFirestoreCondition :: forall a. FirestoreCondition -> Array a -> Array a
 
 foreign import defaultIconUrl :: String
 

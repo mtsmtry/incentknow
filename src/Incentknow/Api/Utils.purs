@@ -34,6 +34,13 @@ data Remote a
   | Holding a
   | Missing String
 
+instance functorRemote :: Functor Remote where
+  map f = case _ of
+    Loading -> Loading
+    LoadingForServer -> LoadingForServer
+    Holding x -> Holding $ f x
+    Missing msg -> Missing msg
+
 derive instance rqRemote :: Eq a => Eq (Remote a)
 
 data Fetch a

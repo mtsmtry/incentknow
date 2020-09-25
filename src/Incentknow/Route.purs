@@ -7,6 +7,7 @@ import Data.Either (Either(..))
 import Data.Foldable (oneOf)
 import Data.List (List(..))
 import Data.List (fromFoldable) as List
+import Data.Map (Map)
 import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (unwrap, wrap)
@@ -77,6 +78,7 @@ data Route
   | EditContent ContentId
   | SpaceList
   | Composition SpaceId FormatId String
+  | ContentList (Maybe SpaceId) (Maybe FormatId) (Array (Tuple String (Maybe String)))
   | Public
   | JoinSpace SpaceId
   | NewContent (Maybe SpaceId) (Maybe FormatId)
@@ -148,6 +150,7 @@ routeToPath = case _ of
   Snapshot workId changeId diff -> "/works/" <> unwrap workId <> "/" <> unwrap changeId <> "/" <> show diff
   NewFormat id -> "/spaces/" <> unwrap id <> "/formats/new"
   NewContent spaceId formatId -> "/contents/new" <> paramsToUrl [ Tuple "space" $ map unwrap spaceId, Tuple "format" $ map unwrap formatId ]
+  ContentList spaceId formatId params -> "/contents" <> paramsToUrl ([ Tuple "space" $ map unwrap spaceId, Tuple "format" $ map unwrap formatId ] <> params)
   Composition spaceId formatId tab -> "/spaces/" <> unwrap spaceId <> "/" <> unwrap formatId <> "/" <> tab
   -- communities
   SpaceList -> "/spaces"
@@ -167,7 +170,6 @@ routeToPath = case _ of
   Format id FormatVersions -> "/formats/" <> unwrap id <> "/versions"
   Format id FormatSetting -> "/formats/" <> unwrap id <> "/setting"
   Format id FormatReactor -> "/formats/" <> unwrap id <> "/reactor"
-
   -- crawler
   NewCrawler -> "/crawlers/new"
   Crawler id CrawlerMain -> "/crawlers/" <> unwrap id
@@ -177,8 +179,8 @@ routeToPath = case _ of
   -- others
   NotFound -> "/not-found"
 
-maybeParam :: String -> Match (Maybe String)
-maybeParam key =
+matchParam :: String -> Match (Maybe String)
+matchParam key =
   Match \route -> case route of
     Cons (Query map) rs -> do
       let
@@ -192,6 +194,12 @@ maybeParam key =
             Tuple (Cons (Query remainingParams) rs) el
     rs -> do
       pure $ Tuple rs Nothing
+
+matchParams :: Match (Array (Tuple String (Maybe String)))
+matchParams =
+  Match \route -> case route of
+    Cons (Query m) rs -> pure $ Tuple rs $ (M.toUnfoldable $ map Just m :: Array (Tuple String (Maybe String)))
+    rs -> pure $ Tuple rs []
 
 toSnapshotDiff :: String -> SnapshotDiff
 toSnapshotDiff str = case List.fromFoldable $ split (Pattern "-") str of
@@ -224,13 +232,13 @@ matchRoute =
         , RivisionList <$> (map ContentId $ lit "contents" *> str <* lit "rivisions" <* end)
         , Rivision <$> (map ContentId $ lit "contents" *> str) <*> (lit "rivisions" *> int <* end)
         , ContentBySemanticId <$> (lit "contents" *> (map FormatId str)) <*> (map SemanticId str) <* end
+        , ContentList <$ lit "contents" <*> space <*> format <*> matchParams <* end
         -- format
         , (flip Format FormatMain) <$> (map FormatId $ lit "formats" *> str <* end)
         , (flip Format FormatPage) <$> (map FormatId $ lit "formats" *> str <* lit "page" <* end)
         , (flip Format FormatVersions) <$> (map FormatId $ lit "formats" *> str <* lit "versions" <* end)
         , (flip Format FormatSetting) <$> (map FormatId $ lit "formats" *> str <* lit "setting" <* end)
         , (flip Format FormatReactor) <$> (map FormatId $ lit "formats" *> str <* lit "reactor" <* end)
-
         -- spaces
         , NewSpace <$ (lit "spaces" <* lit "new")
         , NewFormat <$> (map SpaceId $ lit "spaces" *> str <* lit "formats" <* lit "new" <* end)
@@ -250,9 +258,9 @@ matchRoute =
         , (flip Crawler CrawlerCaches) <$> (map CrawlerId $ lit "crawlers" *> str <* lit "caches" <* end)
         ]
   where
-  space = map (map SpaceId) $ maybeParam "space"
+  space = map (map SpaceId) $ matchParam "space"
 
-  format = map (map FormatId) $ maybeParam "format"
+  format = map (map FormatId) $ matchParam "format"
 
 pathToRoute :: String -> Route
 pathToRoute path = case match matchRoute path of

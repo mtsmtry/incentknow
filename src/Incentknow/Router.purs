@@ -26,23 +26,25 @@ import Incentknow.Organisms.Header as Header
 import Incentknow.Pages.Community.SpaceList as SpaceList
 import Incentknow.Pages.Composition as Composition
 import Incentknow.Pages.Content as Content
+import Incentknow.Pages.Crawler as Crawler
 import Incentknow.Pages.EditContent as EditContent
 import Incentknow.Pages.Format as Format
 import Incentknow.Pages.Home as Home
 import Incentknow.Pages.JoinSpace as JoinSpace
 import Incentknow.Pages.NewContent as NewContent
+import Incentknow.Pages.NewCrawler as NewCrawler
 import Incentknow.Pages.NewFormat as NewFormat
 import Incentknow.Pages.NewSpace as NewSpace
-import Incentknow.Pages.NewCrawler as NewCrawler
-import Incentknow.Pages.Crawler as Crawler
 import Incentknow.Pages.Public as Public
 import Incentknow.Pages.Sign as Sign
 import Incentknow.Pages.Snapshot as Snapshot
 import Incentknow.Pages.Space as Space
 import Incentknow.Pages.User as User
 import Incentknow.Pages.WorkList as WorkList
+import Incentknow.Organisms.ContentQuery as PageContentQuery
 import Incentknow.Route (ContentSpec(..), Route(..), pathToRoute, routeToPath)
 import Incentknow.Templates.Main as Layout
+import Incentknow.Widgets.ContentQuery as ContentQuery
 import Incentknow.Widgets.WorkViewer as WorkViewer
 import Web.HTML (window)
 import Web.HTML.Location (pathname, search)
@@ -84,6 +86,10 @@ type ChildSlots
 
 
     , workViewer :: WorkViewer.Slot Unit
+
+    , contentQuery :: ContentQuery.Slot Unit
+
+    , pageContentQuery :: PageContentQuery.Slot Unit
     )
 
 type State
@@ -131,6 +137,8 @@ component =
     NewContent spaceId formatId -> HH.slot (SProxy :: SProxy "newContent") unit NewContent.component (NewContent.NewInput spaceId formatId) absurd
     Format formatId tab -> HH.slot (SProxy :: SProxy "format") unit Format.component { formatId, tab } absurd
 
+    ContentList spaceId formatId urlParams -> HH.slot (SProxy :: SProxy "pageContentQuery") unit PageContentQuery.component { spaceId, formatId, urlParams } absurd
+
     Composition spaceId formatId tab -> HH.slot (SProxy :: SProxy "composition") unit Composition.component { spaceId, formatId, tab } absurd
     -- community
     JoinSpace spaceId -> HH.slot (SProxy :: SProxy "joinSpace") unit JoinSpace.component { spaceId } absurd
@@ -149,19 +157,23 @@ component =
     RivisionList contentId -> HH.text ""--HH.slot (SProxy :: SProxy "rivisionList") unit RivisionList.component { contentId } absurd
     WorkList -> HH.slot (SProxy :: SProxy "workList") unit WorkList.component { } absurd
 
-  renderWidget route = case route of
+  renderLeftWidget = case _ of 
+    ContentList spaceId formatId urlParams -> HH.slot (SProxy :: SProxy "contentQuery") unit ContentQuery.component { spaceId, formatId, urlParams } absurd
+    _ -> HH.text ""
+
+  renderRightWidget route = case route of
     EditWork workId -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId, route } absurd
     EditContent contentId -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId: WorkId $ unwrap contentId, route } absurd
     Snapshot workId _ _ -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId, route } absurd
-    _ -> HH.div [] []
+    _ -> HH.text ""
 
   render :: State -> H.ComponentHTML Action ChildSlots m
   render state =
     Layout.main
       { header: HH.slot (SProxy :: SProxy "header") unit Header.component { route: state.route } absurd
       , footer: HH.slot (SProxy :: SProxy "footer") unit Footer.component unit absurd
-      , leftSide: HH.div [] []
-      , rightSide: renderWidget state.route
+      , leftSide: renderLeftWidget state.route
+      , rightSide: renderRightWidget state.route
       , messages: state.msgs
       , body:
           HH.div_
