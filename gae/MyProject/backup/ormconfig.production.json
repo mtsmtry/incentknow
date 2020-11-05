@@ -1,0 +1,29 @@
+{
+   "type": "mysql",
+   "username": "root",
+   "password": "2128",
+   "database": "main",
+
+   "host": "10.102.208.3",
+   "port": 3306,
+   "extra": {
+      "poolSize": 10
+   },
+
+   "logging": false,
+   "synchronize": false, 
+   "entities": [
+      "dist/client_sql.js"
+   ],
+   "migrations": [
+      "dist/migration/**/*.js"
+   ],
+   "subscribers": [
+      "dist/subscriber/**/*.js"
+   ],
+   "cli": {
+      "entitiesDir": "src/entity",
+      "migrationsDir": "src/migration",
+      "subscribersDir": "src/subscriber"
+   }
+}

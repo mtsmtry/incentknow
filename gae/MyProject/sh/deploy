@@ -1,0 +1,2 @@
+tsc
+gcloud app deploy
