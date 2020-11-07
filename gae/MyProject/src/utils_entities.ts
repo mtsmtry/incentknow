@@ -168,16 +168,38 @@ export interface PropertyInfo {
     type: Type
 }
 
-export interface TypeArguments {
-    format?: string;
-    type?: Type;
-    language?: Language;
-    properties?: PropertyInfo[];
+function Data() {
+    return (fnc: Function) => { };
 }
 
-export interface Type {
+function DataKind() {
+    return (target: any, props: string) => {};
+}
+
+function DataMember(cstrs: string[]) {
+    return (target: any, props: string) => {};
+}
+
+@Data()
+export class Type {
+    @DataKind()
     name: TypeName;
-    arguments: TypeArguments;
+
+    @DataMember([TypeName.CONTENT])
+    format?: string;
+
+    @DataMember([TypeName.ARRAY])
+    subType?: Type;
+
+    @DataMember([TypeName.CODE])
+    language?: Language;
+
+    @DataMember([TypeName.OBJECT])
+    properties?: PropertyInfo[];
+
+    constructor(src: Partial<Type>) {
+        Object.assign(this, src);
+    }
 }
 
 export function toPropertyInfo(prop: Property): PropertyInfo {
@@ -187,29 +209,24 @@ export function toPropertyInfo(prop: Property): PropertyInfo {
         fieldName: prop.fieldName,
         optional: prop.optional,
         semantic: prop.semantic,
-        type: {
-            name: prop.typeName,
-            arguments: {}
-        }
+        type: new Type({
+            name: prop.typeName
+        })
     }
 
     if (prop.typeName == TypeName.ARRAY) {
-        res.type.arguments = {
-            type: {
-                name: prop.argType,
-                arguments: {
-                    format: prop.argFormat?.entityId,
-                    language: prop.argLanguage,
-                    properties: prop.argProperties.map(toPropertyInfo)
-                }
-            }
-        };
-    } else {
-        res.type.arguments = {
+        Object.assign(res.type, {
+            name: prop.argType,
             format: prop.argFormat?.entityId,
             language: prop.argLanguage,
             properties: prop.argProperties.map(toPropertyInfo)
-        };
+        });
+    } else {
+        Object.assign(res.type, {
+            format: prop.argFormat?.entityId,
+            language: prop.argLanguage,
+            properties: prop.argProperties.map(toPropertyInfo),
+        });
     }
 
     return res;
@@ -333,11 +350,11 @@ export interface FocusedContent {
     updateCount: number;
     viewCount: number;
     format: FocusedFormat;
-    draft: ContentDraft;
+    draftId: ContentDraftId | null;
     data: any;
 }
 
-export function toFocusedContent(content: Content, draft: ContentDraft, format: FocusedFormat): FocusedContent {
+export function toFocusedContent(content: Content, draft: ContentDraft | null, format: FocusedFormat): FocusedContent {
     return {
         entityId: content.entityId,
         createdAt: toTimestamp(content.createdAt),
@@ -347,7 +364,7 @@ export function toFocusedContent(content: Content, draft: ContentDraft, format: 
         updateCount: content.updateCount,
         viewCount: content.viewCount,
         format: format,
-        draft: draft,
+        draftId: draft?.entityId,
         data: content.data
     };
 }
@@ -757,11 +774,11 @@ function mapBy<T>(array: T[], getKey: (obj: T) => number): { [key: number]: T } 
 }
 
 export function toContentNodes(
-        editings: ContentEditing[],
-        commits: ContentCommit[],
-        materialEditings: MaterialEditing[],
-        materialCommits: MaterialCommit[]
-        ): ContentNode[] {
+    editings: ContentEditing[],
+    commits: ContentCommit[],
+    materialEditings: MaterialEditing[],
+    materialCommits: MaterialCommit[]
+): ContentNode[] {
 
     const editingDict = mapBy(editings, x => x.id);
     const materialEditingDict = mapBy(materialEditings, x => x.id);

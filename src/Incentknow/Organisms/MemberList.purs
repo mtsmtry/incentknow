@@ -35,7 +35,7 @@ type Input
 
 type State
   = { members :: Array SpaceMember
-  , isAdmin :: Boolean
+    , isAdmin :: Boolean
     }
 
 data Action

@@ -13,6 +13,4 @@ cp -f index.html public/index.html
 open http://localhost:5000
 
 
-export GOOGLE_APPLICATION_CREDENTIALS=iam.json
 
-firebase serve --only functions,hosting

@@ -1,5 +1,5 @@
 import { Container, Content, ContentGenerator, Format, FormatUsage, Language, MembershipMethod, MemberType, Property, Space, SpaceAuth, SpaceMember, Structure, TypeName, User } from "./client_sql";
-import { PropertyInfo, toFocusedFormat, toFocusedFormatFromStructure, TypeArguments } from './utils_entities';
+import { PropertyInfo, toFocusedFormat, toFocusedFormatFromStructure } from './utils_entities';
 import { Connection, createConnection, SelectQueryBuilder } from 'typeorm';
 
 export class UtilsFormat {

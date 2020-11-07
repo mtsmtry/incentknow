@@ -1,1120 +1,1376 @@
-
-
-function require(str) {
-    if (str == "firebase") {
-        console.log("require firebase")
-        console.log(firebase)
-        return firebase;
-    } else {
-        return null;
-    }
-}
-
-function disinct(array) {
-    return Array.from(new Set(array));
-}
-
-firebase = require("firebase");
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-const storage = firebase.storage();
-const getParams = { source: "cache" };
-const fromServer = { source: "server" };
-
-const defaultIconUrl = "/assets/imgs/default_icon.jpg";
-
-const snapshotOptions = { includeMetadataChanges: true };
-
-exports.defaultIconUrl = defaultIconUrl;
-
-db.settings({
-    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
-});
-// db.enablePersistence();
-db.enablePersistence({ synchronizeTabs: true });
-
-// auth.currentUserは読み込み中にnullになり、ログインしていない状態と読み込み状態の区別がつかないため
-// localStorageに保存した値を用いる
-var currentUser = JSON.parse(window.localStorage.getItem("UID"));
-auth.onAuthStateChanged(user => {
-    currentUser = user;
-    window.localStorage.setItem("UID", JSON.stringify(user));
-});
-
-// https://tenderfeel.xsrv.jp/javascript/3820/
-function showFirebaseError(e, method = "") {
-    if (!e.errorInfo) {
-        return "エラーが発生しました";
-    }
-    e = e.errorInfo;
-    switch (e.code) {
-        case 'auth/cancelled-popup-request':
-        case 'auth/popup-closed-by-user':
-            return null;
-        case 'auth/email-already-exists':
-            return 'このメールアドレスで既にアカウントが登録されています';
-        case 'auth/email-already-in-use':
-            if (method.indexOf('signup') !== -1) {
-                return 'このメールアドレスは使用されています';
-            } else {
-                return 'メールアドレスまたはパスワードが違います';
-            }
-        case 'auth/invalid-email':
-            return 'メールアドレスの形式が正しくありません';
-        case 'auth/user-disabled':
-            return 'サービスの利用が停止されています';
-        case 'auth/user-not-found':
-            return 'メールアドレスまたはパスワードが違います';
-        case 'auth/user-mismatch':
-            if (method === 'signin/popup') {
-                return '認証されているユーザーと異なるアカウントが選択されました';
-            } else {
-                return 'メールアドレスまたはパスワードが違います';
-            }
-        case 'auth/weak-password':
-            return 'パスワードは6文字以上にしてください';
-        case 'auth/wrong-password':
-            return 'メールアドレスまたはパスワードが違います';
-        case 'auth/popup-blocked':
-            return '認証ポップアップがブロックされました。ポップアップブロックをご利用の場合は設定を解除してください';
-        case 'auth/operation-not-supported-in-this-environment':
-        case 'auth/auth-domain-config-required':
-        case 'auth/operation-not-allowed':
-        case 'auth/unauthorized-domain':
-            return '現在この認証方法はご利用頂けません';
-        case 'auth/requires-recent-login':
-            return '認証の有効期限が切れています';
-        default:
-            if (method.indexOf('signin') !== -1) {
-                return '認証に失敗しました';
-            } else {
-                return 'エラーが発生しました';
-            }
-    }
-};
-
-async function mkSpace(spaceSnap, userSpaceSnap = null, options) {
-    const space = spaceSnap.data();
-    space.spaceId = spaceSnap.id;
-    if (!userSpaceSnap && currentUser) {
-        userSpaceSnap = await db.collection("users").doc(currentUser.uid).collection("spaces").doc(space.spaceId).get(options);
-    }
-    if (userSpaceSnap && userSpaceSnap.exists) {
-        const userSpace = userSpaceSnap.data();
-        space.myStatus = userSpace.type;
-    } else {
-        space.myStatus = "none";
-    }
-
-    var memberSnap = null;
-    if (currentUser) {
-        memberSnap = await db.collection("spaces").doc(space.spaceId).collection("members").doc(currentUser.uid).get(options);
-    }
-    if (memberSnap && memberSnap.exists) {
-        space.myMember = await mkSpaceMember(memberSnap, space.spaceId, options);
-    } else {
-        space.myMember = null;
-    }
-
-    if (space.homeUrl) {
-        const url = await storage.ref().child(getSpaceHomeImagePath(space.spaceId)).getDownloadURL();
-        space.homeUrl = url;
-    } else {
-        space.homeUrl = null;
-    }
-    return space;
-}
-
-function mkStructure(structureSnap) {
-    const structure = structureSnap.data();
-    structure.version = structureSnap.id;
-    return structure;
-}
-
-function mkFormat(formatSnap, structureSnap) {
-    const format = formatSnap.data();
-    format.formatId = formatSnap.id;
-    format.structure = mkStructure(structureSnap);
-    if (!format.collectionPage) {
-        format.collectionPage = { compositions: [] };
-    }
-    if (!format.contentPage) {
-        format.contentPage = { relations: [] };
-    }
-    return format;
-}
-
-function mkContent(contentSnap, formatSnap, structureSnap, containerSnap) {
-    const content = contentSnap.data();
-    const container = containerSnap.data();
-    content.contentId = contentSnap.id;
-    content.formatId = formatSnap.id;
-    content.spaceId = container.spaceId;
-    content.containerId = containerSnap.id;
-    content.format = mkFormat(formatSnap, structureSnap);
-    return content;
-}
-
-function getIconPath(uid) {
-    return "users/" + uid + "/icon";
-}
-
-function getSpaceHomeImagePath(spaceId) {
-    return "spaces/" + spaceId + "/home"
-}
-
-async function mkUser(userSnap) {
-    const user = userSnap.data();
-    user.userId = userSnap.id;
-    if (user.iconUrl) {
-        const url = await storage.ref().child(getIconPath(user.userId)).getDownloadURL();
-        user.iconUrl = url;
-    } else {
-        user.iconUrl = defaultIconUrl;
-    }
-    return user;
-}
-
-async function mkSpaceMember(memberSnap, spaceId, options) {
-    const member = memberSnap.data();
-    member.userId = memberSnap.id;
-    member.spaceId = spaceId;
-
-    const userSnap = await db.collection("users").doc(memberSnap.id).get(options);
-    member.user = await mkUser(userSnap);
-
-    return member;
-}
-
-function mkSpaceCommitter(committerSnap) {
-    const committer = committerSnap.data();
-    committer.userId = committerSnap.id;
-    return committer;
-}
-
-function mkWork(workSnap, junctionSnap, formatSnap, structureSnap) {
-    const work = workSnap.data();
-    work.workId = workSnap.id;
-    if (!work.contentId) {
-        work.contentId = null;
-    }
-    if (junctionSnap) {
-        work.spaceId = junctionSnap.spaceId;
-    }
-    work.format = mkFormat(formatSnap, structureSnap);
-    return work;
-}
-
-async function mkAccount(account, userSnap) {
-    const settingSnap = await db.collection("_users").doc(account.uid).get();
-    account.setting = settingSnap.data();
-    account.user = await mkUser(userSnap);
-    account.userId = account.uid;
-    return account;
-}
-
-function mkSnapshot(snapshotSnap) {
-    const snapshot = snapshotSnap.data();
-    snapshot.snapshotId = snapshotSnap.id;
-    return snapshot;
-}
-
-function receive(res) {
-    console.log("receive");
-    console.log(res);
-    if (res.data.error) {
-        console.log(res);
-        throw res.data.error;
-    } else {
-        return res.data;
-    }
-}
-
-getFormatDict = async function (contents, options) {
-    const formatIdVers = disinct(contents.map(content => content.formatId + ":" + content.structureId));
-    var fun = async formatIdVer => {
-        const parts = formatIdVer.split(":");
-        const formatId = parts[0];
-        const structureId = parts[1];
-        const formatRef = db.collection("formats").doc(formatId);
-        const structureRef = formatRef.collection("structures").doc(structureId);
-        const [formatSnap, structureSnap] = await Promise.all([formatRef.get(options), structureRef.get(options)]);
-        return { key: formatIdVer, value: { format: formatSnap, structure: structureSnap } };
-    };
-    const formatAndStructurePromises = formatIdVers.map(fun);
-    fun = await Promise.all(formatAndStructurePromises);
-    return toMap(fun);
-};
-
-function containerQuery(spaceId, formatId) {
-    return db.collection("containers").where("spaceId", "==", spaceId).where("formatId", "==", formatId);
-}
-
-async function getContainer(spaceId, formatId, options) {
-    const containersSnap = await containerQuery(spaceId, formatId).get(options);
-    if (containersSnap.empty) {
-        return null;
-    } else {
-        return containersSnap.docs[0];
-    }
-}
-
-exports.showError = error => error.message;
-
-/*
-exports.getAccount = async req => {
-    if (currentUser) {
-        const userSnap = await db.collection("users").doc(account.uid).get();
-        return mkAccount(currentUser, userSnap);
-    } else {
-        return null;
-    }
-};*/
-
-exports.getCurrentUserId = () => {
-    if (currentUser) {
-        return currentUser.uid;
-    } else {
-        return null;
-    }
-}
-
-exports.register = async req => {
-    var userId;
-    try {
-        userId = await functions.httpsCallable("createUser")(req).then(receive);
-    } catch (error) {
-        console.log("register error");
-        console.log(error);
-        throw showFirebaseError(error);
-    }
-    var actionCodeSettings = {
-        // URL you want to redirect back to. The domain (www.example.com) for this
-        // URL must be whitelisted in the Firebase Console.
-        url: "https://incentknow.com",  //'https://www.incentknow.com/registered',
-        // This must be true.
-        handleCodeInApp: true,
-        iOS: {
-            bundleId: 'com.incentknow.ios'
-        },
-        android: {
-            packageName: 'com.incentknow.android',
-            installApp: true,
-            minimumVersion: '12'
-        },
-        dynamicLinkDomain: 'incentknow.page.link'
-    };
-    try {
-        await auth.sendSignInLinkToEmail(req.email, actionCodeSettings);
-    } catch (error) {
-        console.log(error);
-        throw "確認メールの送信に失敗しました";
-    }
-    return userId;
-};
-
-exports.login = req => {
-    return auth.signInWithEmailAndPassword(req.email, req.password)
-        .then(cred => {
-            console.log("login");
-            console.log(cred);
-            window.localStorage.setItem("UID", JSON.stringify(cred.user));
-        })
-        .catch(error => { throw showFirebaseError(error, "signin") });
-};
-
-exports.logout = req => {
-    return auth.signOut()
-        .then(_ => {
-            window.localStorage.removeItem("UID");
-        })
-        .catch(error => { throw showFirebaseError(error) });
-};
-
-exports.createSpace = req => {
-    return functions.httpsCallable("createSpace")(req).then(receive);
-};
-
-exports.createFormat = req => {
-    return functions.httpsCallable("createFormat")(req).then(receive);
-};
-
-exports.createContent = req => {
-    return functions.httpsCallable("createContent")(req).then(receive);
-};
-
-exports.createCrawler = req => {
-    return functions.httpsCallable("createCrawler")(req).then(receive);
-};
-
-exports.runCrawler = req => {
-    return functions.httpsCallable("runCrawler")(req).then(receive);
-};
-
-exports.commitContent = req => {
-    return functions.httpsCallable("commitContent")(req).then(receive);
-};
-
-exports.writeContentWork = req => {
-    return functions.httpsCallable("writeContentWork")(req).then(receive);
-};
-
-exports.updateBlankWork = req => {
-    return functions.httpsCallable("updateBlankWork")(req).then(receive);
-};
-
-exports.createBlankWork = req => {
-    return functions.httpsCallable("createBlankWork")(req).then(receive);
-};
-
-exports.setMyDisplayName = req => {
-    return functions.httpsCallable("setMyDisplayName")(req).then(receive);
-};
-
-exports.checkSpaceDisplayId = req => {
-    return functions.httpsCallable("checkSpaceDisplayId")(req).then(receive);
-};
-
-exports.setMyIcon = async req => {
-    await storage.ref().child(getIconPath(currentUser.uid)).put(req).then();
-    return await functions.httpsCallable("setMyIcon")({}).then(receive);
-};
-
-exports.setSpaceDisplayName = spaceId => {
-    return displayName => {
-        const req = { spaceId, displayName };
-        return functions.httpsCallable("setSpaceDisplayName")(req).then(receive);
-    };
-};
-
-exports.setSpaceHomeImage = spaceId => {
-    return async image => {
-        await storage.ref().child(getSpaceHomeImagePath(spaceId)).put(image).then();
-        return await functions.httpsCallable("setSpaceHomeImage")({ spaceId }).then(receive);
-    };
-};
-
-exports.setSpacePublished = spaceId => {
-    return published => {
-        const req = { spaceId, published };
-        return functions.httpsCallable("setSpacePublished")(req).then(receive);
-    };
-};
-
-exports.setSpaceDisplayId = spaceId => {
-    return displayId => {
-        const req = { spaceId, displayId };
-        return functions.httpsCallable("setSpaceDisplayId")(req).then(receive);
-    };
-};
-
-exports.setSpaceAuthority = spaceId => {
-    return authority => {
-        const req = { spaceId, authority };
-        return functions.httpsCallable("setSpaceAuthority")(req).then(receive);
-    };
-};
-
-exports.setFormatContentPage = formatId => {
-    return contentPage => {
-        const req = { formatId, contentPage };
-        return functions.httpsCallable("setFormatContentPage")(req).then(receive);
-    };
-};
-
-exports.setFormatCollectionPage = formatId => {
-    return collectionPage => {
-        const req = { formatId, collectionPage };
-        return functions.httpsCallable("setFormatCollectionPage")(req).then(receive);
-    };
-};
-
-exports.setMyPassword = async req => {
-    const email = auth.currentUser.email;
-    const cred = firebase.auth.EmailAuthProvider.credential(email, req.oldPassword);
-
-    try {
-        await auth.currentUser.reauthenticateWithCredential(cred);
-    } catch (e) {
-        throw "現在のパスワードが間違っています";
-    }
-
-    try {
-        await auth.currentUser.updatePassword(req.newPassword);
-    } catch (e) {
-        throw "パスワードの変更に失敗しました";
-    }
-    return {};
-};
-
-exports.setMyEmail = async req => {
-    await auth.currentUser.updateEmail(req);
-    return {};
-};
-
-exports.getPublishedSpaces = async options => {
-    const spaceSnaps = await db.collection("spaces").where("published", "==", true).get(options);
-    const mkSpace2 = spaceSnap => {
-        return mkSpace(spaceSnap, null, options);
-    };
-    return await Promise.all(spaceSnaps.docs.map(mkSpace2));
-};
-
-exports.getContent = contentId => {
-    return async options => {
-        const junctionSnap = await db.collection("contents").doc(contentId).get(options);
-        const junction = junctionSnap.data();
-
-        const containerRef = db.collection("containers").doc(junction.containerId);
-
-        const contentRef = containerRef.collection("items").doc(contentId);
-        const formatRef = db.collection("formats").doc(junction.formatId);
-        const structureRef = formatRef.collection("structures").doc(junction.structureId);
-
-        const [contentSnap, formatSnap, structureSnap, containerSnap] = 
-            await Promise.all([contentRef.get(options), formatRef.get(options), structureRef.get(options), containerRef.get(options)]);
-        return mkContent(contentSnap, formatSnap, structureSnap, containerSnap);
-    };
-};
-
-exports.getMySpaces = async options => {
-    const userSpacesRef = db.collection("users").doc(currentUser.uid).collection("spaces");
-    const userSpaceSnaps = await userSpacesRef.get(options);
-    const getSpace = async userSpaceSnap => {
-        const spaceSnap = await db.collection("spaces").doc(userSpaceSnap.id).get(options);
-        const space = await mkSpace(spaceSnap, userSpaceSnap, options);
-        return space;
-    };
-    const spacePromises = userSpaceSnaps.docs.map(getSpace);
-    const spaces = await Promise.all(spacePromises);
-    return spaces;
-};
-
-exports.onSnapshotContent = contentId => {
-    return callback => {
-        return () => {
-            let unsubscribe = null, cancel = false;
-
-            const get = async junctionSnap => {
-                const junction = junctionSnap.data();
-                const containerRef = db.collection("containers").doc(junction.containerId);
-                const contentRef = containerRef.collection("items").doc(contentId);
-
-                const formatRef = db.collection("formats").doc(junction.formatId);
-                const structureRef = formatRef.collection("structures").doc(junction.structureId);
-                const result = await Promise.all([formatRef.get(), structureRef.get(), containerRef.get()]);
-
-                const observer = async contentSnap => {
-                    const content = mkContent(contentSnap, result[0], result[1], result[2]);
-                    callback(content)();
-                };
-                if (!cancel) {
-                    unsubscribe = contentRef.onSnapshot(snapshotOptions, observer);
-                }
-            };
-            db.collection("contents").doc(contentId).get().then(get);
-            return () => {
-                if (unsubscribe) {
-                    unsubscribe();
-                } else {
-                    cancel = true;
-                }
-            };
-        };
-    };
-};
-
-exports.getFormat = formatId => {
-    return async options => {
-        const formatRef = db.collection("formats").doc(formatId);
-        const formatSnap = await formatRef.get(options);
-        const structureSnap = await formatRef.collection("structures").doc(formatSnap.data().defaultStructureId).get(options);
-        return mkFormat(formatSnap, structureSnap);
-    };
-};
-
-exports.getSpace = spaceId => {
-    return async options => {
-        const spaceSnap = await db.collection("spaces").doc(spaceId).get(options);
-        return await mkSpace(spaceSnap, null, options);
-    };
-};
-
-exports.getUser = userId => {
-    return async options => {
-        const userSnap = await db.collection("users").doc(userId).get(options);
-        return await mkUser(userSnap);
-    };
-};
-
-const mkContents = async function (contentSnaps, containerSnap) {
-    const structureIds = disinct(contentSnaps.docs.map(contentSnap => contentSnap.data().structureId));
-    const fun = async version => {
-        const formatRef = db.collection("formats").doc(formatId);
-        const structureRef = formatRef.collection("structures").doc(version);
-        const structureSnap = await structureRef.get();
-        return { key: version, value: structureSnap };
-    };
-    const container = containerSnap.data();
-    const formatId = container.formatId;
-    const promises = structureIds.map(fun);
-    const structureSnaps = await Promise.all(promises);
-    const structureDict = toMap(structureSnaps);
-    const formatSnap = await db.collection("formats").doc(formatId).get();
-
-    const contents = contentSnaps.docs.map(contentSnap => mkContent(contentSnap, formatSnap, structureDict[contentSnap.data().structureId], containerSnap));
-    return contents;
-};
-
-const getContents = async function (spaceId, formatId, conds, options) {
-    function applyFilter(collection, filter) {
-        return collection.where(filter.fieldPath, filter.opStr, filter.value);
-    }
-
-    const containerSnap = await getContainer(spaceId, formatId, options);
-    if (!containerSnap) {
-        return [];
-    } else {
-        let ref = conds.filters.reduce(applyFilter, containerSnap.ref.collection("items"));
-        if (conds.orderBy) {
-            ref = ref.orderBy(conds.orderBy);
+var Data_Maybe = require("../Data.Maybe/index.js");
+var E = require("../Incentknow.Data.Entities/index.js");
+const endpoint = "https://api.incentknow.com";
+
+async function fetch(method, args) {
+    const response = await fetch(endpoint + method, {
+        method: "POST",
+        body: args,
+
+        headers: {
+            "Content-Type": "application/json"
         }
-        const contentsSnap = await ref.get();
-        const contents = await mkContents(contentsSnap, containerSnap);
-        return contents;
-    }
-};
-
-exports.getContents = spaceId => {
-    return formatId => {
-        return conds => {
-            return async options => {
-                return await getContents(spaceId, formatId, conds, options);
-            };
-        };
-    };
-};
-
-exports.getContentsByFormat = formatId => {
-    return async options => {
-        const formatSnap = await db.collection("formats").doc(formatId).get(options);
-        const format = formatSnap.data();
-        const conds = { filters: [], orderBy: null };
-        return await getContents(format.spaceId, formatId, conds, options);
-    };
-};
-
-exports.getAllSpaceContents = spaceId => {
-    return async options => {
-        const containersSnap = await db.collection("containers").where("spaceId", "==", spaceId).get(options);
-     //   const containerDict = containersSnap.docs.reduce((m, x) => { m[x.data().formatId] = x; return m; }, {});
-        const gets = containersSnap.docs.map(container => container.ref.collection("items").limit(100).get(options));
-        const contentsSnapLists = await Promise.all(gets);
-        const contents = contentsSnapLists.map((contentsSnap, index) => {
-            return contentsSnap.docs.map(contentSnap => {
-                const containerSnap = containersSnap.docs[index];
-                const content = contentSnap.data();
-                const container = containerSnap.data();
-                content.formatId = container.formatId;
-                return content;
-            });
-        }).flat();
-        const formatDict = await getFormatDict(contents, options);
-        return contentsSnapLists.map((contentsSnap, index) => {
-            return contentsSnap.docs.map(contentSnap => {
-                const content = contentSnap.data();
-                const containerSnap = containersSnap.docs[index];
-                const container = containerSnap.data();
-                const formatStrcut = formatDict[container.formatId + ":" + content.structureId];
-                const result = mkContent(contentSnap, formatStrcut.format, formatStrcut.structure, containerSnap);
-                return result;
-            });
-        }).flat();
-    };
-};
-
-exports.getFormats = spaceId => {
-    return async options => {
-        const formatSnaps = await db.collection("formats").where("spaceId", "==", spaceId).get(options);
-        const buildFormat = async formatSnap => {
-            const format = formatSnap.data();
-            const structureSnap = await formatSnap.ref.collection("structures").doc(format.defaultStructureId.toString()).get(options);
-            return mkFormat(formatSnap, structureSnap);
-        };
-        const promises = formatSnaps.docs.map(buildFormat);
-        return await Promise.all(promises);
-    };
-};
-
-exports.getFormatStructures = formatId => {
-    return async options => {
-        const structureSnaps = await db.collection("formats").doc(formatId).collection("structures").get(options);
-        return structureSnaps.docs.map(mkStructure);
-    };
-};
-
-exports.getSpaceMembers = spaceId => {
-    return type => {
-        return async options => {
-            var membersRef = db.collection("spaces").doc(spaceId).collection("members");
-            if (type) {
-                membersRef = membersRef.where("type", "==", type);
-            }
-            const memberSnaps = await membersRef.get(options);
-            const mkSpaceMember2 = async spaceSnap => {
-                return await mkSpaceMember(spaceSnap, spaceId, options);
-            };
-            return await Promise.all(memberSnaps.docs.map(mkSpaceMember2));
-        };
-    };
-};
-
-exports.getSpaceMember = spaceId => {
-    return userId => {
-        return async options => {
-            const memberSnap = await db.collection("spaces").doc(spaceId).collection("members").doc(userId).get(options);
-            return await mkSpaceMember(memberSnap, spaceId, options);
-        };
-    };
-};
-
-exports.getSpaceCommitters = spaceId => {
-    return async options => {
-        const committerSnaps = await db.collection("spaces").doc(spaceId).collection("committers").get(options);
-        return committerSnaps.docs.map(mkSpaceCommitter);
-    };
-};
-
-function toMap(arr) {
-    return arr.reduce(function (map, obj) {
-        map[obj.key] = obj.value;
-        return map;
-    }, {});
-}
-
-exports.getMyWorks = req => {
-    return async options => {
-        var worksRef = db.collection("users").doc(currentUser.uid).collection("works");
-        if (req.state != null) {
-            worksRef = worksRef.where("state", "==", req.state);
-        }
-        const workSnaps = await worksRef.get(options);
-        const works = workSnaps.docs.map(workSnap => workSnap.data());
-
-        const formatAndStructureSnaps = await getFormatDict(works, options);
-
-        var fun = async work => {
-            if (work.contentId) {
-                const value = await db.collection("contents").doc(work.contentId);
-                return { key: work.workId, value: value };
-            } else {
-                return { key: work.workId, value: null };
-            }
-        };
-        const junctionPromises = works.map(fun);
-        fun = await Promise.all(junctionPromises);
-        const junctionSnaps = toMap(fun);
-
-        return workSnaps.docs.map(workSnap => {
-            const work = workSnap.data();
-            const formatIdVer = work.formatId + ":" + work.structureId;
-            const formatAndStructureSnap = formatAndStructureSnaps[formatIdVer];
-            const junctionSnap = junctionSnaps[workSnap.id];
-            return mkWork(workSnap, junctionSnap, formatAndStructureSnap.format, formatAndStructureSnap.structure);
-        });
-    };
-};
-
-exports.deleteWork = async req => {
-    return functions.httpsCallable("deleteWork")(req).then(receive);
-};
-
-exports.onSnapshotWork = workId => {
-    return callback => {
-        return () => {
-            var result = null;
-            const observer = async workSnap => {
-                if (workSnap.exists) {
-                    var work = workSnap.data();
-                    if (!result) {
-                        const formatRef = db.collection("formats").doc(work.formatId);
-                        const structureRef = formatRef.collection("structures").doc(work.structureId);
-                        if (work.contentId) {
-                            const junctionRef = db.collection("contents").doc(work.contentId);
-                            result = await Promise.all([formatRef.get(), structureRef.get(), junctionRef.get()]);
-                        } else {
-                            result = await Promise.all([formatRef.get(), structureRef.get()]);
-                            result.push(null);
-                        }
-                    }
-                    work = mkWork(workSnap, result[2], result[0], result[1]);
-                    console.log(work);
-                    callback(work)();
-                } else {
-                    callback(null)();
-                }
-            };
-            return db.collection("users").doc(currentUser.uid).collection("works").doc(workId).onSnapshot(snapshotOptions, observer);
-        };
-    };
-};
-
-exports.onSnapshotAccount = callback => {
-    return () => {
-        var unscribeUser = null;
-        var prevUid = null;
-        if (currentUser) {
-            prevUid = currentUser.uid;
-        }
-        const userObserver = async userSnap => {
-            // ログインしている
-            if (currentUser) {
-                const account = await mkAccount(currentUser, userSnap);
-                callback(account)();
-                // ログインしていない
-            } else {
-                callback(null)();
-            }
-        };
-        const accountObserver = async authUser => {
-            if (authUser) {
-                const userSnap = await db.collection("users").doc(authUser.uid).get();
-                const account = await mkAccount(authUser, userSnap);
-                callback(account)();
-
-                if (prevUid != authUser.uid) {
-                    unscribeUser();
-                    unscribeUser = null;
-                }
-                if (!unscribeUser) {
-                    unscribeUser = db.collection("users").doc(authUser.uid).onSnapshot(snapshotOptions, userObserver);
-                }
-
-                prevUid = authUser.uid;
-            } else {
-                callback(null)();
-
-                if (unscribeUser) {
-                    unscribeUser();
-                    unscribeUser = null;
-                }
-            }
-        };
-        const unscribeAccount = auth.onAuthStateChanged(accountObserver);
-        return () => {
-            if (unscribeUser) {
-                unscribeUser();
-            }
-            unscribeAccount();
-        };
-    };
-};
-
-exports.onSnapshotSpace = spaceId => {
-    return callback => {
-        return () => {
-            const observer = async snap => {
-                const space = await mkSpace(snap, null, { source: "server" });
-                callback(space)();
-            };
-            return db.collection("spaces").doc(spaceId).onSnapshot(snapshotOptions, observer);
-        };
-    };
-};
-
-exports.onSnapshotSnapshots = workId => {
-    return changeId => {
-        return callback => {
-            return () => {
-                const observer = async snapshotsSnap => {
-                    callback(snapshotsSnap.docs.map(snap => mkSnapshot(snap)))();
-                };
-                return db.collection("users").doc(currentUser.uid).collection("works").doc(workId).collection("changes").doc(changeId).collection("snapshots").onSnapshot(snapshotOptions, observer);
-            };
-        };
-    };
-};
-
-function getUseCache(ref) {
-    return ref.get({ source: "cache" }).catch(res => ref.get({ source: "server" }));
-}
-
-exports.getSnapshot = workId => {
-    return changeId => {
-        return async snapshotId => {
-            const snapshotRef = db.collection("users").doc(currentUser.uid)
-                .collection("works").doc(workId)
-                .collection("changes").doc(changeId)
-                .collection("snapshots").doc(snapshotId);;
-            const snapshotSnap = await getUseCache(snapshotRef);
-            return mkSnapshot(snapshotSnap);
-        };
-    };
-};
-
-exports.onSnapshotContents = req => {
-    return callback => {
-        return () => {
-            let unsubscribe = null, cancel = false;
-            containerQuery(format.spaceId, req.formatId).get(options).then(containersSnap => {
-                const containerSnap = containersSnap.docs[0];
-                const observer = async contentsSnap => {
-                    const contents = await mkContents(contentsSnap, containerSnap);
-                    callback(contents)();
-                };
-
-                if (!cancel) {
-                    containerSnap.ref.collection("items").onSnapshot(snapshotOptions, observer);
-                }
-            });
-            return () => {
-                if (unsubscribe) {
-                    unsubscribe();
-                } else {
-                    cancel = true;
-                }
-            };
-        };
-    };
-};
-
-exports.applySpaceMembership = spaceId => {
-    const req = { spaceId };
-    return functions.httpsCallable("applySpaceMembership")(req).then(receive);
-};
-
-exports.acceptSpaceMembership = spaceId => {
-    return userId => {
-        const req = { spaceId, userId };
-        return functions.httpsCallable("acceptSpaceMembership")(req).then(receive);
-    };
-};
-
-exports.rejectSpaceMembership = spaceId => {
-    return userId => {
-        const req = { spaceId, userId };
-        return functions.httpsCallable("rejectSpaceMembership")(req).then(receive);
-    };
-};
-
-exports.cancelSpaceMembershipApplication = spaceId => {
-    const req = { spaceId };
-    return functions.httpsCallable("cancelSpaceMembershipApplication")(req).then(receive);
-};
-
-exports.setSpaceMembershipMethod = spaceId => {
-    return membershipMethod => {
-        const req = { spaceId, membershipMethod };
-        return functions.httpsCallable("setSpaceMembershipMethod")(req).then(receive);
-    };
-};
-
-exports.setContentGenerator = formatId => {
-    return generator => {
-        const req = { formatId, generator };
-        return functions.httpsCallable("setContentGenerator")(req).then(receive);
-    };
-};
-
-exports.setReactorDefinitionId = formatId => {
-    return definitionId => {
-        const req = { formatId, definitionId };
-        return functions.httpsCallable("setReactorDefinitionId")(req).then(receive);
-    };
-};
-
-function mkReactor(reactorSnap) {
-    const reactor = reactorSnap.data();
-    reactor.formatId = reactorSnap.id;
-    return reactor;
-}
-
-exports.getReactor = formatId => {
-    return async options => {
-        const reactorSnap = await db.collection("reactors").doc(formatId).get(options);
-        return mkReactor(reactorSnap);
-    };
-};
-
-exports.onLoadContentBySemanticId = formatId => {
-    return semanticId => {
-        return callback => {
-            return () => {
-                async function fun() {
-                    const formatRef = db.collection("formats").doc(formatId);
-                    const formatSnap = await formatRef.get();
-                    const format = formatSnap.data();
-                    const containerSnap = await getContainer(format.spaceId, formatId, options);
-                    const contentSnaps = await containerSnap.ref.collection("items").where("data." + format.semanticId, "==", semanticId).get();
-
-                    if (!contentSnaps.empty) {
-                        const contentSnap = contentSnaps.docs[0];
-                        const structureSnap = await formatRef.collection("structures").doc(contentSnap.data().structureId).get();
-                        const content = mkContent(contentSnap, formatSnap, structureSnap, containerSnap);
-                        callback(content)();
-                    }
-
-                    const contentResult = await functions.httpsCallable("getContentBySemanticId")({ formatId, semanticId }).then(receive);
-                    const contentSnap = {
-                        id: contentResult.contentId,
-                        data: () => contentResult
-                    };
-                    const structureSnap = await formatRef.collection("structures").doc(contentResult.structureId).get();
-                    const content = mkContent(contentSnap, formatSnap, structureSnap, containerSnap);
-                    callback(content)();
-                };
-                fun();
-            };
-        };
-    };
-};
-
-exports.getContentsByReactor = async req => {
-    const formatSnap = await db.collection("formats").doc(req.formatId).get();
-    const format = formatSnap.data();
-    const containerSnap = await getContainer(format.spaceId, req.formatId, fromServer);
-    const contentResults = await functions.httpsCallable("getContentsByReactor")(req).then(receive);
-    const contentSnaps = contentResults.map(contentResult => {
-        return {
-            id: null,
-            data: () => contentResult
-        };
     });
-    const contents = await mkContents({ docs: contentSnaps }, containerSnap);
-    return contents;
-};
 
-exports.updateFormatStructure = formatId => {
-    return properties => {
-        const req = { formatId, properties };
-        return functions.httpsCallable("updateFormatStructure")(req).then(receive);
-    };
-};
-
-function mkCrawler(crawlerSnap) {
-    const crawler = crawlerSnap.data();
-    crawler.crawlerId = crawlerSnap.id;
-    return crawler;
+    return await response.json();
 }
 
-exports.getCrawlers = spaceId => {
-    return async options => {
-        const crawlersSnap = await db.collection("crawlers").where("spaceId", "==", spaceId).get(options);
-        const crawlers = crawlersSnap.docs.map(mkCrawler);
-        return crawlers;
-    };
-};
-
-function mkCrawlerOperation(crawlerId, operationSnap) {
-    const operation = operationSnap.data();
-    operation.crawlerId = crawlerId;
-    operation.operationId = operationSnap.id;
-    return operation;
+function psMembershipMethod(str) {
+    switch (str) {
+    case "none":
+        return E.MembershipMethodNone.value;
+    case "app":
+        return E.App.value;
+    }
 }
 
-exports.getCrawlerOperations = crawlerId => {
-    return async options => {
-        const operationsSnap = await db
-            .collection("crawlers").doc(crawlerId)
-            .collection("crawlerOperations").orderBy("createdAt", "desc").get(options);
-        const operations = operationsSnap.docs.map(x => mkCrawlerOperation(crawlerId, x));
-        return operations;
-    };
-};
+function jsMembershipMethod(obj) {
+    if (obj instanceof E.MembershipMethodNone) {
+        return "none";
+    }
 
-function mkCrawlerCache(crawlerId, cacheSnap) {
-    const cache = cacheSnap.data();
-    cache.crawlerId = crawlerId;
-    cache.cacheId = cacheSnap.id;
-    return cache;
+    if (obj instanceof E.App) {
+        return "app";
+    }
 }
 
-exports.getCrawlerCaches = crawlerId => {
-    return async options => {
-        const cachesSnap = await db.collection("crawlers").doc(crawlerId).collection("crawlerCaches").get(options);
-        const caches = cachesSnap.docs.map(x => mkCrawlerCache(crawlerId, x));
-        return caches;
-    };
+function psSpaceAuth(str) {
+    switch (str) {
+    case "none":
+        return E.SpaceAuthNone.value;
+    case "visible":
+        return E.Visible.value;
+    case "readable":
+        return E.Readable.value;
+    case "writable":
+        return E.Writable.value;
+    }
+}
+
+function jsSpaceAuth(obj) {
+    if (obj instanceof E.SpaceAuthNone) {
+        return "none";
+    }
+
+    if (obj instanceof E.Visible) {
+        return "visible";
+    }
+
+    if (obj instanceof E.Readable) {
+        return "readable";
+    }
+
+    if (obj instanceof E.Writable) {
+        return "writable";
+    }
+}
+
+function psReactorState(str) {
+    switch (str) {
+    case "invaild":
+        return E.Invaild.value;
+    }
+}
+
+function jsReactorState(obj) {
+    if (obj instanceof E.Invaild) {
+        return "invaild";
+    }
+}
+
+function psMemberType(str) {
+    switch (str) {
+    case "normal":
+        return E.Normal.value;
+    case "owner":
+        return E.Owner.value;
+    }
+}
+
+function jsMemberType(obj) {
+    if (obj instanceof E.Normal) {
+        return "normal";
+    }
+
+    if (obj instanceof E.Owner) {
+        return "owner";
+    }
+}
+
+function psFormatUsage(str) {
+    switch (str) {
+    case "internal":
+        return E.Internal.value;
+    case "external":
+        return E.External.value;
+    }
+}
+
+function jsFormatUsage(obj) {
+    if (obj instanceof E.Internal) {
+        return "internal";
+    }
+
+    if (obj instanceof E.External) {
+        return "external";
+    }
+}
+
+function psContentGenerator(str) {
+    switch (str) {
+    case "reactor":
+        return E.Reactor.value;
+    case "crawler":
+        return E.Crawler.value;
+    }
+}
+
+function jsContentGenerator(obj) {
+    if (obj instanceof E.Reactor) {
+        return "reactor";
+    }
+
+    if (obj instanceof E.Crawler) {
+        return "crawler";
+    }
+}
+
+function psTypeName(str) {
+    switch (str) {
+    case "integer":
+        return E.Int.value;
+    case "boolean":
+        return E.Bool.value;
+    case "string":
+        return E.String.value;
+    case "format":
+        return E.Format.value;
+    case "space":
+        return E.Space.value;
+    case "content":
+        return E.TypeNameContent.value;
+    case "url":
+        return E.Url.value;
+    case "object":
+        return E.Object.value;
+    case "text":
+        return E.Text.value;
+    case "array":
+        return E.Array.value;
+    case "code":
+        return E.Code.value;
+    }
+}
+
+function jsTypeName(obj) {
+    if (obj instanceof E.Int) {
+        return "integer";
+    }
+
+    if (obj instanceof E.Bool) {
+        return "boolean";
+    }
+
+    if (obj instanceof E.String) {
+        return "string";
+    }
+
+    if (obj instanceof E.Format) {
+        return "format";
+    }
+
+    if (obj instanceof E.Space) {
+        return "space";
+    }
+
+    if (obj instanceof E.TypeNameContent) {
+        return "content";
+    }
+
+    if (obj instanceof E.Url) {
+        return "url";
+    }
+
+    if (obj instanceof E.Object) {
+        return "object";
+    }
+
+    if (obj instanceof E.Text) {
+        return "text";
+    }
+
+    if (obj instanceof E.Array) {
+        return "array";
+    }
+
+    if (obj instanceof E.Code) {
+        return "code";
+    }
+}
+
+function psLanguage(str) {
+    switch (str) {
+    case "python":
+        return E.Python.value;
+    case "javascript":
+        return E.Javascript.value;
+    }
+}
+
+function jsLanguage(obj) {
+    if (obj instanceof E.Python) {
+        return "python";
+    }
+
+    if (obj instanceof E.Javascript) {
+        return "javascript";
+    }
+}
+
+function psEditingState(str) {
+    switch (str) {
+    case "editing":
+        return E.EditingStateEditing.value;
+    case "committed":
+        return E.EditingStateCommitted.value;
+    case "canceled":
+        return E.EditingStateCanceld.value;
+    }
+}
+
+function jsEditingState(obj) {
+    if (obj instanceof E.EditingStateEditing) {
+        return "editing";
+    }
+
+    if (obj instanceof E.EditingStateCommitted) {
+        return "committed";
+    }
+
+    if (obj instanceof E.EditingStateCanceld) {
+        return "canceled";
+    }
+}
+
+function psDraftState(str) {
+    switch (str) {
+    case "editing":
+        return E.DraftStateEditing.value;
+    }
+}
+
+function jsDraftState(obj) {
+    if (obj instanceof E.DraftStateEditing) {
+        return "editing";
+    }
+}
+
+function psChangeType(str) {
+    switch (str) {
+    case "initial":
+        return E.Initial.value;
+    case "write":
+        return E.Write.value;
+    case "remove":
+        return E.Remove.value;
+    }
+}
+
+function jsChangeType(obj) {
+    if (obj instanceof E.Initial) {
+        return "initial";
+    }
+
+    if (obj instanceof E.Write) {
+        return "write";
+    }
+
+    if (obj instanceof E.Remove) {
+        return "remove";
+    }
+}
+
+function psMaterialType(str) {
+    switch (str) {
+    case "folder":
+        return E.Folder.value;
+    case "document":
+        return E.Document.value;
+    }
+}
+
+function jsMaterialType(obj) {
+    if (obj instanceof E.Folder) {
+        return "folder";
+    }
+
+    if (obj instanceof E.Document) {
+        return "document";
+    }
+}
+
+const psContainerId = x => x;
+const jsContainerId = x => x;
+
+function psIntactContainer(obj) {
+    obj.entityId = psContainerId(obj.entityId);
+    obj.space = psRelatedSpace(obj.space);
+    obj.format = psRelatedFormat(obj.format);
+    return obj;
+}
+
+function jsIntactContainer(obj) {
+    obj.entityId = jsContainerId(obj.entityId);
+    obj.space = jsRelatedSpace(obj.space);
+    obj.format = jsRelatedFormat(obj.format);
+    return obj;
+}
+
+const psSpaceId = x => x;
+const jsSpaceId = x => x;
+const psSpaceDisplayId = x => x;
+const jsSpaceDisplayId = x => x;
+
+function psRelatedSpace(obj) {
+    obj.entityId = psSpaceId(obj.entityId);
+    obj.displayId = psSpaceDisplayId(obj.displayId);
+
+    if (obj.homeUrl) {
+        obj.homeUrl = new Data_Maybe.Just(obj.homeUrl);
+    } else {
+        obj.homeUrl = Data_Maybe.Nothing.value;
+    }
+
+    obj.membershipMethod = psMembershipMethod(obj.membershipMethod);
+    obj.defaultAuthority = psSpaceAuth(obj.defaultAuthority);
+    return obj;
+}
+
+function jsRelatedSpace(obj) {
+    obj.entityId = jsSpaceId(obj.entityId);
+    obj.displayId = jsSpaceDisplayId(obj.displayId);
+
+    if (obj.homeUrl instanceof Data_Maybe.Just) {
+        obj.homeUrl = obj.homeUrl.value;
+    } else {
+        obj.homeUrl = null;
+    }
+
+    obj.membershipMethod = jsMembershipMethod(obj.membershipMethod);
+    obj.defaultAuthority = jsSpaceAuth(obj.defaultAuthority);
+    return obj;
+}
+
+function psFocusedSpace(obj) {
+    obj.entityId = psSpaceId(obj.entityId);
+    obj.displayId = psSpaceDisplayId(obj.displayId);
+    obj.creatorUser = psRelatedUser(obj.creatorUser);
+
+    if (obj.homeUrl) {
+        obj.homeUrl = new Data_Maybe.Just(obj.homeUrl);
+    } else {
+        obj.homeUrl = Data_Maybe.Nothing.value;
+    }
+
+    obj.membershipMethod = psMembershipMethod(obj.membershipMethod);
+    obj.defaultAuthority = psSpaceAuth(obj.defaultAuthority);
+    return obj;
+}
+
+function jsFocusedSpace(obj) {
+    obj.entityId = jsSpaceId(obj.entityId);
+    obj.displayId = jsSpaceDisplayId(obj.displayId);
+    obj.creatorUser = jsRelatedUser(obj.creatorUser);
+
+    if (obj.homeUrl instanceof Data_Maybe.Just) {
+        obj.homeUrl = obj.homeUrl.value;
+    } else {
+        obj.homeUrl = null;
+    }
+
+    obj.membershipMethod = jsMembershipMethod(obj.membershipMethod);
+    obj.defaultAuthority = jsSpaceAuth(obj.defaultAuthority);
+    return obj;
+}
+
+function psFocusedSpaceMember(obj) {
+    obj.user = psRelatedUser(obj.user);
+    obj.type = psMemberType(obj.type);
+    return obj;
+}
+
+function jsFocusedSpaceMember(obj) {
+    obj.user = jsRelatedUser(obj.user);
+    obj.type = jsMemberType(obj.type);
+    return obj;
+}
+
+const psUserId = x => x;
+const jsUserId = x => x;
+const psUserDisplayId = x => x;
+const jsUserDisplayId = x => x;
+
+function psRelatedUser(obj) {
+    obj.entityId = psUserId(obj.entityId);
+    obj.displayId = psUserDisplayId(obj.displayId);
+
+    if (obj.iconUrl) {
+        obj.iconUrl = new Data_Maybe.Just(obj.iconUrl);
+    } else {
+        obj.iconUrl = Data_Maybe.Nothing.value;
+    }
+
+    return obj;
+}
+
+function jsRelatedUser(obj) {
+    obj.entityId = jsUserId(obj.entityId);
+    obj.displayId = jsUserDisplayId(obj.displayId);
+
+    if (obj.iconUrl instanceof Data_Maybe.Just) {
+        obj.iconUrl = obj.iconUrl.value;
+    } else {
+        obj.iconUrl = null;
+    }
+
+    return obj;
+}
+
+function psFocusedUser(obj) {
+    obj.entityId = psUserId(obj.entityId);
+    obj.displayId = psUserDisplayId(obj.displayId);
+
+    if (obj.iconUrl) {
+        obj.iconUrl = new Data_Maybe.Just(obj.iconUrl);
+    } else {
+        obj.iconUrl = Data_Maybe.Nothing.value;
+    }
+
+    return obj;
+}
+
+function jsFocusedUser(obj) {
+    obj.entityId = jsUserId(obj.entityId);
+    obj.displayId = jsUserDisplayId(obj.displayId);
+
+    if (obj.iconUrl instanceof Data_Maybe.Just) {
+        obj.iconUrl = obj.iconUrl.value;
+    } else {
+        obj.iconUrl = null;
+    }
+
+    return obj;
+}
+
+function psPropertyInfo(obj) {
+    if (obj.fieldName) {
+        obj.fieldName = new Data_Maybe.Just(obj.fieldName);
+    } else {
+        obj.fieldName = Data_Maybe.Nothing.value;
+    }
+
+    if (obj.semantic) {
+        obj.semantic = new Data_Maybe.Just(obj.semantic);
+    } else {
+        obj.semantic = Data_Maybe.Nothing.value;
+    }
+
+    obj.type = psType(obj.type);
+    return obj;
+}
+
+function jsPropertyInfo(obj) {
+    if (obj.fieldName instanceof Data_Maybe.Just) {
+        obj.fieldName = obj.fieldName.value;
+    } else {
+        obj.fieldName = null;
+    }
+
+    if (obj.semantic instanceof Data_Maybe.Just) {
+        obj.semantic = obj.semantic.value;
+    } else {
+        obj.semantic = null;
+    }
+
+    obj.type = jsType(obj.type);
+    return obj;
+}
+
+function psType(obj) {
+    switch (obj.name) {
+    case "integer":
+        return new E.IntType(obj);
+    case "boolean":
+        return new E.BoolType(obj);
+    case "string":
+        return new E.StringType(obj);
+    case "format":
+        return new E.FormatType(obj);
+    case "space":
+        return new E.SpaceType(obj);
+    case "content":
+        return new E.ContentType(obj);
+    case "url":
+        return new E.UrlType(obj);
+    case "object":
+        return new E.ObjectType(obj);
+    case "text":
+        return new E.TextType(obj);
+    case "array":
+        return new E.ArrayType(obj);
+    case "code":
+        return new E.CodeType(obj);
+    }
+}
+
+function jsType(obj) {
+    if (obj instanceof E.IntType) {
+        obj.value.name = "integer";
+        return obj.value;
+    }
+
+    if (obj instanceof E.BoolType) {
+        obj.value.name = "boolean";
+        return obj.value;
+    }
+
+    if (obj instanceof E.StringType) {
+        obj.value.name = "string";
+        return obj.value;
+    }
+
+    if (obj instanceof E.FormatType) {
+        obj.value.name = "format";
+        return obj.value;
+    }
+
+    if (obj instanceof E.SpaceType) {
+        obj.value.name = "space";
+        return obj.value;
+    }
+
+    if (obj instanceof E.ContentType) {
+        obj.value.name = "content";
+        return obj.value;
+    }
+
+    if (obj instanceof E.UrlType) {
+        obj.value.name = "url";
+        return obj.value;
+    }
+
+    if (obj instanceof E.ObjectType) {
+        obj.value.name = "object";
+        return obj.value;
+    }
+
+    if (obj instanceof E.TextType) {
+        obj.value.name = "text";
+        return obj.value;
+    }
+
+    if (obj instanceof E.ArrayType) {
+        obj.value.name = "array";
+        return obj.value;
+    }
+
+    if (obj instanceof E.CodeType) {
+        obj.value.name = "code";
+        return obj.value;
+    }
+}
+
+const psStructureId = x => x;
+const jsStructureId = x => x;
+
+function psFocusedStructure(obj) {
+    obj.entityId = psStructureId(obj.entityId);
+
+    obj.properties = obj.properties.map(x => {
+        x = psPropertyInfo(x);
+        return x;
+    });
+
+    return obj;
+}
+
+function jsFocusedStructure(obj) {
+    obj.entityId = jsStructureId(obj.entityId);
+
+    obj.properties = obj.properties.map(x => {
+        x = jsPropertyInfo(x);
+        return x;
+    });
+
+    return obj;
+}
+
+const psFormatId = x => x;
+const jsFormatId = x => x;
+const psFormatDisplayId = x => x;
+const jsFormatDisplayId = x => x;
+
+function psRelatedFormat(obj) {
+    obj.entityId = psFormatId(obj.entityId);
+    obj.displayId = psFormatDisplayId(obj.displayId);
+    obj.space = psRelatedSpace(obj.space);
+    obj.generator = psContentGenerator(obj.generator);
+    obj.usage = psFormatUsage(obj.usage);
+    obj.creatorUser = psRelatedUser(obj.creatorUser);
+    obj.updaterUser = psRelatedUser(obj.updaterUser);
+    return obj;
+}
+
+function jsRelatedFormat(obj) {
+    obj.entityId = jsFormatId(obj.entityId);
+    obj.displayId = jsFormatDisplayId(obj.displayId);
+    obj.space = jsRelatedSpace(obj.space);
+    obj.generator = jsContentGenerator(obj.generator);
+    obj.usage = jsFormatUsage(obj.usage);
+    obj.creatorUser = jsRelatedUser(obj.creatorUser);
+    obj.updaterUser = jsRelatedUser(obj.updaterUser);
+    return obj;
+}
+
+function psFocusedFormat(obj) {
+    obj.entityId = psFormatId(obj.entityId);
+    obj.displayId = psFormatDisplayId(obj.displayId);
+    obj.space = psRelatedSpace(obj.space);
+    obj.generator = psContentGenerator(obj.generator);
+    obj.usage = psFormatUsage(obj.usage);
+    obj.creatorUser = psRelatedUser(obj.creatorUser);
+    obj.updaterUser = psRelatedUser(obj.updaterUser);
+    obj.structure = psFocusedStructure(obj.structure);
+    return obj;
+}
+
+function jsFocusedFormat(obj) {
+    obj.entityId = jsFormatId(obj.entityId);
+    obj.displayId = jsFormatDisplayId(obj.displayId);
+    obj.space = jsRelatedSpace(obj.space);
+    obj.generator = jsContentGenerator(obj.generator);
+    obj.usage = jsFormatUsage(obj.usage);
+    obj.creatorUser = jsRelatedUser(obj.creatorUser);
+    obj.updaterUser = jsRelatedUser(obj.updaterUser);
+    obj.structure = jsFocusedStructure(obj.structure);
+    return obj;
+}
+
+const psContentId = x => x;
+const jsContentId = x => x;
+
+function psFocusedContent(obj) {
+    obj.entityId = psContentId(obj.entityId);
+    obj.creatorUser = psRelatedUser(obj.creatorUser);
+    obj.updaterUser = psRelatedUser(obj.updaterUser);
+    obj.format = psFocusedFormat(obj.format);
+
+    if (obj.draftId) {
+        obj.draftId = new Data_Maybe.Just(obj.draftId);
+    } else {
+        obj.draftId = Data_Maybe.Nothing.value;
+    }
+
+    return obj;
+}
+
+function jsFocusedContent(obj) {
+    obj.entityId = jsContentId(obj.entityId);
+    obj.creatorUser = jsRelatedUser(obj.creatorUser);
+    obj.updaterUser = jsRelatedUser(obj.updaterUser);
+    obj.format = jsFocusedFormat(obj.format);
+
+    if (obj.draftId instanceof Data_Maybe.Just) {
+        obj.draftId = obj.draftId.value;
+    } else {
+        obj.draftId = null;
+    }
+
+    return obj;
+}
+
+const psContentCommitId = x => x;
+const jsContentCommitId = x => x;
+
+function psRelatedContentCommit(obj) {
+    obj.entityId = psContentCommitId(obj.entityId);
+    obj.committerUser = psRelatedUser(obj.committerUser);
+    return obj;
+}
+
+function jsRelatedContentCommit(obj) {
+    obj.entityId = jsContentCommitId(obj.entityId);
+    obj.committerUser = jsRelatedUser(obj.committerUser);
+    return obj;
+}
+
+function psFocusedContentCommit(obj) {
+    obj.entityId = psContentCommitId(obj.entityId);
+    obj.committerUser = psRelatedUser(obj.committerUser);
+    return obj;
+}
+
+function jsFocusedContentCommit(obj) {
+    obj.entityId = jsContentCommitId(obj.entityId);
+    obj.committerUser = jsRelatedUser(obj.committerUser);
+    return obj;
+}
+
+const psContentDraftId = x => x;
+const jsContentDraftId = x => x;
+
+function psRelatedContentDraft(obj) {
+    obj.entityId = psContentDraftId(obj.entityId);
+    return obj;
+}
+
+function jsRelatedContentDraft(obj) {
+    obj.entityId = jsContentDraftId(obj.entityId);
+    return obj;
+}
+
+function psFocusedContentDraft(obj) {
+    obj.entityId = psContentDraftId(obj.entityId);
+
+    obj.materialDrafts = obj.materialDrafts.map(x => {
+        x = psFocusedMaterialDraft(x);
+        return x;
+    });
+
+    return obj;
+}
+
+function jsFocusedContentDraft(obj) {
+    obj.entityId = jsContentDraftId(obj.entityId);
+
+    obj.materialDrafts = obj.materialDrafts.map(x => {
+        x = jsFocusedMaterialDraft(x);
+        return x;
+    });
+
+    return obj;
+}
+
+const psMaterialId = x => x;
+const jsMaterialId = x => x;
+
+function psRelatedMaterial(obj) {
+    obj.entityId = psMaterialId(obj.entityId);
+    obj.materialType = psMaterialType(obj.materialType);
+    obj.creatorUser = psRelatedUser(obj.creatorUser);
+    obj.updaterUser = psRelatedUser(obj.updaterUser);
+    return obj;
+}
+
+function jsRelatedMaterial(obj) {
+    obj.entityId = jsMaterialId(obj.entityId);
+    obj.materialType = jsMaterialType(obj.materialType);
+    obj.creatorUser = jsRelatedUser(obj.creatorUser);
+    obj.updaterUser = jsRelatedUser(obj.updaterUser);
+    return obj;
+}
+
+function psFocusedMaterial(obj) {
+    obj.entityId = psMaterialId(obj.entityId);
+    obj.materialType = psMaterialType(obj.materialType);
+    obj.creatorUser = psRelatedUser(obj.creatorUser);
+    obj.updaterUser = psRelatedUser(obj.updaterUser);
+    obj.draft = psRelatedMaterialDraft(obj.draft);
+    return obj;
+}
+
+function jsFocusedMaterial(obj) {
+    obj.entityId = jsMaterialId(obj.entityId);
+    obj.materialType = jsMaterialType(obj.materialType);
+    obj.creatorUser = jsRelatedUser(obj.creatorUser);
+    obj.updaterUser = jsRelatedUser(obj.updaterUser);
+    obj.draft = jsRelatedMaterialDraft(obj.draft);
+    return obj;
+}
+
+const psMaterialCommitId = x => x;
+const jsMaterialCommitId = x => x;
+
+function psRelatedMaterialCommit(obj) {
+    obj.entityId = psMaterialCommitId(obj.entityId);
+    obj.committerUser = psRelatedUser(obj.committerUser);
+    return obj;
+}
+
+function jsRelatedMaterialCommit(obj) {
+    obj.entityId = jsMaterialCommitId(obj.entityId);
+    obj.committerUser = jsRelatedUser(obj.committerUser);
+    return obj;
+}
+
+function psFocusedMaterialCommit(obj) {
+    obj.entityId = psMaterialCommitId(obj.entityId);
+    return obj;
+}
+
+function jsFocusedMaterialCommit(obj) {
+    obj.entityId = jsMaterialCommitId(obj.entityId);
+    return obj;
+}
+
+const psMaterialDraftId = x => x;
+const jsMaterialDraftId = x => x;
+
+function psRelatedMaterialDraft(obj) {
+    obj.entityId = psMaterialDraftId(obj.entityId);
+    return obj;
+}
+
+function jsRelatedMaterialDraft(obj) {
+    obj.entityId = jsMaterialDraftId(obj.entityId);
+    return obj;
+}
+
+function psFocusedMaterialDraft(obj) {
+    obj.entityId = psMaterialDraftId(obj.entityId);
+    obj.material = psRelatedMaterial(obj.material);
+    return obj;
+}
+
+function jsFocusedMaterialDraft(obj) {
+    obj.entityId = jsMaterialDraftId(obj.entityId);
+    obj.material = jsRelatedMaterial(obj.material);
+    return obj;
+}
+
+function psSnapshotSource(str) {
+    switch (str) {
+    case "commit":
+        return E.Commit.value;
+    case "snapshot":
+        return E.Snapshot.value;
+    case "editing":
+        return E.SnapshotSourceEditing.value;
+    case "draft":
+        return E.Draft.value;
+    }
+}
+
+function jsSnapshotSource(obj) {
+    if (obj instanceof E.Commit) {
+        return "commit";
+    }
+
+    if (obj instanceof E.Snapshot) {
+        return "snapshot";
+    }
+
+    if (obj instanceof E.SnapshotSourceEditing) {
+        return "editing";
+    }
+
+    if (obj instanceof E.Draft) {
+        return "draft";
+    }
+}
+
+function psNodeType(str) {
+    switch (str) {
+    case "committed":
+        return E.NodeTypeCommitted.value;
+    case "present":
+        return E.Present.value;
+    case "canceled":
+        return E.NodeTypeCanceld.value;
+    }
+}
+
+function jsNodeType(obj) {
+    if (obj instanceof E.NodeTypeCommitted) {
+        return "committed";
+    }
+
+    if (obj instanceof E.Present) {
+        return "present";
+    }
+
+    if (obj instanceof E.NodeTypeCanceld) {
+        return "canceled";
+    }
+}
+
+function psRelatedMaterialSnapshot(obj) {
+    obj.source = psSnapshotSource(obj.source);
+    return obj;
+}
+
+function jsRelatedMaterialSnapshot(obj) {
+    obj.source = jsSnapshotSource(obj.source);
+    return obj;
+}
+
+function psFocusedMaterialSnapshot(obj) {
+    return obj;
+}
+
+function jsFocusedMaterialSnapshot(obj) {
+    return obj;
+}
+
+function psMaterialNode(obj) {
+    obj.type = psNodeType(obj.type);
+    obj.user = psRelatedUser(obj.user);
+
+    if (obj.editingId) {
+        obj.editingId = new Data_Maybe.Just(obj.editingId);
+    } else {
+        obj.editingId = Data_Maybe.Nothing.value;
+    }
+
+    obj.snapshot = psRelatedMaterialSnapshot(obj.snapshot);
+    return obj;
+}
+
+function jsMaterialNode(obj) {
+    obj.type = jsNodeType(obj.type);
+    obj.user = jsRelatedUser(obj.user);
+
+    if (obj.editingId instanceof Data_Maybe.Just) {
+        obj.editingId = obj.editingId.value;
+    } else {
+        obj.editingId = null;
+    }
+
+    obj.snapshot = jsRelatedMaterialSnapshot(obj.snapshot);
+    return obj;
+}
+
+function psNodeTarget(str) {
+    switch (str) {
+    case "content":
+        return E.NodeTargetContent.value;
+    case "material":
+        return E.Material.value;
+    case "whole":
+        return E.Whole.value;
+    }
+}
+
+function jsNodeTarget(obj) {
+    if (obj instanceof E.NodeTargetContent) {
+        return "content";
+    }
+
+    if (obj instanceof E.Material) {
+        return "material";
+    }
+
+    if (obj instanceof E.Whole) {
+        return "whole";
+    }
+}
+
+function psContentNode(obj) {
+    obj.type = psNodeType(obj.type);
+    obj.target = psNodeTarget(obj.target);
+    obj.user = psRelatedUser(obj.user);
+
+    if (obj.editingId) {
+        obj.editingId = new Data_Maybe.Just(obj.editingId);
+    } else {
+        obj.editingId = Data_Maybe.Nothing.value;
+    }
+
+    obj.snapshot = psRelatedContentSnapshot(obj.snapshot);
+    return obj;
+}
+
+function jsContentNode(obj) {
+    obj.type = jsNodeType(obj.type);
+    obj.target = jsNodeTarget(obj.target);
+    obj.user = jsRelatedUser(obj.user);
+
+    if (obj.editingId instanceof Data_Maybe.Just) {
+        obj.editingId = obj.editingId.value;
+    } else {
+        obj.editingId = null;
+    }
+
+    obj.snapshot = jsRelatedContentSnapshot(obj.snapshot);
+    return obj;
+}
+
+function psRelatedContentSnapshot(obj) {
+    obj.source = psSnapshotSource(obj.source);
+
+    obj.materials = obj.materials.map(x => {
+        x = psRelatedMaterialSnapshot(x);
+        return x;
+    });
+
+    return obj;
+}
+
+function jsRelatedContentSnapshot(obj) {
+    obj.source = jsSnapshotSource(obj.source);
+
+    obj.materials = obj.materials.map(x => {
+        x = jsRelatedMaterialSnapshot(x);
+        return x;
+    });
+
+    return obj;
+}
+
+function psFocusedContentSnapshot(obj) {
+    obj.materials = obj.materials.map(x => {
+        x = psFocusedMaterialSnapshot(x);
+        return x;
+    });
+
+    return obj;
+}
+
+function jsFocusedContentSnapshot(obj) {
+    obj.materials = obj.materials.map(x => {
+        x = jsFocusedMaterialSnapshot(x);
+        return x;
+    });
+
+    return obj;
+}
+
+exports.startContentEditing = async function(args) {
+    args.contentId = jsContentId(args.contentId);
+
+    if (args.forkedCommitId instanceof Data_Maybe.Just) {
+        args.forkedCommitId = args.forkedCommitId.value;
+    } else {
+        args.forkedCommitId = null;
+    }
+
+    let result = await fetch("startContentEditing", args);
+    result = psRelatedContentDraft(result);
+    return result;
 };
 
-function mkCrawlerTask(crawlerId, operationId, taskSnap) {
-    const task = taskSnap.data();
-    task.taskId = taskSnap.id;
-    task.crawlerId = crawlerId;
-    task.oprationId = operationId;
-    return task;
-} 
-
-exports.onSnapshotCrawlerTasks = crawlerId => {
-    return operationId => {
-        return callback => {
-            return () => {
-                var result = null;
-                const observer = async tasksSnap => {
-                    const tasks = tasksSnap.docs.map(x => mkCrawlerTask(crawlerId, operationId, x));
-                    callback(tasks)();
-                };
-                return db.collection("crawlers").doc(crawlerId)
-                    .collection("crawlerOperations").doc(operationId)
-                    .collection("crawlerTasks").orderBy("createdAt", "desc").onSnapshot(snapshotOptions, observer);
-            };
-        };
-    };
+exports.startBlankContentEditing = async function(args) {
+    args.spaceId = jsSpaceId(args.spaceId);
+    args.type = jsMaterialType(args.type);
+    let result = await fetch("startBlankContentEditing", args);
+    result = psRelatedContentDraft(result);
+    return result;
 };
 
-exports.getCrawler = crawlerId => {
-    return async options => {
-        const crawlerSnap = await db.collection("crawlers").doc(crawlerId).get(options);
-        return mkCrawler(crawlerSnap);
-    };
+exports.editContent = async function(args) {
+    args.contentDraftId = jsContentDraftId(args.contentDraftId);
+    let result = await fetch("editContent", args);
+
+    if (result) {
+        result = new Data_Maybe.Just(result);
+    } else {
+        result = Data_Maybe.Nothing.value;
+    }
+
+    return result;
 };
 
-exports.applyFirestoreCondition = conds => {
-    return contents => {
-        function getField(content, fieldPath) {
-            const paths = fieldPath.split(".");
-            let field = content;
-            paths.forEach(path => {
-                field = field[path];
-            });
-            return field;
-        }
+exports.commitContent = async function(args) {
+    args.contentDraftId = jsContentDraftId(args.contentDraftId);
+    let result = await fetch("commitContent", args);
 
-        function matchFilter(content, cond) {
-            const field = getField(content, cond.fieldPath);
-            switch (cond.opStr) {
-                case "==":
-                    return field == cond.value;
-                case "!=":
-                    return field != cond.value;
-                case "<=":
-                    return field <= cond.value;
-                case "<":
-                    return field < cond.value;
-                case ">=":
-                    return field >= cond.value;
-                case ">":
-                    return field > cond.value;
-                case "in":
-                    return cond.value.includes(field);
-                case "array-contains":
-                    return field.includes(cond.value);
-                case "array-contains-any":
-                    return cond.value.map(vl => field.includes(vl)).includes(true);
-            }
-            throw "opStr is invaild";
-        }
+    if (result) {
+        result = new Data_Maybe.Just(result);
+    } else {
+        result = Data_Maybe.Nothing.value;
+    }
 
-        function matchFilters(content) {
-            for(const filter in conds.filters) {
-                if(!matchFilter(content, filter)) {
-                    return false;
-                }
-            }
-            return true;
-        }
+    return result;
+};
 
-        return contents.filter(matchFilters);
+exports.getContent = async function(contentId) {
+    let args = {
+        contentId
     };
+
+    args.contentId = jsContentId(args.contentId);
+    let result = await fetch("getContent", args);
+    result = psFocusedContent(result);
+    return result;
+};
+
+exports.getContentDraft = async function(draftId) {
+    let args = {
+        draftId
+    };
+
+    args.draftId = jsContentDraftId(args.draftId);
+    let result = await fetch("getContentDraft", args);
+    result = psFocusedContentDraft(result);
+    return result;
+};
+
+exports.getContentCommits = async function(contentId) {
+    let args = {
+        contentId
+    };
+
+    args.contentId = jsContentId(args.contentId);
+    let result = await fetch("getContentCommits", args);
+
+    result = result.map(x => {
+        x = psRelatedContentCommit(x);
+        return x;
+    });
+
+    return result;
+};
+
+exports.getContentEditingNodes = async function(draftId) {
+    let args = {
+        draftId
+    };
+
+    args.draftId = jsContentDraftId(args.draftId);
+    let result = await fetch("getContentEditingNodes", args);
+
+    result = result.map(x => {
+        x = psContentNode(x);
+        return x;
+    });
+
+    return result;
+};
+
+exports.getContentSnapshot = async function(args) {
+    args.source = jsSnapshotSource(args.source);
+    let result = await fetch("getContentSnapshot", args);
+    result = psFocusedContentSnapshot(result);
+    return result;
+};
+
+exports.getContentCommit = async function(commitId) {
+    let args = {
+        commitId
+    };
+
+    args.commitId = jsContentCommitId(args.commitId);
+    let result = await fetch("getContentCommit", args);
+    result = psFocusedContentSnapshot(result);
+    return result;
+};
+
+exports.createFormat = async function(args) {
+    args.spaceId = jsSpaceId(args.spaceId);
+    args.usage = jsFormatUsage(args.usage);
+
+    args.properties = args.properties.map(x => {
+        x = jsPropertyInfo(x);
+        return x;
+    });
+
+    let result = await fetch("createFormat", args);
+    result = psRelatedFormat(result);
+    return result;
+};
+
+exports.getFormat = async function(formatDisplayId) {
+    let args = {
+        formatDisplayId
+    };
+
+    args.formatDisplayId = jsFormatDisplayId(args.formatDisplayId);
+    let result = await fetch("getFormat", args);
+    result = psFocusedFormat(result);
+    return result;
+};
+
+exports.startMaterialEditing = async function(args) {
+    args.materialId = jsMaterialId(args.materialId);
+
+    if (args.forkedCommitId instanceof Data_Maybe.Just) {
+        args.forkedCommitId = args.forkedCommitId.value;
+    } else {
+        args.forkedCommitId = null;
+    }
+
+    let result = await fetch("startMaterialEditing", args);
+    result = psRelatedMaterialDraft(result);
+    return result;
+};
+
+exports.startBlankMaterialEditing = async function(args) {
+    args.spaceId = jsSpaceId(args.spaceId);
+    args.type = jsMaterialType(args.type);
+    let result = await fetch("startBlankMaterialEditing", args);
+    result = psRelatedMaterialDraft(result);
+    return result;
+};
+
+exports.editMaterial = async function(args) {
+    args.materialDraftId = jsMaterialDraftId(args.materialDraftId);
+    let result = await fetch("editMaterial", args);
+
+    if (result) {
+        result = new Data_Maybe.Just(result);
+    } else {
+        result = Data_Maybe.Nothing.value;
+    }
+
+    return result;
+};
+
+exports.commitMaterial = async function(args) {
+    args.materialDraftId = jsMaterialDraftId(args.materialDraftId);
+    let result = await fetch("commitMaterial", args);
+
+    if (result) {
+        result = new Data_Maybe.Just(result);
+    } else {
+        result = Data_Maybe.Nothing.value;
+    }
+
+    return result;
+};
+
+exports.getMaterial = async function(materialId) {
+    let args = {
+        materialId
+    };
+
+    args.materialId = jsMaterialId(args.materialId);
+    let result = await fetch("getMaterial", args);
+    result = psFocusedMaterial(result);
+    return result;
+};
+
+exports.getMaterialDraft = async function(draftId) {
+    let args = {
+        draftId
+    };
+
+    args.draftId = jsMaterialDraftId(args.draftId);
+    let result = await fetch("getMaterialDraft", args);
+    result = psFocusedMaterialDraft(result);
+    return result;
+};
+
+exports.getMaterialCommits = async function(materialId) {
+    let args = {
+        materialId
+    };
+
+    args.materialId = jsMaterialId(args.materialId);
+    let result = await fetch("getMaterialCommits", args);
+
+    result = result.map(x => {
+        x = psRelatedMaterialCommit(x);
+        return x;
+    });
+
+    return result;
+};
+
+exports.getMaterialEditingNodes = async function(draftId) {
+    let args = {
+        draftId
+    };
+
+    args.draftId = jsMaterialDraftId(args.draftId);
+    let result = await fetch("getMaterialEditingNodes", args);
+
+    result = result.map(x => {
+        x = psMaterialNode(x);
+        return x;
+    });
+
+    return result;
+};
+
+exports.getMaterialSnapshot = async function(args) {
+    args.source = jsSnapshotSource(args.source);
+    let result = await fetch("getMaterialSnapshot", args);
+    result = psFocusedMaterialSnapshot(result);
+    return result;
+};
+
+exports.getMaterialCommit = async function(commitId) {
+    let args = {
+        commitId
+    };
+
+    args.commitId = jsMaterialCommitId(args.commitId);
+    let result = await fetch("getMaterialCommit", args);
+    result = psFocusedMaterialCommit(result);
+    return result;
+};
+
+exports.createSpace = async function(args) {
+    let result = await fetch("createSpace", args);
+    result = psFocusedSpace(result);
+    return result;
+};
+
+exports.getSpace = async function(spaceDisplayId) {
+    let args = {
+        spaceDisplayId
+    };
+
+    args.spaceDisplayId = jsSpaceDisplayId(args.spaceDisplayId);
+    let result = await fetch("getSpace", args);
+    result = psFocusedSpace(result);
+    return result;
+};
+
+exports.getSpaceMembers = async function(spaceId) {
+    let args = {
+        spaceId
+    };
+
+    args.spaceId = jsSpaceId(args.spaceId);
+    let result = await fetch("getSpaceMembers", args);
+
+    result = result.map(x => {
+        x = psFocusedSpaceMember(x);
+        return x;
+    });
+
+    return result;
+};
+
+exports.createUser = async function(args) {
+    let result = await fetch("createUser", args);
+    result = psFocusedUser(result);
+    return result;
+};
+
+exports.getMyUser = async function() {
+    let result = await fetch("getMyUser", args);
+    result = psFocusedUser(result);
+    return result;
+}();
+
+exports.getUser = async function(displayId) {
+    let args = {
+        displayId
+    };
+
+    args.displayId = jsUserDisplayId(args.displayId);
+    let result = await fetch("getUser", args);
+    result = psFocusedUser(result);
+    return result;
+};
+
+exports.setMyDisplayName = async function(displayName) {
+    let args = {
+        displayName
+    };
+
+    let result = await fetch("setMyDisplayName", args);
+    return result;
+};
+
+exports.setMyDisplayId = async function(displayId) {
+    let args = {
+        displayId
+    };
+
+    args.displayId = jsUserDisplayId(args.displayId);
+    let result = await fetch("setMyDisplayId", args);
+    return result;
 };

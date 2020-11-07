@@ -20,7 +20,7 @@ import Effect (Effect)
 import Foreign (Foreign)
 import Foreign.Object (Object)
 import Foreign.Object as Object
-import Incentknow.Data.Content (ValidationError(..), validateContent)
+import Incentknow.Data.Content as C
 import Incentknow.Data.Ids (ContentId(..), FormatId(..))
 import Incentknow.Data.Property (ChangeType(..), Property, PropertyInfo, PropertyInfoImpl, Type(..), difference, fromPropertyInfo, getTypeName, mkProperties, mkProperty, toPropertyInfo)
 
@@ -35,15 +35,18 @@ getStructureChangeType args = case info.changeType of
   where
   info = difference (map toPropertyInfo args.before) (map toPropertyInfo args.after)
 
-toJsonFromValidationError :: ValidationError -> String
+toJsonFromValidationError :: C.ValidationError -> String
 toJsonFromValidationError = case _ of
-  WrongType prop ty -> "プロパティ'" <> prop <> "'が" <> getTypeName ty <> "型ではありません"
-  LackedProperty prop -> "プロパティ'" <> prop <> "'が不足しています"
-  ExtraProperty prop -> "プロパティ'" <> prop <> "'は必要ありません"
-  NotBeObject -> "オブジェクトではありません"
+  C.WrongType prop ty -> "プロパティ'" <> prop <> "'が" <> getTypeName ty <> "型ではありません"
+  C.LackedProperty prop -> "プロパティ'" <> prop <> "'が不足しています"
+  C.ExtraProperty prop -> "プロパティ'" <> prop <> "'は必要ありません"
+  C.NotBeObject -> "オブジェクトではありません"
 
 validateContentObject :: { props :: Array PropertyInfoImpl, data :: Json } -> Array String
-validateContentObject args = map toJsonFromValidationError $ validateContent (map toPropertyInfo args.props) args.data
+validateContentObject args = map toJsonFromValidationError $ C.validateContentObject (map toPropertyInfo args.props) args.data
+
+validateContentData :: { props :: Array PropertyInfoImpl, data :: Json } -> Array String
+validateContentData args = map toJsonFromValidationError $ C.validateContentData (map toPropertyInfo args.props) args.data
 
 -- maxLargeIndex以下のLargeIndexは作成されない
 normalizeStructure :: Array PropertyInfoImpl -> Array PropertyInfoImpl

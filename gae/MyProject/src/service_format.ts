@@ -5,7 +5,7 @@ import { MongoClient } from './client_mongodb';
 import { Container, Content, ContentGenerator, Format, FormatUsage, Language, MembershipMethod, MemberType, Property, Space, SpaceAuth, SpaceMember, Structure, TypeName, User } from "./client_sql";
 import { UtilsBase } from './utils_base';
 import { UtilsSpaceAuthorization } from './utils_authority';
-import { FocusedFormat, RelatedFormat, FormatDisplayId, PropertyInfo, toFocusedFormat, toRelatedFormat, toFocusedFormatFromStructure, TypeArguments, SpaceId } from './utils_entities';
+import { FocusedFormat, RelatedFormat, FormatDisplayId, PropertyInfo, toFocusedFormat, toRelatedFormat, toFocusedFormatFromStructure, SpaceId, Type } from './utils_entities';
 import { UtilsFormat } from './utils_format';
 
 const base = UtilsBase;
@@ -13,19 +13,19 @@ const auth = UtilsSpaceAuthorization;
 const formatUtils = UtilsFormat;
 
 async function _createProperty(formatId: number, parentPropertyId: number | null, order: number, info: PropertyInfo) {
-    async function setTypeArguments(prop: Property, tyArgs: TypeArguments) {
+    async function setTypeArguments(prop: Property, tyArgs: Type) {
         if (tyArgs.language) {
             prop.argLanguage = tyArgs.language;
         }
-        if (tyArgs.type) {
-            prop.argType = tyArgs.type.name;
+        if (tyArgs.subType) {
+            prop.argType = tyArgs.subType.name;
         }
         if (tyArgs.format) {
             prop.argFormat = await Format.findOne({ entityId: tyArgs.format });
         }
     }
 
-    async function setSubProperties(prop: Property, tyArgs: TypeArguments) {
+    async function setSubProperties(prop: Property, tyArgs: Type) {
         if (tyArgs.properties) {
             await Promise.all(tyArgs.properties.map((x, i) => this.createProperty(formatId, prop.id, i, x)));
         }
@@ -37,18 +37,18 @@ async function _createProperty(formatId: number, parentPropertyId: number | null
     prop.optional = info.optional;
 
     // set arguments
-    await setTypeArguments(prop, info.type.arguments);
-    if (info.type.arguments.type) {
-        await setTypeArguments(prop, info.type.arguments.type.arguments);
+    await setTypeArguments(prop, info.type);
+    if (info.type.subType) {
+        await setTypeArguments(prop, info.type.subType);
     }
 
     // save
     prop = await prop.save();
 
     // set properties
-    await setSubProperties(prop, info.type.arguments);
-    if (info.type.arguments.type) {
-        await setSubProperties(prop, info.type.arguments.type.arguments);
+    await setSubProperties(prop, info.type);
+    if (info.type.subType) {
+        await setSubProperties(prop, info.type.subType);
     }
 
     return prop;

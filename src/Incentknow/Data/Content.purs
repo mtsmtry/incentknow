@@ -19,8 +19,6 @@ import Data.String (joinWith)
 import Data.Tuple (Tuple(..), fst, snd)
 import Effect.Aff.Class (class MonadAff)
 import Foreign.Object as F
-import Incentknow.Api (Content, FirestoreFilter, Format, FirestoreCondition)
-import Incentknow.Data.Ids (ContentId(..), DraftId(..), FormatId(..), SemanticId(..), SpaceId(..), StructureId(..), UserId(..))
 import Incentknow.Data.Property (Type(..), PropertyInfo, mkProperties, toPropertyInfo)
 
 type ContentSemanticData
@@ -50,8 +48,8 @@ data ValidationError
   | ExtraProperty String
   | NotBeObject
 
-validateProperty :: String -> Boolean -> Maybe Type -> Maybe Json -> Array ValidationError
-validateProperty name optional maybeType maybeValue = case maybeType, maybeValue of
+validateProperty :: (PropertyInfo -> String) -> String -> Boolean -> Maybe Type -> Maybe Json -> Array ValidationError
+validateProperty getKey name optional maybeType maybeValue = case maybeType, maybeValue of
   Just type_, Nothing -> if optional then [] else singleton $ LackedProperty name
   Nothing, Just value -> singleton $ ExtraProperty name
   Just type_, Just value -> case type_ of
@@ -72,11 +70,11 @@ validateProperty name optional maybeType maybeValue = case maybeType, maybeValue
         where
         array = fromMaybe [] $ toArray value
 
-        validate i vl = validateProperty (name <> "[" <> show i <> "]") false (Just args.type) (Just vl)
+        validate i vl = validateProperty getKey (name <> "[" <> show i <> "]") false (Just args.type) (Just vl)
       errors -> errors
     UrlType args -> fromBool $ isString value
     ObjectType args -> case fromBool $ isObject value of
-      [] -> validateContentImpl (name <> ".") args.properties value
+      [] -> validateContentImpl getKey (name <> ".") args.properties value
       errors -> errors
     DocumentType args -> fromBool $ isArray value
     ImageType args -> fromBool $ isString value
@@ -85,13 +83,13 @@ validateProperty name optional maybeType maybeValue = case maybeType, maybeValue
     fromBool src = if src then [] else singleton $ WrongType name type_
   Nothing, Nothing -> []
 
-validateContentImpl :: String -> Array PropertyInfo -> Json -> Array ValidationError
-validateContentImpl name props json = case decodeToMap json of
+validateContentImpl :: (PropertyInfo -> String) -> String -> Array PropertyInfo -> Json -> Array ValidationError
+validateContentImpl getKey name props json = case decodeToMap json of
   Just jsonMap -> concat $ map validate pairs
     where
     validate :: Tuple String (Tuple (Maybe PropertyInfo) (Maybe (Tuple String Json))) -> Array ValidationError
     validate (Tuple subName (Tuple prop vl)) =
-      validateProperty (name <> subName)
+      validateProperty getKey (name <> subName)
         (fromMaybe false $ map (\x -> x.optional) prop)
         (map (\x -> x.type) prop)
         (map snd vl)
@@ -103,11 +101,14 @@ validateContentImpl name props json = case decodeToMap json of
     jsonArray = toUnfoldable jsonMap
 
     pairMap :: Map String (Tuple (Maybe PropertyInfo) (Maybe (Tuple String Json)))
-    pairMap = mergeFromArray (\x -> fromMaybe "" x.fieldName) fst props jsonArray
+    pairMap = mergeFromArray getKey fst props jsonArray
   Nothing -> [ NotBeObject ]
 
-validateContent :: Array PropertyInfo -> Json -> Array ValidationError
-validateContent = validateContentImpl ""
+validateContentObject :: Array PropertyInfo -> Json -> Array ValidationError
+validateContentObject = validateContentImpl (\x -> fromMaybe "" x.fieldName) ""
+
+validateContentData :: Array PropertyInfo -> Json -> Array ValidationError
+validateContentData = validateContentImpl (\x -> x.id) ""
 
 data FilterOperation a
   = Equal a
