@@ -17,13 +17,14 @@ import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log, logShow)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Format, getFormat)
+import Incentknow.Api (getFocusedFormat, getFormat)
 import Incentknow.Api.Utils (Fetch, Remote(..), fetchApi, forFetch)
 import Incentknow.Api.Utils as R
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, checkbox, numberarea, textarea)
+import Incentknow.Data.Entities (FocusedFormat, FormatUsage(..), Type(..))
 import Incentknow.Data.Ids (FormatId(..))
-import Incentknow.Data.Property (Enumerator, Property, Type(..), encodeProperties, mkProperties)
+import Incentknow.Data.Property (Enumerator, Property, encodeProperties, mkProperties)
 import Incentknow.HTML.Utils (maybeElem)
 import Incentknow.Molecules.AceEditor as AceEditor
 import Incentknow.Molecules.ContentMenu as ContentMenu
@@ -34,7 +35,7 @@ import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Organisms.Content.Common (EditEnvironment)
 import Incentknow.Organisms.Document as Document
-import Incentknow.Organisms.Document.Section (ContentComponent)
+import Incentknow.Organisms.Document.Section (ContentComponent(..))
 import Test.Unit.Console (consoleLog)
 
 type Input
@@ -45,7 +46,7 @@ type State
     , type :: Type
     , env :: EditEnvironment
     , contentComponent :: ContentComponent
-    , format :: Remote Format
+    , format :: Remote FocusedFormat
     }
 
 data Action
@@ -55,7 +56,7 @@ data Action
   | ChangeAttribute String Json
   | ChangeItem Int Json
   | DeleteItem Int
-  | FetchedFormat (Fetch Format)
+  | FetchedFormat (Fetch FocusedFormat)
 
 type Output
   = Json
@@ -68,7 +69,7 @@ type ChildSlots
     , formatMenu :: FormatMenu.Slot Unit
     , spaceMenu :: SpaceMenu.Slot Unit
     , contentMenu :: ContentMenu.Slot Unit
-    , selectMenu :: SelectMenu.Slot Unit
+    , selectMenu :: SelectMenu.Slot String Unit
     , document :: Document.Slot Unit
     , value :: Slot Int
     , property :: Slot String
@@ -89,7 +90,7 @@ component =
             }
     }
 
-fromEnumeratorToSelectMenuItem :: Enumerator -> SelectMenuItem
+fromEnumeratorToSelectMenuItem :: Enumerator -> SelectMenuItem String
 fromEnumeratorToSelectMenuItem enum =
   { id: enum.id
   , name: enum.displayName
@@ -108,57 +109,57 @@ initialState input =
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state = case state.type of
-  StringType args ->
+  StringType ->
     textarea
       { onChange: ChangeValue <<< fromStringOrNull
       , placeholder: ""
       , value: toStringOrEmpty state.value
       }
-  ImageType args ->
+  ImageType ->
     textarea
       { onChange: ChangeValue <<< fromStringOrNull
       , placeholder: ""
       , value: toStringOrEmpty state.value
       }
-  IntType args ->
+  IntType ->
     numberarea
       { onChange: ChangeValue <<< encodeJson
       , value: toMaybe $ decodeJson state.value
       }
-  EnumType args ->
+  EnumType enums ->
     HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-      { resource: SelectMenuResourceAllCandidates $ map fromEnumeratorToSelectMenuItem args.enumerators
+      { resource: SelectMenuResourceAllCandidates $ map fromEnumeratorToSelectMenuItem enums
       , value: toString state.value
       , disabled: false
       }
       (Just <<< ChangeValue <<< maybe jsonNull fromString)
-  BoolType args -> checkbox "" (fromMaybe false $ toBoolean state.value) (ChangeValue <<< encodeJson) false
-  TextType args ->
+  BoolType -> checkbox "" (fromMaybe false $ toBoolean state.value) (ChangeValue <<< encodeJson) false
+  TextType ->
     HH.slot (SProxy :: SProxy "aceEditor") unit AceEditor.component { value: toStringOrEmpty state.value, language: Nothing, variableHeight: true, readonly: false }
       (Just <<< ChangeValue <<< fromStringOrNull)
-  CodeType args ->
-    HH.slot (SProxy :: SProxy "aceEditor") unit AceEditor.component { value: toStringOrEmpty state.value, language: args.language, variableHeight: true, readonly: false }
+  CodeType lang ->
+    HH.slot (SProxy :: SProxy "aceEditor") unit AceEditor.component { value: toStringOrEmpty state.value, language: Just lang, variableHeight: true, readonly: false }
       (Just <<< ChangeValue <<< fromStringOrNull)
-  FormatType args ->
+  FormatType ->
     HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component { value: map wrap $ toString state.value, filter: maybe FormatMenu.None FormatMenu.SpaceBy state.env.spaceId, disabled: false }
       (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  SpaceType args ->
+  SpaceType ->
     HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component { value: map wrap $ toString state.value, disabled: false }
       (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  ContentType args ->
-    HH.slot (SProxy :: SProxy "contentMenu") unit ContentMenu.component { spaceId: maybe Nothing (\x-> if x.usage == "internal" then Nothing else state.env.spaceId) $ R.toMaybe state.format, value: map wrap $ toString state.value, formatId: args.format, disabled: false }
+  ContentType formatId ->
+    HH.slot (SProxy :: SProxy "contentMenu") unit ContentMenu.component { spaceId: maybe Nothing (\x-> if x.usage == Internal then Nothing else state.env.spaceId) $ R.toMaybe state.format, value: map wrap $ toString state.value, formatId, disabled: false }
       (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  EntityType args ->
-    HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: map wrap $ toString state.value, formatId: args.format, disabled: false }
+  EntityType formatId ->
+    HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: map wrap $ toString state.value, formatId, disabled: false }
       (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  DocumentType args -> HH.slot (SProxy :: SProxy "document") unit Document.component { value: state.value, env: state.env, contentComponent: state.contentComponent } (Just <<< ChangeValue)
-  UrlType args ->
+  DocumentType -> HH.slot (SProxy :: SProxy "document") unit Document.component { value: state.value, env: state.env, contentComponent: state.contentComponent } (Just <<< ChangeValue)
+  UrlType ->
     textarea
       { onChange: ChangeValue <<< fromStringOrNull
       , placeholder: ""
       , value: toStringOrEmpty state.value
       }
-  ArrayType args ->
+  ArrayType subType ->
     HH.div_
       [ button "追加" $ ChangeValue $ encodeJson $ cons jsonNull $ fromMaybe [] $ toArray state.value
       , HH.div_ $ mapWithIndex renderItem array
@@ -166,17 +167,15 @@ render state = case state.type of
     where
     renderItem num item =
       HH.div []
-        [ HH.slot (SProxy :: SProxy "value") num component { value: fromMaybe jsonNull $ index array num, type: args.type, env: state.env, contentComponent: state.contentComponent }
+        [ HH.slot (SProxy :: SProxy "value") num component { value: fromMaybe jsonNull $ index array num, type: subType, env: state.env, contentComponent: state.contentComponent }
             (Just <<< ChangeItem num)
         , button "削除" $ DeleteItem num
         ]
 
-    defaultType = StringType {}
-
     array = fromMaybe [] $ toArray state.value
-  ObjectType args -> HH.div_ $ map renderProperty props
+  ObjectType propInfos -> HH.div_ $ map renderProperty props
     where
-    props = mkProperties state.value args.properties
+    props = mkProperties state.value propInfos
 
     renderProperty :: Property -> H.ComponentHTML Action ChildSlots m
     renderProperty prop =
@@ -205,7 +204,7 @@ handleAction = case _ of
     case state.format of
       Loading ->
         case state.type of
-          ContentType args -> fetchApi FetchedFormat $ getFormat args.format
+          ContentType formatId -> fetchApi FetchedFormat $ getFocusedFormat formatId
           _ -> pure unit
       _ -> pure unit
   ChangeValue value -> do
@@ -218,13 +217,10 @@ handleAction = case _ of
     logShow $ stringify value
     let
       properties = case state.type of
-        ObjectType args -> args.properties
+        ObjectType props -> props
         _ -> []
-    let
       props = mkProperties state.value properties
-    let
       changeProp props id value = map (\prop -> if prop.info.id == id then prop { value = value } else prop) props
-    let
       newValue = encodeProperties $ changeProp props id value
     H.modify_ _ { value = newValue } -- 同時に複数のプロパティが編集されたときのため
     H.raise newValue
@@ -232,9 +228,7 @@ handleAction = case _ of
     state <- H.get
     let
       array = fromMaybe [] $ toArray state.value
-    let
       newArray = mapWithIndex (\i -> \x -> if i == index then value else x) array
-    let
       newValue = encodeJson newArray
     H.modify_ _ { value = newValue }
     H.raise newValue
@@ -242,9 +236,7 @@ handleAction = case _ of
     state <- H.get
     let
       array = fromMaybe [] $ toArray state.value
-    let
       newArray = fromMaybe array $ deleteAt index array
-    let
       newValue = encodeJson newArray
     H.modify_ _ { value = newValue }
     H.raise newValue
@@ -258,4 +250,4 @@ handleAction = case _ of
   FetchedFormat fetch ->
     forFetch fetch \format -> do
       state <- H.modify _ { format = format }
-      H.liftEffect $ consoleLog $ show $ map unwrap $ maybe Nothing (\x-> if x.usage == "internal" then Nothing else state.env.spaceId) $ R.toMaybe state.format
+      H.liftEffect $ consoleLog $ show $ map unwrap $ maybe Nothing (\x-> if x.usage == Internal then Nothing else state.env.spaceId) $ R.toMaybe state.format

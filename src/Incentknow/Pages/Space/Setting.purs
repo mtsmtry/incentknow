@@ -13,6 +13,7 @@ import Data.HTTP.Method (Method(..))
 import Data.Maybe (Maybe(..), fromMaybe, isNothing, maybe)
 import Data.Maybe.Utils (flatten)
 import Data.MediaType (MediaType(..))
+import Data.Newtype (unwrap, wrap)
 import Data.Nullable (toMaybe)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
@@ -21,10 +22,11 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (Account, Space, User, checkSpaceDisplayId, onSnapshotAccount, setMyDisplayName, setMyEmail, setMyIcon, setMyPassword, setSpaceAuthority, setSpaceDisplayId, setSpaceDisplayName, setSpaceHomeImage, setSpaceMembershipMethod, setSpacePublished)
-import Incentknow.Api.Utils (callApi, executeApi, subscribeApi)
+import Incentknow.Api (checkSpaceDisplayId, setSpaceAuthority, setSpaceDisplayId, setSpaceDisplayName, setSpaceMembershipMethod, setSpacePublished)
+import Incentknow.Api.Utils (callApi)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, submitButton, textarea)
+import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..), SpaceAuth(..))
 import Incentknow.Data.Ids (SpaceId(..), UserId(..))
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.DisplayId as DisplayId
@@ -39,12 +41,12 @@ import Incentknow.Organisms.ContentList as ContentList
 import Pipes (discard)
 
 type Input
-  = { space :: Space
+  = { space :: FocusedSpace
     , disabled :: Boolean
     }
 
 type State
-  = { space :: Space
+  = { space :: FocusedSpace
     , disabled :: Boolean
     }
 
@@ -108,12 +110,12 @@ render state =
         , disabled: state.disabled
         }
         (Just <<< Edit)
-    , HH.slot homeImage_ unit SettingImage.component
-        { submit: callApi <<< setSpaceHomeImage state.space.spaceId
-        , value: toMaybe state.space.homeUrl
-        , disabled: state.disabled
-        }
-        (Just <<< Edit)
+    --, HH.slot homeImage_ unit SettingImage.component
+    --    { submit: callApi <<< setSpace state.space.spaceId
+    --    , value: toMaybe state.space.homeUrl
+    --    , disabled: state.disabled
+    --    }
+    --    (Just <<< Edit)
     , HH.slot published_ unit (SettingCheckbox.component "公開する")
         { submit: callApi <<< setSpacePublished state.space.spaceId
         , value: state.space.published
@@ -123,24 +125,24 @@ render state =
         }
         (Just <<< Edit)
     , HH.slot authMenu_ unit SettingAuthMenu.component
-        { submit: callApi <<< \x -> setSpaceAuthority state.space.spaceId { base: fromMaybe "" x }
-        , value: Just state.space.authority.base
+        { submit: callApi <<< \x -> setSpaceAuthority state.space.spaceId $ fromMaybe SpaceAuthNone x
+        , value: Just state.space.defaultAuthority
         , title: "標準権限"
         , desc: "スペースのメンバー以外の人を含む全ての人に適用される権限を設定します"
         , disabled: state.disabled
         }
         (Just <<< Edit)
     , HH.slot membershipMethodMenu_ unit MembershipMethodMenu.component
-        { submit: callApi <<< \x -> setSpaceMembershipMethod state.space.spaceId (fromMaybe "" x)
+        { submit: callApi <<< \x -> setSpaceMembershipMethod state.space.spaceId $ fromMaybe MembershipMethodNone x
         , value: Just state.space.membershipMethod
         , title: "メンバー加入方法"
         , desc: "メンバーがどのような方法でスペースに加入するかを設定します"
         , disabled: state.disabled
         }
         (Just <<< Edit)
-    , HH.slot displayId_ unit (SettingDisplayId.component $ callApi <<< checkSpaceDisplayId)
-        { submit: callApi <<< \x -> setSpaceDisplayId state.space.spaceId x.displayId
-        , value: { displayId: state.space.displayId, checkState: DisplayId.Available }
+    , HH.slot displayId_ unit (SettingDisplayId.component $ callApi <<< checkSpaceDisplayId <<< wrap)
+        { submit: callApi <<< \x -> setSpaceDisplayId state.space.spaceId $ wrap x.displayId
+        , value: { displayId: unwrap state.space.displayId, checkState: DisplayId.Available }
         , title: "表示ID"
         , desc: "IDを設定します"
         , disabled: state.disabled

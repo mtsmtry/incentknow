@@ -45,7 +45,6 @@ import Incentknow.Organisms.ContentQuery as PageContentQuery
 import Incentknow.Route (ContentSpec(..), Route(..), pathToRoute, routeToPath)
 import Incentknow.Templates.Main as Layout
 import Incentknow.Widgets.ContentQuery as ContentQuery
-import Incentknow.Widgets.WorkViewer as WorkViewer
 import Web.HTML (window)
 import Web.HTML.Location (pathname, search)
 import Web.HTML.Window (location)
@@ -85,7 +84,7 @@ type ChildSlots
     , snapshot :: Snapshot.Slot Unit
 
 
-    , workViewer :: WorkViewer.Slot Unit
+   -- , workViewer :: WorkViewer.Slot Unit
 
     , contentQuery :: ContentQuery.Slot Unit
 
@@ -161,11 +160,11 @@ component =
     ContentList spaceId formatId urlParams -> HH.slot (SProxy :: SProxy "contentQuery") unit ContentQuery.component { spaceId, formatId, urlParams } absurd
     _ -> HH.text ""
 
-  renderRightWidget route = case route of
-    EditWork workId -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId, route } absurd
-    EditContent contentId -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId: WorkId $ unwrap contentId, route } absurd
-    Snapshot workId _ _ -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId, route } absurd
-    _ -> HH.text ""
+  renderRightWidget route = HH.text "" --case route of
+  --  EditWork workId -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId, route } absurd
+  --  EditContent contentId -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId: WorkId $ unwrap contentId, route } absurd
+  --  Snapshot workId _ _ -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId, route } absurd
+  --  _ -> HH.text ""
 
   render :: State -> H.ComponentHTML Action ChildSlots m
   render state =

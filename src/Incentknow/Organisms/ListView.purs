@@ -9,8 +9,8 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (User, Format)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
+import Incentknow.Data.Entities (RelatedFormat, RelatedUser, FocusedFormat)
 import Incentknow.HTML.DateTime (dateTime)
 import Incentknow.HTML.Utils (css, link, link_, maybeElem)
 import Incentknow.Route (Route)
@@ -18,10 +18,10 @@ import Incentknow.Route as R
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type ListViewItem
-  = { user :: Maybe User
+  = { user :: Maybe RelatedUser
     , datetime :: Maybe Number
     , title :: String
-    , format :: Maybe Format
+    , format :: Maybe FocusedFormat
     , route :: Route
     }
 

@@ -1,6 +1,7 @@
 module Incentknow.Pages.User.Setting where
 
 import Prelude
+
 import Affjax as AX
 import Affjax.RequestBody as RequestBody
 import Affjax.RequestHeader (RequestHeader(..))
@@ -20,10 +21,12 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (Account, User, onSnapshotAccount, setMyDisplayName, setMyEmail, setMyIcon, setMyPassword)
-import Incentknow.Api.Utils (callApi, executeApi, subscribeApi)
+import Incentknow.Api (getMyAccount, setMyDisplayName, setMyEmail, setMyPassword)
+import Incentknow.Api.Utils (Fetch, Remote(..), callApi, fetchApi, forFetch)
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button, submitButton, textarea)
+import Incentknow.Data.Entities (IntactAccount)
 import Incentknow.Data.Ids (UserId(..))
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.Setting (SettingOutput, SettingQuery(..))
@@ -38,12 +41,12 @@ type Input
   = {}
 
 type State
-  = { account :: Maybe Account
+  = { account :: Remote IntactAccount
     }
 
 data Action
   = Initialize
-  | ChangeAccount (Maybe Account)
+  | ChangeAccount (Fetch IntactAccount)
   | Edit SettingOutput
 
 type Slot p
@@ -67,7 +70,7 @@ component =
 
 initialState :: Input -> State
 initialState input =
-  { account: Nothing
+  { account: Loading
   }
 
 displayName_ = SProxy :: SProxy "displayName"
@@ -80,22 +83,22 @@ email_ = SProxy :: SProxy "email"
 
 render :: forall m. MonadAff m => Behaviour m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  maybeElem state.account \account ->
+  remoteWith state.account \account ->
     HH.div [ css "page-user-setting" ]
       [ HH.slot displayName_ unit SettingText.component
           { submit: callApi <<< setMyDisplayName
-          , value: account.user.displayName
+          , value: account.displayName
           , title: "表示名"
           , desc: ""
           , disabled: false
           }
           (Just <<< Edit)
-      , HH.slot icon_ unit SettingImage.component
-          { submit: callApi <<< setMyIcon
-          , value: Just account.user.iconUrl
-          , disabled: false
-          }
-          (Just <<< Edit)
+      --, HH.slot icon_ unit SettingImage.component
+      --    { submit: callApi <<< 
+      --    , value: Just account.user.iconUrl
+      --    , disabled: false
+      --    }
+      --    (Just <<< Edit)
       , HH.slot password_ unit SettingPassword.component
           { submit: callApi <<< setMyPassword }
           (Just <<< Edit)
@@ -112,9 +115,10 @@ render state =
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
-    _ <- subscribeApi (toMaybe >>> ChangeAccount) onSnapshotAccount
-    pure unit
-  ChangeAccount account -> H.modify_ _ { account = account }
+    fetchApi ChangeAccount getMyAccount
+  ChangeAccount fetch -> do
+    forFetch fetch \account->
+      H.modify_ _ { account = account }
   Edit _ -> do
     -- discard $ H.query displayName_ unit $ H.tell Reset
     pure unit

@@ -13,8 +13,9 @@ import Incentknow.Api (createFormat)
 import Incentknow.Api.Utils (executeApi)
 import Incentknow.AppM (class Behaviour, Message(..), message, navigate)
 import Incentknow.Atoms.Inputs (submitButton)
+import Incentknow.Data.Entities (FormatUsage(..))
 import Incentknow.Data.Ids (SpaceId(..))
-import Incentknow.Data.Property (Property, PropertyInfo, fromPropertyInfo)
+import Incentknow.Data.Property (Property, PropertyInfo)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.Form (define, defineText)
 import Incentknow.Molecules.FormatUsageMenu as FormatUsageMenu
@@ -33,14 +34,14 @@ type State
     , description :: String
     , props :: Array PropertyInfo
     , loading :: Boolean
-    , usage :: Maybe String
+    , usage :: Maybe FormatUsage
     }
 
 data Action
   = ChangeDisplayName String
   | ChangeDisplayId String
   | ChangeDescription String
-  | ChangeUsage (Maybe String)
+  | ChangeUsage (Maybe FormatUsage)
   | Submit
 
 type Slot p
@@ -65,7 +66,7 @@ initialState input =
   , displayName: ""
   , displayId: ""
   , description: ""
-  , usage: Just "internal"
+  , usage: Just Internal
   , props: []
   , loading: false
   }
@@ -78,7 +79,7 @@ render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.Com
 render state =
   creationPage { title: "新しいフォーマットを作成する", desc: "フォーマットは、コンテンツの形式を定義します。また、そのコンテンツのページの形式やコンテンツの他の媒体からのインポートについて定義します。" }
     [ defineText { label: "名前", value: state.displayName, onChange: ChangeDisplayName }
-    , defineText { label: "ID", value: state.displayId, onChange: ChangeDisplayId }
+    --, defineText { label: "ID", value: state.displayId, onChange: ChangeDisplayId }
     , defineText { label: "説明", value: state.description, onChange: ChangeDescription }
     --, defineText { label: "説明コンテンツ", value: state.descContentId, onChange: ChangeDescContentId }
     , define "フォーマットの使用用途"
@@ -111,16 +112,16 @@ handleAction = case _ of
         let
           newFormat =
             { displayName: state.displayName
-            , displayId: state.displayId
+           -- , displayId: state.displayId
             , description: state.description
-            , structure: map fromPropertyInfo props
+            , properties: props
             , spaceId: state.spaceId
             , usage
             }
         H.modify_ _ { loading = true }
         response <- executeApi $ createFormat newFormat
-        for_ response \formatId -> do
-          navigate $ Format formatId FormatMain
+        for_ response \format -> do
+          navigate $ Format format.displayId FormatMain
           message $ Success "フォーマットの作成に成功しました"
         H.modify_ _ { loading = false }
       Nothing, _ -> message $ Error "データ定義の入力が終わっていません"

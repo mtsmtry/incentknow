@@ -17,7 +17,6 @@ import Routing.PushState (PushStateInterface)
 import Type.Equality (class TypeEquals, from)
 import Web.Event.Event (preventDefault)
 import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
-import Incentknow.Api (Account)
 
 data Message
   = Error String

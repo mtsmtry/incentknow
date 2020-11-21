@@ -23,10 +23,10 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (Content, User, Format)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Inputs (button, pulldown)
 import Incentknow.Data.Content (getContentSemanticData)
+import Incentknow.Data.Entities (FocusedContent, RelatedContent, RelatedFormat, RelatedUser, FocusedFormat)
 import Incentknow.Data.Ids (FormatId(..), StructureId(..), UserId(..))
 import Incentknow.Data.Property (mkProperties)
 import Incentknow.HTML.DateTime (dateTime)
@@ -39,13 +39,13 @@ import Incentknow.Route (ContentTab(..), FormatTab(..), Route(..))
 import Incentknow.Templates.Page (tabGrouping)
 
 type Input
-  = { value :: Array Content }
+  = { value :: Array RelatedContent }
 
 type State
-  = { contents :: Array Content
-    , users :: Map UserId User
+  = { contents :: Array RelatedContent
+    , users :: Map UserId RelatedContent
     , formatId :: Maybe FormatId
-    , formats :: Array Format
+    , formats :: Array FocusedFormat
     , formatNum :: Int
     , tab :: ContentTab
     }
@@ -89,14 +89,14 @@ initialState input =
   where
   formats = nubByEq (\x -> \y -> x.formatId == y.formatId) $ map (\x -> x.format) input.value
 
-  formatIds = toUnfoldable $ fromFoldable $ map (\x -> x.formatId) input.value
+  formatIds = toUnfoldable $ fromFoldable $ map (\x -> x.format.formatId) input.value
 
-toListViewItem :: State -> Content -> Maybe ListViewItem
+toListViewItem :: State -> RelatedContent -> Maybe ListViewItem
 toListViewItem state content = Just $ toItem content maybeUser
   where
   maybeUser = Nothing
 
-  toItem :: Content -> Maybe User -> ListViewItem
+  toItem :: RelatedContent -> Maybe RelatedUser -> ListViewItem
   toItem content maybeUser =
     { user: maybeUser
     , datetime: Just content.updatedAt
@@ -119,13 +119,14 @@ render state =
     }
     [ HH.text $ show state.formatNum <> "種類のフォーマット"
     , whenElem (state.formatNum > 1) \_ ->
-        HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component { value: state.formatId, filter: FormatMenu.Formats state.formats, disabled: length items == 0 }
+    -- TODO
+        HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component { value: state.formatId, filter: FormatMenu.None, disabled: length items == 0 }
           (Just <<< ChangeFormat)
     ]
     [ HH.slot (SProxy :: SProxy "listView") unit ListView.component { items } absurd
     ]
   where
-  items = catMaybes $ map (toListViewItem state) $ filter (\x -> maybe true (\y -> x.formatId == y) state.formatId) state.contents
+  items = catMaybes $ map (toListViewItem state) $ filter (\x -> maybe true (\y -> x.format.formatId == y) state.formatId) state.contents
 
 handleAction :: forall o s m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of

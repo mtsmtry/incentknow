@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 cd functions-purescript
 spago bundle-app --main Incentknow.Server --to ../functions/purescript-index.js

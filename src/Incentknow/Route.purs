@@ -5,6 +5,7 @@ import Prelude
 import Data.Array (fromFoldable, toUnfoldable)
 import Data.Either (Either(..))
 import Data.Foldable (oneOf)
+import Data.Int (toNumber)
 import Data.List (List(..))
 import Data.List (fromFoldable) as List
 import Data.Map (Map)
@@ -18,9 +19,9 @@ import Data.Validation.Semiring (invalid)
 import Effect (Effect)
 import Effect.Class (class MonadEffect)
 import Effect.Class as H
-import Incentknow.Data.Ids (ChangeId(..), CommunityId(..), ContentId(..), CrawlerId(..), DraftId(..), FormatId(..), OperationId(..), SemanticId(..), SnapshotId(..), SpaceId(..), UserId(..), WorkId(..))
+import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..), ContentSnapshotId(..), CrawlerId(..), CrawlerOperationId(..), FormatDisplayId(..), FormatId(..), SemanticId(..), SpaceDisplayId(..), SpaceId(..), UserDisplayId(..), UserId(..))
 import Routing (match)
-import Routing.Match (Match(..), end, lit, int, root, str, param)
+import Routing.Match (Match(..), end, int, lit, param, root, str)
 import Routing.Match.Error (MatchError(..))
 import Routing.Types (RoutePart(..))
 
@@ -48,7 +49,7 @@ data SpaceTab
 data CrawlerTab
   = CrawlerMain
   | CrawlerOperations
-  | CrawlerOperation OperationId
+  | CrawlerOperation CrawlerOperationId
   | CrawlerCaches
 
 data UserTab
@@ -59,8 +60,8 @@ data ContentTab
   = ContentMain
 
 data SnapshotDiff
-  = InitialSnapshot SnapshotId
-  | SnapshotDiff SnapshotId SnapshotId
+  = InitialSnapshot ContentSnapshotId
+  | SnapshotDiff ContentSnapshotId ContentSnapshotId
 
 derive instance eqSnapshotDiff :: Eq SnapshotDiff
 
@@ -71,8 +72,8 @@ instance showSnapshotDiff :: Show SnapshotDiff where
 data Route
   = Home
   | Sign
-  | User UserId UserTab
-  | WorkList
+  | User UserDisplayId UserTab
+  | DraftList
   | Content ContentId
   | ContentBySemanticId FormatId SemanticId
   | EditContent ContentId
@@ -83,14 +84,14 @@ data Route
   | JoinSpace SpaceId
   | NewContent (Maybe SpaceId) (Maybe FormatId)
   | NewFormat SpaceId
-  | EditWork WorkId
+  | EditDraft ContentDraftId
   | EditScraper ContentId
-  | Space SpaceId SpaceTab
+  | Space SpaceDisplayId SpaceTab
   | Rivision ContentId Int
   | RivisionList ContentId
-  | Snapshot WorkId ChangeId SnapshotDiff
+  | Snapshot ContentDraftId SnapshotDiff
   | NewSpace
-  | Format FormatId FormatTab
+  | Format FormatDisplayId FormatTab
   | NewCrawler
   | Crawler CrawlerId CrawlerTab
   | NotFound
@@ -144,10 +145,10 @@ routeToPath = case _ of
   Rivision id ver -> "/contents/" <> unwrap id <> "/rivisions/" <> show ver
   RivisionList id -> "/contents/" <> unwrap id <> "/rivisions"
   ContentBySemanticId formatId semanticId -> "/contents/" <> unwrap formatId <> "/" <> unwrap semanticId
-  -- work
-  WorkList -> "/works"
-  EditWork id -> "/works/" <> unwrap id <> "/edit"
-  Snapshot workId changeId diff -> "/works/" <> unwrap workId <> "/" <> unwrap changeId <> "/" <> show diff
+  -- draft
+  DraftList -> "/drafts"
+  EditDraft id -> "/drafts/" <> unwrap id <> "/edit"
+  Snapshot draftId diff -> "/drafts/" <> unwrap draftId <> "/" <> show diff
   NewFormat id -> "/spaces/" <> unwrap id <> "/formats/new"
   NewContent spaceId formatId -> "/contents/new" <> paramsToUrl [ Tuple "space" $ map unwrap spaceId, Tuple "format" $ map unwrap formatId ]
   ContentList spaceId formatId params -> "/contents" <> paramsToUrl ([ Tuple "space" $ map unwrap spaceId, Tuple "format" $ map unwrap formatId ] <> params)
@@ -174,7 +175,7 @@ routeToPath = case _ of
   NewCrawler -> "/crawlers/new"
   Crawler id CrawlerMain -> "/crawlers/" <> unwrap id
   Crawler id CrawlerOperations -> "/crawlers/" <> unwrap id <> "/operations"
-  Crawler id (CrawlerOperation ope) -> "/crawlers/" <> unwrap id <> "/operations/" <> unwrap ope
+  Crawler id (CrawlerOperation ope) -> "/crawlers/" <> unwrap id <> "/operations/" <> show (unwrap ope)
   Crawler id CrawlerCaches -> "/crawlers/" <> unwrap id <> "/caches"
   -- others
   NotFound -> "/not-found"
@@ -215,15 +216,15 @@ matchRoute =
         , Sign <$ (lit "sign" <* end)
         , Public <$ (lit "public" <* end)
         -- user
-        , (flip User UserMain) <$> (map UserId $ lit "users" *> str <* end)
-        , (flip User UserSetting) <$> (map UserId $ lit "users" *> str <* lit "setting" <* end)
+        , (flip User UserMain) <$> (map wrap $ lit "users" *> str <* end)
+        , (flip User UserSetting) <$> (map wrap $ lit "users" *> str <* lit "setting" <* end)
         -- community
         , SpaceList <$ (lit "spaces" <* end)
         , JoinSpace <$> (map SpaceId $ lit "spaces" *> str <* lit "join" <* end)
-        -- work
-        , WorkList <$ (lit "works" <* end)
-        , Snapshot <$> (lit "works" *> (map WorkId str)) <*> (map ChangeId str) <*> ((map toSnapshotDiff str) <* end)
-        , EditWork <$> (map WorkId $ lit "works" *> str <* lit "edit" <* end)
+        -- draft
+        , DraftList <$ (lit "drafts" <* end)
+        , Snapshot <$> (lit "drafts" *> (map wrap str)) <*> ((map toSnapshotDiff str) <* end)
+        , EditDraft <$> (map wrap $ lit "drafts" *> str <* lit "edit" <* end)
         -- content
         , NewContent <$> (lit "contents" <* lit "new" *> space) <*> format <* end
         , EditScraper <$> (map ContentId $ lit "contents" *> str <* lit "edit" <* lit "scraper" <* end)
@@ -234,19 +235,19 @@ matchRoute =
         , ContentBySemanticId <$> (lit "contents" *> (map FormatId str)) <*> (map SemanticId str) <* end
         , ContentList <$ lit "contents" <*> space <*> format <*> matchParams <* end
         -- format
-        , (flip Format FormatMain) <$> (map FormatId $ lit "formats" *> str <* end)
-        , (flip Format FormatPage) <$> (map FormatId $ lit "formats" *> str <* lit "page" <* end)
-        , (flip Format FormatVersions) <$> (map FormatId $ lit "formats" *> str <* lit "versions" <* end)
-        , (flip Format FormatSetting) <$> (map FormatId $ lit "formats" *> str <* lit "setting" <* end)
-        , (flip Format FormatReactor) <$> (map FormatId $ lit "formats" *> str <* lit "reactor" <* end)
+        , (flip Format FormatMain) <$> (map wrap $ lit "formats" *> str <* end)
+        , (flip Format FormatPage) <$> (map wrap $ lit "formats" *> str <* lit "page" <* end)
+        , (flip Format FormatVersions) <$> (map wrap $ lit "formats" *> str <* lit "versions" <* end)
+        , (flip Format FormatSetting) <$> (map wrap $ lit "formats" *> str <* lit "setting" <* end)
+        , (flip Format FormatReactor) <$> (map wrap $ lit "formats" *> str <* lit "reactor" <* end)
         -- spaces
         , NewSpace <$ (lit "spaces" <* lit "new")
         , NewFormat <$> (map SpaceId $ lit "spaces" *> str <* lit "formats" <* lit "new" <* end)
-        , (flip Space SpacePages) <$> (map SpaceId $ lit "spaces" *> str <* end)
-        , (flip Space SpaceContents) <$> (map SpaceId $ lit "spaces" *> str <* lit "contents" <* end)
-        , (flip Space SpaceFormats) <$> (map SpaceId $ lit "spaces" *> str <* lit "formats" <* end)
-        , (flip Space SpaceMembers) <$> (map SpaceId $ lit "spaces" *> str <* lit "members" <* end)
-        , (flip Space SpaceSetting) <$> (map SpaceId $ lit "spaces" *> str <* lit "setting" <* end)
+        , (flip Space SpacePages) <$> (map wrap $ lit "spaces" *> str <* end)
+        , (flip Space SpaceContents) <$> (map wrap $ lit "spaces" *> str <* lit "contents" <* end)
+        , (flip Space SpaceFormats) <$> (map wrap $ lit "spaces" *> str <* lit "formats" <* end)
+        , (flip Space SpaceMembers) <$> (map wrap $ lit "spaces" *> str <* lit "members" <* end)
+        , (flip Space SpaceSetting) <$> (map wrap $ lit "spaces" *> str <* lit "setting" <* end)
         , (\x -> \y -> Composition x y "") <$> (lit "spaces" *> (map SpaceId str)) <*> (map FormatId str)
         , Composition <$> (lit "spaces" *> (map SpaceId str)) <*> (map FormatId str) <*> str
         , NotFound <$ (lit "not-found")
@@ -254,7 +255,7 @@ matchRoute =
         , NewCrawler <$ (lit "crawlers" <* lit "new" <* end)
         , (flip Crawler CrawlerMain) <$> (map CrawlerId $ lit "crawlers" *> str <* end)
         , (flip Crawler CrawlerOperations) <$> (map CrawlerId $ lit "crawlers" *> str <* lit "operations" <* end)
-        , Crawler <$> (lit "crawlers" *> (map CrawlerId str)) <*> (lit "operations" *> map (CrawlerOperation <<< OperationId) str) <* end
+        , Crawler <$> (lit "crawlers" *> (map CrawlerId str)) <*> (lit "operations" *> map (CrawlerOperation <<< CrawlerOperationId) (map toNumber int)) <* end
         , (flip Crawler CrawlerCaches) <$> (map CrawlerId $ lit "crawlers" *> str <* lit "caches" <* end)
         ]
   where

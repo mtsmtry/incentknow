@@ -11,19 +11,20 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Format, updateFormatStructure)
+import Incentknow.Api (updateFormatStructure)
 import Incentknow.Api.Utils (executeApi)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, submitButton)
+import Incentknow.Data.Entities (FocusedFormat)
 import Incentknow.Data.Ids (SpaceId(..))
-import Incentknow.Data.Property (ChangeType(..), difference, fromPropertyInfo, toPropertyInfo)
+import Incentknow.Data.Property (ChangeType(..), difference)
 import Incentknow.Organisms.Structure as Structure
 
 type Input
-  = { format :: Format }
+  = { format :: FocusedFormat }
 
 type State
-  = { format :: Format, editMode :: Boolean, updating :: Boolean }
+  = { format :: FocusedFormat, editMode :: Boolean, updating :: Boolean }
 
 data Action
   = Initialize
@@ -58,7 +59,7 @@ render state =
         button "編集する" Edit
       else
         HH.text ""
-    , HH.slot structure_ unit Structure.component { readonly: not state.editMode, spaceId: state.format.spaceId } absurd
+    , HH.slot structure_ unit Structure.component { readonly: not state.editMode, spaceId: state.format.space.spaceId } absurd
     , if state.editMode then
         HH.div_
           [ submitButton
@@ -78,7 +79,7 @@ handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    let props = map toPropertyInfo state.format.structure.properties
+    let props = state.format.structure.properties
     _ <- H.query structure_ unit $ H.tell $ Structure.SetValue props
     pure unit
   Edit -> H.modify_ _ { editMode = true }
@@ -88,12 +89,12 @@ handleAction = case _ of
     H.query structure_ unit (H.request Structure.GetValue)
       >>= traverse_ \props -> do
           let
-            diff = difference (map toPropertyInfo state.format.structure.properties) props
+            diff = difference state.format.structure.properties props
           when (diff.changeType /= NoneChange) do
             H.modify_ _ { updating = true }
-            result <- executeApi $ updateFormatStructure state.format.formatId (map fromPropertyInfo props)
+            result <- executeApi $ updateFormatStructure state.format.formatId props
             case result of
               Just _ ->
-                H.modify_ _ { updating = false, editMode = false, format { structure { properties = map fromPropertyInfo props } } }
+                H.modify_ _ { updating = false, editMode = false, format { structure { properties = props } } }
               Nothing ->
                 H.modify_ _ { updating = false }

@@ -12,37 +12,38 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Data.Entities (MembershipMethod(..))
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
-import Incentknow.Data.Property (Enumerator, PropertyInfo, Type(..), getTypeName)
+import Incentknow.Data.Property (Enumerator, PropertyInfo)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
 import Incentknow.Molecules.SelectMenu as SelectMenu
 
 type Input
-  = { value :: Maybe String
+  = { value :: Maybe MembershipMethod
     , disabled :: Boolean
     }
 
 type State
-  = { membershipMethod :: Maybe String
+  = { membershipMethod :: Maybe MembershipMethod
     , disabled :: Boolean
     }
 
 data Action
   = Initialize
   | HandleInput Input
-  | Change (Maybe String)
+  | Change (Maybe MembershipMethod)
 
 type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot Unit
+  = ( selectMenu :: SelectMenu.Slot MembershipMethod Unit
     )
 
 type Output
-  = Maybe String
+  = Maybe MembershipMethod
 
 component :: forall q m. Behaviour m => MonadAff m => H.Component HH.HTML q Input Output m
 component =
@@ -59,30 +60,30 @@ component =
     }
 
 type Item
-  = { id :: String
+  = { id :: MembershipMethod
     , name :: String
     , desc :: String
     }
 
 authItems :: Array Item
 authItems =
-  [ { id: "none", name: "None", desc: "メンバーの追加は行われません" }
-  , { id: "app", name: "Application and approval", desc: "メンバー加入者による申請とスペース管理者による承認によって、メンバーシップの加入は管理されます" }
+  [ { id: MembershipMethodNone, name: "None", desc: "メンバーの追加は行われません" }
+  , { id: MembershipMethodApp, name: "Application and approval", desc: "メンバー加入者による申請とスペース管理者による承認によって、メンバーシップの加入は管理されます" }
   ]
 
-toSelectMenuItem :: Item -> SelectMenuItem
-toSelectMenuItem format =
-  { id: format.id
-  , name: format.name
-  , searchWord: format.name
+toSelectMenuItem :: Item -> SelectMenuItem MembershipMethod
+toSelectMenuItem item =
+  { id: item.id
+  , name: item.name
+  , searchWord: item.name
   , html
   }
   where
   html :: forall a s m. H.ComponentHTML a s m
   html =
     HH.div []
-      [ HH.div [ css "name" ] [ HH.text format.name ]
-      , HH.div [ css "desc" ] [ HH.text format.desc ]
+      [ HH.div [ css "name" ] [ HH.text item.name ]
+      , HH.div [ css "desc" ] [ HH.text item.desc ]
       ]
 
 initialState :: Input -> State

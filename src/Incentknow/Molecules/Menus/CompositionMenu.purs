@@ -14,7 +14,7 @@ import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.Data.Page (ContentComposition(..))
-import Incentknow.Data.Property (Enumerator, PropertyInfo, Type(..), getTypeName)
+import Incentknow.Data.Property (Enumerator, PropertyInfo)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
@@ -26,7 +26,7 @@ type Input
     }
 
 type State
-  = { typeItems :: Array SelectMenuItem
+  = { typeItems :: Array (SelectMenuItem String)
     , disabled :: Boolean
     , type :: Maybe String
     }
@@ -40,7 +40,7 @@ type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot Unit
+  = ( selectMenu :: SelectMenu.Slot String Unit
     )
 
 type Output
@@ -76,7 +76,7 @@ typeItems =
   --, { id: "outliner", name: "Enum", desc: "列挙体" }
   ]
 
-toSelectMenuItem :: Item -> SelectMenuItem
+toSelectMenuItem :: Item -> SelectMenuItem String
 toSelectMenuItem format =
   { id: format.id
   , name: format.name

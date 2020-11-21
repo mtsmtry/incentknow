@@ -23,6 +23,7 @@ import Data.Tuple (Tuple(..), uncurry)
 import Foreign (F, Foreign, ForeignError(..), readString)
 import Foreign.Object as F
 import Foreign.Object as Object
+import Incentknow.Data.Entities (Type(..))
 import Incentknow.Data.Ids (SpaceId(..), ContentId(..), FormatId(..))
 import Incentknow.Route (Route)
 import Simple.JSON (class ReadForeign, class WriteForeign, readImpl, writeImpl)
@@ -38,94 +39,12 @@ type EnumeratorImpl
     , displayName :: String
     , fieldName :: Nullable String
     }
-
--- オブジェクトは、自動で間違ったreadImplとwriteImplが生成されてしまうため、
--- 引数にオブジェクトを含む物は手動でreadImplとwriteImplを書く必要がある
--- 自動生成の場合、例えば、{ aa: Just "tt" }は、{ aa: undefined }になる
-data Type
-  = IntType {}
-  | BoolType {}
-  | StringType {}
-  | FormatType {}
-  | SpaceType {}
-  | ContentType { format :: FormatId }
-  | ArrayType { type :: Type }
-  | UrlType {}
-  | EnumType { enumerators :: Array Enumerator }
-  | EntityType { format :: FormatId }
-  | ImageType {}
-  | TextType {}
-  | CodeType { language :: Maybe String }
-  | DocumentType {}
-  | ObjectType { properties :: Array PropertyInfo }
-
-derive instance eqType :: Eq Type
-
-type TypeImpl
-  = { name :: String
-    , arguments :: Foreign
-    }
-
-instance readForeignType :: ReadForeign Type where
-  readImpl src = do
-    impl <- readImpl src :: F TypeImpl
-    case impl.name of
-      "integer" -> IntType <$> readImpl impl.arguments
-      "string" -> StringType <$> readImpl impl.arguments
-      "text" -> TextType <$> readImpl impl.arguments
-      "format" -> FormatType <$> readImpl impl.arguments
-      "boolean" -> BoolType <$> readImpl impl.arguments
-      "space" -> SpaceType <$> readImpl impl.arguments
-      "content" -> ContentType <$> readImpl impl.arguments
-      "code" -> do
-        args :: { language :: Nullable String } <- readImpl impl.arguments
-        pure $ CodeType { language: toMaybe args.language }
-      "array" -> do
-        args :: { type :: Foreign } <- readImpl impl.arguments
-        type_ <- readImpl args.type
-        pure $ ArrayType { type: type_ }
-      "url" -> UrlType <$> readImpl impl.arguments
-      "object" -> do
-        args :: { properties :: Array PropertyInfoImpl } <- readImpl impl.arguments
-        let properties = map toPropertyInfo args.properties
-        pure $ ObjectType { properties }
-      "document" -> DocumentType <$> readImpl impl.arguments
-      "enumeration" -> do
-        args :: { enumerators :: Array EnumeratorImpl } <- readImpl impl.arguments
-        pure $ EnumType { enumerators: map toEnumerator args.enumerators }
-      "entity" -> EntityType <$> readImpl impl.arguments
-      "image" -> ImageType <$> readImpl impl.arguments
-      _ -> except $ Left $ NEL.singleton $ ForeignError ""
-
-fromType :: Type -> TypeImpl
-fromType = case _ of
-  IntType args -> { name: "integer", arguments: writeImpl args }
-  StringType args -> { name: "string", arguments: writeImpl args }
-  BoolType args -> { name: "boolean", arguments: writeImpl args }
-  TextType args -> { name: "text", arguments: writeImpl args }
-  FormatType args -> { name: "format", arguments: writeImpl args }
-  SpaceType args -> { name: "space", arguments: writeImpl args }
-  ContentType args -> { name: "content", arguments: writeImpl args }
-  CodeType args -> { name: "code", arguments: writeImpl { language: toNullable args.language } }
-  ArrayType args -> { name: "array", arguments: writeImpl args }
-  UrlType args -> { name: "url", arguments: writeImpl args }
-  ObjectType args -> { name: "object", arguments: writeImpl { properties: map fromPropertyInfo args.properties } }
-  DocumentType args -> { name: "document", arguments: writeImpl args }
-  EnumType args -> { name: "enumeration", arguments: writeImpl { enumerators: map fromEnumerator args.enumerators } }
-  EntityType args -> { name: "entity", arguments: writeImpl args }
-  ImageType args -> { name: "image", arguments: writeImpl args }
-
+    
 fromEnumerator :: Enumerator -> EnumeratorImpl
 fromEnumerator enum = enum { fieldName = toNullable enum.fieldName }
 
 toEnumerator :: EnumeratorImpl -> Enumerator
 toEnumerator enum = enum { fieldName = toMaybe enum.fieldName }
-
-instance writeForeignType :: WriteForeign Type where
-  writeImpl = writeImpl <<< fromType
-
-getTypeName :: Type -> String
-getTypeName ty = (fromType ty).name
 
 type PropertyInfo
   = { id :: String
@@ -141,56 +60,21 @@ getDefaultValue props = fromObject $ Object.fromFoldable $ map (\x-> Tuple x.id 
   where
   defaultValue :: Type -> Json
   defaultValue = case _ of
-    IntType args -> jsonNull
-    StringType args -> jsonNull
-    BoolType args -> jsonNull
-    TextType args -> jsonNull
-    FormatType args -> jsonNull
-    SpaceType args -> jsonNull
-    ContentType args -> jsonNull
-    CodeType args -> jsonNull
-    ArrayType args -> fromArray []
-    UrlType args -> jsonNull
-    ObjectType args -> getDefaultValue args.properties
-    DocumentType args -> jsonNull
-    EnumType args -> jsonNull
-    EntityType args -> jsonNull
-    ImageType args -> jsonNull
-
-type PropertyInfoImpl
-  = { id :: String
-    , displayName :: String
-    , fieldName :: Nullable String
-    , type :: Foreign
-    , semantic :: Nullable String
-    , optional :: Boolean
-    }
-
-toPropertyInfo :: PropertyInfoImpl -> PropertyInfo
-toPropertyInfo impl =
-  { id: impl.id
-  , displayName: impl.displayName
-  , fieldName: toMaybe impl.fieldName
-  , type: ty
-  , semantic: toMaybe impl.semantic
-  , optional: impl.optional
-  }
-  where
-  tyE = readImpl impl.type :: F Type
-
-  tyF = runExcept tyE
-
-  ty = either (const $ IntType {}) identity tyF
-
-fromPropertyInfo :: PropertyInfo -> PropertyInfoImpl
-fromPropertyInfo src =
-  { id: src.id
-  , displayName: src.displayName
-  , fieldName: toNullable src.fieldName
-  , type: writeImpl src.type
-  , semantic: toNullable src.semantic
-  , optional: src.optional
-  }
+    IntType -> jsonNull
+    StringType -> jsonNull
+    BoolType -> jsonNull
+    TextType -> jsonNull
+    FormatType -> jsonNull
+    SpaceType -> jsonNull
+    ContentType _ -> jsonNull
+    CodeType _ -> jsonNull
+    ArrayType _ -> fromArray []
+    UrlType -> jsonNull
+    ObjectType props -> getDefaultValue props
+    DocumentType -> jsonNull
+    EnumType _ -> jsonNull
+    EntityType _ -> jsonNull
+    ImageType -> jsonNull
 
 type Property
   = { value :: Json
@@ -276,12 +160,12 @@ difference before after = { diffs: diffs, changeType: getChangeType diffs }
               else
                 Nothing
             , case before.type, after.type of
-                StringType _, EntityType _ -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
-                EntityType _, StringType _ -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
+                StringType, EntityType _ -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
+                EntityType _, StringType -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
                 EntityType _, EntityType _ -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
-                StringType _, TextType _ -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
-                CodeType _, TextType _ -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
-                UrlType _, StringType _ -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
+                StringType, TextType -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
+                CodeType _, TextType -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
+                UrlType, StringType -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
                 bfType, afType ->
                   if bfType /= afType then
                     Just $ mkDiff TypeItem MajorChange (Just "") (Just "")

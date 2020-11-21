@@ -11,7 +11,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.Atoms.Inputs (button)
-import Incentknow.Data.Ids (generateId)
+import Incentknow.Data.Utils (generateId)
 import Incentknow.Data.Property (Enumerator)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.DangerChange as DangerChange

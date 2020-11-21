@@ -14,11 +14,12 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Incentknow.Api (SpaceCommitter, SpaceMember, Space, getSpaceCommitters, getSpaceMembers)
+import Incentknow.Api (getSpaceMembers)
 import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
+import Incentknow.Data.Entities (IntactSpaceMember)
 import Incentknow.Data.Ids (SpaceId(..))
 import Incentknow.HTML.Utils (css, link, maybeElem, whenElem)
 import Incentknow.Organisms.MemberList as MemberList
@@ -26,15 +27,15 @@ import Incentknow.Route (FormatTab(..), Route(..), SpaceTab(..), UserTab(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
-  = { space :: Space, isAdmin :: Boolean }
+  = { spaceId :: SpaceId, isAdmin :: Boolean }
 
 type State
-  = { space :: Space, isAdmin :: Boolean, members :: Remote (Array SpaceMember), committers :: Array SpaceCommitter }
+  = { spaceId :: SpaceId, isAdmin :: Boolean, members :: Remote (Array IntactSpaceMember) }
 
 data Action
   = Initialize
   | Navigate MouseEvent Route
-  | FetchedMembers (Fetch (Array SpaceMember))
+  | FetchedMembers (Fetch (Array IntactSpaceMember))
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -51,32 +52,32 @@ component =
     }
 
 initialState :: Input -> State
-initialState input = { space: input.space, isAdmin: input.isAdmin, members: Loading, committers: [] }
+initialState input = { spaceId: input.spaceId, isAdmin: input.isAdmin, members: Loading }
 
 render :: forall m. MonadAff m => Behaviour m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div [ css "page-space-member-list" ]
     [ remoteWith state.members $ renderMembers state ]
 
-renderMembers :: forall m. MonadAff m => Behaviour m => State -> Array SpaceMember -> H.ComponentHTML Action ChildSlots m
+renderMembers :: forall m. MonadAff m => Behaviour m => State -> Array IntactSpaceMember -> H.ComponentHTML Action ChildSlots m
 renderMembers state members =
   HH.div []
     [ whenElem isAdmin \_ ->
-        HH.slot (SProxy :: SProxy "pendingMemberList") unit MemberList.component { members: pendingMembers, isAdmin: state.isAdmin } absurd
-    , HH.slot (SProxy :: SProxy "memberList") unit MemberList.component { members: actualMembers, isAdmin: state.isAdmin } absurd
+ --       HH.slot (SProxy :: SProxy "pendingMemberList") unit MemberList.component { members: pendingMembers, isAdmin: state.isAdmin } absurd
+    HH.slot (SProxy :: SProxy "memberList") unit MemberList.component { members, isAdmin: state.isAdmin } absurd
     ]
   where
-  actualMembers = filter (\x -> x.type /= "pending") members
+  --actualMembers = filter (\x -> x.type /= "pending") members
 
-  pendingMembers = filter (\x -> x.type == "pending") members
+  --pendingMembers = filter (\x -> x.type == "pending") members
 
-  isAdmin = maybe false (\x -> x.type == "owner" || x.type == "admin") $ toMaybe state.space.myMember
+  isAdmin = false --maybe false (\x -> x.type == "owner" || x.type == "admin") $ toMaybe state.space.myMember
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchApi FetchedMembers $ getSpaceMembers state.space.spaceId null
+    fetchApi FetchedMembers $ getSpaceMembers state.spaceId
   FetchedMembers fetch ->
     forFetch fetch \members ->
       H.modify_ _ { members = members }

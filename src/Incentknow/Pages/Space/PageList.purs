@@ -11,12 +11,13 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Incentknow.Api (Format, Space, getFormats)
+import Incentknow.Api (getFormats)
 import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
-import Incentknow.Data.Ids (CommunityId(..), SpaceId(..))
+import Incentknow.Data.Entities (RelatedFormat)
+import Incentknow.Data.Ids (SpaceId(..))
 import Incentknow.Data.Page (ContentComposition)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.CardView (CardViewItem)
@@ -27,12 +28,12 @@ type Input
   = { spaceId :: SpaceId }
 
 type State
-  = { spaceId :: SpaceId, formats :: Remote (Array Format) }
+  = { spaceId :: SpaceId, formats :: Remote (Array RelatedFormat) }
 
 data Action
   = Initialize
   | Navigate Route
-  | FetchedFormats (Fetch (Array Format))
+  | FetchedFormats (Fetch (Array RelatedFormat))
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -51,7 +52,7 @@ component =
 initialState :: Input -> State
 initialState input = { spaceId: input.spaceId, formats: Loading }
 
-toCardViewItem :: State -> Format -> CardViewItem
+toCardViewItem :: State -> RelatedFormat -> CardViewItem
 toCardViewItem state format =
   { title: format.displayName 
   , route: Composition state.spaceId format.formatId ""
@@ -70,7 +71,8 @@ render state =
             ]
         , HH.div [ css "body" ]
             [ remoteWith state.formats \formats->
-                HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map (toCardViewItem state) $ filter (\x-> length x.collectionPage.compositions > 0) formats } absurd
+                HH.text ""
+                --HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map (toCardViewItem state) $ filter (\x-> length x.collectionPage.compositions > 0) formats } absurd
             ]
         ]
     ]

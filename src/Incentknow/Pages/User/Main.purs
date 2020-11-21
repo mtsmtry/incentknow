@@ -8,8 +8,8 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Content)
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Data.Entities (RelatedContent)
 import Incentknow.Data.Ids (UserId(..))
 import Incentknow.Organisms.ContentList as ContentList
 
@@ -17,7 +17,7 @@ type Input
   = { userId :: UserId }
 
 type State
-  = { userId :: UserId, list :: Array Content }
+  = { userId :: UserId, list :: Array RelatedContent }
 
 data Action
   = Initialize

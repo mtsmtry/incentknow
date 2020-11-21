@@ -24,6 +24,7 @@ import Halogen.HTML (lazy)
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource as ES
+import Incentknow.Data.Entities (Language(..))
 import Incentknow.HTML.Utils (css)
 import LSP (CompletionItem, Connection, complete, createConnection, didChange, didOpen, initialize, onOpen)
 
@@ -34,7 +35,12 @@ type Output
   = String
 
 type Input
-  = { value :: String, language :: Maybe String, variableHeight :: Boolean, readonly :: Boolean }
+  = { value :: String, language :: Maybe Language, variableHeight :: Boolean, readonly :: Boolean }
+
+toAceLang :: Language -> String
+toAceLang = case _ of
+  Python -> "python"
+  Javascript -> "javascript"
 
 data Action
   = Initialize
@@ -47,7 +53,7 @@ data Action
 -- | replicating it within Halogen.
 type State
   = { text :: String
-    , language :: Maybe String
+    , language :: Maybe Language
     , editor :: Maybe Editor
     , connection :: Maybe Connection
     , variableHeight :: Boolean
@@ -148,7 +154,7 @@ handleAction = case _ of
                 pure mempty
           -- setup lsp
           for_ state.language \lang -> do
-            liftEffect $ Session.setMode ("ace/mode/" <> lang) session
+            liftEffect $ Session.setMode ("ace/mode/" <> toAceLang lang) session
             when (not state.readonly) do
               -- lcp
               connection <- createConnection

@@ -12,58 +12,37 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Data.Entities (SpaceAuth(..))
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
-import Incentknow.Data.Property (Enumerator, PropertyInfo, Type(..), getTypeName)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
 import Incentknow.Molecules.SelectMenu as SelectMenu
 
 type Input
-  = { value :: Maybe String
+  = { value :: Maybe SpaceAuth
     , disabled :: Boolean
     }
 
-data Authority
-  = None
-  | Visible
-  | Readable
-  | Writable
-
-toAuth :: String -> Maybe Authority
-toAuth = case _ of
-  "none" -> Just None
-  "visible" -> Just Visible
-  "readable" -> Just Readable
-  "writable" -> Just Writable
-  _ -> Nothing
-
-fromAuth :: Authority -> String
-fromAuth = case _ of
-  None -> "none"
-  Visible -> "visible"
-  Readable -> "readable"
-  Writable -> "writable"
-
 type State
-  = { auth :: Maybe Authority
+  = { auth :: Maybe SpaceAuth
     , disabled :: Boolean
     }
 
 data Action
   = Initialize
   | HandleInput Input
-  | Change (Maybe String)
+  | Change (Maybe SpaceAuth)
 
 type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot Unit
+  = ( selectMenu :: SelectMenu.Slot SpaceAuth Unit
     )
 
 type Output
-  = Maybe String
+  = Maybe SpaceAuth
 
 component :: forall q m. Behaviour m => MonadAff m => H.Component HH.HTML q Input Output m
 component =
@@ -80,37 +59,37 @@ component =
     }
 
 type Item
-  = { id :: String
+  = { id :: SpaceAuth
     , name :: String
     , desc :: String
     }
 
 authItems :: Array Item
 authItems =
-  [ { id: "none", name: "None", desc: "なし" }
-  , { id: "visible", name: "Visible", desc: "スペースの名前や説明を閲覧できます" }
-  , { id: "readable", name: "Readable", desc: "コンテンツやメンバーの一覧を閲覧できます" }
-  , { id: "writable", name: "Writable", desc: "コンテンツを投稿できます" }
+  [ { id: SpaceAuthNone, name: "None", desc: "なし" }
+  , { id: SpaceAuthVisible, name: "Visible", desc: "スペースの名前や説明を閲覧できます" }
+  , { id: SpaceAuthVisible, name: "Readable", desc: "コンテンツやメンバーの一覧を閲覧できます" }
+  , { id: SpaceAuthWritable, name: "Writable", desc: "コンテンツを投稿できます" }
   ]
 
-toSelectMenuItem :: Item -> SelectMenuItem
-toSelectMenuItem format =
-  { id: format.id
-  , name: format.name
-  , searchWord: format.name
+toSelectMenuItem :: Item -> SelectMenuItem SpaceAuth
+toSelectMenuItem item =
+  { id: item.id
+  , name: item.name
+  , searchWord: item.name
   , html
   }
   where
   html :: forall a s m. H.ComponentHTML a s m
   html =
     HH.div []
-      [ HH.div [ css "name" ] [ HH.text format.name ]
-      , HH.div [ css "desc" ] [ HH.text format.desc ]
+      [ HH.div [ css "name" ] [ HH.text item.name ]
+      , HH.div [ css "desc" ] [ HH.text item.desc ]
       ]
 
 initialState :: Input -> State
 initialState input =
-  { auth: flatten $ map toAuth input.value
+  { auth: input.value
   , disabled: input.disabled
   }
 
@@ -118,7 +97,7 @@ render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action
 render state =
   HH.div_
     [ HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-        { resource: SelectMenuResourceAllCandidates $ map toSelectMenuItem authItems, value: map fromAuth state.auth, disabled: state.disabled }
+        { resource: SelectMenuResourceAllCandidates $ map toSelectMenuItem authItems, value: state.auth, disabled: state.disabled }
         (Just <<< Change)
     ]
 
@@ -127,5 +106,5 @@ handleAction = case _ of
   Initialize -> pure unit
   HandleInput input -> when (isJust input.value) $ H.put $ initialState input
   Change auth -> do
-    H.modify_ _ { auth = flatten $ map toAuth auth }
+    H.modify_ _ { auth = auth }
     H.raise auth

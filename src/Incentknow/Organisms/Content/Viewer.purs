@@ -13,15 +13,14 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Format)
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Data.Entities (FocusedFormat, Type(..))
 import Incentknow.Data.Ids (ContentId)
-import Incentknow.Data.Property (Type(..), toPropertyInfo)
 import Incentknow.HTML.Utils (maybeElem)
 import Incentknow.Organisms.Content.ValueViewer as Value
 
 type Input
-  = { format :: Format, value :: Json }
+  = { format :: FocusedFormat, value :: Json }
 
 type State
   = { data :: Value.Input }
@@ -52,10 +51,10 @@ initialState :: Input -> State
 initialState input = 
   { data: mkValueInput input.format input.value }
 
-mkValueInput :: Format -> Json -> Value.Input
+mkValueInput :: FocusedFormat -> Json -> Value.Input
 mkValueInput format value =
   { value: value
-  , type: ObjectType { properties: map toPropertyInfo format.structure.properties }
+  , type: ObjectType format.structure.properties
   }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m

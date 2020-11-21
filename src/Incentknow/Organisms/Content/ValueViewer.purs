@@ -21,8 +21,9 @@ import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, numberarea, textarea)
+import Incentknow.Data.Entities (Type(..))
 import Incentknow.Data.Ids (FormatId(..))
-import Incentknow.Data.Property (Property, Type(..), encodeProperties, mkProperties)
+import Incentknow.Data.Property (Property, encodeProperties, mkProperties)
 import Incentknow.HTML.Utils (maybeElem)
 import Incentknow.Molecules.AceEditor as AceEditor
 import Incentknow.Molecules.ContentLink as ContentLink
@@ -65,41 +66,39 @@ initialState input = { value: input.value, type: input.type }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state = case state.type of
-  EnumType args -> HH.text $ fromMaybe "" $ (flip M.lookup) enums $ toStringOrEmpty state.value
+  EnumType enums -> HH.text $ fromMaybe "" $ (flip M.lookup) array $ toStringOrEmpty state.value
     where
-    enums = M.fromFoldable $ map (\x-> Tuple x.id x.displayName) args.enumerators
-  StringType args -> HH.text $ toStringOrEmpty state.value
-  IntType args -> HH.text $ fromMaybe "NaN" $ map show $ toNumber state.value
-  BoolType args -> HH.text $ fromMaybe "NaN" $ map show $ toBoolean state.value
-  TextType args -> HH.text $ toStringOrEmpty state.value
-  CodeType args ->
+    array = M.fromFoldable $ map (\x-> Tuple x.id x.displayName) enums
+  StringType -> HH.text $ toStringOrEmpty state.value
+  IntType -> HH.text $ fromMaybe "NaN" $ map show $ toNumber state.value
+  BoolType -> HH.text $ fromMaybe "NaN" $ map show $ toBoolean state.value
+  TextType -> HH.text $ toStringOrEmpty state.value
+  CodeType land ->
     HH.slot (SProxy :: SProxy "aceEditor") unit AceEditor.component
       { value: toStringOrEmpty state.value
-      , language: args.language
+      , language: Just land
       , variableHeight: true
       , readonly: true
       }
       (const Nothing)
-  FormatType args -> HH.text ""
-  SpaceType args -> HH.text ""
-  ContentType args -> case toString state.value of
+  FormatType -> HH.text ""
+  SpaceType -> HH.text ""
+  ContentType formatId -> case toString state.value of
     Just contentId -> HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value: ContentSpecContentId $ wrap contentId } absurd
     Nothing -> HH.text ""
-  EntityType args -> case toString state.value of
-    Just semanticId -> HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value: ContentSpecSemanticId args.format $ wrap semanticId } absurd
+  EntityType formatId -> case toString state.value of
+    Just semanticId -> HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value: ContentSpecSemanticId formatId $ wrap semanticId } absurd
     Nothing -> HH.text ""
-  DocumentType args -> HH.text ""
-  UrlType args -> HH.a [ HP.href $ toStringOrEmpty state.value ] [ HH.text $ toStringOrEmpty state.value ]
-  ArrayType args -> HH.div_ $ mapWithIndex renderItem array
+  DocumentType -> HH.text ""
+  UrlType -> HH.a [ HP.href $ toStringOrEmpty state.value ] [ HH.text $ toStringOrEmpty state.value ]
+  ArrayType subType -> HH.div_ $ mapWithIndex renderItem array
     where
-    renderItem num item = HH.slot (SProxy :: SProxy "value") num component { value: fromMaybe jsonNull $ index array num, type: args.type } absurd
-
-    defaultType = StringType {}
+    renderItem num item = HH.slot (SProxy :: SProxy "value") num component { value: fromMaybe jsonNull $ index array num, type: subType } absurd
 
     array = fromMaybe [] $ toArray state.value
-  ObjectType args -> HH.div_ $ map renderProperty props
+  ObjectType propInfos -> HH.div_ $ map renderProperty props
     where
-    props = mkProperties state.value args.properties
+    props = mkProperties state.value propInfos
 
     renderProperty :: Property -> H.ComponentHTML Action ChildSlots m
     renderProperty prop =
@@ -110,7 +109,7 @@ render state = case state.type of
         , HH.dd []
             [ HH.slot (SProxy :: SProxy "property") prop.info.id component { value: prop.value, type: prop.info.type } absurd ]
         ]
-  ImageType args ->
+  ImageType ->
     HH.img [ HP.src $ toStringOrEmpty state.value ]
   where
   toStringOrEmpty = fromMaybe "" <<< toString

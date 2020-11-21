@@ -12,37 +12,38 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Data.Entities (FormatUsage(..))
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
-import Incentknow.Data.Property (Enumerator, PropertyInfo, Type(..), getTypeName)
+import Incentknow.Data.Property (Enumerator, PropertyInfo)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
 import Incentknow.Molecules.SelectMenu as SelectMenu
 
 type Input
-  = { value :: Maybe String
+  = { value :: Maybe FormatUsage
     , disabled :: Boolean
     }
 
 type State
-  = { generator :: Maybe String
+  = { generator :: Maybe FormatUsage
     , disabled :: Boolean
     }
 
 data Action
   = Initialize
   | HandleInput Input
-  | Change (Maybe String)
+  | Change (Maybe FormatUsage)
 
 type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot Unit
+  = ( selectMenu :: SelectMenu.Slot FormatUsage Unit
     )
 
 type Output
-  = Maybe String
+  = Maybe FormatUsage
 
 component :: forall q m. Behaviour m => MonadAff m => H.Component HH.HTML q Input Output m
 component =
@@ -59,18 +60,18 @@ component =
     }
 
 type Item
-  = { id :: String
+  = { id :: FormatUsage
     , name :: String
     , desc :: String
     }
 
 usages :: Array Item
 usages =
-  [ { id: "internal", name: "Internal", desc: "デフォルトです。スペース内部でのみ使用できるフォーマットです。" }
-  , { id: "external", name: "External", desc: "スペース外部でのみ使用できるフォーマットです。" }
+  [ { id: Internal, name: "Internal", desc: "デフォルトです。スペース内部でのみ使用できるフォーマットです。" }
+  , { id: External, name: "External", desc: "スペース外部でのみ使用できるフォーマットです。" }
   ]
 
-toSelectMenuItem :: Item -> SelectMenuItem
+toSelectMenuItem :: Item -> SelectMenuItem FormatUsage
 toSelectMenuItem format =
   { id: format.id
   , name: format.name

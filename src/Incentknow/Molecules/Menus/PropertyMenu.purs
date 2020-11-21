@@ -11,11 +11,12 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Format, getFormat, getFormats)
+import Incentknow.Api (getFocusedFormat, getFormat, getFormats)
 import Incentknow.Api.Utils (Fetch, executeApi, fetchApi, forFetch, forFetchItem)
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Data.Entities (RelatedFormat, Type, FocusedFormat)
 import Incentknow.Data.Ids (SpaceId(..), FormatId(..))
-import Incentknow.Data.Property (PropertyInfo, Type, toPropertyInfo)
+import Incentknow.Data.Property (PropertyInfo)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
 import Incentknow.Molecules.SelectMenu as SelectMenu
@@ -39,13 +40,13 @@ data Action
   = Initialize
   | HandleInput Input
   | ChangeValue (Maybe String)
-  | FetchedFormat (Fetch Format)
+  | FetchedFormat (Fetch FocusedFormat)
 
 type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot Unit )
+  = ( selectMenu :: SelectMenu.Slot String Unit )
 
 type Output
   = Maybe String
@@ -81,7 +82,7 @@ render state =
   where
   props = maybe state.props (\ty-> filter (\item-> item.type == ty) state.props) state.type
 
-toSelectMenuItem :: PropertyInfo -> SelectMenuItem
+toSelectMenuItem :: PropertyInfo -> SelectMenuItem String
 toSelectMenuItem prop =
   { id: prop.id
   , name: prop.displayName
@@ -99,12 +100,10 @@ handleAction :: forall m. Behaviour m => MonadAff m => MonadEffect m => Action -
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchApi FetchedFormat $ getFormat state.formatId
+    fetchApi FetchedFormat $ getFocusedFormat state.formatId
   FetchedFormat fetch ->
     forFetchItem fetch \format-> do
-      let
-        props = map toPropertyInfo format.structure.properties
-      H.modify_ _ { props = props }
+      H.modify_ _ { props = format.structure.properties }
   HandleInput input -> do
     state <- H.get
     if state.formatId /= input.formatId then do

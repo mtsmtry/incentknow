@@ -1,6 +1,7 @@
 module Incentknow.Organisms.Structure where
 
 import Prelude
+
 import Data.Array (concat, filter, length, range)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Maybe.Utils (allJust, flatten)
@@ -20,8 +21,11 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, checkbox, pulldown, textarea)
-import Incentknow.Data.Ids (SpaceId(..), generateId)
-import Incentknow.Data.Property (Enumerator, Property, PropertyInfo, Type(..), getTypeName)
+import Incentknow.Data.Entities (Type(..), TypeName(..))
+import Incentknow.Data.EntityUtils (getTypeName)
+import Incentknow.Data.Ids (SpaceId(..))
+import Incentknow.Data.Property (Enumerator, Property, PropertyInfo)
+import Incentknow.Data.Utils (generateId)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Molecules.FormatMenu as FormatMenu
@@ -163,12 +167,9 @@ render state =
                   }
             ]
         , HH.td []
-            [ if state.readonly then
-                HH.text $ fromMaybe "" $ map getTypeName prop.type
-              else
-                HH.slot (SProxy :: SProxy "typeMenu") prop.id TypeMenu.component
-                  { value: prop.type, exceptions: [ "object" ], spaceId: state.spaceId, disabled: false }
-                  (Just <<< ChangeType prop.id)
+            [ HH.slot (SProxy :: SProxy "typeMenu") prop.id TypeMenu.component
+                { value: prop.type, exceptions: [ TypeNameObject ], spaceId: state.spaceId, disabled: not state.readonly }
+                (Just <<< ChangeType prop.id)
             ]
         , HH.td []
             [ if state.readonly then
@@ -207,26 +208,26 @@ render state =
 
 getSubStructure :: Type -> Maybe (Array PropertyInfo)
 getSubStructure ty = case ty of
-  ArrayType args -> case args.type of
-    ObjectType objArgs -> Just objArgs.properties
+  ArrayType subType -> case subType of
+    ObjectType props -> Just props
     _ -> Nothing
   _ -> Nothing
 
 getEnumerators :: Type -> Maybe (Array Enumerator)
 getEnumerators ty = case ty of
-  EnumType args -> Just args.enumerators
+  EnumType enums -> Just enums
   _ -> Nothing
 
 setSubStructure :: Array PropertyInfo -> Type -> Type
 setSubStructure properties ty = case ty of
-  ArrayType args -> case args.type of
-    ObjectType objArgs -> ArrayType $ args { type = ObjectType $ objArgs { properties = properties } }
+  ArrayType subType -> case subType of
+    ObjectType props -> ArrayType $ ObjectType props
     _ -> ty
   _ -> ty
 
 setEnumerators :: Array Enumerator -> Type -> Type
-setEnumerators enumerators ty = case ty of
-  EnumType args -> EnumType $ args { enumerators = enumerators }
+setEnumerators enums ty = case ty of
+  EnumType _ -> EnumType enums
   _ -> ty
 
 toMaybeString :: String -> Maybe String

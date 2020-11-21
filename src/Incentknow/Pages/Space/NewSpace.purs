@@ -1,9 +1,9 @@
 module Incentknow.Pages.NewSpace where
 
 import Prelude
-
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Newtype (wrap)
 import Data.String (length)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
@@ -14,7 +14,7 @@ import Incentknow.Api (checkSpaceDisplayId, createSpace)
 import Incentknow.Api.Utils (callApi, executeApi)
 import Incentknow.AppM (class Behaviour, Message(..), message, navigate)
 import Incentknow.Atoms.Inputs (submitButton)
-import Incentknow.Data.Ids (CommunityId(..), generateId)
+import Incentknow.Data.Utils (generateId)
 import Incentknow.Molecules.DisplayId (CheckState(..))
 import Incentknow.Molecules.DisplayId as DisplayId
 import Incentknow.Molecules.Form (define, defineText)
@@ -69,7 +69,7 @@ render state =
     [ defineText { label: "表示名", value: state.displayName, onChange: ChangeDisplayName }
     , define "ID"
         [ HH.slot (SProxy :: SProxy "displayId") unit DisplayId.component
-            { checkId: callApi <<< checkSpaceDisplayId
+            { checkId: callApi <<< checkSpaceDisplayId <<< wrap
             , disabled: false
             , value: state.displayId
             }
@@ -97,8 +97,14 @@ handleAction = case _ of
   Submit -> do
     state <- H.modify _ { loading = true }
     -- regulation <- H.query regulation_ unit (H.request SpaceRegulation.GetValue)
-    response <- executeApi $ createSpace { displayId: state.displayId.displayId, displayName: state.displayName, description: state.description }
-    for_ response \spaceId -> do
-      navigate $ Space spaceId SpacePages
+    response <-
+      executeApi
+        $ createSpace
+            { displayId: state.displayId.displayId
+            , displayName: state.displayName
+            , description: state.description
+            }
+    for_ response \space -> do
+      navigate $ Space space.spaceId SpacePages
       message $ Success "スペースの作成に成功しました"
     H.modify_ _ { loading = false }

@@ -7,3 +7,7 @@ Steps to run this project:
 3. Run `npm start` command
 
 https://qiita.com/Ishidall/items/1e3d3ce17125c92c619b
+
+
+コンテンツの作成を抽象化する
+- spaceId, contentId, 

@@ -1,6 +1,7 @@
 module Incentknow.Organisms.ContentPage where
 
 import Prelude
+
 import Data.Array (catMaybes, concat, filter, length, mapWithIndex, range)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Maybe.Utils (allJust, flatten)
@@ -20,9 +21,10 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, checkbox, pulldown, textarea)
-import Incentknow.Data.Ids (FormatId(..), SpaceId(..), generateId)
+import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.Data.Page (ContentPage, ContentRelation)
 import Incentknow.Data.Property (Enumerator, Property, PropertyInfo, Type(..), getTypeName)
+import Incentknow.Data.Utils (generateId)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Molecules.FormatMenu as FormatMenu

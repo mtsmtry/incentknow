@@ -1,6 +1,7 @@
 module Incentknow.Pages.Snapshot where
 
 import Prelude
+
 import Data.Array (index, length, range)
 import Data.Foldable (for_)
 import Data.Int (fromString)
@@ -14,12 +15,10 @@ import Effect.Aff.Class (class MonadAff)
 import Halogen (SubscriptionId)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Content, Format, Snapshot, Work, getSnapshot, onSnapshotContent, onSnapshotWork)
-import Incentknow.Api.Utils (executeApi, subscribeApi)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Inputs (button)
 import Incentknow.Data.Content (getContentSemanticData)
-import Incentknow.Data.Ids (ChangeId(..), ContentId(..), SnapshotId(..), WorkId(..))
+import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..))
 import Incentknow.HTML.Utils (css, link, link_, maybeElem)
 import Incentknow.Organisms.Content.Viewer as Content
 import Incentknow.Organisms.ContentList as ContentList
@@ -28,13 +27,13 @@ import Incentknow.Templates.Page (section, tabPage)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
-  = { workId :: WorkId
+  = { draftId :: ContentDraftId
     , changeId :: ChangeId
     , snapshotDiff :: SnapshotDiff
     }
 
 type State
-  = { workId :: WorkId
+  = { draftId :: ContentDraftId
     , changeId :: ChangeId
     , beforeSnapshotId :: Maybe SnapshotId
     , afterSnapshotId :: SnapshotId

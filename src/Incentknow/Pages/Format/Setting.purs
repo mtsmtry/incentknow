@@ -21,7 +21,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (Account, Format, Space, User, checkSpaceDisplayId, onSnapshotAccount, setContentGenerator, setMyDisplayName, setMyEmail, setMyIcon, setMyPassword, setSpaceAuthority, setSpaceDisplayId, setSpaceDisplayName, setSpaceHomeImage, setSpaceMembershipMethod, setSpacePublished)
+import Incentknow.Api (checkSpaceDisplayId, setMyDisplayName, setMyEmail, setMyIcon, setMyPassword, setSpaceAuthority, setSpaceDisplayId, setSpaceDisplayName, setSpaceHomeImage, setSpaceMembershipMethod, setSpacePublished)
 import Incentknow.Api.Utils (callApi, executeApi, subscribeApi)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, submitButton, textarea)

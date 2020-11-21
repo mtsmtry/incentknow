@@ -9,15 +9,15 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Crawler)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, submitButton)
+import Incentknow.Data.Entities (IntactCrawler)
 
 type Input
-  = { crawler :: Crawler }
+  = { crawler :: IntactCrawler }
 
 type State
-  = { crawler :: Crawler, editMode :: Boolean, updating :: Boolean }
+  = { crawler :: IntactCrawler, editMode :: Boolean, updating :: Boolean }
 
 data Action
   = Initialize

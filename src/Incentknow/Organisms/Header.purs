@@ -1,6 +1,7 @@
 module Incentknow.Organisms.Header where
 
 import Prelude
+
 import Data.Maybe (Maybe(..))
 import Data.Nullable (toMaybe)
 import Effect.Aff.Class (class MonadAff)
@@ -9,9 +10,8 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource as ES
-import Incentknow.Api (Account, onSnapshotAccount)
-import Incentknow.Api.Utils (subscribeApi)
 import Incentknow.AppM (class Behaviour, navigateRoute)
+import Incentknow.Data.Entities (IntactAccount)
 import Incentknow.HTML.Utils (css, link, link_, maybeElem)
 import Incentknow.Route (Route(..), UserTab(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
@@ -20,13 +20,13 @@ type Input
   = { route :: Route }
 
 type State
-  = { account :: Maybe Account, route :: Route }
+  = { account :: Maybe IntactAccount, route :: Route }
 
 data Action
   = Initialize
   | Navigate MouseEvent Route
   | HandleInput Input
-  | ChangeAccount (Maybe Account)
+  | ChangeAccount (Maybe IntactAccount)
 
 type Slot p
   = forall q. H.Slot q Void p

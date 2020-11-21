@@ -24,15 +24,13 @@ import Foreign.Object as O
 import Global (decodeURI, decodeURIComponent, encodeURI, encodeURIComponent)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Format, getFormat)
 import Incentknow.Api.Utils (Fetch, Remote(..), fetchApi, forFetch, forFetchItem)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button, checkbox, submitButton, textarea)
-import Incentknow.Data.Content (ContentFilter, FilterOperation(..))
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.Data.Page (toJson)
-import Incentknow.Data.Property (PropertyInfo, Type(..), toPropertyInfo)
+import Incentknow.Data.Property (PropertyInfo, toPropertyInfo)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Route (Route(..))

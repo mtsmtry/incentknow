@@ -17,7 +17,6 @@ import Incentknow.Data.Ids (FormatId(..))
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Pages.Format.Main as Main
-import Incentknow.Pages.Format.Page as Page
 import Incentknow.Pages.Format.Reactor as Reactor
 import Incentknow.Pages.Format.Setting as Setting
 import Incentknow.Pages.Format.Versions as Versions

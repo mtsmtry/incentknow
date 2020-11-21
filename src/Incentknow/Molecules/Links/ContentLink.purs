@@ -10,9 +10,9 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Content, Format)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Data.Content (getContentSemanticData)
+import Incentknow.Data.Entities (FocusedContent, FocusedFormat)
 import Incentknow.Data.Ids (ContentId(..), FormatId(..))
 import Incentknow.HTML.Utils (maybeElem)
 import Incentknow.Molecules.SelectMenu (SelectMenuItem)
@@ -23,7 +23,7 @@ type Input
   = { value :: ContentSpec }
 
 type State
-  = { contentSpec :: ContentSpec, content :: Maybe Content, format :: Maybe Format }
+  = { contentSpec :: ContentSpec, content :: Maybe FocusedContent, format :: Maybe FocusedFormat }
 
 data Action
   = Initialize
@@ -63,13 +63,13 @@ render state =
     maybeElem state.format \format->
       renderLink content format
   where
-  renderLink :: Content -> Format -> H.ComponentHTML Action ChildSlots m
+  renderLink :: FocusedContent -> FocusedFormat -> H.ComponentHTML Action ChildSlots m
   renderLink content format =
     HH.text common.title
     where
     common = getContentSemanticData content.data format
 
-toSelectMenuItem :: Content -> SelectMenuItem
+toSelectMenuItem :: FocusedContent -> SelectMenuItem
 toSelectMenuItem content =
   { id: unwrap content.contentId
   , name: unwrap content.contentId

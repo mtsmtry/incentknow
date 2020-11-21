@@ -2,6 +2,7 @@ module Incentknow.Molecules.ContentMenu where
 
 import Prelude
 
+import Data.Argonaut.Core (jsonNull)
 import Data.Array (filter, fromFoldable)
 import Data.Foldable (for_)
 import Data.Map as M
@@ -15,10 +16,11 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (Content, Format, defaultCondition, getContent, getContents, getContentsByFormat)
+import Incentknow.Api (getContents, getRelatedContent)
 import Incentknow.Api.Utils (Fetch, executeApi, fetchApi, forFetchItem)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Content (ContentSemanticData, getContentSemanticData)
+import Incentknow.Data.Entities (RelatedContent)
 import Incentknow.Data.Ids (ContentId(..), FormatId(..), SpaceId(..))
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..), upsertItems)
@@ -32,7 +34,7 @@ type Input
     }
 
 type State
-  = { items :: Array SelectMenuItem
+  = { items :: Array (SelectMenuItem ContentId)
     , initialContentId :: Maybe ContentId
     , contentId :: Maybe ContentId
     , formatId :: FormatId
@@ -43,15 +45,15 @@ type State
 data Action
   = Initialize
   | HandleInput Input
-  | ChangeValue (Maybe String)
-  | FetchedInitialContent (Fetch Content)
-  | FetchedContents (Fetch (Array Content))
+  | ChangeValue (Maybe ContentId)
+  | FetchedInitialContent (Fetch RelatedContent)
+  | FetchedContents (Fetch (Array RelatedContent))
 
 type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot Unit )
+  = ( selectMenu :: SelectMenu.Slot ContentId Unit )
 
 type Output
   = Maybe ContentId
@@ -83,18 +85,18 @@ initialState input =
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-    { resource: SelectMenuResourceAllCandidates state.items, value: map unwrap state.contentId, disabled: state.disabled }
+    { resource: SelectMenuResourceAllCandidates state.items, value: state.contentId, disabled: state.disabled }
     (Just <<< ChangeValue)
 
-toSelectMenuItem :: Content -> SelectMenuItem
+toSelectMenuItem :: RelatedContent -> SelectMenuItem ContentId
 toSelectMenuItem content =
-  { id: unwrap content.contentId
+  { id: content.contentId
   , name: semanticData.title
   , searchWord: semanticData.title
   , html: fromContentToHtml semanticData
   }
   where
-  semanticData = getContentSemanticData content.data content.format
+  semanticData = getContentSemanticData content.data content.format -- TODO
 
 fromContentToHtml :: ContentSemanticData -> forall a s m. H.ComponentHTML a s m
 fromContentToHtml src =
@@ -109,10 +111,10 @@ handleAction = case _ of
   Initialize -> do
     state <- H.get
     for_ state.initialContentId \contentId -> do
-      fetchApi FetchedInitialContent $ getContent contentId
+      fetchApi FetchedInitialContent $ getRelatedContent contentId
     case state.spaceId of
-      Just spaceId -> fetchApi FetchedContents $ getContents spaceId state.formatId defaultCondition
-      Nothing -> fetchApi FetchedContents $ getContentsByFormat state.formatId
+      Just spaceId -> fetchApi FetchedContents $ getContents spaceId state.formatId
+      Nothing -> pure unit -- TODO fetchApi FetchedContents $ getContentsByFormat state.formatId
   FetchedInitialContent fetch ->
     forFetchItem fetch \content->
       H.modify_ \s-> s { items = upsertItems [ toSelectMenuItem content ] s.items }
@@ -126,4 +128,4 @@ handleAction = case _ of
       handleAction Initialize
     else
       H.modify_ _ { contentId = input.value, disabled = input.disabled }
-  ChangeValue value -> H.raise $ map ContentId value
+  ChangeValue value -> H.raise value

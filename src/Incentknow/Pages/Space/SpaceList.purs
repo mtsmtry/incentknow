@@ -13,12 +13,12 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Incentknow.Api (Space, getPublishedSpaces, getMySpaces)
+import Incentknow.Api (getMySpaces, getPublishedSpaces)
 import Incentknow.Api.Utils (Fetch, Remote(..), callApi, executeApi, fetchApi, forFetch, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
-import Incentknow.Data.Ids (CommunityId(..))
+import Incentknow.Data.Entities (RelatedSpace)
 import Incentknow.HTML.Utils (css, whenElem)
 import Incentknow.Organisms.CardView (CardViewItem)
 import Incentknow.Organisms.CardView as CardView
@@ -28,13 +28,13 @@ type Input
   = {}
 
 type State
-  = { publishedSpaces :: Remote (Array Space), followedSpaces :: Remote (Array Space), logined :: Boolean }
+  = { publishedSpaces :: Remote (Array RelatedSpace), followedSpaces :: Remote (Array RelatedSpace), logined :: Boolean }
 
 data Action
   = Initialize
   | Navigate Route
-  | FetchedPublishedSpaces (Fetch (Array Space))
-  | FetchedFollowedSpaces (Fetch (Array Space))
+  | FetchedPublishedSpaces (Fetch (Array RelatedSpace))
+  | FetchedFollowedSpaces (Fetch (Array RelatedSpace))
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -55,10 +55,10 @@ component =
 initialState :: Input -> State
 initialState input = { publishedSpaces: Loading, followedSpaces: Loading, logined: true }
 
-toCardViewItem :: Space -> CardViewItem
+toCardViewItem :: RelatedSpace -> CardViewItem
 toCardViewItem space =
   { title: space.displayName
-  , route: Space space.spaceId SpacePages
+  , route: Space space.displayId SpacePages
   , desc: ""
   , info: ""--"コンテンツ数:" <> show space.contentCount
   }

@@ -21,7 +21,6 @@ import Foreign (Foreign)
 import Foreign.Object (Object)
 import Foreign.Object as Object
 import Incentknow.Data.Content as C
-import Incentknow.Data.Ids (ContentId(..), FormatId(..))
 import Incentknow.Data.Property (ChangeType(..), Property, PropertyInfo, PropertyInfoImpl, Type(..), difference, fromPropertyInfo, getTypeName, mkProperties, mkProperty, toPropertyInfo)
 
 main :: Effect Unit

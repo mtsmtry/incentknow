@@ -14,18 +14,17 @@ import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Format)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, numberarea, textarea)
+import Incentknow.Data.Entities (FocusedFormat, Type(..))
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
-import Incentknow.Data.Property (Type(..), toPropertyInfo)
 import Incentknow.HTML.Utils (maybeElem)
 import Incentknow.Organisms.Content.Common (EditEnvironment, EditorInput)
 import Incentknow.Organisms.Content.ValueEditor as Value
 import Incentknow.Organisms.Document.Section (ContentComponent(..))
 
 type State
-  = { format :: Format
+  = { format :: FocusedFormat
     , value :: Json
     , env :: EditEnvironment
     }
@@ -64,11 +63,11 @@ initialState input =
   , env: input.env
   }
 
-mkValueInput :: Json -> Format -> EditEnvironment -> Value.Input
+mkValueInput :: Json -> FocusedFormat -> EditEnvironment -> Value.Input
 mkValueInput value format env =
   { value
   , env
-  , type: ObjectType { properties: map toPropertyInfo format.structure.properties }
+  , type: ObjectType format.structure.properties
   , contentComponent: ContentComponent component
   }
 

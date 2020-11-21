@@ -1,6 +1,7 @@
 module Incentknow.Organisms.Document where
 
 import Prelude
+
 import Data.Argonaut.Core (Json, jsonNull)
 import Data.Argonaut.Decode (decodeJson)
 import Data.Argonaut.Encode (encodeJson)
@@ -18,7 +19,8 @@ import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button)
 import Incentknow.Data.Document (Section)
-import Incentknow.Data.Ids (ContentId, generateId)
+import Incentknow.Data.Ids (ContentId)
+import Incentknow.Data.Utils (generateId)
 import Incentknow.HTML.Utils (maybeElem)
 import Incentknow.Organisms.Content.Common (EditEnvironment)
 import Incentknow.Organisms.Content.ValueViewer as Value

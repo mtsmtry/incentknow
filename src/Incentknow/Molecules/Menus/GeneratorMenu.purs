@@ -12,37 +12,38 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Data.Entities (ContentGenerator(..))
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
-import Incentknow.Data.Property (Enumerator, PropertyInfo, Type(..), getTypeName)
+import Incentknow.Data.Property (Enumerator, PropertyInfo)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
 import Incentknow.Molecules.SelectMenu as SelectMenu
 
 type Input
-  = { value :: Maybe String
+  = { value :: Maybe ContentGenerator
     , disabled :: Boolean
     }
 
 type State
-  = { generator :: Maybe String
+  = { generator :: Maybe ContentGenerator
     , disabled :: Boolean
     }
 
 data Action
   = Initialize
   | HandleInput Input
-  | Change (Maybe String)
+  | Change (Maybe ContentGenerator)
 
 type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot Unit
+  = ( selectMenu :: SelectMenu.Slot ContentGenerator Unit
     )
 
 type Output
-  = Maybe String
+  = Maybe ContentGenerator
 
 component :: forall q m. Behaviour m => MonadAff m => H.Component HH.HTML q Input Output m
 component =
@@ -59,18 +60,18 @@ component =
     }
 
 type Item
-  = { id :: String
+  = { id :: ContentGenerator
     , name :: String
     , desc :: String
     }
 
 generators :: Array Item
 generators =
-  [ { id: "none", name: "None", desc: "ジェネレータは設定しません" }
-  , { id: "reactor", name: "Reactor", desc: "取得毎にコンテンツを生成するジェネレータを設定します" }
+  [ { id: ContentGeneratorNone, name: "None", desc: "ジェネレータは設定しません" }
+  , { id: ContentGeneratorReactor, name: "Reactor", desc: "取得毎にコンテンツを生成するジェネレータを設定します" }
   ]
 
-toSelectMenuItem :: Item -> SelectMenuItem
+toSelectMenuItem :: Item -> SelectMenuItem ContentGenerator
 toSelectMenuItem format =
   { id: format.id
   , name: format.name

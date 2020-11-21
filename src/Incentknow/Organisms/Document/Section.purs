@@ -15,10 +15,11 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Incentknow.Api (Format, getFormat)
+import Incentknow.Api (getFormat)
 import Incentknow.Api.Utils (executeApi)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Document (Section)
+import Incentknow.Data.Entities (FocusedFormat)
 import Incentknow.Data.Ids (ContentId, FormatId(..))
 import Incentknow.HTML.Utils (maybeElem)
 import Incentknow.Molecules.AceEditor as AceEditor
@@ -32,7 +33,7 @@ type Input
   = { value :: Section, env :: EditEnvironment, contentComponent :: ContentComponent }
 
 type State
-  = { section :: Section, env :: EditEnvironment, contentComponent :: ContentComponent, formatId :: Maybe FormatId, format :: Maybe Format }
+  = { section :: Section, env :: EditEnvironment, contentComponent :: ContentComponent, formatId :: Maybe FormatId, format :: Maybe FocusedFormat }
 
 data Action
   = Initialize

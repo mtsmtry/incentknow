@@ -4,7 +4,7 @@ import Prelude
 
 import Data.Array (filter, fromFoldable)
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..), isJust, maybe)
 import Data.Newtype (unwrap)
 import Data.Nullable (notNull, null)
 import Data.Symbol (SProxy(..))
@@ -12,16 +12,17 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Format, getFormat, getFormats)
-import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch, forFetchItem, toMaybe)
+import Incentknow.Api (getRelatedFormat, getFormats)
+import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch, forFetchItem)
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Ids (SpaceId(..), FormatId(..))
+import Incentknow.Data.Entities (FormatUsage, RelatedFormat)
+import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..), upsertItems)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 
 data FormatFilter
-  = Formats (Array Format)
+  = Formats (Array RelatedFormat)
   | SpaceBy SpaceId
   | SpaceByAndHasSemanticId SpaceId
   | None
@@ -41,7 +42,7 @@ type Input
 
 type State
   = { filter :: FormatFilter
-    , items :: Array SelectMenuItem
+    , items :: Array (SelectMenuItem FormatId)
     , initialFormatId :: Maybe FormatId
     , formatId :: Maybe FormatId
     , disabled :: Boolean
@@ -50,15 +51,15 @@ type State
 data Action
   = Initialize
   | HandleInput Input
-  | ChangeValue (Maybe String)
-  | FetchedInitialFormat (Fetch Format)
-  | FetchedFormats (Fetch (Array Format))
+  | ChangeValue (Maybe FormatId)
+  | FetchedInitialFormat (Fetch RelatedFormat)
+  | FetchedFormats (Fetch (Array RelatedFormat))
 
 type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot Unit )
+  = ( selectMenu :: SelectMenu.Slot FormatId Unit )
 
 type Output
   = Maybe FormatId
@@ -89,12 +90,12 @@ initialState input =
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-    { resource: SelectMenuResourceAllCandidates state.items, value: map unwrap state.formatId, disabled: state.disabled }
+    { resource: SelectMenuResourceAllCandidates state.items, value: state.formatId, disabled: state.disabled }
     (Just <<< ChangeValue)
 
-toSelectMenuItem :: Format -> SelectMenuItem
+toSelectMenuItem :: RelatedFormat -> SelectMenuItem FormatId
 toSelectMenuItem format =
-  { id: unwrap format.formatId
+  { id: format.formatId
   , name: format.displayName
   , searchWord: format.displayName
   , html: html
@@ -111,7 +112,7 @@ handleAction = case _ of
   Initialize -> do
     state <- H.get
     for_ state.initialFormatId \formatId -> do
-      fetchApi FetchedInitialFormat $ getFormat formatId
+      fetchApi FetchedInitialFormat $ getRelatedFormat formatId
     case state.filter of
       Formats formats -> H.modify_ _ { items = map toSelectMenuItem formats }
       SpaceBy spaceId -> fetchApi FetchedFormats $ getFormats spaceId
@@ -125,7 +126,7 @@ handleAction = case _ of
       state <- H.get
       case state.filter of
         SpaceByAndHasSemanticId _ -> do
-          let formats2 = filter (\x-> null /= x.semanticId) formats
+          let formats2 = filter (\x-> isJust x.semanticId) formats
           H.modify_ \s-> s { items = upsertItems (map toSelectMenuItem formats2) s.items }
         _ ->
           H.modify_ \s-> s { items = upsertItems (map toSelectMenuItem formats) s.items }
@@ -136,4 +137,4 @@ handleAction = case _ of
       handleAction Initialize
     else
       H.modify_ _ { formatId = input.value, disabled = input.disabled }
-  ChangeValue value -> H.raise $ map FormatId value
+  ChangeValue value -> H.raise value

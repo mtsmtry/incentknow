@@ -2,7 +2,7 @@ module Incentknow.Organisms.Content.Common where
 
 import Data.Argonaut.Core (Json)
 import Data.Maybe (Maybe)
-import Incentknow.Api (Format)
+import Incentknow.Data.Entities (FocusedFormat)
 import Incentknow.Data.Ids (SpaceId(..))
 
 type EditEnvironment
@@ -10,7 +10,7 @@ type EditEnvironment
     }
 
 type EditorInput
-  = { format :: Format
+  = { format :: FocusedFormat
     , value :: Json
     , env :: EditEnvironment
     }

@@ -8,11 +8,12 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Space, applySpaceMembership, getSpace)
+import Incentknow.Api (applySpaceMembership, getSpace)
 import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (submitButton)
-import Incentknow.Data.Ids (CommunityId(..), SpaceId(..))
+import Incentknow.Data.Entities (FocusedSpace)
+import Incentknow.Data.Ids (SpaceId(..))
 import Incentknow.Molecules.Form (defineText)
 import Incentknow.Templates.Page (section)
 
@@ -20,12 +21,12 @@ type Input
   = { spaceId :: SpaceId }
 
 type State
-  = { spaceId :: SpaceId, space :: Remote Space }
+  = { spaceId :: SpaceId, space :: Remote FocusedSpace }
 
 data Action
   = Submit
   | Initialize
-  | FetchedSpace (Fetch Space)
+  | FetchedSpace (Fetch FocusedSpace)
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -60,8 +61,9 @@ render state =
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
-    state <- H.get
-    fetchApi FetchedSpace $ getSpace state.spaceId
+    --state <- H.get
+    --fetchApi FetchedSpace $ getSpace state.spaceId
+    pure unit
   FetchedSpace fetch ->
     forFetch fetch \space->
       H.modify_ _ { space = space }

@@ -8,11 +8,12 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Incentknow.Api (getCrawlers, Crawler)
+import Incentknow.Api (getCrawlers)
 import Incentknow.Api.Utils (Fetch, Remote(..), fetchApi, forFetch)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
+import Incentknow.Data.Entities (IntactCrawler)
 import Incentknow.Data.Ids (SpaceId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Route (CrawlerTab(..), Route(..))
@@ -21,12 +22,12 @@ type Input
   = { spaceId :: SpaceId }
 
 type State
-  = { spaceId :: SpaceId, crawlers :: Remote (Array Crawler) }
+  = { spaceId :: SpaceId, crawlers :: Remote (Array IntactCrawler) }
 
 data Action
   = Initialize
   | Navigate Route
-  | FetchedCrawlers (Fetch (Array Crawler))
+  | FetchedCrawlers (Fetch (Array IntactCrawler))
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -58,7 +59,7 @@ render state =
         ]
     ]
   where
-  renderItem :: Crawler -> H.ComponentHTML Action () m
+  renderItem :: IntactCrawler -> H.ComponentHTML Action () m
   renderItem crawler =
     HH.div [ css "item" ]
       [ HH.div [ css "name", HE.onClick $ \_ -> Just $ Navigate $ Crawler crawler.crawlerId CrawlerMain ] 

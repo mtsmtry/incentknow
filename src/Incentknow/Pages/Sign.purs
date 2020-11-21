@@ -10,7 +10,8 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (login, register)
+import Incentknow.Api (createUser)
+import Incentknow.Api.Session (login)
 import Incentknow.Api.Utils (executeApi)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute, resetMessage)
 import Incentknow.Atoms.Inputs (submitButton)
@@ -206,7 +207,7 @@ handleAction = case _ of
         , email: state.email
         , password: state.password
         }
-    result <- executeApi $ register user
+    result <- executeApi $ createUser user
     case result of
       Just _ -> do
         H.modify_ (_ { resultMessage = Just $ "登録が完了しました。" <> state.email <> "に送信したリンクからメールアドレスを認証してください。" })

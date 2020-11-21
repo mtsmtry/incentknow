@@ -2,12 +2,13 @@ import { AssertionError } from "assert";
 import * as express from "express";
 import * as bodyParser from "body-parser";
 import Router from 'express-promise-router';
-import { ServiceUser } from "./service_user";
-import { ServiceSpace } from "./service_space";
-import { ServiceFormat } from "./service_format";
-import { ServiceContainer } from "./service_container";
-import { UtilsBase } from "./utils_base";
+import * as ServiceUser from "./service_user";
+import * as ServiceSpace from "./service_space";
+import * as ServiceFormat from "./service_format";
+import * as ServiceContainer from "./service_container";
+import * as UtilsBase from "./utils_base";
 import * as AWS from "aws-sdk";
+import * as jwt from 'jsonwebtoken';
 
 const app = express();
 const router = Router();
@@ -26,7 +27,10 @@ router.post('/:method', async (req, res) => {
     const method = req.params.method;
     //console.log("post: " + method);
     //console.log(req.body);
-    UtilsBase.userId = "e7st6GlawfJu"; // req.headers["session"]?.toString();
+    const session = req.header("Session");
+    if (session) {
+        UtilsBase.setUserId(ServiceUser._verfyToken(session));
+    }
     const start = Date.now();
     const response = await getMethod(method)(req.body);
     const time = Date.now() - start;

@@ -11,9 +11,10 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Space, getMySpaces, getPublishedSpaces, getSpace)
+import Incentknow.Api (getMySpaces, getPublishedSpaces, getRelatedSpace, getSpace)
 import Incentknow.Api.Utils (Fetch, executeApi, fetchApi, forFetchItem)
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Data.Entities (RelatedSpace)
 import Incentknow.Data.Ids (SpaceId(..))
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..), upsertItems)
@@ -24,8 +25,8 @@ type Input
     , disabled :: Boolean
     }
 
-type State
-  = { items :: Array SelectMenuItem
+type State 
+  = { items :: Array (SelectMenuItem SpaceId)
     , initialSpaceId :: Maybe SpaceId
     , spaceId :: Maybe SpaceId
     , disabled :: Boolean
@@ -34,15 +35,15 @@ type State
 data Action
   = Initialize
   | HandleInput Input
-  | ChangeValue (Maybe String)
-  | FetchedSpace (Fetch Space)
-  | FetchedSpaces (Fetch (Array Space))
+  | ChangeValue (Maybe SpaceId)
+  | FetchedSpace (Fetch RelatedSpace)
+  | FetchedSpaces (Fetch (Array RelatedSpace))
 
 type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot Unit )
+  = ( selectMenu :: SelectMenu.Slot SpaceId Unit )
 
 type Output
   = Maybe SpaceId
@@ -72,12 +73,12 @@ initialState input =
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-    { resource: SelectMenuResourceAllCandidates state.items, value: map unwrap state.spaceId, disabled: false }
+    { resource: SelectMenuResourceAllCandidates state.items, value: state.spaceId, disabled: false }
     (Just <<< ChangeValue)
 
-toSelectMenuItem :: Space -> SelectMenuItem
+toSelectMenuItem :: RelatedSpace -> SelectMenuItem SpaceId
 toSelectMenuItem space =
-  { id: unwrap space.spaceId
+  { id: space.spaceId
   , name: space.displayName
   , searchWord: space.displayName
   , html: html
@@ -94,7 +95,7 @@ handleAction = case _ of
   Initialize -> do
     state <- H.get
     for_ state.initialSpaceId \spaceId -> do
-      fetchApi FetchedSpace $ getSpace spaceId
+      fetchApi FetchedSpace $ getRelatedSpace spaceId
     fetchApi FetchedSpaces getPublishedSpaces
     fetchApi FetchedSpaces getMySpaces
   FetchedSpace fetch ->
@@ -104,4 +105,4 @@ handleAction = case _ of
     forFetchItem fetch \space->
       H.modify_ \s-> s { items = upsertItems (map toSelectMenuItem space) s.items }
   HandleInput input -> H.modify_ _ { spaceId = input.value, disabled = input.disabled }
-  ChangeValue value -> H.raise $ map SpaceId value
+  ChangeValue value -> H.raise value

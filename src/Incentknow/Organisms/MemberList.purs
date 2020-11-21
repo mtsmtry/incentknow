@@ -9,7 +9,7 @@ import Data.DateTime (DateTime(..))
 import Data.DateTime.Utils (fromTimestampToString)
 import Data.Map (Map, fromFoldable)
 import Data.Map as M
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff, liftAff)
@@ -17,10 +17,11 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (SpaceMember, User, acceptSpaceMembership, getUser, rejectSpaceMembership)
+import Incentknow.Api (acceptSpaceMembership, getUser, rejectSpaceMembership)
 import Incentknow.Api.Utils (executeApi)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Inputs (menuPositiveButton, menuNegativeButton)
+import Incentknow.Data.Entities (IntactSpaceMember, MemberType(..))
 import Incentknow.Data.Ids (UserId(..))
 import Incentknow.HTML.DateTime (dateTime)
 import Incentknow.HTML.Utils (css, link, link_, maybeElem, whenElem)
@@ -29,12 +30,12 @@ import Incentknow.Route as R
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
-  = { members :: Array SpaceMember
+  = { members :: Array IntactSpaceMember
     , isAdmin :: Boolean
     }
 
 type State
-  = { members :: Array SpaceMember
+  = { members :: Array IntactSpaceMember
     , isAdmin :: Boolean
     }
 
@@ -42,8 +43,8 @@ data Action
   = Initialize
   | HandleInput Input
   | Navigate MouseEvent Route
-  | AcceptMembership SpaceMember
-  | RejectMembership SpaceMember
+ -- | AcceptMembership IntactSpaceMember
+ -- | RejectMembership IntactSpaceMember
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -62,13 +63,13 @@ component =
 initialState :: Input -> State
 initialState input = { members: input.members, isAdmin: input.isAdmin }
 
-showMemberType :: SpaceMember -> String
+showMemberType :: IntactSpaceMember -> String
 showMemberType member = case member.type of
-  "owner" -> "オーナー"
-  "admin" -> "管理者"
-  "normal" -> "メンバー"
-  "pending" -> "メンバー申請保留中"
-  _ -> "エラー"
+  Owner-> "オーナー"
+ -- "admin" -> "管理者"
+  Normal -> "メンバー"
+ -- "pending" -> "メンバー申請保留中"
+ -- _ -> "エラー"
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
@@ -76,21 +77,20 @@ render state =
     [ css "org-userlist" ]
     (map renderItem state.members)
   where
-  renderItem :: SpaceMember -> H.ComponentHTML Action ChildSlots m
+  renderItem :: IntactSpaceMember -> H.ComponentHTML Action ChildSlots m
   renderItem member =
     HH.div [ css "item" ]
-      [ linkUser [ css "icon" ] [ HH.img [ HP.src member.user.iconUrl ] ]
+      [ linkUser [ css "icon" ] [ HH.img [ HP.src $ fromMaybe "" member.user.iconUrl ] ] -- TODO
       , HH.div [ css "details" ]
           [ linkUser [ css "username" ] [ HH.text member.user.displayName ]
           , HH.div [ css "info" ] [ HH.text $ showMemberType member ]
-          , whenElem (member.type /= "pending") \_->
-            HH.text $ fromTimestampToString member.joinedAt <> "に加入しました"
-          , whenElem (member.type == "pending" && state.isAdmin) \_->
-              HH.div []
-                [ HH.text "メンバーに申請しています"
-                , menuPositiveButton "許可" (AcceptMembership member)
-                , menuNegativeButton "拒否" (RejectMembership member)
-                ]
+          , HH.text $ fromTimestampToString member.joinedAt <> "に加入しました"
+          --, whenElem (member.type == "pending" && state.isAdmin) \_->
+          --    HH.div []
+          --      [ HH.text "メンバーに申請しています"
+          --      , menuPositiveButton "許可" (AcceptMembership member)
+          --      , menuNegativeButton "拒否" (RejectMembership member)
+          --      ]
           ]
       ]
       where
@@ -103,9 +103,9 @@ handleAction = case _ of
     H.put $ initialState props
     handleAction Initialize
   Navigate event route -> navigateRoute event route
-  AcceptMembership member -> do
-    _ <- executeApi $ acceptSpaceMembership member.spaceId member.userId
-    pure unit
-  RejectMembership member -> do
-    _ <- executeApi $ rejectSpaceMembership member.spaceId member.userId
-    pure unit
+  --AcceptMembership member -> do
+  --  _ <- executeApi $ acceptSpaceMembership member.spaceId member.userId
+  --  pure unit
+  --RejectMembership member -> do
+  --  _ <- executeApi $ rejectSpaceMembership member.spaceId member.userId
+  --  pure unit

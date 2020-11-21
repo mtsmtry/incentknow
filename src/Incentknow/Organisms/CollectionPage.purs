@@ -20,7 +20,7 @@ import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, checkbox, pulldown)
 import Incentknow.Data.Ids (FormatId(..))
 import Incentknow.Data.Page (CollectionPage, ContentComposition, ContentPage, ContentRelation, fromContentComposition, toContentComposition)
-import Incentknow.Data.Property (Enumerator, Property, PropertyInfo, Type(..), getTypeName)
+import Incentknow.Data.Property (Enumerator, Property, PropertyInfo)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.CompositionMenu as CompositionMenu
 import Incentknow.Molecules.DangerChange as DangerChange

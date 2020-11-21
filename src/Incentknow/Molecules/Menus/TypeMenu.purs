@@ -12,8 +12,10 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Data.Entities (Language(..), Type, TypeName(..))
+import Incentknow.Data.EntityUtils (TypeOptions, buildType, defaultTypeOptions, getTypeName)
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
-import Incentknow.Data.Property (Enumerator, PropertyInfo, Type(..), getTypeName)
+import Incentknow.Data.Property (Enumerator, PropertyInfo)
 import Incentknow.HTML.Utils (css, whenElem)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
@@ -22,93 +24,28 @@ import Incentknow.Molecules.SpaceMenu as SpaceMenu
 
 type Input
   = { value :: Maybe Type
-    , exceptions :: Array String
+    , exceptions :: Array TypeName
     , spaceId :: SpaceId
     , disabled :: Boolean
     }
 
-type TypeArguments
-  = { format :: Maybe FormatId
-    , space :: Maybe SpaceId
-    , language :: Maybe String
-    , type :: Maybe Type
-    , properties :: Maybe (Array PropertyInfo)
-    , enumerators :: Maybe (Array Enumerator)
-    }
-
-defaultTypeArguments :: TypeArguments
-defaultTypeArguments =
-  { format: Nothing
-  , space: Nothing
-  , language: Nothing
-  , type: Nothing
-  , properties: Just [] -- これは外部で設定するので、mkTypeでNothingが出力されないようにダミーのデフォルト値を設定
-  , enumerators: Nothing
-  }
-
-getTypeArguments :: Type -> TypeArguments
-getTypeArguments = case _ of
-  IntType args -> defaultTypeArguments
-  StringType args -> defaultTypeArguments
-  BoolType args -> defaultTypeArguments
-  TextType args -> defaultTypeArguments
-  FormatType args -> defaultTypeArguments
-  SpaceType args -> defaultTypeArguments
-  ContentType args -> defaultTypeArguments { format = Just args.format }
-  CodeType args -> defaultTypeArguments { language = args.language }
-  ArrayType args -> defaultTypeArguments { type = Just args.type }
-  UrlType args -> defaultTypeArguments
-  ObjectType args -> defaultTypeArguments { properties = Just args.properties }
-  DocumentType args -> defaultTypeArguments
-  EnumType args -> defaultTypeArguments { enumerators = Just args.enumerators }
-  EntityType args -> defaultTypeArguments { format = Just args.format }
-  ImageType args -> defaultTypeArguments
-
-mkType :: String -> TypeArguments -> Maybe Type
-mkType name args = case name of
-  "integer" -> pure $ IntType {}
-  "string" -> pure $ StringType {}
-  "text" -> pure $ TextType {}
-  "format" -> pure $ FormatType {}
-  "boolean" -> pure $ BoolType {}
-  "space" -> pure $ SpaceType {}
-  "content" -> do
-    format <- args.format
-    pure $ ContentType { format }
-  "code" -> pure $ CodeType { language: args.language }
-  "array" -> do
-    ty <- args.type
-    pure $ ArrayType { type: ty }
-  "url" -> pure $ UrlType {}
-  "object" -> do
-    properties <- args.properties
-    pure $ ObjectType { properties }
-  "document" -> pure $ DocumentType {}
-  "enumeration" -> do
-    enumerators <- args.enumerators
-    pure $ EnumType { enumerators }
-  "entity" -> do
-    format <- args.format
-    pure $ EntityType { format }
-  "image" -> pure $ ImageType {}
-  _ -> Nothing
-
 type State
-  = { typeNameItems :: Array SelectMenuItem
-    , langNameItems :: Array SelectMenuItem
-    , typeName :: Maybe String
-    , typeArgs :: TypeArguments
-    , exceptions :: Array String
+  = { typeNameItems :: Array (SelectMenuItem TypeName)
+    , langNameItems :: Array (SelectMenuItem Language)
+    , typeName :: Maybe TypeName    
+    , typeOptions :: TypeOptions
+    , exceptions :: Array TypeName
     , spaceId :: SpaceId
+    , selectedSpaceId :: Maybe SpaceId
     , disabled :: Boolean
     }
 
 data Action
   = Initialize
   | HandleInput Input
-  | ChangeTypeName (Maybe String)
+  | ChangeTypeName (Maybe TypeName)
   | ChangeFormat (Maybe FormatId)
-  | ChangeLangName (Maybe String)
+  | ChangeLangName (Maybe Language)
   | ChangeArgType (Maybe Type)
   | ChangeSpace (Maybe SpaceId)
 
@@ -116,10 +53,10 @@ type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot Unit
+  = ( selectMenu :: SelectMenu.Slot TypeName Unit
     , spaceMenu :: SpaceMenu.Slot Unit
     , formatMenu :: FormatMenu.Slot Unit
-    , langMenu :: SelectMenu.Slot Unit
+    , langMenu :: SelectMenu.Slot Language Unit
     , typeMenu :: Slot Unit
     )
 
@@ -140,41 +77,41 @@ component =
               }
     }
 
-type Item
-  = { id :: String
+type Item a
+  = { id :: a
     , name :: String
     , desc :: String
     }
 
-typeItems :: Array Item
+typeItems :: Array (Item TypeName)
 typeItems =
-  [ { id: "integer", name: "Integer", desc: "整数" }
-  , { id: "string", name: "String", desc: "文字列(改行なし)" }
-  , { id: "text", name: "Text", desc: "文字列(改行あり)" }
-  , { id: "decimal", name: "Decimal", desc: "少数" }
-  , { id: "boolean", name: "Boolean", desc: "ブール値" }
-  , { id: "enumeration", name: "Enum", desc: "列挙体" }
-  , { id: "format", name: "Format", desc: "フォーマット" }
-  , { id: "space", name: "Space", desc: "スペース" }
-  , { id: "content", name: "Content", desc: "コンテンツ" }
-  , { id: "code", name: "SourceCode", desc: "ソースコード" }
-  , { id: "url", name: "URL", desc: "URL" }
-  , { id: "array", name: "Array", desc: "配列" }
-  , { id: "object", name: "Object", desc: "オブジェクト" }
-  , { id: "document", name: "Document", desc: "ドキュメント" }
-  , { id: "entity", name: "Entity", desc: "エンティティ" }
-  , { id: "image", name: "Image", desc: "画像" }
+  [ { id: TypeNameInt, name: "Integer", desc: "整数" }
+  , { id: TypeNameString, name: "String", desc: "文字列(改行なし)" }
+  , { id: TypeNameText, name: "Text", desc: "文字列(改行あり)" }
+ -- , { id: TypeNameDecimal, name: "Decimal", desc: "少数" }
+  , { id: TypeNameBool, name: "Boolean", desc: "ブール値" }
+  , { id: TypeNameEnum, name: "Enum", desc: "列挙体" }
+  , { id: TypeNameFormat, name: "Format", desc: "フォーマット" }
+  , { id: TypeNameSpace, name: "Space", desc: "スペース" }
+  , { id: TypeNameContent, name: "Content", desc: "コンテンツ" }
+  , { id: TypeNameCode, name: "SourceCode", desc: "ソースコード" }
+  , { id: TypeNameUrl, name: "URL", desc: "URL" }
+  , { id: TypeNameArray, name: "Array", desc: "配列" }
+  , { id: TypeNameObject, name: "Object", desc: "オブジェクト" }
+  , { id: TypeNameDocument, name: "Document", desc: "ドキュメント" }
+  , { id: TypeNameEntity, name: "Entity", desc: "エンティティ" }
+  , { id: TypeNameImage, name: "Image", desc: "画像" }
   ]
 
-langItems :: Array Item
+langItems :: Array (Item Language)
 langItems =
-  [ { id: "python", name: "Python", desc: "" }
-  , { id: "javascript", name: "JavaScript", desc: "" }
-  , { id: "r", name: "R", desc: "" }
-  , { id: "json", name: "JSON", desc: "" }
+  [ { id: Python, name: "Python", desc: "" }
+  , { id: Javascript, name: "JavaScript", desc: "" }
+  --, { id: "r", name: "R", desc: "" }
+  --, { id: Json, name: "JSON", desc: "" }
   ]
 
-toSelectMenuItem :: Item -> SelectMenuItem
+toSelectMenuItem :: forall a. Item a -> SelectMenuItem a
 toSelectMenuItem format =
   { id: format.id
   , name: format.name
@@ -194,13 +131,12 @@ initialState input =
   { typeNameItems: map toSelectMenuItem $ filter (\x -> notElem x.id input.exceptions) typeItems
   , langNameItems: map toSelectMenuItem langItems
   , typeName: map getTypeName input.value
-  , typeArgs: fromMaybe defaultTypeArguments2 $ map getTypeArguments input.value
+  , typeOptions: defaultTypeOptions
   , exceptions: input.exceptions
   , spaceId: input.spaceId
+  , selectedSpaceId: Just input.spaceId
   , disabled: input.disabled
   }
-  where
-  defaultTypeArguments2 = defaultTypeArguments { space = Just input.spaceId }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
@@ -209,40 +145,40 @@ render state =
         { resource: SelectMenuResourceAllCandidates $ state.typeNameItems, value: state.typeName, disabled: state.disabled }
         (Just <<< ChangeTypeName)
     , case state.typeName of
-        Just "content" ->
+        Just TypeNameContent ->
           HH.div_
-            [ whenElem (isNothing state.typeArgs.format) \_ ->
+            [ whenElem (isNothing state.typeOptions.format) \_ ->
                 HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
-                  { value: state.typeArgs.space, disabled: false }
+                  { value: state.selectedSpaceId, disabled: false }
                   (Just <<< ChangeSpace)
             , HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component
-                { value: state.typeArgs.format, filter: maybe FormatMenu.None FormatMenu.SpaceBy state.typeArgs.space, disabled: state.disabled }
+                { value: state.typeOptions.format, filter: maybe FormatMenu.None FormatMenu.SpaceBy state.selectedSpaceId, disabled: state.disabled }
                 (Just <<< ChangeFormat)
             ]
-        Just "entity" ->
+        Just TypeNameEntity ->
           HH.div_
-            [ whenElem (isNothing state.typeArgs.format) \_ ->
+            [ whenElem (isNothing state.typeOptions.format) \_ ->
                 HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
-                  { value: state.typeArgs.space, disabled: false }
+                  { value: state.selectedSpaceId, disabled: false }
                   (Just <<< ChangeSpace)
             , HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component
-                { value: state.typeArgs.format, filter: maybe FormatMenu.None FormatMenu.SpaceByAndHasSemanticId state.typeArgs.space, disabled: state.disabled }
+                { value: state.typeOptions.format, filter: maybe FormatMenu.None FormatMenu.SpaceByAndHasSemanticId state.selectedSpaceId, disabled: state.disabled }
                 (Just <<< ChangeFormat)
             ]
-        Just "code" ->
+        Just TypeNameCode ->
           HH.slot (SProxy :: SProxy "langMenu") unit SelectMenu.component
-            { resource: SelectMenuResourceAllCandidates state.langNameItems, value: state.typeArgs.language, disabled: state.disabled }
+            { resource: SelectMenuResourceAllCandidates state.langNameItems, value: state.typeOptions.language, disabled: state.disabled }
             (Just <<< ChangeLangName)
-        Just "array" ->
+        Just TypeNameArray ->
           HH.slot (SProxy :: SProxy "typeMenu") unit component
-            { value: state.typeArgs.type, exceptions: [ "array" ], spaceId: state.spaceId, disabled: state.disabled }
+            { value: state.typeOptions.subType, exceptions: [ TypeNameArray ], spaceId: state.spaceId, disabled: state.disabled }
             (Just <<< ChangeArgType)
         _ -> HH.text ""
     ]
 
-buildType :: State -> Maybe (Maybe Type)
-buildType state = case state.typeName of
-  Just name -> case mkType name state.typeArgs of
+buildReturnType :: State -> Maybe (Maybe Type)
+buildReturnType state = case state.typeName of
+  Just name -> case buildType name state.typeOptions of
     Just ty -> Just $ Just ty
     Nothing -> Nothing
   Nothing -> Just Nothing
@@ -251,7 +187,7 @@ buildType state = case state.typeName of
 -- Just Nothing: 値なし
 -- Nothing: 保留
 raiseOrModify :: forall m. State -> H.HalogenM State Action ChildSlots Output m Unit
-raiseOrModify state = case buildType state of
+raiseOrModify state = case buildReturnType state of
   Just value -> do
     H.raise value
     when (isNothing value) $ H.put state
@@ -263,16 +199,16 @@ handleAction = case _ of
   HandleInput input -> when (isJust input.value) $ H.put $ initialState input
   ChangeFormat formatId -> do
     state <- H.get
-    raiseOrModify $ state { typeArgs = state.typeArgs { format = formatId } }
+    raiseOrModify $ state { typeOptions = state.typeOptions { format = formatId } }
   ChangeTypeName typeName -> do
     state <- H.get
     raiseOrModify $ state { typeName = typeName }
   ChangeLangName langName -> do
     state <- H.get
-    raiseOrModify $ state { typeArgs = state.typeArgs { language = langName } }
+    raiseOrModify $ state { typeOptions = state.typeOptions { language = langName } }
   ChangeArgType argType -> do
     state <- H.get
-    raiseOrModify $ state { typeArgs = state.typeArgs { type = argType } }
+    raiseOrModify $ state { typeOptions = state.typeOptions { subType = argType } }
   ChangeSpace space -> do
     state <- H.get
-    raiseOrModify $ state { typeArgs = state.typeArgs { space = space } }
+    raiseOrModify $ state { selectedSpaceId = space }

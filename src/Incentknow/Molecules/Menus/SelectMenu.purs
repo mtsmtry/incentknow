@@ -26,7 +26,7 @@ import Halogen.HTML.Properties as HP
 import Incentknow.Api.Utils (callbackApi, executeApi)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (loadingWith)
-import Incentknow.Data.Ids (generateId)
+import Incentknow.Data.Utils (generateId)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Web.DOM (Element)
 import Web.DOM.NonElementParentNode (getElementById)
@@ -35,71 +35,71 @@ import Web.HTML.HTMLElement (focus)
 import Web.HTML.HTMLElement (fromElement)
 import Web.HTML.Window (document)
 
-type SelectMenuItem
-  = { id :: String
+type SelectMenuItem a
+  = { id :: a
     , name :: String
     , searchWord :: String
     , html :: forall a s m. H.ComponentHTML a s m
     }
 
-upsertItems :: Array SelectMenuItem -> Array SelectMenuItem -> Array SelectMenuItem
+upsertItems :: forall a. Ord a => Array (SelectMenuItem a) -> Array (SelectMenuItem a) -> Array (SelectMenuItem a)
 upsertItems additions src = Array.fromFoldable $ Map.values $ union (toMap additions) (toMap src)
   where
   toMap xs = Map.fromFoldable (map (\x-> Tuple x.id x) xs)
 
-data SelectMenuResource
-  = SelectMenuResourceAllCandidates (Array SelectMenuItem)
+data SelectMenuResource a
+  = SelectMenuResourceAllCandidates (Array (SelectMenuItem a))
   | SelectMenuResourceFetchFunctions
-    { search :: String -> Aff (Either String (Array SelectMenuItem))
-    , get :: String -> (SelectMenuItem -> Effect Unit) -> Effect Unit
+    { search :: String -> Aff (Either String (Array (SelectMenuItem a)))
+    , get :: a -> (SelectMenuItem a -> Effect Unit) -> Effect Unit
     }
 
-type Input
-  = { resource :: SelectMenuResource
-    , value :: Maybe String
+type Input a
+  = { resource :: SelectMenuResource a
+    , value :: Maybe a
     , disabled :: Boolean
     }
 
-type State
-  = { resource :: SelectMenuResource
-    , displayItems :: Array SelectMenuItem
+type State a
+  = { resource :: SelectMenuResource a
+    , displayItems :: Array (SelectMenuItem a)
     , isFocused :: Boolean
     , isMouseEnterListBox :: Boolean
     , filter :: String
-    , selectedId :: Maybe String
-    , selectedItem :: Maybe SelectMenuItem
+    , selectedId :: Maybe a
+    , selectedItem :: Maybe (SelectMenuItem a)
     , textbox :: Maybe Element
     , disabled :: Boolean
     , loadingItems :: Boolean
     , loadingError :: Maybe String
     }
 
-data Action
+data Action a
   = Initialize
   | Load
-  | ClickItem SelectMenuItem
-  | SetSelectedItem SelectMenuItem
+  | ClickItem (SelectMenuItem a)
+  | SetSelectedItem (SelectMenuItem a)
   | FocusTextArea
   | BlurTextArea
   | Unselect
   | ChangeFilter String
   | MouseEnterListBox
   | MouseLeaveListBox
-  | HandleInput Input
+  | HandleInput (Input a)
   | ClickValue
   | ClickTextArea
   | GetTextBox (Maybe Element)
 
-data Query a
-  = GetValue (Maybe String -> a)
+data Query id a
+  = GetValue (Maybe id -> a)
 
-type Output
-  = Maybe String
+type Output a
+  = Maybe a
 
-type Slot
-  = H.Slot Query Output
+type Slot a p
+  = H.Slot (Query a) (Output a) p
 
-component :: forall m. Behaviour m => MonadAff m => H.Component HH.HTML Query Input Output m
+component :: forall m a. Ord a => Eq a => Behaviour m => MonadAff m => H.Component HH.HTML (Query a) (Input a) (Output a) m
 component =
   H.mkComponent
     { initialState
@@ -114,7 +114,7 @@ component =
             }
     }
 
-setInput :: State -> Input -> State
+setInput :: forall a. Ord a => State a -> Input a -> State a
 setInput state input =
   state
     { resource = input.resource
@@ -135,7 +135,7 @@ setInput state input =
     SelectMenuResourceAllCandidates items -> getDisplayItems state.filter items
     SelectMenuResourceFetchFunctions _ -> state.displayItems
 
-initialState :: Input -> State
+initialState :: forall a. Eq a => Ord a => Input a -> State a
 initialState =
   setInput
     { resource: SelectMenuResourceAllCandidates []
@@ -153,7 +153,7 @@ initialState =
 
 textbox_ = RefLabel "textbox"
 
-render :: forall m. State -> H.ComponentHTML Action () m
+render :: forall m a. State a -> H.ComponentHTML (Action a) () m
 render state =
   HH.div [ css if state.disabled then "mol-select-menu disabled" else "mol-select-menu" ]
     [ if (isNothing state.selectedId || state.isFocused) && not state.disabled then
@@ -214,7 +214,7 @@ render state =
           )
     ]
   where
-  renderItem :: SelectMenuItem -> H.ComponentHTML Action () m
+  renderItem :: SelectMenuItem a -> H.ComponentHTML (Action a) () m
   renderItem item =
     HH.li
       [ css "item"
@@ -223,14 +223,14 @@ render state =
       [ item.html
       ]
 
-  messageItem :: H.ComponentHTML Action () m -> H.ComponentHTML Action () m
+  messageItem :: H.ComponentHTML (Action a) () m -> H.ComponentHTML (Action a) () m
   messageItem msg =
     HH.li [ css "item" ] [ msg ]
 
-getDisplayItems :: String -> Array SelectMenuItem -> Array SelectMenuItem
+getDisplayItems :: forall a. String -> Array (SelectMenuItem a) -> Array (SelectMenuItem a)
 getDisplayItems word items = if word == "" then items else filter (\x -> contains (Pattern word) x.searchWord) items
 
-handleAction :: forall m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action () Output m Unit
+handleAction :: forall m a. Eq a => Ord a => Behaviour m => MonadAff m => Action a -> H.HalogenM (State a) (Action a) () (Output a) m Unit
 handleAction = case _ of
   Initialize -> do
     handleAction Load
@@ -283,7 +283,7 @@ handleAction = case _ of
       >>= traverse_ \textbox -> do
           liftEffect $ focus textbox
 
-handleQuery :: forall m a. Query a -> H.HalogenM State Action () Output m (Maybe a)
+handleQuery :: forall m a r. Query a r -> H.HalogenM (State a) (Action a) () (Output a) m (Maybe r)
 handleQuery = case _ of
   GetValue k -> do
     state <- H.get
