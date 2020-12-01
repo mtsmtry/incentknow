@@ -8,7 +8,7 @@ output/
 .psc-package/
 .spago/
 
-/index.js
+/client/index.js
 
 /ts2ps/
 

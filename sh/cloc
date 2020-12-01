@@ -1,1 +1,1 @@
-cloc src/Incentknow ts2ps/src gae/MyProject/src
+cloc frontend/src/Incentknow ts2ps/src backend/src

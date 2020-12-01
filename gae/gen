@@ -1,1 +1,0 @@
-schemats generate -c 'mysql://104.198.85.62/main?user=local&password=2128' -t users -o osm.ts
