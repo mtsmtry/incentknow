@@ -1,7 +1,6 @@
 module Incentknow.Pages.Space.PageList where
 
 import Prelude
-
 import Ace.Document (getAllLines)
 import Data.Array (filter, length)
 import Data.Maybe (Maybe(..))
@@ -11,8 +10,8 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Incentknow.Api (getFormats)
-import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch)
+import Incentknow.API (getFormats)
+import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
@@ -54,7 +53,7 @@ initialState input = { spaceId: input.spaceId, formats: Loading }
 
 toCardViewItem :: State -> RelatedFormat -> CardViewItem
 toCardViewItem state format =
-  { title: format.displayName 
+  { title: format.displayName
   , route: Composition state.spaceId format.formatId ""
   , desc: ""
   , info: ""
@@ -66,24 +65,22 @@ render state =
     [ HH.div [ css "table" ]
         [ HH.div [ css "header" ]
             [ HH.div [ css "column" ]
-                [ --HH.text "ã‚¹ãƒšãƒ¼ã‚¹"
-                ]
+                [ --HH.text "ã‚¹ãƒšãƒ¼ã‚¹"]
             ]
         , HH.div [ css "body" ]
-            [ remoteWith state.formats \formats->
+            [ remoteWith state.formats \formats ->
                 HH.text ""
-                --HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map (toCardViewItem state) $ filter (\x-> length x.collectionPage.compositions > 0) formats } absurd
+            --HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map (toCardViewItem state) $ filter (\x-> length x.collectionPage.compositions > 0) formats } absurd
             ]
         ]
     ]
-
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchApi FetchedFormats $ getFormats state.spaceId
+    fetchAPI FetchedFormats $ getFormats state.spaceId
   FetchedFormats fetch -> do
-    forFetch fetch \formats->
+    forFetch fetch \formats ->
       H.modify_ _ { formats = formats }
   Navigate route -> navigate route

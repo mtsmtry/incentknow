@@ -1,7 +1,6 @@
 module Incentknow.Pages.NewFormat where
 
 import Prelude
-
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Symbol (SProxy(..))
@@ -9,8 +8,8 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (createFormat)
-import Incentknow.Api.Utils (executeApi)
+import Incentknow.API (createFormat)
+import Incentknow.API.Execution (executeAPI)
 import Incentknow.AppM (class Behaviour, Message(..), message, navigate)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Data.Entities (FormatUsage(..))
@@ -112,16 +111,16 @@ handleAction = case _ of
         let
           newFormat =
             { displayName: state.displayName
-           -- , displayId: state.displayId
+            -- , displayId: state.displayId
             , description: state.description
             , properties: props
             , spaceId: state.spaceId
             , usage
             }
         H.modify_ _ { loading = true }
-        response <- executeApi $ createFormat newFormat
-        for_ response \format -> do
-          navigate $ Format format.displayId FormatMain
+        response <- executeAPI $ createFormat newFormat
+        for_ response \displayId -> do
+          navigate $ Format displayId FormatMain
           message $ Success "フォーマットの作成に成功しました"
         H.modify_ _ { loading = false }
       Nothing, _ -> message $ Error "データ定義の入力が終わっていません"

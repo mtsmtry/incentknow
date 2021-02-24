@@ -1,4 +1,5 @@
-import { User } from "../../entities/user/user";
+import { User } from "../../entities/user/User";
+import { toTimestamp } from "../Utils";
 
 export type UserId = string;
 
@@ -13,13 +14,14 @@ export interface IntactAccount {
     email: string;
 }
 
-export function toIntactAccount(user: User): RelatedUser {
+export function toIntactAccount(user: User): IntactAccount {
     return {
         userId: user.entityId,
         displayId: user.displayId,
         displayName: user.displayName,
         iconUrl: user.iconUrl,
-        createdAt: toTimestamp(user.createdAt)
+        createdAt: toTimestamp(user.createdAt),
+        email: user.email
     }
 }
 

@@ -1,7 +1,6 @@
 module Incentknow.Pages.Format.Page where
 
 import Prelude
-
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
@@ -10,7 +9,7 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.Api (Format, Structure, getFormatStructures, setFormatCollectionPage, setFormatContentPage)
-import Incentknow.Api.Utils (executeApi)
+import Incentknow.Api.Execution (executeApi)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button)
 import Incentknow.Data.Ids (FormatId(..))
@@ -123,13 +122,13 @@ handleAction = case _ of
     state <- H.get
     H.query contentPage_ unit (H.request ContentPage.GetValue)
       >>= traverse_ \contentPage -> do
-        H.modify_ _ { contentPageState = Sending }
-        _ <- executeApi $ setFormatContentPage state.format.formatId contentPage
-        H.modify_ _ { contentPageState = None }
+          H.modify_ _ { contentPageState = Sending }
+          _ <- executeApi $ setFormatContentPage state.format.formatId contentPage
+          H.modify_ _ { contentPageState = None }
   SubmitCollectionPage -> do
     state <- H.get
     H.query collectionPage_ unit (H.request CollectionPage.GetValue)
       >>= traverse_ \collectionPage -> do
-        H.modify_ _ { collectionPageState = Sending }
-        _ <- executeApi $ setFormatCollectionPage state.format.formatId collectionPage
-        H.modify_ _ { collectionPageState = None }
+          H.modify_ _ { collectionPageState = Sending }
+          _ <- executeApi $ setFormatCollectionPage state.format.formatId collectionPage
+          H.modify_ _ { collectionPageState = None }

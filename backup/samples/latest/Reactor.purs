@@ -1,7 +1,6 @@
 module Incentknow.Pages.Format.Reactor where
 
 import Prelude
-
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing)
 import Data.Maybe.Utils (flatten)
@@ -15,7 +14,7 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.Api (checkSpaceDisplayId, createSpace, getReactor, setReactorDefinitionId)
-import Incentknow.Api.Utils (Fetch, Remote(..), callApi, executeApi, fetchApi, forFetch, toMaybe)
+import Incentknow.Api.Execution (Fetch, Remote(..), callApi, executeApi, fetchApi, forFetch, toMaybe)
 import Incentknow.AppM (class Behaviour, Message(..), message, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
@@ -99,7 +98,7 @@ handleAction = case _ of
     fetchApi FetchedReactor $ getReactor state.format.formatId
   FetchedReactor fetch -> do
     forFetch fetch \reactor ->
-      H.modify_ _ { reactor = reactor, definitionId = flatten $ map (\x-> N.toMaybe x.definitionId) $ toMaybe reactor }
+      H.modify_ _ { reactor = reactor, definitionId = flatten $ map (\x -> N.toMaybe x.definitionId) $ toMaybe reactor }
   ChangeDefinitionId definitionId -> H.modify_ _ { definitionId = definitionId }
   Submit -> do
     state <- H.get

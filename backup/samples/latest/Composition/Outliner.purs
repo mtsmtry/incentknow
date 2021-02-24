@@ -1,7 +1,6 @@
 module Incentknow.Pages.Composition.Outliner where
 
 import Prelude
-
 import Control.Parallel (sequential)
 import Data.Argonaut.Core (toObject, toString)
 import Data.Array (catMaybes, filter, foldr, fromFoldable, head, length)
@@ -20,7 +19,7 @@ import Foreign.Object (lookup)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.Api (Content, getContents, onSnapshotContents)
-import Incentknow.Api.Utils (executeApi, subscribeApi)
+import Incentknow.Api.Execution (executeApi, subscribeApi)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Ids (ContentId(..), FormatId(..), SpaceId(..))
 import Incentknow.Data.Page (Outliner)
@@ -77,18 +76,18 @@ initialState input =
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div [ css "page-cmp-outliner" ]
-    (map renderItem $ filter (\x-> isNothing x.parent) $ fromFoldable $ M.values state.items)
+    (map renderItem $ filter (\x -> isNothing x.parent) $ fromFoldable $ M.values state.items)
   where
   renderItem :: Item -> H.ComponentHTML Action ChildSlots m
   renderItem item =
     maybeElem item.content \content ->
       HH.div [ css "page-cmp-outliner_item" ]
         [ HH.slot (SProxy :: SProxy "content") content.contentId Content.component { contentSpec: ContentSpecContentId content.contentId } absurd
-        , whenElem (length childItems > 0) \_->
+        , whenElem (length childItems > 0) \_ ->
             HH.div [ css "children" ] (map renderItem childItems)
         ]
-      where
-      childItems = catMaybes $ map (\contentId-> M.lookup contentId state.items) $ fromFoldable item.children
+    where
+    childItems = catMaybes $ map (\contentId -> M.lookup contentId state.items) $ fromFoldable item.children
 
 initialItem :: Item
 initialItem =

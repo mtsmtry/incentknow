@@ -1,7 +1,6 @@
-module Incentknow.Pages.Community.SpaceList where
+module Incentknow.Pages.SpaceList where
 
 import Prelude
-
 import Ace.Document (getAllLines)
 import Data.Either (isLeft)
 import Data.Foldable (for_)
@@ -13,8 +12,8 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Incentknow.Api (getMySpaces, getPublishedSpaces)
-import Incentknow.Api.Utils (Fetch, Remote(..), callApi, executeApi, fetchApi, forFetch, toMaybe)
+import Incentknow.API (getMySpaces, getPublishedSpaces)
+import Incentknow.API.Execution (Fetch, Remote(..), callAPI, executeAPI, fetchAPI, forFetch, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
@@ -60,7 +59,7 @@ toCardViewItem space =
   { title: space.displayName
   , route: Space space.displayId SpacePages
   , desc: ""
-  , info: ""--"コンテンツ数:" <> show space.contentCount
+  , info: "" --"コンテンツ数:" <> show space.contentCount
   }
 
 render :: forall m. MonadEffect m => Behaviour m => State -> H.ComponentHTML Action ChildSlots m
@@ -72,14 +71,14 @@ render state =
           [ HH.div [ css "caption" ]
               [ HH.text "登録しているスペース"
               ]
-          , remoteWith state.followedSpaces \spaces->
+          , remoteWith state.followedSpaces \spaces ->
               HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map toCardViewItem spaces } absurd
           ]
     , HH.div [ css "part" ]
         [ HH.div [ css "caption" ]
             [ HH.text "公開されているスペース"
             ]
-        , remoteWith state.publishedSpaces \spaces->
+        , remoteWith state.publishedSpaces \spaces ->
             HH.slot (SProxy :: SProxy "cardview2") unit CardView.component { items: map toCardViewItem spaces } absurd
         ]
     ]
@@ -87,13 +86,13 @@ render state =
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
-    fetchApi FetchedPublishedSpaces getPublishedSpaces
-    fetchApi FetchedFollowedSpaces getMySpaces
-  FetchedPublishedSpaces fetch->
-    forFetch fetch \spaces->
+    fetchAPI FetchedPublishedSpaces getPublishedSpaces
+    fetchAPI FetchedFollowedSpaces getMySpaces
+  FetchedPublishedSpaces fetch ->
+    forFetch fetch \spaces ->
       H.modify_ _ { publishedSpaces = spaces }
-  FetchedFollowedSpaces fetch->
-    forFetch fetch \spaces-> do
+  FetchedFollowedSpaces fetch ->
+    forFetch fetch \spaces -> do
       H.modify_ _ { followedSpaces = spaces }
       when (isNothing $ toMaybe spaces) do
         H.modify_ _ { logined = false }

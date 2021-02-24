@@ -33,6 +33,6 @@ export function UpdatedAt() {
     return UpdateDateColumn({ precision: 0, default: () => 'NOW()' })
 }
 
-export function Date() {
+export function DateColumn() {
     return Column({ name: "date", precision: 0, default: () => 'NOW()' })
 }

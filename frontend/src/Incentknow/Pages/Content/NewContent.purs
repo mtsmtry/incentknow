@@ -8,8 +8,8 @@ import Data.Either (either)
 import Data.Foldable (for_, traverse_)
 import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
 import Data.Newtype (unwrap)
-import Data.Nullable (toMaybe, toNullable)
 import Data.Symbol (SProxy(..))
+import Data.Traversable (for)
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
@@ -22,41 +22,59 @@ import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
 import Halogen.Query.HalogenM (SubscriptionId(..))
-import Incentknow.Api (Format, Work, createBlankWork, createContent, getFormat, onSnapshotWork, updateBlankWork)
-import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch, subscribeApi)
-import Incentknow.Api.Utils as R
+import Incentknow.API (getContentDraft, getFormat, createNewContentDraft, startContentEditing)
+import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch, toMaybe)
+import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigate, pushState)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Atoms.Message (SaveState(..), saveState)
-import Incentknow.Data.Ids (SpaceId(..), WorkId(..), FormatId(..))
-import Incentknow.Data.Property (getDefaultValue, toPropertyInfo)
-import Incentknow.HTML.Utils (css, maybeElem)
+import Incentknow.Data.Entities (FocusedFormat, FocusedContentDraft)
+import Incentknow.Data.Ids (ContentDraftId, ContentId, FormatId(..), SpaceId(..))
+import Incentknow.Data.Property (getDefaultValue)
+import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Organisms.Content.Editor as Editor
 import Incentknow.Route (Route(..))
 import Incentknow.Templates.Page (section)
 
+-- A type which defines the draft by three kind sources
 data Input
   = NewInput (Maybe SpaceId) (Maybe FormatId)
-  | DraftInput WorkId
+  | DraftInput ContentDraftId
+  | ContentInput ContentId
 
-instance eqInput :: Eq Input where
-  eq (NewInput a b) (NewInput a' b') = a == a' && b == b'
-  eq (DraftInput a) (DraftInput a') = a == a'
-  eq _ _ = false
+derive instance eqInput :: Eq Input
+
+data DraftPhase
+  = Blank
+  | BlankDraft
+  | Draft
+
+getDraftPhase :: State -> DraftPhase
+getDraftPhase state =
+  if isNothing state.draftId then
+    Blank
+  else
+    if state.draft == Loading then
+      BlankDraft
+    else
+      Draft
 
 type State
   = { input :: Input
+    -- the selected value
     , spaceId :: Maybe SpaceId
     , formatId :: Maybe FormatId
-    , format :: Remote Format
+    -- the format and the value of the editor
+    , format :: Remote FocusedFormat
     , value :: Json
-    , workId :: Maybe WorkId
+    -- the save state
     , saveState :: SaveState
+    -- is loading of a commit
     , loading :: Boolean
-    , workSubId :: Maybe SubscriptionId
+    -- the subscription id of a interval save timer
     , timerSubId :: Maybe SubscriptionId
     }
 
@@ -67,10 +85,11 @@ data Action
   | ChangeSpace (Maybe SpaceId)
   | ChangeFormat (Maybe FormatId)
   | ChangeValue Json
-  | ChangeWork (Maybe Work)
   | CheckChage
-  | FetchedFormat (Fetch Format)
-  | Create
+  | FetchedFormat (Fetch FocusedFormat)
+  | FetchedDraft (Fetch FocusedContentDraft)
+  | FetchedDraftId (Fetch ContentDraftId)
+  | Commit
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -103,22 +122,20 @@ initialState input = case input of
     , formatId: formatId
     , format: Loading
     , value: jsonNull
-    , workId: Nothing
+    , draftId: Nothing
     , saveState: HasNotChange
     , loading: false
-    , workSubId: Nothing
     , timerSubId: Nothing
     }
-  DraftInput workId ->
+  DraftInput draftId ->
     { input: input
     , spaceId: Nothing
     , formatId: Nothing
     , format: Loading
     , value: jsonNull
-    , workId: Just workId
+    , draftId: Just draftId
     , saveState: HasNotChange
     , loading: false
-    , workSubId: Nothing
     , timerSubId: Nothing
     }
 
@@ -129,22 +146,42 @@ render state =
   section "page-new-content"
     [ HH.div [ css "page-new-content" ]
         [ saveState state.saveState
-        , HH.div
+        , whenElem (draftPhase == Blank)
+            HH.div
             [ css "menu" ]
             [ HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component { value: state.spaceId, disabled: false } (Just <<< ChangeSpace)
-            , HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component { value: state.formatId, filter: maybe FormatMenu.None FormatMenu.SpaceBy state.spaceId, disabled: false } (Just <<< ChangeFormat)
+            , whenElem (isNothing state.contentId)
+                HH.slot
+                (SProxy :: SProxy "formatMenu")
+                unit
+                FormatMenu.component
+                { value: state.formatId, filter: maybe FormatMenu.None FormatMenu.SpaceBy state.spaceId, disabled: false }
+                (Just <<< ChangeFormat)
             ]
         , remoteWith state.format \format ->
             HH.slot editor_ unit Editor.component { format: format, value: state.value, env: { spaceId: state.spaceId } } (Just <<< ChangeValue)
-        , submitButton
-            { isDisabled: isNothing state.spaceId || isNothing state.formatId || state.loading
-            , isLoading: state.loading
-            , text: "作成"
-            , loadingText: "作成中"
-            , onClick: Create
-            }
+        , case draftPhase of
+            Blank -> HH.text ""
+            BlankDraft _ _ ->
+              submitButton
+                { isDisabled: isNothing state.spaceId || isNothing state.formatId || state.loading
+                , isLoading: state.loading
+                , text: "作成"
+                , loadingText: "作成中"
+                , onClick: Commit
+                }
+            Draft _ _ ->
+              submitButton
+                { isDisabled: isNothing (toMaybe state.data) || state.loading || state.disabled
+                , isLoading: state.loading
+                , text: "変更"
+                , loadingText: "変更中"
+                , onClick: Commit
+                }
         ]
     ]
+  where
+  draftPhase = getDraftPhase state
 
 timer :: forall m. MonadAff m => EventSource m Action
 timer =
@@ -166,77 +203,98 @@ handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    for_ state.workSubId \subId ->
-      H.unsubscribe subId
+    -- Load resources
     handleAction Load
+    -- Subscrive a interval save timer
     when (isNothing state.timerSubId) do
       timerSubId <- H.subscribe timer
       H.modify_ _ { timerSubId = Just timerSubId }
-  Load -> do
-    state <- H.get
-    case state.input of
-      NewInput spaceId formatId -> H.modify_ _ { spaceId = spaceId, formatId = formatId }
-      DraftInput workId -> do
-        workSubId <- subscribeApi (toMaybe >>> ChangeWork) $ onSnapshotWork (unwrap workId)
-        H.modify_ _ { workId = Just workId, workSubId = Just workSubId }
-    H.gets _.formatId
-      >>= traverse_ \formatId -> do
-          fetchApi FetchedFormat $ getFormat formatId
-  FetchedFormat fetch -> do
-    forFetch fetch \format ->
-      H.modify_ _ { format = format, value = fromMaybe jsonNull $ map (\x -> getDefaultValue $ map toPropertyInfo x.structure.properties) $ R.toMaybe format }
-  ChangeWork maybeWork -> do
-    state <- H.get
-    when (state.saveState == HasNotChange || state.saveState == Saved) do
-      for_ maybeWork \work ->
-        H.modify_ _ { spaceId = toMaybe work.spaceId, format = Holding work.format, formatId = Just work.formatId, value = work.data }
   HandleInput input -> do
     state <- H.get
+    -- Load resources
     when (state.input /= input) do
       H.put $ initialState input
       handleAction Load
+  Load -> do
+    state <- H.get
+    case state.input of
+      NewInput spaceId formatId -> do
+        -- set the selected value
+        H.modify_ _ { spaceId = spaceId, formatId = formatId }
+        -- fetch the format
+        H.gets _.formatId
+          >>= traverse_ \formatId -> do
+              fetchAPI FetchedFormat $ getFormat formatId
+      DraftInput draftId -> do
+        -- fetch the draft
+        fetchAPI FetchedDraft $ getContentDraft draftId
+      ContentInput contentId -> do
+        -- get or create a draft of the specified content and fetch the draft id
+        fetchAPI FetchedDraftId $ startContentEditing contentId Nothing
+  -- Fetch
+  FetchedFormat fetch -> do
+    forFetch fetch \format ->
+      H.modify_ _ { format = format, value = fromMaybe jsonNull $ map (\x -> getDefaultValue x.structure.properties) $ R.toMaybe format }
+  FetchedDraft fetch -> do
+    forFetch fetch \draft ->
+      H.modify_ _ { format = draft.format, value = draft.data }
+  FetchedDraftId fetch -> do
+    forFetch fetch \remoteDraftId ->
+      H.modify_ _ { draftId = toMaybe remoteDraftId }
+        -- fetch the draft
+        for
+        (toMaybe remoteDraftId) \draftId ->
+        fetchAPI FetchedDraft $ getContentDraft draftId
+  -- Change
   ChangeSpace spaceId -> do
     state <- H.get
     when (state.spaceId /= spaceId) do
       H.modify_ _ { spaceId = spaceId }
-      case state.workId of
-        Nothing -> pushState $ NewContent spaceId state.formatId
-        Just _ -> pure unit
+      -- Change url if the draft is not created
+      case getDraftPhase state of
+        Blank -> pushState $ NewContent spaceId state.formatId
+        _ -> pure unit
   ChangeFormat formatId -> do
     state <- H.get
     when (state.formatId /= formatId) do
-      case state.workId of
-        Just _ -> pure unit
-        Nothing -> pushState $ NewContent state.spaceId formatId
+      -- Change url if the draft is not created
+      case getDraftPhase state of
+        Blank -> pushState $ NewContent state.spaceId formatId
+        _ -> pure unit
+      -- Reload the format
       H.modify_ _ { formatId = formatId, format = Loading }
       for_ formatId \formatId -> do
-        fetchApi FetchedFormat $ getFormat formatId
+        fetchAPI FetchedFormat $ getFormat formatId
   ChangeValue value -> do
     state <- H.get
+    -- Set the value and change the save state
     case state.saveState of
       Saving -> H.modify_ _ { value = value, saveState = SavingButChanged }
       _ -> H.modify_ _ { value = value, saveState = NotSaved }
+  -- Save changes if they happened
   CheckChage -> do
     state <- H.get
+    -- when active state for save
     when (state.saveState == NotSaved && not state.loading) do
-      for_ (R.toMaybe state.format) \format -> do
+      for_ (toMaybe state.format) \format -> do
+        -- Set the save state
         H.modify_ _ { saveState = Saving }
         for_ state.formatId \formatId -> do
-          case state.workId of
-            Just workId -> do
-              result <- executeApi $ updateBlankWork { structureId: format.defaultStructureId, workId, spaceId: toNullable state.spaceId, formatId, data: state.value }
+          case getDraftPhase state of
+            Blank -> do
+              result <- executeAPI $ createNewContentDraft state.format state.spaceId
               case result of
-                Just _ -> makeSaveStateSaved
-                Nothing -> H.modify_ _ { saveState = NotSaved }
-            Nothing -> do
-              result <- executeApi $ createBlankWork { structureId: format.defaultStructureId, formatId, spaceId: toNullable state.spaceId, data: state.value }
-              case result of
-                Just workId -> do
-                  pushState $ EditWork workId
+                Just draftId -> do
+                  pushState $ EditDraft draftId
                   H.modify_ _ { input = DraftInput workId, workId = Just workId }
                   makeSaveStateSaved
                 Nothing -> H.modify_ _ { saveState = NotSaved }
-  Create -> do
+            BlankDraft draftId -> do
+              result <- executeAPI $ edit { structureId: format.defaultStructureId, workId, spaceId: toNullable state.spaceId, formatId, data: state.value }
+              case result of
+                Just _ -> makeSaveStateSaved
+                Nothing -> H.modify_ _ { saveState = NotSaved }
+  Commit -> do
     state <- H.get
     let
       newContent = do
@@ -250,7 +308,7 @@ handleAction = case _ of
           }
     for_ newContent \newContent -> do
       H.modify_ _ { loading = true }
-      result <- executeApi $ createContent newContent
+      result <- executeAPI $ createContent newContent
       for_ result \contentId -> do
         navigate $ EditContent contentId
       H.modify_ _ { loading = false }

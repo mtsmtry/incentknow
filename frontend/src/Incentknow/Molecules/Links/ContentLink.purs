@@ -34,7 +34,7 @@ type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot Unit )
+  = (  )
 
 component :: forall q o m. Behaviour m => MonadAff m => MonadEffect m => H.Component HH.HTML q Input o m
 component =
@@ -69,9 +69,9 @@ render state =
     where
     common = getContentSemanticData content.data format
 
-toSelectMenuItem :: FocusedContent -> SelectMenuItem
+toSelectMenuItem :: FocusedContent -> SelectMenuItem ContentId
 toSelectMenuItem content =
-  { id: unwrap content.contentId
+  { id: content.contentId
   , name: unwrap content.contentId
   , searchWord: unwrap content.contentId
   , html: html

@@ -1,6 +1,4 @@
 
-
-
 export function Data() {
     return (fnc: Function) => { };
 }

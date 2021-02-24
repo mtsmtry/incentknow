@@ -1,7 +1,6 @@
 module Incentknow.Pages.Space.ContentList where
 
 import Prelude
-
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
 import Data.Symbol (SProxy(..))
@@ -9,8 +8,8 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (getContents)
-import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch)
+import Incentknow.API (getContents)
+import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (RelatedContent)
@@ -45,15 +44,15 @@ initialState :: Input -> State
 initialState input = { spaceId: input.spaceId, contents: Loading }
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
-render state = 
-  remoteWith state.contents \contents->
+render state =
+  remoteWith state.contents \contents ->
     HH.slot (SProxy :: SProxy "contentList") unit ContentList.component { value: contents } absurd
 
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchApi FetchedContents $ getContents state.spaceId (wrap "")
+    fetchAPI FetchedContents $ getContents state.spaceId (wrap "")
   FetchedContents fetch -> do
-    forFetch fetch \contents->
+    forFetch fetch \contents ->
       H.modify_ _ { contents = contents }

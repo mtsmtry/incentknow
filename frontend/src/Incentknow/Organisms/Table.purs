@@ -1,7 +1,6 @@
 module Incentknow.Organisms.Table where
 
 import Prelude
-
 import Data.Array (singleton)
 import Data.Maybe (Maybe(..), maybe)
 import Effect.Class (class MonadEffect)
@@ -13,7 +12,7 @@ import Incentknow.Route (Route)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 data TableCell
-  = TableCell (Maybe Route) String 
+  = TableCell (Maybe Route) String
 
 data TableRow
   = TableRow (Array TableCell)

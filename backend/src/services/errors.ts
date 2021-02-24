@@ -1,17 +1,19 @@
 
 
-class LackOfAuthority {
+export class LackOfAuthority {
 
 }
 
-class InternalError {
-    
+export class InternalError {
+
 }
 
-class WrongTargetState {
-    
+export class WrongTargetState {
+    constructor(private msg?: string) {
+
+    }
 }
 
-class NotFoundEntity {
-    
+export class NotFoundEntity {
+
 }

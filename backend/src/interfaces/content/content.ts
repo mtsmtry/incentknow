@@ -1,10 +1,11 @@
 
 // Content ------------------------------
 
-import { Content, ContentId } from "../../entities/content/content";
-import { FocusedFormat } from "../format/format";
-import { RelatedUser, toRelatedUser } from "../user/user";
-import { RelatedContentDraft } from "./content_draft";
+import { Content, ContentId } from "../../entities/content/Content";
+import { FocusedFormat } from "../format/Format";
+import { RelatedUser, toRelatedUser } from "../user/User";
+import { toTimestamp } from "../Utils";
+import { RelatedContentDraft } from "./ContentDraft";
 
 export interface RelatedContent {
     contentId: ContentId;

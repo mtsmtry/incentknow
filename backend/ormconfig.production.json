@@ -9,7 +9,7 @@
    "logging": false,
    "synchronize": false, 
    "entities": [
-      "dist/client_sql.js"
+      "dist/src/entities/**/*.js"
    ],
    "migrations": [
       "dist/migration/**/*.js"

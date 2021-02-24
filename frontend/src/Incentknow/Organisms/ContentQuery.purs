@@ -1,7 +1,6 @@
 module Incentknow.Organisms.ContentQuery where
 
 import Prelude
-
 import Data.Array (catMaybes, filter, head, length, nubByEq, range)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.String.CodeUnits (charAt, fromCharArray)
@@ -15,8 +14,8 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (Content, Format, User, applyFirestoreCondition, getContents, getFormat)
-import Incentknow.Api.Utils (Fetch, Remote(..), fetchApi, forFetch, forFetchItem)
+import Incentknow.API (Content, Format, User, applyFirestoreCondition, getContents, getFormat)
+import Incentknow.API.Execution (Fetch, Remote(..), fetchAPI, forFetch, forFetchItem)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button, pulldown)
@@ -111,25 +110,29 @@ handleAction :: forall o s m. Behaviour m => MonadAff m => Action -> H.HalogenM 
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    for_ state.formatId \formatId-> do
-      fetchApi FetchedFormat $ getFormat formatId 
+    for_ state.formatId \formatId -> do
+      fetchAPI FetchedFormat $ getFormat formatId
   FetchedFormat fetch -> do
     state <- H.get
-    for_ state.spaceId \spaceId->do
-      forFetchItem fetch \format->do
-        let 
+    for_ state.spaceId \spaceId -> do
+      forFetchItem fetch \format -> do
+        let
           props = map toPropertyInfo format.structure.properties
+
           values = fromUrlParams state.urlParams props
+
           filters = toContentFilters values props
+
           condition = { filters, orderBy: Nothing }
+
           method = toContentQueryMethod condition
-        forFetch fetch \remoteFormat->
+        forFetch fetch \remoteFormat ->
           H.modify_ _ { method = Just method, format = remoteFormat }
-        fetchApi FetchedContents $ getContents spaceId format.formatId method.serverCondition
+        fetchAPI FetchedContents $ getContents spaceId format.formatId method.serverCondition
   FetchedContents fetch -> do
     state <- H.get
-    forFetch fetch \contents-> do
-      for_ state.method \method-> do
+    forFetch fetch \contents -> do
+      for_ state.method \method -> do
         H.modify_ _ { contents = map (applyFirestoreCondition method.clientCondition) contents }
   HandleInput input -> do
     H.put $ initialState input

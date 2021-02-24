@@ -10,8 +10,8 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (checkSpaceDisplayId, createSpace)
-import Incentknow.Api.Utils (callApi, executeApi)
+import Incentknow.API (getAvailableSpaceDisplayId, createSpace)
+import Incentknow.API.Execution (callAPI, executeAPI)
 import Incentknow.AppM (class Behaviour, Message(..), message, navigate)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Data.Utils (generateId)
@@ -69,7 +69,7 @@ render state =
     [ defineText { label: "表示名", value: state.displayName, onChange: ChangeDisplayName }
     , define "ID"
         [ HH.slot (SProxy :: SProxy "displayId") unit DisplayId.component
-            { checkId: callApi <<< checkSpaceDisplayId <<< wrap
+            { checkId: callAPI <<< getAvailableSpaceDisplayId <<< wrap
             , disabled: false
             , value: state.displayId
             }
@@ -98,13 +98,13 @@ handleAction = case _ of
     state <- H.modify _ { loading = true }
     -- regulation <- H.query regulation_ unit (H.request SpaceRegulation.GetValue)
     response <-
-      executeApi
+      executeAPI
         $ createSpace
             { displayId: state.displayId.displayId
             , displayName: state.displayName
             , description: state.description
             }
-    for_ response \space -> do
-      navigate $ Space space.spaceId SpacePages
+    for_ response \displayId -> do
+      navigate $ Space displayId SpacePages
       message $ Success "スペースの作成に成功しました"
     H.modify_ _ { loading = false }

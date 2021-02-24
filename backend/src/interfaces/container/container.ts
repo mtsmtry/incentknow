@@ -1,7 +1,8 @@
-import { Container, ContentGenerator } from "../../entities/container/container";
-import { RelatedFormat, toRelatedFormat } from "../format/format";
-import { IntactReactor } from "../reactor/reactor";
-import { RelatedSpace, toRelatedSpace } from "../space/space";
+import { Container, ContentGenerator } from "../../entities/container/Container";
+import { RelatedFormat, toRelatedFormat } from "../format/Format";
+import { IntactReactor } from "../reactor/Reactor";
+import { RelatedSpace, toRelatedSpace } from "../space/Space";
+import { toTimestamp } from "../Utils";
 
 export type ContainerId = string;
 

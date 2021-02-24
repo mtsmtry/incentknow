@@ -1,7 +1,6 @@
 module Incentknow.Pages.DraftList where
 
 import Prelude
-
 import Data.Argonaut.Core (toString)
 import Data.Array (catMaybes, filter, head, range)
 import Data.Map (Map)
@@ -23,8 +22,8 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (getMyContentDrafts)
-import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch)
+import Incentknow.API (getMyContentDrafts)
+import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button, pulldown)
@@ -127,27 +126,27 @@ render state =
         DraftDrafting ->
           remoteWith state.drafts \drafts ->
             HH.slot (SProxy :: SProxy "listView") unit ListView.component
-              { items: catMaybes $ map (toListViewItem state) $ filter (\x-> x.state == EditingStateEditing) drafts }
+              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.state == EditingStateEditing) drafts }
               absurd
         DraftCommitted ->
           remoteWith state.drafts \drafts ->
             HH.slot (SProxy :: SProxy "listView") unit ListView.component
-              { items: catMaybes $ map (toListViewItem state) $ filter (\x-> x.state == EditingStateCommitted) drafts }
+              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.state == EditingStateCommitted) drafts }
               absurd
         DraftDeleted ->
           remoteWith state.drafts \drafts ->
             HH.slot (SProxy :: SProxy "listView") unit ListView.component
-              { items: catMaybes $ map (toListViewItem state) $ filter (\x-> x.state == EditingStateCanceld) drafts }
+              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.state == EditingStateCanceld) drafts }
               absurd
     ]
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
-    fetchApi FetchedDrafts $ getMyContentDrafts
-    --workingDrafts <- executeApi $ getMyDrafts { state: notNull "working" }
+    fetchAPI FetchedDrafts $ getMyContentDrafts
+  --workingDrafts <- executeAPI $ getMyDrafts { state: notNull "working" }
   FetchedDrafts fetch -> do
-    forFetch fetch \drafts->
+    forFetch fetch \drafts ->
       H.modify_ _ { drafts = drafts }
   HandleInput props -> pure unit
   Navigate route -> navigate route

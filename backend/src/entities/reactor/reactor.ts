@@ -1,9 +1,9 @@
 import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
-import { NewTypeInt, NewTypeString } from "../../implication";
-import { Container, ContainerSk } from "../container/container";
-import { Content, ContentSk } from "../content/content";
-import { User, UserSk } from "../user/user";
-import { CreatedAt, createEntityId, EntityId } from '../utils';
+import { NewTypeInt, NewTypeString } from "../../Implication";
+import { Container, ContainerSk } from "../container/Container";
+import { Content, ContentSk } from "../content/Content";
+import { User, UserSk } from "../user/User";
+import { CreatedAt, createEntityId, EntityId } from '../Utils';
 
 export enum ReactorState {
     INVAILD = "invaild"
@@ -38,7 +38,7 @@ export class Reactor {
     @OneToOne(type => Content, { onDelete: "SET NULL" })
     @JoinColumn({ name: "definitionId" })
     definition: Content | null;
-    @Column({ nullable: true })
+    @Column("int", { nullable: true })
     definitionId: ContentSk | null;
 
     @CreatedAt()

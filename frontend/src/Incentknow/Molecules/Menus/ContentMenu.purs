@@ -1,7 +1,6 @@
 module Incentknow.Molecules.ContentMenu where
 
 import Prelude
-
 import Data.Argonaut.Core (jsonNull)
 import Data.Array (filter, fromFoldable)
 import Data.Foldable (for_)
@@ -16,8 +15,8 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (getContents, getRelatedContent)
-import Incentknow.Api.Utils (Fetch, executeApi, fetchApi, forFetchItem)
+import Incentknow.API (getContents, getRelatedContent)
+import Incentknow.API.Execution (Fetch, executeAPI, fetchAPI, forFetchItem)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Content (ContentSemanticData, getContentSemanticData)
 import Incentknow.Data.Entities (RelatedContent)
@@ -102,7 +101,7 @@ fromContentToHtml :: ContentSemanticData -> forall a s m. H.ComponentHTML a s m
 fromContentToHtml src =
   HH.div [ css "name" ]
     [ HH.text $ src.title
-    , maybeElem src.image \image->
+    , maybeElem src.image \image ->
         HH.img [ HP.src image ]
     ]
 
@@ -111,15 +110,15 @@ handleAction = case _ of
   Initialize -> do
     state <- H.get
     for_ state.initialContentId \contentId -> do
-      fetchApi FetchedInitialContent $ getRelatedContent contentId
+      fetchAPI FetchedInitialContent $ getRelatedContent contentId
     case state.spaceId of
-      Just spaceId -> fetchApi FetchedContents $ getContents spaceId state.formatId
-      Nothing -> pure unit -- TODO fetchApi FetchedContents $ getContentsByFormat state.formatId
+      Just spaceId -> fetchAPI FetchedContents $ getContents spaceId state.formatId
+      Nothing -> pure unit -- TODO fetchAPI FetchedContents $ getContentsByFormat state.formatId
   FetchedInitialContent fetch ->
-    forFetchItem fetch \content->
-      H.modify_ \s-> s { items = upsertItems [ toSelectMenuItem content ] s.items }
+    forFetchItem fetch \content ->
+      H.modify_ \s -> s { items = upsertItems [ toSelectMenuItem content ] s.items }
   FetchedContents fetch ->
-    forFetchItem fetch \contents-> do
+    forFetchItem fetch \contents -> do
       H.modify_ \s -> s { items = upsertItems (map toSelectMenuItem contents) s.items }
   HandleInput input -> do
     state <- H.get

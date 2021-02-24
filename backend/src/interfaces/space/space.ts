@@ -1,5 +1,6 @@
-import { MembershipMethod, Space, SpaceAuth } from "../../entities/space/space";
-import { RelatedUser, toRelatedUser } from "../user/user";
+import { MembershipMethod, Space, SpaceAuth } from "../../entities/space/Space";
+import { RelatedUser, toRelatedUser } from "../user/User";
+import { toTimestamp } from "../Utils";
 
 export type SpaceId = string;
 

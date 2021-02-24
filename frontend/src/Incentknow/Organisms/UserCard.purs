@@ -1,7 +1,6 @@
 module Incentknow.Organisms.UserCard where
 
 import Prelude
-
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Maybe.Utils (flatten)
 import Data.Newtype (unwrap)
@@ -10,8 +9,8 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (getRelatedUser, getUser)
-import Incentknow.Api.Utils (Fetch, Remote(..), defaultIconUrl, executeApi, fetchApi, forFetch, toMaybe)
+import Incentknow.API (getRelatedUser, getUser)
+import Incentknow.API.Execution (Fetch, Remote(..), defaultIconUrl, executeAPI, fetchAPI, forFetch, toMaybe)
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (RelatedUser)
@@ -23,16 +22,15 @@ import Incentknow.Route as R
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
-  = { userId :: UserId, timestamp :: Number }
+  = { user :: RelatedUser, timestamp :: Number }
 
 type State
-  = { userId :: UserId, timestamp :: Number, user :: Remote RelatedUser }
+  = { user :: RelatedUser, timestamp :: Number }
 
 data Action
   = Initialize
   | HandleInput Input
   | Navigate MouseEvent R.Route
-  | FetchedUser (Fetch RelatedUser)
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -49,26 +47,20 @@ component =
     }
 
 initialState :: Input -> State
-initialState input = { userId: input.userId, timestamp: input.timestamp, user: Loading }
+initialState input = { user: input.user, timestamp: input.timestamp }
 
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div [ css "org-usercard" ]
-    [ link_ Navigate (R.User state.userId UserMain) [ HH.img [ HP.src $ fromMaybe defaultIconUrl $ flatten $ map _.iconUrl (toMaybe state.user) ] ]
+    [ link_ Navigate (R.User state.user.displayId UserMain) [ HH.img [ HP.src $ fromMaybe defaultIconUrl $ state.user.iconUrl ] ]
     , HH.div [ css "info" ]
-        [ link Navigate (R.User state.userId UserMain) [ css "username" ] [ HH.text $ maybe (unwrap state.userId) _.displayName (toMaybe state.user) ]
-        , remoteWith state.user \user ->
-            HH.div [ css "timestamp" ] [ dateTime state.timestamp ]
+        [ link Navigate (R.User state.user.displayId UserMain) [ css "username" ] [ HH.text $ state.user.displayName ]
+        , HH.div [ css "timestamp" ] [ dateTime state.timestamp ]
         ]
     ]
 
 handleAction :: forall o m. MonadAff m => Behaviour m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
-  Initialize -> do
-    state <- H.get
-    fetchApi FetchedUser $ getRelatedUser state.userId
-  FetchedUser fetch -> do
-    forFetch fetch \user ->
-      H.modify_ _ { user = user }
-  HandleInput input -> pure unit
+  Initialize -> pure unit
+  HandleInput input -> H.put input
   Navigate event route -> navigateRoute event route

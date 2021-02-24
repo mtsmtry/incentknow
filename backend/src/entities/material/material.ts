@@ -1,10 +1,10 @@
 import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { NewTypeInt, NewTypeString } from "../../implication";
-import { Content, ContentSk } from "../content/content";
-import { Space, SpaceSk } from "../space/space";
-import { User, UserSk } from "../user/user";
-import { CreatedAt, createEntityId, EntityId, UpdatedAt } from '../utils';
-import { MaterialCommit } from "./material_commit";
+import { NewTypeInt, NewTypeString } from "../../Implication";
+import { Content, ContentSk } from "../content/Content";
+import { Space, SpaceSk } from "../space/Space";
+import { User, UserSk } from "../user/User";
+import { CreatedAt, createEntityId, EntityId, UpdatedAt } from '../Utils';
+import { MaterialCommit } from "./MaterialCommit";
 
 export enum MaterialType {
     FOLDER = "folder",
@@ -27,13 +27,13 @@ export class Material {
     @ManyToOne(type => Content, { onDelete: "RESTRICT" })
     @JoinColumn({ name: "contentId" })
     content: Content | null;
-    @Column({ nullable: true })
+    @Column("int", { nullable: true })
     contentId: ContentSk | null;
 
     @ManyToOne(type => Space, { onDelete: "RESTRICT" })
     @JoinColumn({ name: "spaceId" })
     space: Space | null;
-    @Column({ nullable: true })
+    @Column("int", { nullable: true })
     spaceId: SpaceSk | null;
 
     @Column({ asExpression: "coalesce(contentId, spaceId)", generatedType: "VIRTUAL" })

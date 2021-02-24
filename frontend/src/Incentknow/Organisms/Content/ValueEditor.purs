@@ -1,7 +1,6 @@
 module Incentknow.Organisms.Content.ValueEditor where
 
 import Prelude
-
 import Data.Argonaut.Core (Json, fromArray, fromString, jsonNull, stringify, toArray, toBoolean, toString)
 import Data.Argonaut.Decode (decodeJson)
 import Data.Argonaut.Encode (encodeJson)
@@ -17,9 +16,9 @@ import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log, logShow)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (getFocusedFormat, getFormat)
-import Incentknow.Api.Utils (Fetch, Remote(..), fetchApi, forFetch)
-import Incentknow.Api.Utils as R
+import Incentknow.API (getFocusedFormat, getFormat)
+import Incentknow.API.Execution (Fetch, Remote(..), fetchAPI, forFetch)
+import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, checkbox, numberarea, textarea)
 import Incentknow.Data.Entities (FocusedFormat, FormatUsage(..), Type(..))
@@ -147,7 +146,7 @@ render state = case state.type of
     HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component { value: map wrap $ toString state.value, disabled: false }
       (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
   ContentType formatId ->
-    HH.slot (SProxy :: SProxy "contentMenu") unit ContentMenu.component { spaceId: maybe Nothing (\x-> if x.usage == Internal then Nothing else state.env.spaceId) $ R.toMaybe state.format, value: map wrap $ toString state.value, formatId, disabled: false }
+    HH.slot (SProxy :: SProxy "contentMenu") unit ContentMenu.component { spaceId: maybe Nothing (\x -> if x.usage == Internal then Nothing else state.env.spaceId) $ R.toMaybe state.format, value: map wrap $ toString state.value, formatId, disabled: false }
       (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
   EntityType formatId ->
     HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: map wrap $ toString state.value, formatId, disabled: false }
@@ -202,10 +201,9 @@ handleAction = case _ of
   Initialize -> do
     state <- H.get
     case state.format of
-      Loading ->
-        case state.type of
-          ContentType formatId -> fetchApi FetchedFormat $ getFocusedFormat formatId
-          _ -> pure unit
+      Loading -> case state.type of
+        ContentType formatId -> fetchAPI FetchedFormat $ getFocusedFormat formatId
+        _ -> pure unit
       _ -> pure unit
   ChangeValue value -> do
     logShow $ stringify value
@@ -219,8 +217,11 @@ handleAction = case _ of
       properties = case state.type of
         ObjectType props -> props
         _ -> []
+
       props = mkProperties state.value properties
+
       changeProp props id value = map (\prop -> if prop.info.id == id then prop { value = value } else prop) props
+
       newValue = encodeProperties $ changeProp props id value
     H.modify_ _ { value = newValue } -- 同時に複数のプロパティが編集されたときのため
     H.raise newValue
@@ -228,7 +229,9 @@ handleAction = case _ of
     state <- H.get
     let
       array = fromMaybe [] $ toArray state.value
+
       newArray = mapWithIndex (\i -> \x -> if i == index then value else x) array
+
       newValue = encodeJson newArray
     H.modify_ _ { value = newValue }
     H.raise newValue
@@ -236,7 +239,9 @@ handleAction = case _ of
     state <- H.get
     let
       array = fromMaybe [] $ toArray state.value
+
       newArray = fromMaybe array $ deleteAt index array
+
       newValue = encodeJson newArray
     H.modify_ _ { value = newValue }
     H.raise newValue
@@ -250,4 +255,4 @@ handleAction = case _ of
   FetchedFormat fetch ->
     forFetch fetch \format -> do
       state <- H.modify _ { format = format }
-      H.liftEffect $ consoleLog $ show $ map unwrap $ maybe Nothing (\x-> if x.usage == Internal then Nothing else state.env.spaceId) $ R.toMaybe state.format
+      H.liftEffect $ consoleLog $ show $ map unwrap $ maybe Nothing (\x -> if x.usage == Internal then Nothing else state.env.spaceId) $ R.toMaybe state.format

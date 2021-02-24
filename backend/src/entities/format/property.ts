@@ -1,7 +1,7 @@
 import { BeforeInsert, Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
-import { NewTypeInt, NewTypeString } from "../../implication";
-import { CreatedAt, createEntityId, DisplayName, UpdatedAt } from '../utils';
-import { Format, FormatSk } from "./format";
+import { NewTypeInt, NewTypeString } from "../../Implication";
+import { CreatedAt, createEntityId, DisplayName, UpdatedAt } from '../Utils';
+import { Format, FormatSk } from "./Format";
 
 export enum TypeName {
     INT = "integer",
@@ -52,16 +52,16 @@ export class Property {
     @ManyToOne(type => Property, prop => prop.argProperties, { onDelete: "RESTRICT" })
     @JoinColumn({ name: "parentPropertyId" })
     parentProperty: Property | null;
-    @Column({ nullable: true })
+    @Column("int", { nullable: true })
     parentPropertyId: PropertySk | null;
 
     @DisplayName()
     displayName: string;
 
-    @Column({ nullable: true })
+    @Column("varchar", { length: 100, nullable: true })
     fieldName: string | null;
 
-    @Column({ nullable: true })
+    @Column("varchar", { length: 100, nullable: true })
     semantic: string | null;
 
     @Column({ default: false })

@@ -1,7 +1,6 @@
 module Incentknow.Pages.Format.Setting where
 
 import Prelude
-
 import Affjax as AX
 import Affjax.RequestBody as RequestBody
 import Affjax.RequestHeader (RequestHeader(..))
@@ -21,8 +20,8 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (checkSpaceDisplayId, setMyDisplayName, setMyEmail, setMyIcon, setMyPassword, setSpaceAuthority, setSpaceDisplayId, setSpaceDisplayName, setSpaceHomeImage, setSpaceMembershipMethod, setSpacePublished)
-import Incentknow.Api.Utils (callApi, executeApi, subscribeApi)
+import Incentknow.API (checkSpaceDisplayId, setMyDisplayName, setMyEmail, setMyIcon, setMyPassword, setSpaceAuthority, setSpaceDisplayId, setSpaceDisplayName, setSpaceHomeImage, setSpaceMembershipMethod, setSpacePublished)
+import Incentknow.API.Execution (callAPI, executeAPI, subscribeAPI)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, submitButton, textarea)
 import Incentknow.Data.Ids (SpaceId(..), UserId(..))
@@ -87,7 +86,7 @@ render state =
   HH.div [ css "page-user-setting" ]
     [ whenElem (state.format.usage == "internal") \_ ->
         HH.slot generatorMenu_ unit GeneratorMenu.component
-          { submit: callApi <<< \x -> setContentGenerator state.format.formatId (fromMaybe "" x)
+          { submit: callAPI <<< \x -> setContentGenerator state.format.formatId (fromMaybe "" x)
           , value: Just state.format.generator
           , title: "ジェネレータの設定"
           , desc: "コンテンツを自動的に生成する設定をします"

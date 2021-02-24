@@ -10,7 +10,7 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.Api (Content, Space, Format, getContents, getFormat)
-import Incentknow.Api.Utils (executeApi)
+import Incentknow.Api.Execution (executeApi)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.Data.Page (ContentComposition(..), toContentComposition)
@@ -94,7 +94,7 @@ handleAction = case _ of
   Initialize -> do
     state <- H.get
     pure unit
-    --result <- executeApi $ getFormat state.formatId
-    --for_ result \format ->
-    --  H.modify_ _ { format = Just format, compotisions = map toContentComposition format.collectionPage.compositions }
+  --result <- executeApi $ getFormat state.formatId
+  --for_ result \format ->
+  --  H.modify_ _ { format = Just format, compotisions = map toContentComposition format.collectionPage.compositions }
   ChangeTab tab -> H.modify_ _ { tab = tab }

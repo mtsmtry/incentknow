@@ -1,15 +1,23 @@
 import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { NewTypeInt, NewTypeString } from "../../implication";
-import { Container, ContainerSk } from "../container/container";
-import { Structure, StructureSk } from "../format/structure";
-import { Material } from "../material/material";
-import { User, UserSk } from "../user/user";
-import { CreatedAt, createEntityId, Date, EntityId, UpdatedAt } from '../utils';
-import { ContentCommit } from "./content_commit";
+import { NewTypeInt, NewTypeString } from "../../Implication";
+import { Container, ContainerSk } from "../container/Container";
+import { Structure, StructureSk } from "../format/Structure";
+import { Material } from "../material/Material";
+import { User, UserSk } from "../user/User";
+import { CreatedAt, createEntityId, DateColumn, EntityId, UpdatedAt } from '../Utils';
+import { ContentCommit } from "./ContentCommit";
 
 export type ContentSk = NewTypeInt<"ContentSk">;
 
 export type ContentId = NewTypeString<"ContentId">;
+
+/*
+    Content: 現時点におけるコンテンツの実体
+    ContentDraft: あるユーザーがコンテンツの編集について保持するあらゆる情報
+    ContentEditing: コンテンツをコミットするまでの一連の編集プロセス
+    ContentSnapshot: 自動保存されるコンテンツのデータ
+
+*/
 
 @Entity()
 export class Content {
@@ -44,7 +52,7 @@ export class Content {
     @Column()
     creatorUserId: UserSk;
 
-    @Date()
+    @DateColumn()
     updatedAtOnlyData: Date;
 
     // 帰属するMaterialの更新も含む

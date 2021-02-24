@@ -21,9 +21,11 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, checkbox, pulldown, textarea)
+import Incentknow.Data.Entities (Type(..))
+import Incentknow.Data.EntityUtils (getTypeName)
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.Data.Page (ContentPage, ContentRelation)
-import Incentknow.Data.Property (Enumerator, Property, PropertyInfo, Type(..), getTypeName)
+import Incentknow.Data.Property (Enumerator, Property, PropertyInfo)
 import Incentknow.Data.Utils (generateId)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
@@ -147,7 +149,7 @@ render state =
       , HH.td []
           [ maybeElem rel.formatId \formatId ->
               HH.slot (SProxy :: SProxy "propMenu") index PropertyMenu.component
-                { value: rel.property, formatId, type: Just $ ContentType { format: state.formatId }, disabled: state.readonly }
+                { value: rel.property, formatId, type: Just $ ContentType state.formatId, disabled: state.readonly }
                 (Just <<< ChangeProperty index)
           ]
       ]

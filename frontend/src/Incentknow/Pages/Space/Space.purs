@@ -1,7 +1,6 @@
 module Incentknow.Pages.Space where
 
 import Prelude
-
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Maybe.Utils (flatten)
@@ -12,8 +11,8 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.Query.HalogenM (SubscriptionId(..))
-import Incentknow.Api (getSpace)
-import Incentknow.Api.Utils (Fetch, Remote(..), fetchApi, forFetch)
+import Incentknow.API (getSpace)
+import Incentknow.API.Execution (Fetch, Remote(..), fetchAPI, forFetch)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (menuPositiveButton, dangerButton)
@@ -22,7 +21,7 @@ import Incentknow.Data.Ids (SpaceDisplayId(..), SpaceId(..))
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Pages.Space.ContentList as ContentList
-import Incentknow.Pages.Space.CrawlerList as CrawlerList
+--import Incentknow.Pages.Space.CrawlerList as CrawlerList
 import Incentknow.Pages.Space.FormatList as FormatList
 import Incentknow.Pages.Space.MemberList as MemberList
 import Incentknow.Pages.Space.PageList as PageList
@@ -94,70 +93,70 @@ render state =
 
 renderMain :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> FocusedSpace -> H.ComponentHTML Action ChildSlots m
 renderMain state space =
-    tabPage
-      { tabs:
-          --if readable then
-            [ SpacePages, SpaceContents, SpaceFormats, SpaceMembers, SpaceCrawlers, SpaceSetting ]
-          --else
-          --  [ SpacePages, SpaceSetting ]
-      , currentTab: state.tab
-      , onChangeTab: ChangeTab
-      , showTab:
-          case _ of
-            SpacePages -> if readable then "Pages" else "Caption"
-            SpaceContents -> "Contents"
-            SpaceFormats -> "Formats"
-            SpaceMembers -> "Members"
-            SpaceCrawlers -> "Crawlers"
-            SpaceSetting -> if isAdmin then "Setting" else "Information"
-      }
-      [ whenElem writable \_ ->
-          menuPositiveButton "コンテンツを追加" (Navigate $ NewContent (Just space.spaceId) Nothing)
-      ]
-      [ HH.div [ css "page-space" ]
-          [ HH.div [ css "name" ] [ HH.text space.displayName ]
-          , HH.div [ css "desc" ] [ HH.text space.description ]
-          ]
-      ]
-      [ case state.tab of
-          SpacePages ->
-            if readable then
-              HH.slot (SProxy :: SProxy "pages") unit PageList.component { spaceId: space.spaceId } absurd
-            else
-              section ""
-                [ HH.text "このスペースはメンバー以外には非公開です"
-                , case space.membershipMethod of
-                    MembershipMethodApp -> 
-                      if isPending then
-                        HH.text "メンバーへの加入を申請しています。スペース管理者の承認をお待ちください。"
-                      else
-                        menuPositiveButton "メンバーへの加入を申請" (Navigate $ JoinSpace space.spaceId)
-                    _ -> HH.text ""
-                ]
-          SpaceContents -> HH.slot (SProxy :: SProxy "contents") unit ContentList.component { spaceId: space.spaceId } absurd
-          SpaceFormats -> HH.slot (SProxy :: SProxy "formats") unit FormatList.component { spaceId: space.spaceId } absurd
-          SpaceMembers -> HH.slot (SProxy :: SProxy "members") unit MemberList.component { spaceId: space.spaceId, isAdmin } absurd
-          SpaceCrawlers -> HH.slot (SProxy :: SProxy "crawlers") unit CrawlerList.component { spaceId: space.spaceId } absurd
-          SpaceSetting -> HH.slot (SProxy :: SProxy "setting") unit Setting.component { space: space, disabled: not isAdmin } absurd
-      ]
+  tabPage
+    { tabs:
+        --if readable then
+        [ SpacePages, SpaceContents, SpaceFormats, SpaceMembers, SpaceCrawlers, SpaceSetting ]
+    --else
+    --  [ SpacePages, SpaceSetting ]
+    , currentTab: state.tab
+    , onChangeTab: ChangeTab
+    , showTab:
+        case _ of
+          SpacePages -> if readable then "Pages" else "Caption"
+          SpaceContents -> "Contents"
+          SpaceFormats -> "Formats"
+          SpaceMembers -> "Members"
+          SpaceCrawlers -> "Crawlers"
+          SpaceSetting -> if isAdmin then "Setting" else "Information"
+    }
+    [ whenElem writable \_ ->
+        menuPositiveButton "コンテンツを追加" (Navigate $ NewContent (Just space.spaceId) Nothing)
+    ]
+    [ HH.div [ css "page-space" ]
+        [ HH.div [ css "name" ] [ HH.text space.displayName ]
+        , HH.div [ css "desc" ] [ HH.text space.description ]
+        ]
+    ]
+    [ case state.tab of
+        SpacePages ->
+          if readable then
+            HH.slot (SProxy :: SProxy "pages") unit PageList.component { spaceId: space.spaceId } absurd
+          else
+            section ""
+              [ HH.text "このスペースはメンバー以外には非公開です"
+              , case space.membershipMethod of
+                  MembershipMethodApp ->
+                    if isPending then
+                      HH.text "メンバーへの加入を申請しています。スペース管理者の承認をお待ちください。"
+                    else
+                      menuPositiveButton "メンバーへの加入を申請" (Navigate $ JoinSpace space.spaceId)
+                  _ -> HH.text ""
+              ]
+        SpaceContents -> HH.slot (SProxy :: SProxy "contents") unit ContentList.component { spaceId: space.spaceId } absurd
+        SpaceFormats -> HH.slot (SProxy :: SProxy "formats") unit FormatList.component { spaceId: space.spaceId } absurd
+        SpaceMembers -> HH.slot (SProxy :: SProxy "members") unit MemberList.component { spaceId: space.spaceId, isAdmin } absurd
+        SpaceCrawlers -> HH.slot (SProxy :: SProxy "crawlers") unit CrawlerList.component { spaceId: space.spaceId } absurd
+        SpaceSetting -> HH.slot (SProxy :: SProxy "setting") unit Setting.component { space: space, disabled: not isAdmin } absurd
+    ]
   where
-  isPending = true-- maybe false (\x -> x.type == "pending") $ toMaybe space.myMember 
+  isPending = true -- maybe false (\x -> x.type == "pending") $ toMaybe space.myMember 
 
-  isMember = true-- maybe false (\x -> x.type /= "pending") $ toMaybe space.myMember 
+  isMember = true -- maybe false (\x -> x.type /= "pending") $ toMaybe space.myMember 
 
-  isAdmin = true-- maybe false (\x -> x.type == "owner" || x.type == "admin") $ toMaybe space.myMember 
+  isAdmin = true -- maybe false (\x -> x.type == "owner" || x.type == "admin") $ toMaybe space.myMember 
 
-  readable = true-- isMember || space.authority.base == "readable" || space.authority.base == "writable"
+  readable = true -- isMember || space.authority.base == "readable" || space.authority.base == "writable"
 
-  writable = true-- isMember || space.authority.base == "writable"
+  writable = true -- isMember || space.authority.base == "writable"
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchApi FetchedSpace $ getSpace state.spaceId
-  FetchedSpace fetch -> 
-    forFetch fetch \space-> 
+    fetchAPI FetchedSpace $ getSpace state.spaceId
+  FetchedSpace fetch ->
+    forFetch fetch \space ->
       H.modify_ _ { space = space }
   HandleInput input -> do
     state <- H.get

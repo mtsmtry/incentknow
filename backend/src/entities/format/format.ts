@@ -1,10 +1,10 @@
 import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
-import { NewTypeInt, NewTypeString } from "../../implication";
-import { Space, SpaceSk } from "../space/space";
-import { User, UserSk } from "../user/user";
-import { CreatedAt, createDisplayId, createEntityId, DisplayId, DisplayName, EntityId, UpdatedAt } from '../utils';
-import { Property } from "./property";
-import { Structure, StructureSk } from "./structure";
+import { NewTypeInt, NewTypeString } from "../../Implication";
+import { Space, SpaceSk } from "../space/Space";
+import { User, UserSk } from "../user/User";
+import { CreatedAt, createDisplayId, createEntityId, DisplayId, DisplayName, EntityId, UpdatedAt } from '../Utils';
+import { Property } from "./Property";
+import { Structure, StructureSk } from "./Structure";
 
 export enum FormatUsage {
     INTERNAL = "internal",
@@ -16,6 +16,8 @@ export type FormatSk = NewTypeInt<"FormatSk">;
 export type FormatId = NewTypeString<"FormatId">;
 
 export type FormatDisplayId = NewTypeString<"FormatDisplayId">;
+
+export type SemanticId = NewTypeString<"SemanticId">;
 
 @Entity()
 export class Format {
@@ -41,7 +43,7 @@ export class Format {
     @Column()
     description: string;
 
-    @OneToOne(type => Structure, { onDelete: "SET NULL" })
+    @OneToOne(type => Structure, { onDelete: "RESTRICT" })
     @JoinColumn({ name: "currentStructureId" })
     currentStructure: Structure;
     @Column()
@@ -77,8 +79,11 @@ export class Format {
     @OneToMany(type => Property, prop => prop.format, { onDelete: "CASCADE", cascade: ["insert"] })
     properties: Property[];
 
+    @Column("char", { length: 2, nullable: true })
+    semanticId: SemanticId | null;
+
     @Column()
-    semanticId: string | null;
+    latestVersion: number;
 
     @BeforeInsert()
     onInsert() {

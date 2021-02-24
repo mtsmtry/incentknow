@@ -14,8 +14,8 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Incentknow.Api (getSpaceMembers)
-import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch)
+import Incentknow.API (getSpaceMembers)
+import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
@@ -63,21 +63,19 @@ renderMembers :: forall m. MonadAff m => Behaviour m => State -> Array IntactSpa
 renderMembers state members =
   HH.div []
     [ whenElem isAdmin \_ ->
- --       HH.slot (SProxy :: SProxy "pendingMemberList") unit MemberList.component { members: pendingMembers, isAdmin: state.isAdmin } absurd
-    HH.slot (SProxy :: SProxy "memberList") unit MemberList.component { members, isAdmin: state.isAdmin } absurd
+        --       HH.slot (SProxy :: SProxy "pendingMemberList") unit MemberList.component { members: pendingMembers, isAdmin: state.isAdmin } absurd
+        HH.slot (SProxy :: SProxy "memberList") unit MemberList.component { members, isAdmin: state.isAdmin } absurd
     ]
   where
   --actualMembers = filter (\x -> x.type /= "pending") members
-
   --pendingMembers = filter (\x -> x.type == "pending") members
-
   isAdmin = false --maybe false (\x -> x.type == "owner" || x.type == "admin") $ toMaybe state.space.myMember
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchApi FetchedMembers $ getSpaceMembers state.spaceId
+    fetchAPI FetchedMembers $ getSpaceMembers state.spaceId
   FetchedMembers fetch ->
     forFetch fetch \members ->
       H.modify_ _ { members = members }

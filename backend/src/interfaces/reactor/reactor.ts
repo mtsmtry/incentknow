@@ -1,7 +1,8 @@
-import { ContentId } from "../../entities/content/content";
-import { Reactor, ReactorState } from "../../entities/reactor/reactor";
-import { RelatedContainer, toRelatedContainer } from "../container/container";
-import { RelatedUser, toRelatedUser } from "../user/user";
+import { ContentId } from "../../entities/content/Content";
+import { Reactor, ReactorState } from "../../entities/reactor/Reactor";
+import { RelatedContainer, toRelatedContainer } from "../container/Container";
+import { RelatedUser, toRelatedUser } from "../user/User";
+import { toTimestamp } from "../Utils";
 
 export type ReactorId = string;
 

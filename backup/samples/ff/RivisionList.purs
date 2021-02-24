@@ -1,7 +1,6 @@
 module Incentknow.Pages.RivisionList where
 
 import Prelude
-
 import Data.DateTime as DateTime
 import Data.DateTime.Instant (instant, toDateTime)
 import Data.Maybe (Maybe(..))
@@ -10,7 +9,7 @@ import Data.Time.Duration (Milliseconds(..))
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api.Utils (getClient, handleError)
+import Incentknow.Api.Execution (getClient, handleError)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Inputs (button)
 import Incentknow.Data.Content (Rivision)
@@ -37,7 +36,7 @@ type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = ( )
+  = ()
 
 component :: forall q o m. Behaviour m => MonadAff m => H.Component HH.HTML q Input o m
 component =
@@ -66,7 +65,7 @@ render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action
 render state =
   section "page-rivision-list"
     [ maybeElem state.rivisions \rivisions ->
-        HH.div [ ] (map (renderRivsion state) rivisions)
+        HH.div [] (map (renderRivsion state) rivisions)
     ]
 
 handleAction :: forall o m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit

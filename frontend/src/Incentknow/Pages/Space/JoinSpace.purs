@@ -1,15 +1,14 @@
 module Incentknow.Pages.JoinSpace where
 
 import Prelude
-
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (applySpaceMembership, getSpace)
-import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch)
+import Incentknow.API (applySpaceMembership, getSpace)
+import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Data.Entities (FocusedSpace)
@@ -32,7 +31,7 @@ type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = (  )
+  = ()
 
 component :: forall q o m. Behaviour m => MonadAff m => MonadEffect m => H.Component HH.HTML q Input o m
 component =
@@ -62,12 +61,12 @@ handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action
 handleAction = case _ of
   Initialize -> do
     --state <- H.get
-    --fetchApi FetchedSpace $ getSpace state.spaceId
+    --fetchAPI FetchedSpace $ getSpace state.spaceId
     pure unit
   FetchedSpace fetch ->
-    forFetch fetch \space->
+    forFetch fetch \space ->
       H.modify_ _ { space = space }
   Submit -> do
     state <- H.get
-    response <- executeApi $ applySpaceMembership state.spaceId
+    response <- executeAPI $ applySpaceMembership state.spaceId
     pure unit

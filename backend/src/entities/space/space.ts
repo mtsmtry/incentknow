@@ -1,8 +1,8 @@
 import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { NewTypeInt, NewTypeString } from "../../implication";
-import { User, UserSk } from "../user/user";
-import { CreatedAt, createDisplayId, createEntityId, DisplayId, DisplayName, EntityId } from '../utils';
-import { SpaceFollow } from "./space_follow";
+import { NewTypeInt, NewTypeString } from "../../Implication";
+import { User, UserSk } from "../user/User";
+import { CreatedAt, createDisplayId, createEntityId, DisplayId, DisplayName, EntityId } from '../Utils';
+import { SpaceFollow } from "./SpaceFollow";
 
 export enum MembershipMethod {
     NONE = "none",
@@ -40,7 +40,7 @@ export class Space {
     @CreatedAt()
     createdAt: Date;
 
-    @ManyToOne(type => User, { onDelete: "SET NULL" })
+    @ManyToOne(type => User, { onDelete: "RESTRICT" })
     @JoinColumn({ name: "creatorUserId" })
     creatorUser: User;
     @Column()
@@ -49,7 +49,7 @@ export class Space {
     @Column()
     description: string;
 
-    @Column({ nullable: true })
+    @Column("varchar", { length: 100, nullable: true })
     homeUrl: string | null;
 
     @Column({

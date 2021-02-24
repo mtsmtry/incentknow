@@ -1,7 +1,6 @@
 module Incentknow.Widgets.ContentQuery where
 
 import Prelude
-
 import Control.Monad.Except (runExcept)
 import Data.Argonaut.Core (Json, fromArray, fromBoolean, fromNumber, fromObject, fromString, isArray, isBoolean, isNumber, isObject, isString, jsonNull, stringify, toArray, toBoolean, toNumber, toObject, toString)
 import Data.Argonaut.Encode (encodeJson)
@@ -24,13 +23,13 @@ import Foreign.Object as O
 import Global (decodeURI, decodeURIComponent, encodeURI, encodeURIComponent)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api.Utils (Fetch, Remote(..), fetchApi, forFetch, forFetchItem)
+import Incentknow.API.Execution (Fetch, Remote(..), fetchAPI, forFetch, forFetchItem)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button, checkbox, submitButton, textarea)
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.Data.Page (toJson)
-import Incentknow.Data.Property (PropertyInfo, toPropertyInfo)
+import Incentknow.Data.Property (PropertyInfo)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Route (Route(..))
@@ -49,7 +48,7 @@ data FilterValue
   | ValueString String
   | ValueObject (Map String FilterValue)
   | ValueNone
- 
+
 instance showFilterValue :: Show FilterValue where
   show = case _ of
     ValueInt vl -> show vl
@@ -90,24 +89,25 @@ fromUrlParams params props = M.fromFoldable $ map (\(Tuple id vls) -> Tuple id $
   objToArray = O.toUnfoldable
 
   toValues :: String -> String -> Array FilterValue
-  toValues id vls = maybe [] (\ty-> toValues' ty vls) maybeType
+  toValues id vls = maybe [] (\ty -> toValues' ty vls) maybeType
     where
     prop = M.lookup id $ toPropertyMap props
+
     maybeType = map _.type prop
-  
+
     toValues' :: Type -> String -> Array FilterValue
-    toValues' ty vls =
-      case ty of
-        ArrayType args -> toValues' args.type vls
-        ObjectType _ -> case runExcept $ parseJSON vls of
-          Right frg -> if isArray json then
-              catMaybes $ map fromJson $ fromMaybe [] $ toArray json
-            else
-              catMaybes $ [ fromJson json ]
-            where
-            json = toJson frg
-          _ -> []
-        _ -> map (\vl-> fromMaybe ValueNone $ toValue vl ty) $ split (Pattern ",") vls
+    toValues' ty vls = case ty of
+      ArrayType args -> toValues' args.type vls
+      ObjectType _ -> case runExcept $ parseJSON vls of
+        Right frg ->
+          if isArray json then
+            catMaybes $ map fromJson $ fromMaybe [] $ toArray json
+          else
+            catMaybes $ [ fromJson json ]
+          where
+          json = toJson frg
+        _ -> []
+      _ -> map (\vl -> fromMaybe ValueNone $ toValue vl ty) $ split (Pattern ",") vls
 
   fromJson :: Json -> Maybe FilterValue
   fromJson json =
@@ -142,10 +142,9 @@ toUrlParams m = map (\(Tuple key vls) -> Tuple key $ Just $ showValues vls) $ M.
   showValues :: Array FilterValue -> String
   showValues vls = case vls of
     [ vl ] -> showValue vl
-    _ -> case head vls of 
+    _ -> case head vls of
       Just (ValueObject obj) -> encodeUriValue $ stringify $ fromArray $ map toJson vls
       _ -> joinWith "," $ map showValue vls
-
     where
     showValue :: FilterValue -> String
     showValue = case _ of
@@ -337,7 +336,7 @@ handleAction = case _ of
   Initialize -> do
     state <- H.get
     for_ state.formatId \id ->
-      fetchApi FetchedFormat $ getFormat id
+      fetchAPI FetchedFormat $ getFormat id
     H.liftEffect $ consoleLog $ show $ state.urlParams
   ChangeSpace spaceId -> do
     H.modify_ _ { spaceId = spaceId }
@@ -345,7 +344,7 @@ handleAction = case _ of
   ChangeFormat formatId -> do
     H.modify_ _ { formatId = formatId, format = Loading }
     for_ formatId \id ->
-      fetchApi FetchedFormat $ getFormat id
+      fetchAPI FetchedFormat $ getFormat id
     navigateNewUrl
   HandleInput input -> do
     state <- H.get

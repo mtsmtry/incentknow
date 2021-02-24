@@ -1,7 +1,6 @@
 module Incentknow.Molecules.PropertyMenu where
 
 import Prelude
-
 import Data.Array (filter, fromFoldable)
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), maybe)
@@ -11,8 +10,8 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (getFocusedFormat, getFormat, getFormats)
-import Incentknow.Api.Utils (Fetch, executeApi, fetchApi, forFetch, forFetchItem)
+import Incentknow.API (getFocusedFormat, getFormat, getFormats)
+import Incentknow.API.Execution (Fetch, executeAPI, fetchAPI, forFetch, forFetchItem)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (RelatedFormat, Type, FocusedFormat)
 import Incentknow.Data.Ids (SpaceId(..), FormatId(..))
@@ -25,7 +24,7 @@ type Input
   = { formatId :: FormatId
     , value :: Maybe String
     , type :: Maybe Type
-    , disabled:: Boolean
+    , disabled :: Boolean
     }
 
 type State
@@ -80,7 +79,7 @@ render state =
     { resource: SelectMenuResourceAllCandidates $ map toSelectMenuItem props, value: state.property, disabled: state.disabled }
     (Just <<< ChangeValue)
   where
-  props = maybe state.props (\ty-> filter (\item-> item.type == ty) state.props) state.type
+  props = maybe state.props (\ty -> filter (\item -> item.type == ty) state.props) state.type
 
 toSelectMenuItem :: PropertyInfo -> SelectMenuItem String
 toSelectMenuItem prop =
@@ -100,9 +99,9 @@ handleAction :: forall m. Behaviour m => MonadAff m => MonadEffect m => Action -
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchApi FetchedFormat $ getFocusedFormat state.formatId
+    fetchAPI FetchedFormat $ getFocusedFormat state.formatId
   FetchedFormat fetch ->
-    forFetchItem fetch \format-> do
+    forFetchItem fetch \format -> do
       H.modify_ _ { props = format.structure.properties }
   HandleInput input -> do
     state <- H.get

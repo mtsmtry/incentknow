@@ -1,7 +1,6 @@
 module Incentknow.Molecules.SpaceMenu where
 
 import Prelude
-
 import Data.Array (filter, fromFoldable)
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), maybe)
@@ -11,8 +10,8 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (getMySpaces, getPublishedSpaces, getRelatedSpace, getSpace)
-import Incentknow.Api.Utils (Fetch, executeApi, fetchApi, forFetchItem)
+import Incentknow.API (getMySpaces, getPublishedSpaces, getRelatedSpace, getSpace)
+import Incentknow.API.Execution (Fetch, executeAPI, fetchAPI, forFetchItem)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (RelatedSpace)
 import Incentknow.Data.Ids (SpaceId(..))
@@ -25,7 +24,7 @@ type Input
     , disabled :: Boolean
     }
 
-type State 
+type State
   = { items :: Array (SelectMenuItem SpaceId)
     , initialSpaceId :: Maybe SpaceId
     , spaceId :: Maybe SpaceId
@@ -95,14 +94,14 @@ handleAction = case _ of
   Initialize -> do
     state <- H.get
     for_ state.initialSpaceId \spaceId -> do
-      fetchApi FetchedSpace $ getRelatedSpace spaceId
-    fetchApi FetchedSpaces getPublishedSpaces
-    fetchApi FetchedSpaces getMySpaces
+      fetchAPI FetchedSpace $ getRelatedSpace spaceId
+    fetchAPI FetchedSpaces getPublishedSpaces
+    fetchAPI FetchedSpaces getMySpaces
   FetchedSpace fetch ->
-    forFetchItem fetch \space->
-      H.modify_ \s-> s { items = upsertItems [ toSelectMenuItem space ] s.items }
+    forFetchItem fetch \space ->
+      H.modify_ \s -> s { items = upsertItems [ toSelectMenuItem space ] s.items }
   FetchedSpaces fetch ->
-    forFetchItem fetch \space->
-      H.modify_ \s-> s { items = upsertItems (map toSelectMenuItem space) s.items }
+    forFetchItem fetch \space ->
+      H.modify_ \s -> s { items = upsertItems (map toSelectMenuItem space) s.items }
   HandleInput input -> H.modify_ _ { spaceId = input.value, disabled = input.disabled }
   ChangeValue value -> H.raise value

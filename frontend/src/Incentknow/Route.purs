@@ -19,7 +19,7 @@ import Data.Validation.Semiring (invalid)
 import Effect (Effect)
 import Effect.Class (class MonadEffect)
 import Effect.Class as H
-import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..), ContentSnapshotId(..), CrawlerId(..), CrawlerOperationId(..), FormatDisplayId(..), FormatId(..), SemanticId(..), SpaceDisplayId(..), SpaceId(..), UserDisplayId(..), UserId(..))
+import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..), ContentSnapshotId(..), FormatDisplayId(..), FormatId(..), SemanticId(..), SpaceDisplayId(..), SpaceId(..), UserDisplayId(..), UserId(..))
 import Routing (match)
 import Routing.Match (Match(..), end, int, lit, param, root, str)
 import Routing.Match.Error (MatchError(..))
@@ -46,11 +46,11 @@ data SpaceTab
   | SpaceCrawlers
   | SpaceSetting
 
-data CrawlerTab
-  = CrawlerMain
-  | CrawlerOperations
-  | CrawlerOperation CrawlerOperationId
-  | CrawlerCaches
+--data CrawlerTab
+  -- = CrawlerMain
+  -- | CrawlerOperations
+  -- | CrawlerOperation CrawlerOperationId
+  -- | CrawlerCaches
 
 data UserTab
   = UserMain
@@ -92,15 +92,15 @@ data Route
   | Snapshot ContentDraftId SnapshotDiff
   | NewSpace
   | Format FormatDisplayId FormatTab
-  | NewCrawler
-  | Crawler CrawlerId CrawlerTab
+ -- | NewCrawler
+ -- | Crawler CrawlerId CrawlerTab
   | NotFound
 
 derive instance eqFormatTab :: Eq FormatTab
 
 derive instance eqSpaceTab :: Eq SpaceTab
 
-derive instance eqCrawlerTab :: Eq CrawlerTab
+--derive instance eqCrawlerTab :: Eq CrawlerTab
 
 derive instance eqUserTab :: Eq UserTab
 
@@ -172,11 +172,11 @@ routeToPath = case _ of
   Format id FormatSetting -> "/formats/" <> unwrap id <> "/setting"
   Format id FormatReactor -> "/formats/" <> unwrap id <> "/reactor"
   -- crawler
-  NewCrawler -> "/crawlers/new"
-  Crawler id CrawlerMain -> "/crawlers/" <> unwrap id
-  Crawler id CrawlerOperations -> "/crawlers/" <> unwrap id <> "/operations"
-  Crawler id (CrawlerOperation ope) -> "/crawlers/" <> unwrap id <> "/operations/" <> show (unwrap ope)
-  Crawler id CrawlerCaches -> "/crawlers/" <> unwrap id <> "/caches"
+  --NewCrawler -> "/crawlers/new"
+  --Crawler id CrawlerMain -> "/crawlers/" <> unwrap id
+  --Crawler id CrawlerOperations -> "/crawlers/" <> unwrap id <> "/operations"
+ -- Crawler id (CrawlerOperation ope) -> "/crawlers/" <> unwrap id <> "/operations/" <> show (unwrap ope)
+  --Crawler id CrawlerCaches -> "/crawlers/" <> unwrap id <> "/caches"
   -- others
   NotFound -> "/not-found"
 
@@ -252,11 +252,11 @@ matchRoute =
         , Composition <$> (lit "spaces" *> (map SpaceId str)) <*> (map FormatId str) <*> str
         , NotFound <$ (lit "not-found")
         -- crawlers
-        , NewCrawler <$ (lit "crawlers" <* lit "new" <* end)
-        , (flip Crawler CrawlerMain) <$> (map CrawlerId $ lit "crawlers" *> str <* end)
-        , (flip Crawler CrawlerOperations) <$> (map CrawlerId $ lit "crawlers" *> str <* lit "operations" <* end)
-        , Crawler <$> (lit "crawlers" *> (map CrawlerId str)) <*> (lit "operations" *> map (CrawlerOperation <<< CrawlerOperationId) (map toNumber int)) <* end
-        , (flip Crawler CrawlerCaches) <$> (map CrawlerId $ lit "crawlers" *> str <* lit "caches" <* end)
+       -- , NewCrawler <$ (lit "crawlers" <* lit "new" <* end)
+       -- , (flip Crawler CrawlerMain) <$> (map CrawlerId $ lit "crawlers" *> str <* end)
+       -- , (flip Crawler CrawlerOperations) <$> (map CrawlerId $ lit "crawlers" *> str <* lit "operations" <* end)
+       -- , Crawler <$> (lit "crawlers" *> (map CrawlerId str)) <*> (lit "operations" *> map (CrawlerOperation <<< CrawlerOperationId) (map toNumber int)) <* end
+       -- , (flip Crawler CrawlerCaches) <$> (map CrawlerId $ lit "crawlers" *> str <* lit "caches" <* end)
         ]
   where
   space = map (map SpaceId) $ matchParam "space"

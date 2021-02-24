@@ -5,35 +5,8 @@ import Prelude
 
 import Data.Maybe (Maybe)
 import Data.Argonaut.Core (Json)
-import Incentknow.Data.Ids (ContainerId, SpaceId, SpaceDisplayId, UserId, UserDisplayId, StructureId, FormatId, FormatDisplayId, ContentId, SemanticId, ContentCommitId, ContentDraftId, MaterialId, MaterialCommitId, MaterialDraftId, MaterialSnapshotId, ContentSnapshotId, CrawlerId, CrawlerOperationId, CrawlerTaskId, CrawlerCacheId, ReactorId)
+import Incentknow.Data.Ids (ContainerSk, ContainerId, ContentSk, ContentId, ContentCommitSk, ContentCommitId, ContentDraftSk, ContentDraftId, ContentEditingSk, ContentEditingId, ContentSnapshotSk, ContentSnapshotId, ContentTransitionSk, ContentTransitionId, FormatSk, FormatId, FormatDisplayId, SemanticId, PropertySk, PropertyId, StructureSk, StructureId, MaterialSk, MaterialId, MaterialCommitSk, MaterialCommitId, MaterialDraftSk, MaterialDraftId, MaterialEditingSk, MaterialEditingId, MaterialSnapshotSk, MaterialSnapshotId, ReactorSk, ReactorId, SpaceSk, SpaceId, SpaceDisplayId, SpaceFollowSk, SpaceMemberSk, SpaceMembershipApplicationSk, UserSk, UserId, UserDisplayId, ContentRevisionId, ContentWholeRevisionId, MaterialRevisionId)
 
-
----------------------------------------------------------
---  Sql
----------------------------------------------------------
-
-data MembershipMethod
-  = MembershipMethodNone
-  | MembershipMethodApp
-
-derive instance eqMembershipMethod :: Eq MembershipMethod
-derive instance ordMembershipMethod :: Ord MembershipMethod
-
-data SpaceAuth
-  = SpaceAuthNone
-  | SpaceAuthVisible
-  | SpaceAuthReadable
-  | SpaceAuthWritable
-
-derive instance eqSpaceAuth :: Eq SpaceAuth
-derive instance ordSpaceAuth :: Ord SpaceAuth
-
-data MemberType
-  = Normal
-  | Owner
-
-derive instance eqMemberType :: Eq MemberType
-derive instance ordMemberType :: Ord MemberType
 
 data ContentGenerator
   = ContentGeneratorNone
@@ -42,6 +15,22 @@ data ContentGenerator
 
 derive instance eqContentGenerator :: Eq ContentGenerator
 derive instance ordContentGenerator :: Ord ContentGenerator
+
+data ContentChangeType
+  = ContentChangeTypeInitial
+  | ContentChangeTypeWrite
+  | ContentChangeTypeRemove
+
+derive instance eqContentChangeType :: Eq ContentChangeType
+derive instance ordContentChangeType :: Ord ContentChangeType
+
+data ContentEditingState
+  = ContentEditingStateEditing
+  | ContentEditingStateCommitted
+  | ContentEditingStateCanceld
+
+derive instance eqContentEditingState :: Eq ContentEditingState
+derive instance ordContentEditingState :: Ord ContentEditingState
 
 data FormatUsage
   = Internal
@@ -77,28 +66,6 @@ data Language
 derive instance eqLanguage :: Eq Language
 derive instance ordLanguage :: Ord Language
 
-data EditingState
-  = EditingStateEditing
-  | EditingStateCommitted
-  | EditingStateCanceld
-
-derive instance eqEditingState :: Eq EditingState
-derive instance ordEditingState :: Ord EditingState
-
-data DraftState
-  = DraftStateEditing
-
-derive instance eqDraftState :: Eq DraftState
-derive instance ordDraftState :: Ord DraftState
-
-data ChangeType
-  = Initial
-  | Write
-  | Remove
-
-derive instance eqChangeType :: Eq ChangeType
-derive instance ordChangeType :: Ord ChangeType
-
 data MaterialType
   = MaterialTypeFolder
   | MaterialTypeDocument
@@ -106,62 +73,21 @@ data MaterialType
 derive instance eqMaterialType :: Eq MaterialType
 derive instance ordMaterialType :: Ord MaterialType
 
-data CrawlerTaskStatus
-  = CrawlerTaskStatusPdending
-  | CrawlerTaskStatusRunning
-  | CrawlerTaskStatusCompleted
-  | CrawlerTaskStatusFailedFetching
-  | CrawlerTaskStatusFailedScraping
-  | CrawlerTaskStatusFailedImporting
+data MaterialChangeType
+  = MaterialChangeTypeInitial
+  | MaterialChangeTypeWrite
+  | MaterialChangeTypeRemove
 
-derive instance eqCrawlerTaskStatus :: Eq CrawlerTaskStatus
-derive instance ordCrawlerTaskStatus :: Ord CrawlerTaskStatus
+derive instance eqMaterialChangeType :: Eq MaterialChangeType
+derive instance ordMaterialChangeType :: Ord MaterialChangeType
 
-data Status
+data MaterialEditingState
+  = MaterialEditingStateEditing
+  | MaterialEditingStateCommitted
+  | MaterialEditingStateCanceld
 
-derive instance eqStatus :: Eq Status
-derive instance ordStatus :: Ord Status
-
-data CrawlerTaskMethod
-  = CrawlerTaskMethodCrawling
-  | CrawlerTaskMethodScraping
-
-derive instance eqCrawlerTaskMethod :: Eq CrawlerTaskMethod
-derive instance ordCrawlerTaskMethod :: Ord CrawlerTaskMethod
-
-data CrawlerTakeoverClass
-  = New
-  | Duplication
-
-derive instance eqCrawlerTakeoverClass :: Eq CrawlerTakeoverClass
-derive instance ordCrawlerTakeoverClass :: Ord CrawlerTakeoverClass
-
-type CrawlerTaskOutput
-  = { indexes :: Array { url :: String, taskId :: Maybe String, class :: CrawlerTakeoverClass }
-    , contents :: Maybe (Array { contentId :: String, version :: Number })
-    }
-
-data CrawlerOperationStatus
-  = CrawlerOperationStatusPending
-  | CrawlerOperationStatusRunning
-  | CrawlerOperationStatusCompleted
-
-derive instance eqCrawlerOperationStatus :: Eq CrawlerOperationStatus
-derive instance ordCrawlerOperationStatus :: Ord CrawlerOperationStatus
-
-data CrawlerOperationMethod
-  = CrawlerOperationMethodCrawling
-  | CrawlerOperationMethodScraping
-
-derive instance eqCrawlerOperationMethod :: Eq CrawlerOperationMethod
-derive instance ordCrawlerOperationMethod :: Ord CrawlerOperationMethod
-
-data CrawlerCacheStatus
-  = Stored
-  | Deleted
-
-derive instance eqCrawlerCacheStatus :: Eq CrawlerCacheStatus
-derive instance ordCrawlerCacheStatus :: Ord CrawlerCacheStatus
+derive instance eqMaterialEditingState :: Eq MaterialEditingState
+derive instance ordMaterialEditingState :: Ord MaterialEditingState
 
 data ReactorState
   = Invaild
@@ -169,16 +95,344 @@ data ReactorState
 derive instance eqReactorState :: Eq ReactorState
 derive instance ordReactorState :: Ord ReactorState
 
----------------------------------------------------------
---  Entities
----------------------------------------------------------
+data MembershipMethod
+  = MembershipMethodNone
+  | MembershipMethodApp
 
-type IntactContainer
+derive instance eqMembershipMethod :: Eq MembershipMethod
+derive instance ordMembershipMethod :: Ord MembershipMethod
+
+data SpaceAuth
+  = SpaceAuthNone
+  | SpaceAuthVisible
+  | SpaceAuthReadable
+  | SpaceAuthWritable
+
+derive instance eqSpaceAuth :: Eq SpaceAuth
+derive instance ordSpaceAuth :: Ord SpaceAuth
+
+data MemberType
+  = Normal
+  | Owner
+
+derive instance eqMemberType :: Eq MemberType
+derive instance ordMemberType :: Ord MemberType
+
+type RelatedContainer
   = { containerId :: ContainerId
     , space :: RelatedSpace
     , format :: RelatedFormat
     , createdAt :: Number
     , updatedAt :: Number
+    , generator :: Maybe ContentGenerator
+    }
+
+type FocusedContainer
+  = { containerId :: ContainerId
+    , space :: RelatedSpace
+    , format :: RelatedFormat
+    , createdAt :: Number
+    , updatedAt :: Number
+    , generator :: Maybe ContentGenerator
+    , reactor :: Maybe IntactReactor
+    }
+
+type RelatedContent
+  = { contentId :: ContentId
+    , createdAt :: Number
+    , updatedAt :: Number
+    , creatorUser :: RelatedUser
+    , updaterUser :: RelatedUser
+    , updateCount :: Number
+    , viewCount :: Number
+    , format :: FocusedFormat
+    , data :: Json
+    }
+
+type FocusedContent
+  = { contentId :: ContentId
+    , createdAt :: Number
+    , updatedAt :: Number
+    , creatorUser :: RelatedUser
+    , updaterUser :: RelatedUser
+    , updateCount :: Number
+    , viewCount :: Number
+    , format :: FocusedFormat
+    , draft :: Maybe RelatedContentDraft
+    , data :: Json
+    }
+
+type RelatedContentCommit
+  = { commitId :: ContentCommitId
+    , timestamp :: Number
+    , basedCommitId :: Maybe ContentCommitId
+    , committerUser :: RelatedUser
+    }
+
+type FocusedContentCommit
+  = { commitId :: ContentCommitId
+    , timestamp :: Number
+    , basedCommitId :: Maybe ContentCommitId
+    , committerUser :: RelatedUser
+    }
+
+type RelatedContentDraft
+  = { draftId :: ContentDraftId
+    , createdAt :: Number
+    , updatedAt :: Number
+    , basedCommitId :: Maybe ContentCommitId
+    , data :: Json
+    , contentId :: Maybe ContentId
+    , format :: FocusedFormat
+    }
+
+type FocusedContentDraft
+  = { draftId :: ContentDraftId
+    , createdAt :: Number
+    , updatedAt :: Number
+    , basedCommitId :: Maybe ContentCommitId
+    , data :: Json
+    , contentId :: Maybe ContentId
+    , materialDrafts :: Array FocusedMaterialDraft
+    }
+
+data ContentNodeType
+  = ContentNodeTypeCommitted
+  | ContentNodeTypePresent
+  | ContentNodeTypeCanceld
+
+derive instance eqContentNodeType :: Eq ContentNodeType
+derive instance ordContentNodeType :: Ord ContentNodeType
+
+data ContentNodeTarget
+  = ContentNodeTargetContent
+  | ContentNodeTargetMaterial
+  | ContentNodeTargetWhole
+
+derive instance eqContentNodeTarget :: Eq ContentNodeTarget
+derive instance ordContentNodeTarget :: Ord ContentNodeTarget
+
+type ContentNode
+  = { type :: ContentNodeType
+    , target :: ContentNodeTarget
+    , user :: RelatedUser
+    , editingId :: Maybe String
+    , rivision :: RelatedContentRevision
+    }
+
+data ContentRevisionSource
+  = ContentRevisionSourceCommit
+  | ContentRevisionSourceSnapshot
+  | ContentRevisionSourceEditing
+  | ContentRevisionSourceDraft
+
+derive instance eqContentRevisionSource :: Eq ContentRevisionSource
+derive instance ordContentRevisionSource :: Ord ContentRevisionSource
+
+type ContentRivisionStructure
+  = { source :: ContentRevisionSource
+    , entityId :: String
+    }
+
+type ContentWholeRevisionStructure
+  = { content :: ContentRevisionId
+    , materials :: Array MaterialRevisionId
+    }
+
+type RelatedContentRevision
+  = { snapshotId :: ContentWholeRevisionId
+    , timestamp :: Number
+    }
+
+type FocusedContentRevision
+  = { timestamp :: Number
+    , data :: Json
+    , materials :: Array FocusedMaterialRevision
+    }
+
+type RelatedFormat
+  = { formatId :: FormatId
+    , displayId :: FormatDisplayId
+    , displayName :: String
+    , description :: String
+    , space :: RelatedSpace
+    , usage :: FormatUsage
+    , createdAt :: Number
+    , creatorUser :: RelatedUser
+    , updatedAt :: Number
+    , updaterUser :: RelatedUser
+    , semanticId :: Maybe String
+    , currentStructure :: RelatedStructure
+    }
+
+type FocusedFormat
+  = { formatId :: FormatId
+    , displayId :: FormatDisplayId
+    , displayName :: String
+    , description :: String
+    , space :: RelatedSpace
+    , usage :: FormatUsage
+    , createdAt :: Number
+    , creatorUser :: RelatedUser
+    , updatedAt :: Number
+    , updaterUser :: RelatedUser
+    , currentStructure :: FocusedStructure
+    , semanticId :: Maybe String
+    }
+
+type PropertyInfo
+  = { displayName :: String
+    , fieldName :: Maybe String
+    , id :: String
+    , optional :: Boolean
+    , semantic :: Maybe String
+    , type :: Type
+    }
+
+type Enumerator
+  = { id :: String
+    , displayName :: String
+    , fieldName :: Maybe String
+    }
+
+data Type
+  = IntType 
+  | BoolType 
+  | StringType 
+  | FormatType 
+  | SpaceType 
+  | ContentType FormatId
+  | UrlType 
+  | ObjectType (Array PropertyInfo)
+  | TextType 
+  | ArrayType Type
+  | CodeType Language
+  | EnumType (Array Enumerator)
+  | DocumentType 
+  | ImageType 
+  | EntityType FormatId
+
+derive instance eqType :: Eq Type
+
+type RelatedStructure
+  = { structureId :: StructureId
+    , version :: Number
+    , title :: Maybe String
+    , createdAt :: Number
+    }
+
+type FocusedStructure
+  = { structureId :: StructureId
+    , version :: Number
+    , title :: Maybe String
+    , properties :: Array PropertyInfo
+    , createdAt :: Number
+    }
+
+type RelatedMaterial
+  = { materialId :: MaterialId
+    , contentId :: Maybe ContentId
+    , displayName :: String
+    , materialType :: MaterialType
+    , createdAt :: Number
+    , creatorUser :: RelatedUser
+    , updatedAt :: Number
+    , updaterUser :: RelatedUser
+    }
+
+type FocusedMaterial
+  = { materialId :: MaterialId
+    , contentId :: Maybe ContentId
+    , displayName :: String
+    , materialType :: MaterialType
+    , createdAt :: Number
+    , creatorUser :: RelatedUser
+    , updatedAt :: Number
+    , updaterUser :: RelatedUser
+    , data :: String
+    , draft :: Maybe RelatedMaterialDraft
+    }
+
+type RelatedMaterialCommit
+  = { commitId :: MaterialCommitId
+    , timestamp :: Number
+    , dataSize :: Number
+    , basedCommitId :: Maybe MaterialCommitId
+    , committerUser :: RelatedUser
+    }
+
+type FocusedMaterialCommit
+  = { commitId :: MaterialCommitId
+    , timestamp :: Number
+    , data :: String
+    , dataSize :: Number
+    }
+
+type RelatedMaterialDraft
+  = { draftId :: MaterialDraftId
+    , displayName :: String
+    , createdAt :: Number
+    , updatedAt :: Number
+    }
+
+type FocusedMaterialDraft
+  = { draftId :: MaterialDraftId
+    , displayName :: String
+    , createdAt :: Number
+    , updatedAt :: Number
+    , contentDraftId :: Maybe ContentDraftId
+    , material :: Maybe RelatedMaterial
+    , basedCommitId :: Maybe MaterialCommitId
+    , data :: String
+    }
+
+data MaterialNodeType
+  = MaterialNodeTypeCommitted
+  | MaterialNodeTypePresent
+  | MaterialNodeTypeCanceld
+
+derive instance eqMaterialNodeType :: Eq MaterialNodeType
+derive instance ordMaterialNodeType :: Ord MaterialNodeType
+
+type MaterialNode
+  = { type :: MaterialNodeType
+    , user :: RelatedUser
+    , editingId :: Maybe String
+    , revision :: RelatedMaterialRevision
+    }
+
+data MaterialRevisionSource
+  = MaterialRevisionSourceCommit
+  | MaterialRevisionSourceSnapshot
+  | MaterialRevisionSourceEditing
+  | MaterialRevisionSourceDraft
+
+derive instance eqMaterialRevisionSource :: Eq MaterialRevisionSource
+derive instance ordMaterialRevisionSource :: Ord MaterialRevisionSource
+
+type MaterialRevisionStructure
+  = { source :: MaterialRevisionSource
+    , entityId :: String
+    }
+
+type RelatedMaterialRevision
+  = { snapshotId :: MaterialRevisionId
+    , timestamp :: Number
+    , dataSize :: Number
+    }
+
+type FocusedMaterialRevision
+  = { timestamp :: Number
+    , data :: String
+    }
+
+type IntactReactor
+  = { reactorId :: ReactorId
+    , container :: RelatedContainer
+    , state :: ReactorState
+    , definitionId :: Maybe ContentId
+    , createdAt :: Number
+    , creatorUser :: RelatedUser
     }
 
 type RelatedSpace
@@ -242,344 +496,16 @@ type FocusedUser
     , createdAt :: Number
     }
 
-type PropertyInfo
-  = { displayName :: String
-    , fieldName :: Maybe String
-    , id :: String
-    , optional :: Boolean
-    , semantic :: Maybe String
-    , type :: Type
-    }
+data MaterialCompositionType
+  = Creation
+  | Move
 
-type Enumerator
-  = { id :: String
-    , displayName :: String
-    , fieldName :: Maybe String
-    }
+derive instance eqMaterialCompositionType :: Eq MaterialCompositionType
+derive instance ordMaterialCompositionType :: Ord MaterialCompositionType
 
-data Type
-  = IntType 
-  | BoolType 
-  | StringType 
-  | FormatType 
-  | SpaceType 
-  | ContentType FormatId
-  | UrlType 
-  | ObjectType (Array PropertyInfo)
-  | TextType 
-  | ArrayType Type
-  | CodeType Language
-  | EnumType (Array Enumerator)
-  | DocumentType 
-  | ImageType 
-  | EntityType FormatId
+data MaterialComposition
+  = CreationMaterialComposition String String
+  | MoveMaterialComposition MaterialId
 
-derive instance eqType :: Eq Type
-
-type FocusedStructure
-  = { structureId :: StructureId
-    , properties :: Array PropertyInfo
-    , createdAt :: Number
-    }
-
-type RelatedFormat
-  = { formatId :: FormatId
-    , displayId :: FormatDisplayId
-    , displayName :: String
-    , description :: String
-    , space :: RelatedSpace
-    , usage :: FormatUsage
-    , createdAt :: Number
-    , creatorUser :: RelatedUser
-    , updatedAt :: Number
-    , updaterUser :: RelatedUser
-    , semanticId :: Maybe String
-    }
-
-type FocusedFormat
-  = { formatId :: FormatId
-    , displayId :: FormatDisplayId
-    , displayName :: String
-    , description :: String
-    , space :: RelatedSpace
-    , usage :: FormatUsage
-    , createdAt :: Number
-    , creatorUser :: RelatedUser
-    , updatedAt :: Number
-    , updaterUser :: RelatedUser
-    , structure :: FocusedStructure
-    , semanticId :: Maybe String
-    }
-
-type RelatedContent
-  = { contentId :: ContentId
-    , createdAt :: Number
-    , updatedAt :: Number
-    , creatorUser :: RelatedUser
-    , updaterUser :: RelatedUser
-    , updateCount :: Number
-    , viewCount :: Number
-    , format :: FocusedFormat
-    , data :: Json
-    }
-
-type FocusedContent
-  = { contentId :: ContentId
-    , createdAt :: Number
-    , updatedAt :: Number
-    , creatorUser :: RelatedUser
-    , updaterUser :: RelatedUser
-    , updateCount :: Number
-    , viewCount :: Number
-    , format :: FocusedFormat
-    , draftId :: Maybe ContentDraftId
-    , data :: Json
-    }
-
-type RelatedContentCommit
-  = { commitId :: ContentCommitId
-    , timestamp :: Number
-    , forkedCommitId :: String
-    , committerUser :: RelatedUser
-    }
-
-type FocusedContentCommit
-  = { commitId :: ContentCommitId
-    , timestamp :: Number
-    , forkedCommitId :: String
-    , committerUser :: RelatedUser
-    }
-
-type RelatedContentDraft
-  = { draftId :: ContentDraftId
-    , createdAt :: Number
-    , updatedAt :: Number
-    , forkedCommitId :: String
-    , data :: Json
-    , format :: FocusedFormat
-    , state :: EditingState
-    }
-
-type FocusedContentDraft
-  = { draftId :: ContentDraftId
-    , createdAt :: Number
-    , updatedAt :: Number
-    , forkedCommitId :: String
-    , data :: String
-    , materialDrafts :: Array FocusedMaterialDraft
-    , state :: EditingState
-    }
-
-type RelatedMaterial
-  = { materialId :: MaterialId
-    , contentId :: String
-    , displayName :: String
-    , materialType :: MaterialType
-    , createdAt :: Number
-    , creatorUser :: RelatedUser
-    , updatedAt :: Number
-    , updaterUser :: RelatedUser
-    }
-
-type FocusedMaterial
-  = { materialId :: MaterialId
-    , contentId :: String
-    , displayName :: String
-    , materialType :: MaterialType
-    , createdAt :: Number
-    , creatorUser :: RelatedUser
-    , updatedAt :: Number
-    , updaterUser :: RelatedUser
-    , data :: String
-    , draft :: RelatedMaterialDraft
-    }
-
-type RelatedMaterialCommit
-  = { commitId :: MaterialCommitId
-    , timestamp :: Number
-    , dataSize :: Number
-    , forkedCommitId :: String
-    , committerUser :: RelatedUser
-    }
-
-type FocusedMaterialCommit
-  = { commitId :: MaterialCommitId
-    , timestamp :: Number
-    , data :: String
-    , dataSize :: Number
-    }
-
-type RelatedMaterialDraft
-  = { draftId :: MaterialDraftId
-    , displayName :: String
-    , createdAt :: Number
-    , updatedAt :: Number
-    }
-
-type FocusedMaterialDraft
-  = { draftId :: MaterialDraftId
-    , displayName :: String
-    , createdAt :: Number
-    , updatedAt :: Number
-    , contentDraftId :: String
-    , material :: RelatedMaterial
-    , forkedCommitId :: String
-    , data :: String
-    }
-
-data SnapshotSource
-  = SnapshotSourceCommit
-  | SnapshotSourceSnapshot
-  | SnapshotSourceEditing
-  | SnapshotSourceDraft
-
-derive instance eqSnapshotSource :: Eq SnapshotSource
-derive instance ordSnapshotSource :: Ord SnapshotSource
-
-data NodeType
-  = NodeTypeCommitted
-  | NodeTypePresent
-  | NodeTypeCanceld
-
-derive instance eqNodeType :: Eq NodeType
-derive instance ordNodeType :: Ord NodeType
-
-type MaterialSnapshotStructure
-  = { source :: SnapshotSource
-    , entityId :: String
-    }
-
-type RelatedMaterialSnapshot
-  = { snapshotId :: MaterialSnapshotId
-    , timestamp :: Number
-    , dataSize :: Number
-    }
-
-type FocusedMaterialSnapshot
-  = { timestamp :: Number
-    , data :: String
-    }
-
-type MaterialNode
-  = { type :: NodeType
-    , user :: RelatedUser
-    , editingId :: Maybe String
-    , snapshot :: RelatedMaterialSnapshot
-    }
-
-data NodeTarget
-  = NodeTargetContent
-  | NodeTargetMaterial
-  | NodeTargetWhole
-
-derive instance eqNodeTarget :: Eq NodeTarget
-derive instance ordNodeTarget :: Ord NodeTarget
-
-type ContentNode
-  = { type :: NodeType
-    , target :: NodeTarget
-    , user :: RelatedUser
-    , editingId :: Maybe String
-    , snapshot :: RelatedContentSnapshot
-    }
-
-type ContentSnapshotStructure
-  = { source :: SnapshotSource
-    , entityId :: String
-    , materials :: Array MaterialSnapshotId
-    }
-
-type RelatedContentSnapshot
-  = { snapshotId :: ContentSnapshotId
-    , timestamp :: Number
-    }
-
-type FocusedContentSnapshot
-  = { timestamp :: Number
-    , data :: String
-    , materials :: Array FocusedMaterialSnapshot
-    }
-
-type IntactCrawler
-  = { crawlerId :: CrawlerId
-    , definitionId :: ContentId
-    , displayName :: String
-    , spaceId :: SpaceId
-    , updatedAt :: Number
-    , runningOperation :: Maybe IntactCrawlerOperation
-    }
-
-type IntactCrawlerOperation
-  = { operationId :: CrawlerOperationId
-    , createdAt :: Number
-    , executorUser :: RelatedUser
-    , method :: CrawlerOperationMethod
-    , startedAt :: Maybe Number
-    , endedAt :: Maybe Number
-    , status :: CrawlerOperationStatus
-    }
-
-type IntactCrawlerTask
-  = { taskId :: CrawlerTaskId
-    , scraperId :: ContentId
-    , displayName :: String
-    , createdAt :: Number
-    , startedAt :: Maybe Number
-    , endedAt :: Maybe Number
-    , message :: Maybe String
-    , output :: CrawlerTaskOutput
-    , cacheId :: CrawlerCacheId
-    }
-
-type IntendCrawlerCache
-  = { cacheId :: CrawlerCacheId
-    , operationId :: CrawlerOperationId
-    , scraperId :: ContentId
-    , url :: String
-    , status :: CrawlerCacheStatus
-    , createdAt :: Number
-    , updatedAt :: Number
-    }
-
-type IntactReactor
-  = { reactorId :: ReactorId
-    , space :: RelatedSpace
-    , format :: RelatedFormat
-    , state :: ReactorState
-    , definitionId :: ContentId
-    , createdAt :: Number
-    , creatorUser :: RelatedUser
-    }
-
----------------------------------------------------------
---  Container
----------------------------------------------------------
-
----------------------------------------------------------
---  Content
----------------------------------------------------------
-
----------------------------------------------------------
---  Format
----------------------------------------------------------
-
----------------------------------------------------------
---  Material
----------------------------------------------------------
-
----------------------------------------------------------
---  Space
----------------------------------------------------------
-
----------------------------------------------------------
---  User
----------------------------------------------------------
-
----------------------------------------------------------
---  Crawler
----------------------------------------------------------
-
----------------------------------------------------------
---  Reactor
----------------------------------------------------------
+derive instance eqMaterialComposition :: Eq MaterialComposition
 

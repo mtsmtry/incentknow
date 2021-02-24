@@ -1,7 +1,6 @@
 module Incentknow.Pages.Content where
 
 import Prelude
-
 import Data.Array (index, length, range)
 import Data.Foldable (for_)
 import Data.Int (fromString)
@@ -13,8 +12,8 @@ import Effect.Aff.Class (class MonadAff)
 import Halogen (SubscriptionId)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (Content, onLoadContentBySemanticId, onSnapshotContent)
-import Incentknow.Api.Utils (Fetch, Remote, callbackApi, executeApi, fetchApi, forFetch, subscribeApi)
+import Incentknow.API (Content, onLoadContentBySemanticId, onSnapshotContent)
+import Incentknow.API.Execution (Fetch, Remote, callbackAPI, executeAPI, fetchAPI, forFetch, subscribeAPI)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute, pushState)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button)
@@ -114,14 +113,14 @@ render state =
               else
                 maybe "Error" (\r -> r.displayName) $ index content.format.contentPage.relations (fromMaybe 0 (fromString x))
         }
-        [ ]
+        []
         [ HH.text (getContentSemanticData content.data content.format).title
         ]
         [ if state.tab == "main" then
             renderContent content
           else
-            maybeElem (M.lookup state.tab state.relationalContents) \remote->
-              remoteWith remote \contents->
+            maybeElem (M.lookup state.tab state.relationalContents) \remote ->
+              remoteWith remote \contents ->
                 HH.slot (SProxy :: SProxy "contentList") state.tab ContentList.component { value: contents } absurd
         ]
 
@@ -129,21 +128,20 @@ handleAction :: forall o m. Behaviour m => MonadAff m => Action -> H.HalogenM St
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    for_ state.contentSubId \subId->
+    for_ state.contentSubId \subId ->
       H.unsubscribe subId
     case state.contentSpec of
       ContentSpecContentId contentId -> do
-        contentSubId <- subscribeApi ChangeContent $ onSnapshotContent contentId
+        contentSubId <- subscribeAPI ChangeContent $ onSnapshotContent contentId
         H.modify_ _ { contentSubId = Just contentSubId }
       ContentSpecSemanticId formatId semanticId -> do
-        callbackApi ChangeContent $ onLoadContentBySemanticId formatId semanticId
+        callbackAPI ChangeContent $ onLoadContentBySemanticId formatId semanticId
   ChangeContent content -> do
     state <- H.get
     case state.contentSpec of
       ContentSpecSemanticId formatId semanticId -> do
         pushState $ R.Content content.contentId
-      ContentSpecContentId contentId ->
-        pure unit
+      ContentSpecContentId contentId -> pure unit
     H.modify_ _ { content = Just content }
   HandleInput input -> do
     state <- H.get
@@ -152,18 +150,18 @@ handleAction = case _ of
       handleAction Initialize
   Navigate event route -> navigateRoute event route
   NavigateRoute route -> navigate route
-  FetchedRelationalContents tab fetch->
-    forFetch fetch \contents->
+  FetchedRelationalContents tab fetch ->
+    forFetch fetch \contents ->
       H.modify_ \x -> x { relationalContents = M.insert tab contents x.relationalContents }
   ChangeTab tab -> do
     state <- H.modify _ { tab = tab }
     if tab == "main" then do
       pure unit
     else do
-      let id = fromMaybe 0 (fromString tab)
+      let
+        id = fromMaybe 0 (fromString tab)
       for_ state.content \content -> do
         when (not (M.member tab state.relationalContents)) do
           for_ (index content.format.contentPage.relations id) \relation -> do
             pure unit
-            --fetchApi (FetchedRelationalContents tab) $ getContentsByQuery { formatId: relation.formatId, property: relation.property, contentId: content.contentId }
-            
+ --fetchAPI (FetchedRelationalContents tab) $ getContentsByQuery { formatId: relation.formatId, property: relation.property, contentId: content.contentId }

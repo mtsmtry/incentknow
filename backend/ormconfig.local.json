@@ -10,7 +10,7 @@
 
    "synchronize": true, 
    "entities": [
-      "dist/client_sql.js"
+      "dist/src/entities/**/*.js"
    ],
    "migrations": [
       "dist/migration/**/*.js"

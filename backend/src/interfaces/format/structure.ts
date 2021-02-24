@@ -1,7 +1,9 @@
-import { FormatId } from "../../entities/format/format";
-import { Language, Property, TypeName } from "../../entities/format/property";
-import { Structure } from "../../entities/format/structure";
-import { Data, DataKind, DataMember } from "../../implication";
+import { title } from "process";
+import { FormatId } from "../../entities/format/Format";
+import { Language, Property, TypeName } from "../../entities/format/Property";
+import { Structure } from "../../entities/format/Structure";
+import { Data, DataKind, DataMember } from "../../Implication";
+import { toTimestamp } from "../Utils";
 
 export interface PropertyInfo {
     displayName: string,
@@ -75,8 +77,26 @@ export function toPropertyInfo(prop: Property): PropertyInfo {
 
 export type StructureId = string;
 
+export interface RelatedStructure {
+    structureId: StructureId;
+    version: number;
+    title: string | null;
+    createdAt: number;
+}
+
+export function toRelatedStructure(structure: Structure): RelatedStructure {
+    return {
+        structureId: structure.entityId,
+        version: structure.version,
+        title: structure.title,
+        createdAt: toTimestamp(structure.createdAt)
+    }
+}
+
 export interface FocusedStructure {
     structureId: StructureId;
+    version: number;
+    title: string | null;
     properties: PropertyInfo[];
     createdAt: number;
 }
@@ -84,6 +104,8 @@ export interface FocusedStructure {
 export function toFocusedStructure(structure: Structure): FocusedStructure {
     return {
         structureId: structure.entityId,
+        version: structure.version,
+        title: structure.title,
         properties: structure.properties.map(toPropertyInfo),
         createdAt: toTimestamp(structure.createdAt)
     };

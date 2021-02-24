@@ -24,6 +24,7 @@
       "express": "^4.17.1",
       "express-promise-router": "^4.0.1",
       "ioredis": "^4.17.3",
+      "jsonwebtoken": "^8.5.1",
       "mongodb": "^3.6.2",
       "mysql": "^2.18.1",
       "reflect-metadata": "^0.1.10",

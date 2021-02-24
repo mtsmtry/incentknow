@@ -1,7 +1,6 @@
 module Incentknow.Pages.User.Setting where
 
 import Prelude
-
 import Affjax as AX
 import Affjax.RequestBody as RequestBody
 import Affjax.RequestHeader (RequestHeader(..))
@@ -21,8 +20,8 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (getMyAccount, setMyDisplayName, setMyEmail, setMyPassword)
-import Incentknow.Api.Utils (Fetch, Remote(..), callApi, fetchApi, forFetch)
+import Incentknow.API (getMyAccount, setMyDisplayName, setMyEmail, setMyPassword)
+import Incentknow.API.Execution (Fetch, Remote(..), callAPI, fetchAPI, forFetch)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button, submitButton, textarea)
@@ -86,7 +85,7 @@ render state =
   remoteWith state.account \account ->
     HH.div [ css "page-user-setting" ]
       [ HH.slot displayName_ unit SettingText.component
-          { submit: callApi <<< setMyDisplayName
+          { submit: callAPI <<< setMyDisplayName
           , value: account.displayName
           , title: "表示名"
           , desc: ""
@@ -94,16 +93,16 @@ render state =
           }
           (Just <<< Edit)
       --, HH.slot icon_ unit SettingImage.component
-      --    { submit: callApi <<< 
+      --    { submit: callAPI <<< 
       --    , value: Just account.user.iconUrl
       --    , disabled: false
       --    }
       --    (Just <<< Edit)
       , HH.slot password_ unit SettingPassword.component
-          { submit: callApi <<< setMyPassword }
+          { submit: callAPI <<< setMyPassword }
           (Just <<< Edit)
       , HH.slot email_ unit SettingText.component
-          { submit: callApi <<< setMyEmail
+          { submit: callAPI <<< setMyEmail
           , value: account.email
           , title: "メールアドレス"
           , desc: ""
@@ -115,9 +114,9 @@ render state =
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
-    fetchApi ChangeAccount getMyAccount
+    fetchAPI ChangeAccount getMyAccount
   ChangeAccount fetch -> do
-    forFetch fetch \account->
+    forFetch fetch \account ->
       H.modify_ _ { account = account }
   Edit _ -> do
     -- discard $ H.query displayName_ unit $ H.tell Reset

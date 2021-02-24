@@ -1,7 +1,6 @@
 module Incentknow.Molecules.FormatMenu where
 
 import Prelude
-
 import Data.Array (filter, fromFoldable)
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), isJust, maybe)
@@ -12,27 +11,23 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (getRelatedFormat, getFormats)
-import Incentknow.Api.Utils (Fetch, Remote(..), executeApi, fetchApi, forFetch, forFetchItem)
+import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, forFetch, forFetchItem)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (FormatUsage, RelatedFormat)
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.HTML.Utils (css)
-import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..), upsertItems)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 
+{- 
+  A component for selecting a format on the specified constraint
+-}
 data FormatFilter
   = Formats (Array RelatedFormat)
   | SpaceBy SpaceId
   | SpaceByAndHasSemanticId SpaceId
   | None
 
-instance eqFormatFilter :: Eq FormatFilter where
-  eq a b = case a, b of
-    Formats fa, Formats fb -> false
-    SpaceBy sa, SpaceBy sb -> sa == sb
-    None, None -> true
-    _, _ -> false
+derive instance eqFormatFilter :: Eq FormatFilter
 
 type Input
   = { filter :: FormatFilter
@@ -112,24 +107,24 @@ handleAction = case _ of
   Initialize -> do
     state <- H.get
     for_ state.initialFormatId \formatId -> do
-      fetchApi FetchedInitialFormat $ getRelatedFormat formatId
+      fetchAPI FetchedInitialFormat $ getRelatedFormat formatId
     case state.filter of
       Formats formats -> H.modify_ _ { items = map toSelectMenuItem formats }
-      SpaceBy spaceId -> fetchApi FetchedFormats $ getFormats spaceId
-      SpaceByAndHasSemanticId spaceId -> fetchApi FetchedFormats $ getFormats spaceId
+      SpaceBy spaceId -> fetchAPI FetchedFormats $ getFormats spaceId
+      SpaceByAndHasSemanticId spaceId -> fetchAPI FetchedFormats $ getFormats spaceId
       None -> pure unit
   FetchedInitialFormat fetch ->
-    forFetchItem fetch \format->
-      H.modify_ \s-> s { items = upsertItems [ toSelectMenuItem format ] s.items }
+    forFetchItem fetch \format ->
+      H.modify_ \s -> s { items = upsertItems [ toSelectMenuItem format ] s.items }
   FetchedFormats fetch ->
-    forFetchItem fetch \formats-> do
+    forFetchItem fetch \formats -> do
       state <- H.get
       case state.filter of
         SpaceByAndHasSemanticId _ -> do
-          let formats2 = filter (\x-> isJust x.semanticId) formats
-          H.modify_ \s-> s { items = upsertItems (map toSelectMenuItem formats2) s.items }
-        _ ->
-          H.modify_ \s-> s { items = upsertItems (map toSelectMenuItem formats) s.items }
+          let
+            formats2 = filter (\x -> isJust x.semanticId) formats
+          H.modify_ \s -> s { items = upsertItems (map toSelectMenuItem formats2) s.items }
+        _ -> H.modify_ \s -> s { items = upsertItems (map toSelectMenuItem formats) s.items }
   HandleInput input -> do
     state <- H.get
     if input.filter /= state.filter then do

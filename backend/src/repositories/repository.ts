@@ -10,7 +10,7 @@ import { SelectQueryBuilder } from "typeorm/query-builder/SelectQueryBuilder";
 import { PlainObjectToNewEntityTransformer } from "typeorm/query-builder/transformer/PlainObjectToNewEntityTransformer";
 import { QueryRunner } from "typeorm/query-runner/QueryRunner";
 import { SaveOptions } from "typeorm/repository/SaveOptions";
-import { Transaction } from "./transaction";
+import { Transaction } from "./Transaction";
 
 export interface BaseRepository<T extends BaseCommand> {
     createCommand(transaction: Transaction): T;
@@ -23,6 +23,7 @@ export interface BaseCommand {
 }
 
 export class Repository<T> implements BaseRepository<Command<T>> {
+    static defaultAlias: string = "x";
     readonly connection: Connection;
     readonly metadata: EntityMetadata;
     protected plainObjectToEntityTransformer = new PlainObjectToNewEntityTransformer();
@@ -37,10 +38,9 @@ export class Repository<T> implements BaseRepository<Command<T>> {
     }
 
     createQuery(transaction?: Transaction): SelectQueryBuilder<T> {
-        const alias = "x";
         return new SelectQueryBuilder(this.connection, transaction?.queryRunner)
-            .select(alias)
-            .from(this.metadata.target, alias);
+            .select(Repository.defaultAlias)
+            .from(this.metadata.target, Repository.defaultAlias);
     }
 }
 
@@ -56,8 +56,8 @@ export class Command<T> implements BaseCommand {
         this.queryRunner = transaction.queryRunner;
     }
 
-    createQueryBuilder(alias?: string) {
-        return this.repository.createQueryBuilder(alias, this.transaction);
+    createQuery() {
+        return this.repository.createQuery(this.transaction);
     }
 
     create(plainObject?: DeepPartial<T>): T;
@@ -101,14 +101,14 @@ export class Command<T> implements BaseCommand {
             criteria instanceof Date ||
             Array.isArray(criteria)) {
 
-            return this.createQueryBuilder()
+            return this.createQuery()
                 .update(this.repository.metadata.target)
                 .set(partialEntity)
                 .whereInIds(criteria)
                 .execute();
 
         } else {
-            return this.createQueryBuilder()
+            return this.createQuery()
                 .update(this.repository.metadata.target)
                 .set(partialEntity)
                 .where(criteria)
@@ -132,14 +132,14 @@ export class Command<T> implements BaseCommand {
             criteria instanceof Date ||
             Array.isArray(criteria)) {
 
-            return this.repository.createQueryBuilder(this.transaction)
+            return this.repository.createQuery(this.transaction)
                 .delete()
                 .from(this.repository.metadata.target)
                 .whereInIds(criteria)
                 .execute();
 
         } else {
-            return this.repository.createQueryBuilder(this.transaction)
+            return this.repository.createQuery(this.transaction)
                 .delete()
                 .from(this.repository.metadata.target)
                 .where(criteria)
@@ -167,7 +167,7 @@ export class Command<T> implements BaseCommand {
             );
 
         return this.repository
-            .createQueryBuilder("entity", this.transaction)
+            .createQuery()
             .update(this.repository.metadata.target)
             .set(values)
             .where(conditions)
@@ -181,12 +181,7 @@ export class Command<T> implements BaseCommand {
             options = idOrOptionsOrConditions as ObjectLiteral;
         }
 
-        let alias: string = this.repository.metadata.name;
-        if (findOptions && findOptions.join) {
-            alias = findOptions.join.alias;
-
-        }
-        const qb = this.createQueryBuilder(alias);
+        const qb = this.createQuery();
 
         if (!findOptions || findOptions.loadEagerRelations !== false)
             FindOptionsUtils.joinEagerRelations(qb, qb.alias, qb.expressionMap.mainAlias!.metadata);
@@ -214,7 +209,7 @@ export class Command<T> implements BaseCommand {
     }
 
     async find(optionsOrConditions?: FindManyOptions<T> | FindConditions<T>): Promise<T[]> {
-        const qb = this.createQueryBuilder(FindOptionsUtils.extractFindManyOptionsAlias(optionsOrConditions) || this.repository.metadata.name);
+        const qb = this.createQuery();
 
         if (!FindOptionsUtils.isFindManyOptions(optionsOrConditions) || optionsOrConditions.loadEagerRelations !== false)
             FindOptionsUtils.joinEagerRelations(qb, qb.alias, this.repository.metadata);

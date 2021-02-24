@@ -1,7 +1,6 @@
 module Incentknow.Pages.Sign where
 
 import Prelude
-
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
@@ -10,9 +9,9 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (createUser)
-import Incentknow.Api.Session (login)
-import Incentknow.Api.Utils (executeApi)
+import Incentknow.API (createUser)
+import Incentknow.API.Session (login)
+import Incentknow.API.Execution (executeAPI)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute, resetMessage)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Atoms.Message (success)
@@ -207,12 +206,12 @@ handleAction = case _ of
         , email: state.email
         , password: state.password
         }
-    result <- executeApi $ createUser user
+    result <- executeAPI $ createUser user
     case result of
       Just _ -> do
         H.modify_ (_ { resultMessage = Just $ "登録が完了しました。" <> state.email <> "に送信したリンクからメールアドレスを認証してください。" })
         resetMessage
-      Nothing-> H.modify_ (_ { isRegistering = false })
+      Nothing -> H.modify_ (_ { isRegistering = false })
   Login -> do
     state <- H.get
     H.modify_ _ { isLogining = true }
@@ -221,7 +220,7 @@ handleAction = case _ of
         { email: state.email
         , password: state.password
         }
-    result <- executeApi $ login user
+    result <- executeAPI $ login user
     case result of
       Just _ -> navigate Home
       Nothing -> H.modify_ _ { isLogining = false }

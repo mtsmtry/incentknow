@@ -1,0 +1,10 @@
+- 2/14
+    ☐ とりあえず、ブラウザで動かせるようにする
+        ☐ SelectMenuを作る
+            - Contants (候補が予め決まっている場合)
+            - FetchAndConstants (いくつかの候補は存在するが取得が必要)
+            - Fetch (取得する)
+            - Search (候補が多すぎる場合)    
+
+            - (Maybe 検索文字, Maybe Page) 
+            - -> (Boolean これで全てか否か)

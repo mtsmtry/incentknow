@@ -21,7 +21,7 @@ import Effect.Class (class MonadEffect)
 import Foreign.NullOrUndefined (null)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api.Utils (callApi, callbackApi, executeApi)
+import Incentknow.API.Execution (callAPI, callbackAPI, executeAPI)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (RelatedContent)
@@ -89,7 +89,7 @@ render state =
   where
   search :: String -> Aff (Either String (Array (SelectMenuItem SemanticId)))
   search words = do -- TODO
-    --  result <- callApi promise
+    --  result <- callAPI promise
     --  pure $ map (map toSelectMenuItem) result
     pure (Right [])
 

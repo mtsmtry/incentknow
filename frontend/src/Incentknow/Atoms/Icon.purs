@@ -1,10 +1,9 @@
 module Incentknow.Atoms.Icon where
 
 import Prelude
-
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api.Utils (Remote(..))
+import Incentknow.API.Execution (Remote(..))
 import Incentknow.HTML.Utils (css)
 
 loadingWith :: forall w i. String -> HH.HTML w i

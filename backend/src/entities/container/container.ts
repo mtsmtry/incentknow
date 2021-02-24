@@ -1,8 +1,8 @@
 import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
-import { NewTypeInt, NewTypeString } from "../../implication";
-import { Format, FormatSk } from "../format/format";
-import { Space, SpaceSk } from "../space/space";
-import { CreatedAt, createEntityId, EntityId, UpdatedAt } from '../utils';
+import { NewTypeInt, NewTypeString } from "../../Implication";
+import { Format, FormatSk } from "../format/Format";
+import { Space, SpaceSk } from "../space/Space";
+import { CreatedAt, createEntityId, EntityId, UpdatedAt } from '../Utils';
 
 export enum ContentGenerator {
     NONE = "none",

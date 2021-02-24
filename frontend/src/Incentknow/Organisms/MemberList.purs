@@ -1,7 +1,6 @@
 module Incentknow.Organisms.MemberList where
 
 import Prelude
-
 import Control.Parallel (sequential)
 import Control.Promise (toAff)
 import Data.Array (singleton)
@@ -17,8 +16,8 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (acceptSpaceMembership, getUser, rejectSpaceMembership)
-import Incentknow.Api.Utils (executeApi)
+import Incentknow.API (acceptSpaceMembership, getUser, rejectSpaceMembership)
+import Incentknow.API.Execution (executeAPI)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Inputs (menuPositiveButton, menuNegativeButton)
 import Incentknow.Data.Entities (IntactSpaceMember, MemberType(..))
@@ -43,9 +42,9 @@ data Action
   = Initialize
   | HandleInput Input
   | Navigate MouseEvent Route
- -- | AcceptMembership IntactSpaceMember
- -- | RejectMembership IntactSpaceMember
 
+-- | AcceptMembership IntactSpaceMember
+-- | RejectMembership IntactSpaceMember
 type Slot p
   = forall q. H.Slot q Void p
 
@@ -65,12 +64,12 @@ initialState input = { members: input.members, isAdmin: input.isAdmin }
 
 showMemberType :: IntactSpaceMember -> String
 showMemberType member = case member.type of
-  Owner-> "オーナー"
- -- "admin" -> "管理者"
+  Owner -> "オーナー"
+  -- "admin" -> "管理者"
   Normal -> "メンバー"
- -- "pending" -> "メンバー申請保留中"
- -- _ -> "エラー"
 
+-- "pending" -> "メンバー申請保留中"
+-- _ -> "エラー"
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div
@@ -93,8 +92,8 @@ render state =
           --      ]
           ]
       ]
-      where
-      linkUser = link Navigate (R.User member.user.userId R.UserMain)
+    where
+    linkUser = link Navigate (R.User member.user.displayId R.UserMain)
 
 handleAction :: forall o s m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
@@ -103,9 +102,4 @@ handleAction = case _ of
     H.put $ initialState props
     handleAction Initialize
   Navigate event route -> navigateRoute event route
-  --AcceptMembership member -> do
-  --  _ <- executeApi $ acceptSpaceMembership member.spaceId member.userId
-  --  pure unit
-  --RejectMembership member -> do
-  --  _ <- executeApi $ rejectSpaceMembership member.spaceId member.userId
-  --  pure unit
+ --AcceptMembership member -> do --  _ <- executeAPI $ acceptSpaceMembership member.spaceId member.userId --  pure unit --RejectMembership member -> do --  _ <- executeAPI $ rejectSpaceMembership member.spaceId member.userId --  pure unit

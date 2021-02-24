@@ -1,10 +1,11 @@
 
 // Material ------------------------------
 
-import { ContentId } from "../../entities/content/content";
-import { Material, MaterialType } from "../../entities/material/material";
-import { RelatedUser, toRelatedUser } from "../user/user";
-import { RelatedMaterialDraft } from "./material_draft";
+import { ContentId } from "../../entities/content/Content";
+import { Material, MaterialType } from "../../entities/material/Material";
+import { RelatedUser, toRelatedUser } from "../user/User";
+import { toTimestamp } from "../Utils";
+import { RelatedMaterialDraft } from "./MaterialDraft";
 
 export type MaterialId = string;
 

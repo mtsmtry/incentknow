@@ -1,272 +1,430 @@
 
-module Incentknow.Api where
+module Incentknow.API where
 
 import Prelude
 
-import Data.Maybe (Maybe)
-import Data.Argonaut.Core (Json)
 import Control.Promise (Promise)
+import Data.Argonaut.Core (Json)
+import Data.Maybe (Maybe)
+import Incentknow.API.Execution (CommandAPI, QueryAPI, __commandAPI, __queryAPI)
 import Incentknow.Data.Entities as E
 import Incentknow.Data.Ids as E
 
 
 ---------------------------------------------------------
---  Container
+--  ContainerService
 ---------------------------------------------------------
 
-foreign import getContents :: 
-  E.SpaceId -> E.FormatId -> Promise (Array E.RelatedContent)
+foreign import __getContainers :: 
+  E.SpaceId -> Promise (Array E.RelatedContainer)
+
+getContainers :: E.SpaceId -> QueryAPI (Array E.RelatedContainer)
+getContainers = __queryAPI "getContainers" <<< __getContainers
 
 ---------------------------------------------------------
---  Content
+--  ContentService
 ---------------------------------------------------------
 
-foreign import startContentEditing :: 
-  E.ContentId -> Maybe E.ContentCommitId -> Promise E.RelatedContentDraft
+foreign import __startContentEditing :: 
+  E.ContentId -> Maybe E.ContentCommitId -> Promise E.ContentDraftId
 
-foreign import startBlankContentEditing :: 
-  E.SpaceId -> String -> E.MaterialType -> Promise E.RelatedContentDraft
+startContentEditing :: E.ContentId -> Maybe E.ContentCommitId -> CommandAPI E.ContentDraftId
+startContentEditing = __commandAPI "startContentEditing" <<< __startContentEditing
 
-foreign import editContent :: 
-  E.ContentDraftId -> Json -> Promise (Maybe E.RelatedContentSnapshot)
+foreign import __createNewContentDraft :: 
+  E.StructureId -> Maybe E.SpaceId -> Maybe Json -> Promise E.ContentDraftId
 
-foreign import commitContent :: 
+createNewContentDraft :: E.StructureId -> Maybe E.SpaceId -> Maybe Json -> CommandAPI E.ContentDraftId
+createNewContentDraft = __commandAPI "createNewContentDraft" <<< __createNewContentDraft
+
+foreign import __editContentDraft :: 
+  E.ContentDraftId -> Json -> Promise (Maybe E.RelatedContentRevision)
+
+editContentDraft :: E.ContentDraftId -> Json -> CommandAPI (Maybe E.RelatedContentRevision)
+editContentDraft = __commandAPI "editContentDraft" <<< __editContentDraft
+
+foreign import __commitContent :: 
   E.ContentDraftId -> Json -> Promise (Maybe E.RelatedContentCommit)
 
-foreign import getContent :: 
+commitContent :: E.ContentDraftId -> Json -> CommandAPI (Maybe E.RelatedContentCommit)
+commitContent = __commandAPI "commitContent" <<< __commitContent
+
+foreign import __getContent :: 
   E.ContentId -> Promise E.FocusedContent
 
-foreign import getRelatedContent :: 
+getContent :: E.ContentId -> QueryAPI E.FocusedContent
+getContent = __queryAPI "getContent" <<< __getContent
+
+foreign import __getRelatedContent :: 
   E.ContentId -> Promise E.RelatedContent
 
-foreign import getMyContentDrafts :: 
+getRelatedContent :: E.ContentId -> QueryAPI E.RelatedContent
+getRelatedContent = __queryAPI "getRelatedContent" <<< __getRelatedContent
+
+foreign import __getContents :: 
+  E.SpaceId -> E.FormatId -> Promise (Array E.RelatedContent)
+
+getContents :: E.SpaceId -> E.FormatId -> QueryAPI (Array E.RelatedContent)
+getContents = __queryAPI "getContents" <<< __getContents
+
+foreign import __getMyContentDrafts :: 
   Promise (Array E.RelatedContentDraft)
 
-foreign import getContentDraft :: 
+getMyContentDrafts :: QueryAPI (Array E.RelatedContentDraft)
+getMyContentDrafts = __queryAPI "getMyContentDrafts" <<< __getMyContentDrafts
+
+foreign import __getContentDraft :: 
   E.ContentDraftId -> Promise E.FocusedContentDraft
 
-foreign import getContentCommits :: 
+getContentDraft :: E.ContentDraftId -> QueryAPI E.FocusedContentDraft
+getContentDraft = __queryAPI "getContentDraft" <<< __getContentDraft
+
+foreign import __getContentCommits :: 
   E.ContentId -> Promise (Array E.RelatedContentCommit)
 
-foreign import getContentEditingNodes :: 
+getContentCommits :: E.ContentId -> QueryAPI (Array E.RelatedContentCommit)
+getContentCommits = __queryAPI "getContentCommits" <<< __getContentCommits
+
+foreign import __getContentEditingNodes :: 
   E.ContentDraftId -> Promise (Array E.ContentNode)
 
-foreign import getContentSnapshot :: 
-  E.ContentSnapshotId -> Promise E.FocusedContentSnapshot
+getContentEditingNodes :: E.ContentDraftId -> QueryAPI (Array E.ContentNode)
+getContentEditingNodes = __queryAPI "getContentEditingNodes" <<< __getContentEditingNodes
 
-foreign import getContentCommit :: 
-  E.ContentCommitId -> Promise E.FocusedContentSnapshot
+foreign import __getContentRevision :: 
+  E.ContentWholeRevisionId -> Promise E.FocusedContentRevision
+
+getContentRevision :: E.ContentWholeRevisionId -> QueryAPI E.FocusedContentRevision
+getContentRevision = __queryAPI "getContentRevision" <<< __getContentRevision
+
+foreign import __getContentCommit :: 
+  E.ContentCommitId -> Promise E.FocusedContentCommit
+
+getContentCommit :: E.ContentCommitId -> QueryAPI E.FocusedContentCommit
+getContentCommit = __queryAPI "getContentCommit" <<< __getContentCommit
 
 ---------------------------------------------------------
---  Format
+--  FormatService
 ---------------------------------------------------------
 
-foreign import createFormat :: 
+foreign import __createFormat :: 
   { spaceId :: E.SpaceId
   , displayName :: String
   , description :: String
   , usage :: E.FormatUsage
   , properties :: Array E.PropertyInfo
   }
-  -> Promise E.RelatedFormat
+  -> Promise E.FormatDisplayId
 
-foreign import getFormat :: 
+createFormat :: 
+  { spaceId :: E.SpaceId
+  , displayName :: String
+  , description :: String
+  , usage :: E.FormatUsage
+  , properties :: Array E.PropertyInfo
+  }
+  -> CommandAPI E.FormatDisplayId
+createFormat = __commandAPI "createFormat" <<< __createFormat
+
+foreign import __getFormat :: 
   E.FormatDisplayId -> Promise E.FocusedFormat
 
-foreign import getFocusedFormat :: 
+getFormat :: E.FormatDisplayId -> QueryAPI E.FocusedFormat
+getFormat = __queryAPI "getFormat" <<< __getFormat
+
+foreign import __getFocusedFormat :: 
   E.FormatId -> Promise E.FocusedFormat
 
-foreign import getRelatedFormat :: 
+getFocusedFormat :: E.FormatId -> QueryAPI E.FocusedFormat
+getFocusedFormat = __queryAPI "getFocusedFormat" <<< __getFocusedFormat
+
+foreign import __getRelatedFormat :: 
   E.FormatId -> Promise E.RelatedFormat
 
-foreign import getFormats :: 
+getRelatedFormat :: E.FormatId -> QueryAPI E.RelatedFormat
+getRelatedFormat = __queryAPI "getRelatedFormat" <<< __getRelatedFormat
+
+foreign import __getFormats :: 
   E.SpaceId -> Promise (Array E.RelatedFormat)
 
-foreign import updateFormatStructure :: 
+getFormats :: E.SpaceId -> QueryAPI (Array E.RelatedFormat)
+getFormats = __queryAPI "getFormats" <<< __getFormats
+
+foreign import __getStructures :: 
+  E.FormatId -> Promise (Array E.RelatedStructure)
+
+getStructures :: E.FormatId -> QueryAPI (Array E.RelatedStructure)
+getStructures = __queryAPI "getStructures" <<< __getStructures
+
+foreign import __updateFormatStructure :: 
   E.FormatId -> Array E.PropertyInfo -> Promise {}
 
+updateFormatStructure :: E.FormatId -> Array E.PropertyInfo -> CommandAPI {}
+updateFormatStructure = __commandAPI "updateFormatStructure" <<< __updateFormatStructure
+
 ---------------------------------------------------------
---  Material
+--  MaterialService
 ---------------------------------------------------------
 
-foreign import startMaterialEditing :: 
+foreign import __startMaterialEditing :: 
   E.MaterialId -> Maybe E.MaterialCommitId -> Promise E.RelatedMaterialDraft
 
-foreign import startBlankMaterialEditing :: 
-  E.SpaceId -> String -> E.MaterialType -> Promise E.RelatedMaterialDraft
+startMaterialEditing :: E.MaterialId -> Maybe E.MaterialCommitId -> CommandAPI E.RelatedMaterialDraft
+startMaterialEditing = __commandAPI "startMaterialEditing" <<< __startMaterialEditing
 
-foreign import editMaterial :: 
-  E.MaterialDraftId -> String -> Promise (Maybe E.RelatedMaterialSnapshot)
+foreign import __startBlankMaterialEditing :: 
+  E.SpaceId -> E.MaterialType -> Promise E.RelatedMaterialDraft
 
-foreign import commitMaterial :: 
-  E.MaterialDraftId -> String -> Promise (Maybe E.RelatedMaterialCommit)
+startBlankMaterialEditing :: E.SpaceId -> E.MaterialType -> CommandAPI E.RelatedMaterialDraft
+startBlankMaterialEditing = __commandAPI "startBlankMaterialEditing" <<< __startBlankMaterialEditing
 
-foreign import getMaterial :: 
+foreign import __editMaterialDraft :: 
+  E.MaterialDraftId -> String -> Promise (Maybe E.RelatedMaterialRevision)
+
+editMaterialDraft :: E.MaterialDraftId -> String -> CommandAPI (Maybe E.RelatedMaterialRevision)
+editMaterialDraft = __commandAPI "editMaterialDraft" <<< __editMaterialDraft
+
+foreign import __commitMaterial :: 
+  E.MaterialDraftId -> Promise E.RelatedMaterialRevision
+
+commitMaterial :: E.MaterialDraftId -> CommandAPI E.RelatedMaterialRevision
+commitMaterial = __commandAPI "commitMaterial" <<< __commitMaterial
+
+foreign import __getMaterial :: 
   E.MaterialId -> Promise E.FocusedMaterial
 
-foreign import getMyMaterialDrafts :: 
+getMaterial :: E.MaterialId -> QueryAPI E.FocusedMaterial
+getMaterial = __queryAPI "getMaterial" <<< __getMaterial
+
+foreign import __getMyMaterialDrafts :: 
   Promise (Array E.RelatedMaterialDraft)
 
-foreign import getMaterialDraft :: 
+getMyMaterialDrafts :: QueryAPI (Array E.RelatedMaterialDraft)
+getMyMaterialDrafts = __queryAPI "getMyMaterialDrafts" <<< __getMyMaterialDrafts
+
+foreign import __getMaterialDraft :: 
   E.MaterialDraftId -> Promise E.FocusedMaterialDraft
 
-foreign import getMaterialCommits :: 
+getMaterialDraft :: E.MaterialDraftId -> QueryAPI E.FocusedMaterialDraft
+getMaterialDraft = __queryAPI "getMaterialDraft" <<< __getMaterialDraft
+
+foreign import __getMaterialCommits :: 
   E.MaterialId -> Promise (Array E.RelatedMaterialCommit)
 
-foreign import getMaterialEditingNodes :: 
+getMaterialCommits :: E.MaterialId -> QueryAPI (Array E.RelatedMaterialCommit)
+getMaterialCommits = __queryAPI "getMaterialCommits" <<< __getMaterialCommits
+
+foreign import __getMaterialEditingNodes :: 
   E.MaterialDraftId -> Promise (Array E.MaterialNode)
 
-foreign import getMaterialSnapshot :: 
-  E.MaterialSnapshotId -> Promise E.FocusedMaterialSnapshot
+getMaterialEditingNodes :: E.MaterialDraftId -> QueryAPI (Array E.MaterialNode)
+getMaterialEditingNodes = __queryAPI "getMaterialEditingNodes" <<< __getMaterialEditingNodes
 
-foreign import getMaterialCommit :: 
+foreign import __getMaterialRevision :: 
+  E.MaterialRevisionId -> Promise E.FocusedMaterialRevision
+
+getMaterialRevision :: E.MaterialRevisionId -> QueryAPI E.FocusedMaterialRevision
+getMaterialRevision = __queryAPI "getMaterialRevision" <<< __getMaterialRevision
+
+foreign import __getMaterialCommit :: 
   E.MaterialCommitId -> Promise E.FocusedMaterialCommit
 
+getMaterialCommit :: E.MaterialCommitId -> QueryAPI E.FocusedMaterialCommit
+getMaterialCommit = __queryAPI "getMaterialCommit" <<< __getMaterialCommit
+
 ---------------------------------------------------------
---  Space
+--  SpaceService
 ---------------------------------------------------------
 
-foreign import createSpace :: 
+foreign import __createSpace :: 
   { displayId :: String
   , displayName :: String
   , description :: String
   }
-  -> Promise E.FocusedSpace
+  -> Promise E.SpaceDisplayId
 
-foreign import getSpace :: 
+createSpace :: 
+  { displayId :: String
+  , displayName :: String
+  , description :: String
+  }
+  -> CommandAPI E.SpaceDisplayId
+createSpace = __commandAPI "createSpace" <<< __createSpace
+
+foreign import __getSpace :: 
   E.SpaceDisplayId -> Promise E.FocusedSpace
 
-foreign import getRelatedSpace :: 
+getSpace :: E.SpaceDisplayId -> QueryAPI E.FocusedSpace
+getSpace = __queryAPI "getSpace" <<< __getSpace
+
+foreign import __getMySpaces :: 
+  Promise (Array E.RelatedSpace)
+
+getMySpaces :: QueryAPI (Array E.RelatedSpace)
+getMySpaces = __queryAPI "getMySpaces" <<< __getMySpaces
+
+foreign import __getRelatedSpace :: 
   E.SpaceId -> Promise E.RelatedSpace
 
-foreign import getSpaceMembers :: 
+getRelatedSpace :: E.SpaceId -> QueryAPI E.RelatedSpace
+getRelatedSpace = __queryAPI "getRelatedSpace" <<< __getRelatedSpace
+
+foreign import __getSpaceMembers :: 
   E.SpaceId -> Promise (Array E.IntactSpaceMember)
 
-foreign import getSpaceMembershipApplications :: 
+getSpaceMembers :: E.SpaceId -> QueryAPI (Array E.IntactSpaceMember)
+getSpaceMembers = __queryAPI "getSpaceMembers" <<< __getSpaceMembers
+
+foreign import __getSpaceMembershipApplications :: 
   E.SpaceId -> Promise (Array E.IntactSpaceMembershipApplication)
 
-foreign import checkSpaceDisplayId :: 
+getSpaceMembershipApplications :: E.SpaceId -> QueryAPI (Array E.IntactSpaceMembershipApplication)
+getSpaceMembershipApplications = __queryAPI "getSpaceMembershipApplications" <<< __getSpaceMembershipApplications
+
+foreign import __getAvailableSpaceDisplayId :: 
   E.SpaceDisplayId -> Promise Boolean
 
-foreign import getMySpaces :: 
+getAvailableSpaceDisplayId :: E.SpaceDisplayId -> QueryAPI Boolean
+getAvailableSpaceDisplayId = __queryAPI "getAvailableSpaceDisplayId" <<< __getAvailableSpaceDisplayId
+
+foreign import __getFollowingSpaces :: 
   Promise (Array E.RelatedSpace)
 
-foreign import getPublishedSpaces :: 
+getFollowingSpaces :: QueryAPI (Array E.RelatedSpace)
+getFollowingSpaces = __queryAPI "getFollowingSpaces" <<< __getFollowingSpaces
+
+foreign import __getPublishedSpaces :: 
   Promise (Array E.RelatedSpace)
 
-foreign import setSpaceDisplayId :: 
-  E.SpaceId -> E.SpaceDisplayId -> Promise {}
+getPublishedSpaces :: QueryAPI (Array E.RelatedSpace)
+getPublishedSpaces = __queryAPI "getPublishedSpaces" <<< __getPublishedSpaces
 
-foreign import setSpaceDisplayName :: 
-  E.SpaceId -> String -> Promise {}
-
-foreign import setSpaceAuthority :: 
-  E.SpaceId -> E.SpaceAuth -> Promise {}
-
-foreign import setSpacePublished :: 
-  E.SpaceId -> Boolean -> Promise {}
-
-foreign import applySpaceMembership :: 
+foreign import __applySpaceMembership :: 
   E.SpaceId -> Promise {}
 
-foreign import acceptSpaceMembership :: 
+applySpaceMembership :: E.SpaceId -> CommandAPI {}
+applySpaceMembership = __commandAPI "applySpaceMembership" <<< __applySpaceMembership
+
+foreign import __acceptSpaceMembership :: 
   E.SpaceId -> E.UserId -> Promise {}
 
-foreign import rejectSpaceMembership :: 
+acceptSpaceMembership :: E.SpaceId -> E.UserId -> CommandAPI {}
+acceptSpaceMembership = __commandAPI "acceptSpaceMembership" <<< __acceptSpaceMembership
+
+foreign import __rejectSpaceMembership :: 
   E.SpaceId -> E.UserId -> Promise {}
 
-foreign import cancelSpaceMembershipApplication :: 
+rejectSpaceMembership :: E.SpaceId -> E.UserId -> CommandAPI {}
+rejectSpaceMembership = __commandAPI "rejectSpaceMembership" <<< __rejectSpaceMembership
+
+foreign import __cancelSpaceMembershipApplication :: 
   E.SpaceId -> Promise {}
 
-foreign import setSpaceMembershipMethod :: 
+cancelSpaceMembershipApplication :: E.SpaceId -> CommandAPI {}
+cancelSpaceMembershipApplication = __commandAPI "cancelSpaceMembershipApplication" <<< __cancelSpaceMembershipApplication
+
+foreign import __setSpaceMembershipMethod :: 
   E.SpaceId -> E.MembershipMethod -> Promise {}
 
+setSpaceMembershipMethod :: E.SpaceId -> E.MembershipMethod -> CommandAPI {}
+setSpaceMembershipMethod = __commandAPI "setSpaceMembershipMethod" <<< __setSpaceMembershipMethod
+
 ---------------------------------------------------------
---  User
+--  UserService
 ---------------------------------------------------------
 
-foreign import createUser :: 
+foreign import __createUser :: 
   { email :: String
   , displayName :: String
   , password :: String
   }
-  -> Promise E.FocusedUser
+  -> Promise E.UserId
 
-foreign import getMyUser :: 
+createUser :: 
+  { email :: String
+  , displayName :: String
+  , password :: String
+  }
+  -> CommandAPI E.UserId
+createUser = __commandAPI "createUser" <<< __createUser
+
+foreign import __getMyUser :: 
   Promise E.FocusedUser
 
-foreign import getMyAccount :: 
+getMyUser :: QueryAPI E.FocusedUser
+getMyUser = __queryAPI "getMyUser" <<< __getMyUser
+
+foreign import __getMyAccount :: 
   Promise E.IntactAccount
 
-foreign import getUser :: 
+getMyAccount :: QueryAPI E.IntactAccount
+getMyAccount = __queryAPI "getMyAccount" <<< __getMyAccount
+
+foreign import __getUser :: 
   E.UserDisplayId -> Promise E.FocusedUser
 
-foreign import authenticate :: 
+getUser :: E.UserDisplayId -> QueryAPI E.FocusedUser
+getUser = __queryAPI "getUser" <<< __getUser
+
+foreign import __authenticate :: 
   { email :: String
   , password :: String
   }
   -> Promise String
 
-foreign import getFocusedUser :: 
+authenticate :: 
+  { email :: String
+  , password :: String
+  }
+  -> CommandAPI String
+authenticate = __commandAPI "authenticate" <<< __authenticate
+
+foreign import __getFocusedUser :: 
   E.UserId -> Promise E.FocusedUser
 
-foreign import getRelatedUser :: 
+getFocusedUser :: E.UserId -> QueryAPI E.FocusedUser
+getFocusedUser = __queryAPI "getFocusedUser" <<< __getFocusedUser
+
+foreign import __getRelatedUser :: 
   E.UserId -> Promise E.RelatedUser
 
-foreign import setMyDisplayName :: 
-  String -> Promise {}
+getRelatedUser :: E.UserId -> QueryAPI E.RelatedUser
+getRelatedUser = __queryAPI "getRelatedUser" <<< __getRelatedUser
 
-foreign import setMyDisplayId :: 
-  E.UserDisplayId -> Promise {}
-
-foreign import setMyPassword :: 
+foreign import __setMyPassword :: 
   { oldPassword :: String
   , newPassword :: String
   }
   -> Promise {}
 
-foreign import setMyEmail :: 
-  String -> Promise {}
-
-foreign import setMyIcon :: 
-  String -> Promise {}
-
----------------------------------------------------------
---  Crawler
----------------------------------------------------------
-
-foreign import createCrawler :: 
-  E.SpaceId -> E.ContentId -> String -> Promise E.IntactCrawler
-
-foreign import getCrawlers :: 
-  E.SpaceId -> Promise (Array E.IntactCrawler)
-
-foreign import getCrawler :: 
-  E.CrawlerId -> Promise E.IntactCrawler
-
-foreign import runCrawler :: 
-  E.CrawlerId -> E.CrawlerOperationMethod -> Promise {}
-
-foreign import beginCrawlingTask :: 
-  E.CrawlerTaskId -> Promise {}
-
-foreign import completeCrawlingTask :: 
-  E.CrawlerTaskId -> E.CrawlerTaskOutput -> Promise {}
-
-foreign import failedCrawlingTask :: 
-  { taskId :: E.CrawlerTaskId
-  , phase :: String
-  , message :: String
+setMyPassword :: 
+  { oldPassword :: String
+  , newPassword :: String
   }
-  -> Promise {}
+  -> CommandAPI {}
+setMyPassword = __commandAPI "setMyPassword" <<< __setMyPassword
 
----------------------------------------------------------
---  Reactor
----------------------------------------------------------
+foreign import __setMyDisplayName :: 
+  String -> Promise {}
 
-foreign import getReactor :: 
-  E.ReactorId -> Promise E.IntactReactor
+setMyDisplayName :: String -> CommandAPI {}
+setMyDisplayName = __commandAPI "setMyDisplayName" <<< __setMyDisplayName
 
-foreign import setReactorDefinitionId :: 
-  E.ReactorId -> E.ContentId -> Promise {}
+foreign import __setMyDisplayId :: 
+  E.UserDisplayId -> Promise {}
+
+setMyDisplayId :: E.UserDisplayId -> CommandAPI {}
+setMyDisplayId = __commandAPI "setMyDisplayId" <<< __setMyDisplayId
+
+foreign import __setMyEmail :: 
+  String -> Promise {}
+
+setMyEmail :: String -> CommandAPI {}
+setMyEmail = __commandAPI "setMyEmail" <<< __setMyEmail
+
+foreign import __setMyIcon :: 
+  String -> Promise {}
+
+setMyIcon :: String -> CommandAPI {}
+setMyIcon = __commandAPI "setMyIcon" <<< __setMyIcon
 

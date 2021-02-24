@@ -121,15 +121,15 @@ handleAction = case _ of
     state <- H.get
     for_ state.workSubId \subId -> do
       H.unsubscribe subId
-    id <- subscribeApi (ChangeWork <<< toMaybe) $ onSnapshotWork (unwrap state.workId)
+    id <- subscribeAPI (ChangeWork <<< toMaybe) $ onSnapshotWork (unwrap state.workId)
     H.modify_ _ { workSubId = Just id }
     handleAction InitializeSnapshot
   InitializeSnapshot -> do
     state <- H.get
     for_ state.beforeSnapshotId \snapshotId -> do
-      beforeSnapshot <- executeApi $ getSnapshot state.workId state.changeId snapshotId
+      beforeSnapshot <- executeAPI $ getSnapshot state.workId state.changeId snapshotId
       H.modify_ _ { beforeSnapshot = beforeSnapshot }
-    afterSnapshot <- executeApi $ getSnapshot state.workId state.changeId state.afterSnapshotId
+    afterSnapshot <- executeAPI $ getSnapshot state.workId state.changeId state.afterSnapshotId
     H.modify_ _ { afterSnapshot = afterSnapshot }
   ChangeWork work -> H.modify_ _ { work = work }
   HandleInput input -> do

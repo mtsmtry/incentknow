@@ -1,8 +1,9 @@
-import { Format, FormatDisplayId, FormatId, FormatUsage } from "../../entities/format/format";
-import { Structure } from "../../entities/format/structure";
-import { RelatedSpace, toRelatedSpace } from "../space/space";
-import { RelatedUser, toRelatedUser } from "../user/user";
-import { FocusedStructure, toFocusedStructure } from "./structure";
+import { Format, FormatDisplayId, FormatId, FormatUsage } from "../../entities/format/Format";
+import { Structure } from "../../entities/format/Structure";
+import { RelatedSpace, toRelatedSpace } from "../space/Space";
+import { RelatedUser, toRelatedUser } from "../user/User";
+import { toTimestamp } from "../Utils";
+import { FocusedStructure, RelatedStructure, toFocusedStructure, toRelatedStructure } from "./Structure";
 
 export interface RelatedFormat {
     formatId: FormatId;
@@ -16,6 +17,7 @@ export interface RelatedFormat {
     updatedAt: number;
     updaterUser: RelatedUser;
     semanticId: string | null;
+    currentStructure: RelatedStructure;
 }
 
 export function toRelatedFormat(format: Format): RelatedFormat {
@@ -30,7 +32,8 @@ export function toRelatedFormat(format: Format): RelatedFormat {
         creatorUser: toRelatedUser(format.creatorUser),
         updatedAt: toTimestamp(format.updatedAt),
         updaterUser: toRelatedUser(format.updaterUser),
-        semanticId: format.semanticId
+        semanticId: format.semanticId,
+        currentStructure: toRelatedStructure(format.currentStructure)
     }
 }
 
@@ -45,7 +48,7 @@ export interface FocusedFormat {
     creatorUser: RelatedUser;
     updatedAt: number;
     updaterUser: RelatedUser;
-    structure: FocusedStructure;
+    currentStructure: FocusedStructure;
     semanticId: string | null;
 }
 
@@ -61,7 +64,7 @@ export function toFocusedFormat(format: Format): FocusedFormat {
         creatorUser: toRelatedUser(format.creatorUser),
         updatedAt: toTimestamp(format.updatedAt),
         updaterUser: toRelatedUser(format.updaterUser),
-        structure: toFocusedStructure(format.currentStructure),
+        currentStructure: toFocusedStructure(format.currentStructure),
         semanticId: format.semanticId
     }
 }
@@ -78,7 +81,7 @@ export function toFocusedFormatFromStructure(structure: Structure): FocusedForma
         creatorUser: toRelatedUser(structure.format.creatorUser),
         updatedAt: toTimestamp(structure.format.updatedAt),
         updaterUser: toRelatedUser(structure.format.updaterUser),
-        structure: toFocusedStructure(structure),
+        currentStructure: toFocusedStructure(structure),
         semanticId: structure.format.semanticId
     }
 }

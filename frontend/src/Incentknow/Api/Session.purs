@@ -1,10 +1,10 @@
-module Incentknow.Api.Session where
+module Incentknow.API.Session where
 
 import Prelude
 
 import Control.Promise (Promise)
 import Effect (Effect)
-import Incentknow.Api (authenticate)
+import Incentknow.API (authenticate)
 
 foreign import storeSession :: Promise String -> Promise {}
 

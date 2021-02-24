@@ -2,7 +2,7 @@ module Incentknow.Organisms.Header where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Nullable (toMaybe)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
@@ -48,7 +48,7 @@ component =
 handleAction :: forall o m. MonadAff m => Behaviour m => Action -> H.HalogenM State Action () o m Unit
 handleAction = case _ of
   Initialize -> do
-    _ <- subscribeApi (toMaybe >>> ChangeAccount) onSnapshotAccount
+   -- _ <- subscribeAPI (toMaybe >>> ChangeAccount) onSnapshotAccount
     pure unit
   Navigate event route -> navigateRoute event route
   HandleInput input -> H.modify_ _ { route = input.route }
@@ -70,12 +70,12 @@ render state =
         [ css "links" ]
         [ headerLink "Spaces" SpaceList
         , maybeElem state.account \_ ->
-            headerLink "Works" WorkList
+            headerLink "Drafts" DraftList
         , maybeElem state.account \_ ->
             headerLink "Create" (NewContent Nothing Nothing)
         , HH.span [ css "space" ] []
         , case state.account of
-            Just account -> headerUrlLink account.user.displayName account.user.iconUrl (User account.userId UserMain)
+            Just account -> headerUrlLink account.displayName account.iconUrl (User account.displayId UserMain)
             Nothing -> headerLink "ログイン/登録" Sign
         ]
     ]
@@ -86,10 +86,10 @@ render state =
       [ css $ if route == state.route then "link link-selected" else "link" ]
       [ HH.span [ css "text" ] [ HH.text name ] ]
 
-  headerUrlLink :: String -> String -> Route -> H.ComponentHTML Action () m
+  headerUrlLink :: String -> Maybe String -> Route -> H.ComponentHTML Action () m
   headerUrlLink name url route =
     link Navigate route
       [ css $ if route == state.route then "link link-selected" else "link" ]
-      [ HH.img [ HP.src url ]
+      [ HH.img [ HP.src $ fromMaybe "" url ]
       , HH.span [ css "text" ] [ HH.text name ]
       ]

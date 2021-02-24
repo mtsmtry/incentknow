@@ -1,7 +1,6 @@
 module Incentknow.Organisms.Document.Section where
 
 import Prelude
-
 import Data.Argonaut.Core (Json, jsonNull)
 import Data.Argonaut.Encode (encodeJson)
 import Data.Argonaut.Parser (jsonParser)
@@ -15,8 +14,8 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Incentknow.Api (getFormat)
-import Incentknow.Api.Utils (executeApi)
+import Incentknow.API (getFormat)
+import Incentknow.API.Execution (executeAPI)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Document (Section)
 import Incentknow.Data.Entities (FocusedFormat)
@@ -106,8 +105,8 @@ handleAction = case _ of
     for_ formatId \formatId -> do
       when (state.formatId /= Just formatId) do
         H.modify_ _ { format = Nothing }
-        --format <- executeApi $ getFormat formatId
-        --H.modify_ _ { format = format }
+  --format <- executeAPI $ getFormat formatId
+  --H.modify_ _ { format = format }
   ChangeText text -> do
     state <- H.modify _ { section { data = encodeJson text } }
     H.raise state.section

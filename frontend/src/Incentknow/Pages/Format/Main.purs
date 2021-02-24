@@ -1,7 +1,6 @@
 module Incentknow.Pages.Format.Main where
 
 import Prelude
-
 import CSS (properties)
 import Data.Either (Either(..))
 import Data.Foldable (for_, traverse_)
@@ -11,8 +10,8 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.Api (updateFormatStructure)
-import Incentknow.Api.Utils (executeApi)
+import Incentknow.API (updateFormatStructure)
+import Incentknow.API.Execution (executeAPI)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, submitButton)
 import Incentknow.Data.Entities (FocusedFormat)
@@ -79,7 +78,8 @@ handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    let props = state.format.structure.properties
+    let
+      props = state.format.structure.properties
     _ <- H.query structure_ unit $ H.tell $ Structure.SetValue props
     pure unit
   Edit -> H.modify_ _ { editMode = true }
@@ -92,9 +92,7 @@ handleAction = case _ of
             diff = difference state.format.structure.properties props
           when (diff.changeType /= NoneChange) do
             H.modify_ _ { updating = true }
-            result <- executeApi $ updateFormatStructure state.format.formatId props
+            result <- executeAPI $ updateFormatStructure state.format.formatId props
             case result of
-              Just _ ->
-                H.modify_ _ { updating = false, editMode = false, format { structure { properties = props } } }
-              Nothing ->
-                H.modify_ _ { updating = false }
+              Just _ -> H.modify_ _ { updating = false, editMode = false, format { structure { properties = props } } }
+              Nothing -> H.modify_ _ { updating = false }

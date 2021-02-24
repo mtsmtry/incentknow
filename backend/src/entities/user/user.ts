@@ -1,6 +1,6 @@
 import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { NewTypeInt, NewTypeString } from "../../implication";
-import { CreatedAt, createDisplayId, createEntityId, DisplayId, DisplayName, EntityId } from '../utils';
+import { NewTypeInt, NewTypeString } from "../../Implication";
+import { CreatedAt, createDisplayId, createEntityId, DisplayId, DisplayName, EntityId } from '../Utils';
 
 // id: RDBのJoin用に用いられる, サーバー外では使用しない
 // displayId: ユーザーが設定する
@@ -33,7 +33,7 @@ export class User {
     @Column("varchar", { length: 255, unique: true, select: false })
     email: string;
 
-    @Column({ nullable: true })
+    @Column("varchar", { length: 100, nullable: true })
     iconUrl: string | null;
 
     @CreatedAt()

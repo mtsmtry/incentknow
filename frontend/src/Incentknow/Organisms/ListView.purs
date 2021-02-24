@@ -67,16 +67,16 @@ render state =
       [ css "item" ]
       [ maybeElem item.format \format ->
           HH.div [ css "format" ]
-            [ link_ Navigate (R.Format format.formatId R.FormatMain) [ HH.text $ format.displayName ] ]
+            [ link_ Navigate (R.Format format.displayId R.FormatMain) [ HH.text $ format.displayName ] ]
       , HH.div [ css "title" ]
           [ HH.text item.title ]
       , case item.user, item.datetime of
           Just user, Just dt ->
             HH.div [ css "user" ]
-              [ HH.div [ css "username" ] [ HH.span [] [ link_ Navigate (R.User user.userId R.UserMain) [HH.text user.displayName] ] ]
+              [ HH.div [ css "username" ] [ HH.span [] [ link_ Navigate (R.User user.displayId R.UserMain) [HH.text user.displayName] ] ]
               , HH.div [ css "datetime" ] [ HH.span [] [ dateTime dt ] ]
               ]
-          Just user, Nothing -> HH.div [ css "username" ] [ HH.span [] [ link_ Navigate (R.User user.userId R.UserMain) [ HH.text user.displayName ] ] ]
+          Just user, Nothing -> HH.div [ css "username" ] [ HH.span [] [ link_ Navigate (R.User user.displayId R.UserMain) [ HH.text user.displayName ] ] ]
           Nothing, Just dt -> HH.div [ css "datetime" ] [ HH.span [] [ dateTime dt ] ]
           _, _ -> HH.text ""
       ]

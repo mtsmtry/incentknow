@@ -1,7 +1,6 @@
 module Incentknow.Pages.User where
 
 import Prelude
-
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Symbol (SProxy(..))
@@ -11,8 +10,8 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.Api (getUser)
-import Incentknow.Api.Utils (Fetch, Remote(..), defaultIconUrl, executeApi, fetchApi, forFetch, toMaybe)
+import Incentknow.API (getUser)
+import Incentknow.API.Execution (Fetch, Remote(..), defaultIconUrl, executeAPI, fetchAPI, forFetch, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (menuPositiveButton, dangerButton)
@@ -68,34 +67,34 @@ render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.Com
 render state =
   HH.div [ css "page-user" ]
     [ tabPage
-          { tabs: [ UserMain ] <> if userId == state.myUserId then [ UserSetting ] else []
-          , currentTab: state.tab
-          , onChangeTab: ChangeTab
-          , showTab:
-              case _ of
-                UserMain -> "Home"
-                UserSetting -> "Setting"
-          }
-          ( if userId == state.myUserId then
-              [ HH.div [ css "page-user-logout", HE.onClick $ \_ -> Just Logout ] [ HH.text "Logout" ] ]
-            else
-              []
-          )
-          [ remoteWith state.user \user->
-              HH.div [ css "page-user-header" ]
-                [ HH.div [ css "left" ]
-                    [ HH.img [ HP.src $ fromMaybe defaultIconUrl user.iconUrl ] ]
-                , HH.div [ css "right" ]
-                    [ HH.div [ css "name" ] [ HH.text user.displayName ]
-                    ]
-                ]
-          ]
-          [ case state.tab of
-              UserMain -> 
-                maybeElem userId \x->
-                  HH.slot (SProxy :: SProxy "main") unit Main.component { userId: x } absurd
-              UserSetting -> HH.slot (SProxy :: SProxy "setting") unit Setting.component {} absurd
-          ]
+        { tabs: [ UserMain ] <> if userId == state.myUserId then [ UserSetting ] else []
+        , currentTab: state.tab
+        , onChangeTab: ChangeTab
+        , showTab:
+            case _ of
+              UserMain -> "Home"
+              UserSetting -> "Setting"
+        }
+        ( if userId == state.myUserId then
+            [ HH.div [ css "page-user-logout", HE.onClick $ \_ -> Just Logout ] [ HH.text "Logout" ] ]
+          else
+            []
+        )
+        [ remoteWith state.user \user ->
+            HH.div [ css "page-user-header" ]
+              [ HH.div [ css "left" ]
+                  [ HH.img [ HP.src $ fromMaybe defaultIconUrl user.iconUrl ] ]
+              , HH.div [ css "right" ]
+                  [ HH.div [ css "name" ] [ HH.text user.displayName ]
+                  ]
+              ]
+        ]
+        [ case state.tab of
+            UserMain ->
+              maybeElem userId \x ->
+                HH.slot (SProxy :: SProxy "main") unit Main.component { userId: x } absurd
+            UserSetting -> HH.slot (SProxy :: SProxy "setting") unit Setting.component {} absurd
+        ]
     ]
   where
   userId = map _.userId $ toMaybe state.user
@@ -104,11 +103,11 @@ handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-   -- myUserId <- H.liftEffect $ getCurrentUserId
-   -- H.modify_ _ { myUserId = toMaybe myUserId }
-    fetchApi FetchedUser $ getUser state.userId
+    -- myUserId <- H.liftEffect $ getCurrentUserId
+    -- H.modify_ _ { myUserId = toMaybe myUserId }
+    fetchAPI FetchedUser $ getUser state.userId
   FetchedUser fetch -> do
-    forFetch fetch \user-> 
+    forFetch fetch \user ->
       H.modify_ _ { user = user }
   HandleInput input -> do
     state <- H.get
@@ -122,6 +121,6 @@ handleAction = case _ of
     navigate $ User state.userId tab
   Navigate route -> navigate route
   Logout -> do
-    --_ <- executeApi $ logout {}
+    --_ <- executeAPI $ logout {}
     H.modify_ _ { myUserId = Nothing }
     pure unit
