@@ -1,1 +1,0 @@
-{"version":3,"file":"SpaceMembershipApplication.js","sourceRoot":"","sources":["../../../../src/interfaces/space/SpaceMembershipApplication.ts"],"names":[],"mappings":";;;AACA,qCAA0D;AAC1D,kCAAuC;AAOvC,SAAgB,kCAAkC,CAAC,GAA+B;IAC9E,OAAO;QACH,IAAI,EAAE,oBAAa,CAAC,GAAG,CAAC,IAAI,CAAC;QAC7B,SAAS,EAAE,mBAAW,CAAC,GAAG,CAAC,SAAS,CAAC;KACxC,CAAA;AACL,CAAC;AALD,gFAKC"}

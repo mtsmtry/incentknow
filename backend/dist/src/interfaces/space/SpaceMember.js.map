@@ -1,1 +1,0 @@
-{"version":3,"file":"SpaceMember.js","sourceRoot":"","sources":["../../../../src/interfaces/space/SpaceMember.ts"],"names":[],"mappings":";;;AACA,qCAA0D;AAC1D,kCAAuC;AAQvC,SAAgB,mBAAmB,CAAC,MAAmB;IACnD,OAAO;QACH,IAAI,EAAE,oBAAa,CAAC,MAAM,CAAC,IAAI,CAAC;QAChC,QAAQ,EAAE,mBAAW,CAAC,MAAM,CAAC,QAAQ,CAAC;QACtC,IAAI,EAAE,MAAM,CAAC,IAAI;KACpB,CAAA;AACL,CAAC;AAND,kDAMC"}
