@@ -6,11 +6,11 @@ services:
     environment:
       - MYSQL_USER=docker
       - MYSQL_PASSWORD=password
-      - MYSQL_DATABASE=exabroker
+      - MYSQL_DATABASE=incentknow
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
     command: "mysqld --skip-name-resolve"
     volumes:
-      - /mnt/hdd/exabroker:/var/lib/mysql
+      - /mnt/hdd/incentknow:/var/lib/mysql
       - ./db/conf.d:/etc/mysql/conf.d
     ports:
       - "3306:3306"

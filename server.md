@@ -8,3 +8,10 @@ sudo apt-get install docker.io
 sudo apt install docker-compose
 
 sudo apt install mysql-server mysql-client
+
+# GitHub SSH接続
+https://blog.katsubemakito.net/git/github-ssh-keys
+
+# docker-composeをdockerに接続できるようにする
+sudo usermod -aG docker $USER
+ログアウト
