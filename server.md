@@ -15,3 +15,5 @@ https://blog.katsubemakito.net/git/github-ssh-keys
 # docker-composeをdockerに接続できるようにする
 sudo usermod -aG docker $USER
 ログアウト
+
+mysql -u docker --port 3306 -h 13.113.194.38 -ppassword incentknow

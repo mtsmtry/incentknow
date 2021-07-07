@@ -8,7 +8,8 @@ services:
       - MYSQL_PASSWORD=password
       - MYSQL_DATABASE=incentknow
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-    command: "mysqld --skip-name-resolve"
+      - TZ: 'Asia/Tokyo'
+    command: "mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --skip-name-resolve"
     volumes:
       - /mnt/hdd/incentknow:/var/lib/mysql
       - ./db/conf.d:/etc/mysql/conf.d
