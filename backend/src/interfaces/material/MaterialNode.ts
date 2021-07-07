@@ -4,7 +4,6 @@ import { notNull } from "../../utils";
 import { RelatedUser, toRelatedUser } from "../user/User";
 import { RelatedMaterialRevision, toRelatedMaterialRevisionFromCommit, toRelatedMaterialRevisionFromEditing } from "./MaterialRevision";
 
-
 // [基本的な履歴管理の説明]
 // Content/MaterialとCommitのデータ部分をSnapshotに統合することは可能ですが、
 // 以下の三層を疎結合にするために、分離する設計を取っていいます。
@@ -30,7 +29,6 @@ import { RelatedMaterialRevision, toRelatedMaterialRevisionFromCommit, toRelated
 // 2. Snapshot (RDBのSnapshotとは異なります)
 //      タイムスタンプ、データ、作成者のみを示すシンプルなものです。
 //      Commit, Draft, Snapshotから生成されます。
-
 
 export enum MaterialNodeType {
     COMMITTED = "committed",

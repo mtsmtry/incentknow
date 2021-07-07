@@ -19,7 +19,7 @@ import Data.Validation.Semiring (invalid)
 import Effect (Effect)
 import Effect.Class (class MonadEffect)
 import Effect.Class as H
-import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..), ContentSnapshotId(..), FormatDisplayId(..), FormatId(..), SemanticId(..), SpaceDisplayId(..), SpaceId(..), UserDisplayId(..), UserId(..))
+import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..), ContentSnapshotId(..), FormatDisplayId(..), FormatId(..), SemanticId(..), SpaceDisplayId(..), SpaceId(..), StructureId(..), UserDisplayId(..), UserId(..))
 import Routing (match)
 import Routing.Match (Match(..), end, int, lit, param, root, str)
 import Routing.Match.Error (MatchError(..))
@@ -69,6 +69,13 @@ instance showSnapshotDiff :: Show SnapshotDiff where
   show (InitialSnapshot id) = unwrap id
   show (SnapshotDiff id1 id2) = unwrap id1 <> "-" <> unwrap id2
 
+data EditTarget
+  = TargetBlank (Maybe SpaceId) (Maybe StructureId)
+  | TargetDraft ContentDraftId
+  | TargetContent ContentId
+
+derive instance eqInput :: Eq EditTarget
+
 data Route
   = Home
   | Sign
@@ -76,20 +83,19 @@ data Route
   | DraftList
   | Content ContentId
   | ContentBySemanticId FormatId SemanticId
-  | EditContent ContentId
+  | EditContent EditTarget
   | SpaceList
   | Composition SpaceId FormatId String
-  | ContentList (Maybe SpaceId) (Maybe FormatId) (Array (Tuple String (Maybe String)))
+  -- | ContentList (Maybe SpaceId) (Maybe FormatId) (Array (Tuple String (Maybe String)))
   | Public
   | JoinSpace SpaceId
-  | NewContent (Maybe SpaceId) (Maybe FormatId)
   | NewFormat SpaceId
-  | EditDraft ContentDraftId
+  -- | EditDraft ContentDraftId
   | EditScraper ContentId
   | Space SpaceDisplayId SpaceTab
   | Rivision ContentId Int
   | RivisionList ContentId
-  | Snapshot ContentDraftId SnapshotDiff
+  -- | Snapshot ContentDraftId SnapshotDiff
   | NewSpace
   | Format FormatDisplayId FormatTab
  -- | NewCrawler
@@ -141,17 +147,18 @@ routeToPath = case _ of
   User id UserMain -> "/users/" <> unwrap id
   User id UserSetting -> "/users/" <> unwrap id <> "/setting"
   Content id -> "/contents/" <> unwrap id
-  EditContent id -> "/contents/" <> unwrap id <> "/edit"
+  EditContent (TargetBlank spaceId structureId) -> "/contents/new" <> paramsToUrl [ Tuple "space" $ map unwrap spaceId, Tuple "structure" $ map unwrap structureId ]
+  EditContent (TargetDraft id) -> "/contents/" <> unwrap id <> "/edit"
+  EditContent (TargetContent contentId) -> "/contents/new" <> paramsToUrl [ Tuple "content" $ Just $ unwrap contentId ]
   Rivision id ver -> "/contents/" <> unwrap id <> "/rivisions/" <> show ver
   RivisionList id -> "/contents/" <> unwrap id <> "/rivisions"
   ContentBySemanticId formatId semanticId -> "/contents/" <> unwrap formatId <> "/" <> unwrap semanticId
   -- draft
   DraftList -> "/drafts"
-  EditDraft id -> "/drafts/" <> unwrap id <> "/edit"
-  Snapshot draftId diff -> "/drafts/" <> unwrap draftId <> "/" <> show diff
+  --EditDraft id -> "/drafts/" <> unwrap id <> "/edit"
+  --Snapshot draftId diff -> "/drafts/" <> unwrap draftId <> "/" <> show diff
   NewFormat id -> "/spaces/" <> unwrap id <> "/formats/new"
-  NewContent spaceId formatId -> "/contents/new" <> paramsToUrl [ Tuple "space" $ map unwrap spaceId, Tuple "format" $ map unwrap formatId ]
-  ContentList spaceId formatId params -> "/contents" <> paramsToUrl ([ Tuple "space" $ map unwrap spaceId, Tuple "format" $ map unwrap formatId ] <> params)
+  --ContentList spaceId formatId params -> "/contents" <> paramsToUrl ([ Tuple "space" $ map unwrap spaceId, Tuple "format" $ map unwrap formatId ] <> params)
   Composition spaceId formatId tab -> "/spaces/" <> unwrap spaceId <> "/" <> unwrap formatId <> "/" <> tab
   -- communities
   SpaceList -> "/spaces"
@@ -223,17 +230,18 @@ matchRoute =
         , JoinSpace <$> (map SpaceId $ lit "spaces" *> str <* lit "join" <* end)
         -- draft
         , DraftList <$ (lit "drafts" <* end)
-        , Snapshot <$> (lit "drafts" *> (map wrap str)) <*> ((map toSnapshotDiff str) <* end)
-        , EditDraft <$> (map wrap $ lit "drafts" *> str <* lit "edit" <* end)
+        --, Snapshot <$> (lit "drafts" *> (map wrap str)) <*> ((map toSnapshotDiff str) <* end)
+        --, EditDraft <$> (map wrap $ lit "drafts" *> str <* lit "edit" <* end)
         -- content
-        , NewContent <$> (lit "contents" <* lit "new" *> space) <*> format <* end
         , EditScraper <$> (map ContentId $ lit "contents" *> str <* lit "edit" <* lit "scraper" <* end)
-        , EditContent <$> (map ContentId $ lit "contents" *> str <* lit "edit" <* end)
+        , (EditContent <<< TargetDraft) <$> (map ContentDraftId $ lit "contents" *> str <* lit "edit" <* end)
+        , (\x-> \y-> EditContent $ TargetBlank x y) <$> (lit "contents" <* lit "new" *> space) <*> structure <* end
+        , (EditContent <<< TargetContent) <$> (map ContentId $ lit "contents" *> str <* lit "edit" <* end)
         , Content <$> (map ContentId $ lit "contents" *> str <* end)
         , RivisionList <$> (map ContentId $ lit "contents" *> str <* lit "rivisions" <* end)
         , Rivision <$> (map ContentId $ lit "contents" *> str) <*> (lit "rivisions" *> int <* end)
         , ContentBySemanticId <$> (lit "contents" *> (map FormatId str)) <*> (map SemanticId str) <* end
-        , ContentList <$ lit "contents" <*> space <*> format <*> matchParams <* end
+        --, ContentList <$ lit "contents" <*> space <*> format <*> matchParams <* end
         -- format
         , (flip Format FormatMain) <$> (map wrap $ lit "formats" *> str <* end)
         , (flip Format FormatPage) <$> (map wrap $ lit "formats" *> str <* lit "page" <* end)
@@ -262,6 +270,10 @@ matchRoute =
   space = map (map SpaceId) $ matchParam "space"
 
   format = map (map FormatId) $ matchParam "format"
+
+  structure = map (map StructureId) $ matchParam "structure"
+
+  content = map (map ContentId) $ matchParam "content"
 
 pathToRoute :: String -> Route
 pathToRoute path = case match matchRoute path of

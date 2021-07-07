@@ -32,8 +32,7 @@ type ContentSemanticData
 getContentSemanticData :: Json -> FocusedFormat -> ContentSemanticData
 getContentSemanticData contentData format = { title, semanticId: map wrap semanticId, image }
   where
-  props = mkProperties contentData format.currentS
-  tructure.properties
+  props = mkProperties contentData format.currentStructure.properties
 
   semanticId =
     flatten

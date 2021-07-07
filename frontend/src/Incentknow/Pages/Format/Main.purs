@@ -11,7 +11,7 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (updateFormatStructure)
-import Incentknow.API.Execution (executeAPI)
+import Incentknow.API.Execution (executeAPI, executeCommand)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, submitButton)
 import Incentknow.Data.Entities (FocusedFormat)
@@ -27,6 +27,7 @@ type State
 
 data Action
   = Initialize
+  | HandleInput Input
   | Edit
   | Discard
   | SubmitEdit
@@ -43,7 +44,13 @@ component =
   H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval H.defaultEval { initialize = Just Initialize, handleAction = handleAction }
+    , eval:
+        H.mkEval
+          H.defaultEval
+            { initialize = Just Initialize
+            , handleAction = handleAction
+            , receive = Just <<< HandleInput
+            }
     }
 
 initialState :: Input -> State
@@ -79,9 +86,12 @@ handleAction = case _ of
   Initialize -> do
     state <- H.get
     let
-      props = state.format.structure.properties
+      props = state.format.currentStructure.properties
     _ <- H.query structure_ unit $ H.tell $ Structure.SetValue props
     pure unit
+  HandleInput input -> do
+    H.modify_ _ { format = input.format }
+    handleAction Initialize
   Edit -> H.modify_ _ { editMode = true }
   Discard -> H.modify_ _ { editMode = false }
   SubmitEdit -> do
@@ -89,10 +99,10 @@ handleAction = case _ of
     H.query structure_ unit (H.request Structure.GetValue)
       >>= traverse_ \props -> do
           let
-            diff = difference state.format.structure.properties props
+            diff = difference state.format.currentStructure.properties props
           when (diff.changeType /= NoneChange) do
             H.modify_ _ { updating = true }
-            result <- executeAPI $ updateFormatStructure state.format.formatId props
+            result <- executeCommand $ updateFormatStructure state.format.formatId props
             case result of
-              Just _ -> H.modify_ _ { updating = false, editMode = false, format { structure { properties = props } } }
+              Just _ -> H.modify_ _ { updating = false, editMode = false, format { currentStructure { properties = props } } }
               Nothing -> H.modify_ _ { updating = false }

@@ -1,6 +1,7 @@
 module Incentknow.Molecules.ContentMenu where
 
 import Prelude
+
 import Data.Argonaut.Core (jsonNull)
 import Data.Array (filter, fromFoldable)
 import Data.Foldable (for_)
@@ -15,15 +16,16 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.API (getContents, getRelatedContent)
-import Incentknow.API.Execution (Fetch, executeAPI, fetchAPI, forFetchItem)
+import Incentknow.API (getContent, getContents, getRelatedContent)
+import Incentknow.API.Execution (Fetch, executeAPI, forItem, toQueryCallback)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Content (ContentSemanticData, getContentSemanticData)
 import Incentknow.Data.Entities (RelatedContent)
 import Incentknow.Data.Ids (ContentId(..), FormatId(..), SpaceId(..))
 import Incentknow.HTML.Utils (css, maybeElem)
-import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..), upsertItems)
+import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu
+import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 
 type Input
   = { value :: Maybe ContentId
@@ -33,9 +35,7 @@ type Input
     }
 
 type State
-  = { items :: Array (SelectMenuItem ContentId)
-    , initialContentId :: Maybe ContentId
-    , contentId :: Maybe ContentId
+  = { contentId :: Maybe ContentId
     , formatId :: FormatId
     , spaceId :: Maybe SpaceId
     , disabled :: Boolean
@@ -45,8 +45,6 @@ data Action
   = Initialize
   | HandleInput Input
   | ChangeValue (Maybe ContentId)
-  | FetchedInitialContent (Fetch RelatedContent)
-  | FetchedContents (Fetch (Array RelatedContent))
 
 type Slot p
   = forall q. H.Slot q Output p
@@ -73,9 +71,7 @@ component =
 
 initialState :: Input -> State
 initialState input =
-  { items: []
-  , initialContentId: input.value
-  , contentId: input.value
+  { contentId: input.value
   , spaceId: input.spaceId
   , formatId: input.formatId
   , disabled: input.disabled
@@ -84,7 +80,17 @@ initialState input =
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-    { resource: SelectMenuResourceAllCandidates state.items, value: state.contentId, disabled: state.disabled }
+    { value: state.contentId
+    , disabled: state.disabled
+    , fetchMultiple: case _ of
+        Nothing -> case state.spaceId of 
+          Just spaceId -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) $ getContents spaceId state.formatId
+          Nothing -> Nothing
+        _ -> Nothing
+    , fetchSingle: Just $ \x-> toQueryCallback $ map toSelectMenuItem $ getRelatedContent x
+    , fetchId: unwrap state.formatId
+    , initial: emptyCandidateSet
+    }
     (Just <<< ChangeValue)
 
 toSelectMenuItem :: RelatedContent -> SelectMenuItem ContentId
@@ -107,19 +113,7 @@ fromContentToHtml src =
 
 handleAction :: forall m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
-  Initialize -> do
-    state <- H.get
-    for_ state.initialContentId \contentId -> do
-      fetchAPI FetchedInitialContent $ getRelatedContent contentId
-    case state.spaceId of
-      Just spaceId -> fetchAPI FetchedContents $ getContents spaceId state.formatId
-      Nothing -> pure unit -- TODO fetchAPI FetchedContents $ getContentsByFormat state.formatId
-  FetchedInitialContent fetch ->
-    forFetchItem fetch \content ->
-      H.modify_ \s -> s { items = upsertItems [ toSelectMenuItem content ] s.items }
-  FetchedContents fetch ->
-    forFetchItem fetch \contents -> do
-      H.modify_ \s -> s { items = upsertItems (map toSelectMenuItem contents) s.items }
+  Initialize -> pure unit
   HandleInput input -> do
     state <- H.get
     if state.formatId /= input.formatId || state.spaceId /= input.spaceId then do

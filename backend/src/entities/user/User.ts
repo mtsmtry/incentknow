@@ -27,10 +27,10 @@ export class User {
     @DisplayName()
     displayName: string;
 
-    @Column("char", { length: 60, select: false })
+    @Column("char", { length: 60 })
     passwordHash: string;
 
-    @Column("varchar", { length: 255, unique: true, select: false })
+    @Column("varchar", { length: 255, unique: true })
     email: string;
 
     @Column("varchar", { length: 100, nullable: true })

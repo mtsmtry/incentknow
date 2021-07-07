@@ -1,0 +1,17 @@
+version: "2"
+
+services:
+  db:
+    image: mysql:5.7
+    environment:
+      - MYSQL_USER=docker
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=exabroker
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    command: "mysqld --skip-name-resolve"
+    volumes:
+      - /mnt/hdd/exabroker:/var/lib/mysql
+      - ./db/conf.d:/etc/mysql/conf.d
+    ports:
+      - "3306:3306"
+    restart: always

@@ -1,31 +1,33 @@
 module Incentknow.Pages.Format where
 
 import Prelude
+
 import Data.Maybe (Maybe(..), maybe)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (Format, getFormat)
-import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch, toMaybe)
+import Incentknow.API (getFocusedFormat, getFormat)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (menuPositiveButton, dangerButton)
-import Incentknow.Data.Ids (FormatId(..))
+import Incentknow.Data.Entities (FocusedFormat)
+import Incentknow.Data.Ids (FormatDisplayId, FormatId(..))
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Pages.Format.Main as Main
 import Incentknow.Pages.Format.Setting as Setting
 import Incentknow.Pages.Format.Versions as Versions
-import Incentknow.Route (FormatTab(..), Route(..))
+import Incentknow.Route (EditTarget(..), FormatTab(..), Route(..))
 import Incentknow.Templates.Page (tabPage)
 
 type Input
-  = { formatId :: FormatId, tab :: FormatTab }
+  = { formatId :: FormatDisplayId, tab :: FormatTab }
 
 type State
-  = { formatId :: FormatId, tab :: FormatTab, format :: Remote Format }
+  = { formatId :: FormatDisplayId, tab :: FormatTab, format :: Remote FocusedFormat }
 
 data Action
   = Initialize
@@ -33,18 +35,18 @@ data Action
   | HandleInput Input
   | Navigate Route
   | Delete
-  | FetchedFormat (Fetch Format)
+  | FetchedFormat (Fetch FocusedFormat)
 
 type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
   = ( main :: Main.Slot Unit
-    , page :: Page.Slot Unit
+    --, page :: Page.Slot Unit
     , versions :: Versions.Slot Unit
     , delete :: DangerChange.Slot Unit
     , setting :: Setting.Slot Unit
-    , reactor :: Reactor.Slot Unit
+    --, reactor :: Reactor.Slot Unit
     )
 
 component :: forall q o m. Behaviour m => MonadAff m => MonadEffect m => H.Component HH.HTML q Input o m
@@ -75,7 +77,7 @@ render state =
   tabPage
     { tabs:
         [ FormatMain, FormatPage, FormatVersions, FormatSetting ]
-          <> if maybe false (\x -> x.generator == "reactor") (toMaybe state.format) then [ FormatReactor ] else []
+         -- <> if maybe false (\x -> x.generator == "reactor") (toMaybe state.format) then [ FormatReactor ] else []
     , currentTab: state.tab
     , onChangeTab: ChangeTab
     , showTab:
@@ -87,7 +89,7 @@ render state =
           FormatReactor -> "Reactor"
     }
     [ maybeElem (toMaybe state.format) \x ->
-        menuPositiveButton "このフォーマットでコンテンツを作成" (Navigate $ NewContent (Just x.spaceId) (Just state.formatId))
+        menuPositiveButton "このフォーマットでコンテンツを作成" (Navigate $ EditContent $ TargetBlank (Just x.space.spaceId) (Just x.currentStructure.structureId))
     ]
     [ remoteWith state.format \x ->
         HH.div [ css "page-format" ]
@@ -97,8 +99,8 @@ render state =
     ]
     [ remoteWith state.format \x -> case state.tab of
         FormatMain -> HH.slot (SProxy :: SProxy "main") unit Main.component { format: x } absurd
-        FormatPage -> HH.slot (SProxy :: SProxy "page") unit Page.component { format: x } absurd
-        FormatVersions -> HH.slot (SProxy :: SProxy "versions") unit Versions.component { formatId: state.formatId } absurd
+        FormatPage -> HH.text ""  -- HH.slot (SProxy :: SProxy "page") unit Page.component { format: x } absurd
+        FormatVersions -> HH.slot (SProxy :: SProxy "versions") unit Versions.component { formatId: x.formatId } absurd
         FormatSetting -> HH.slot (SProxy :: SProxy "setting") unit Setting.component { format: x, disabled: false } absurd
         FormatReactor -> HH.text "" -- HH.slot (SProxy :: SProxy "reactor") unit Reactor.component { format: x } absurd  
     ]
@@ -107,9 +109,9 @@ handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchAPI FetchedFormat $ getFormat state.formatId
+    callbackQuery FetchedFormat $ getFormat state.formatId
   FetchedFormat fetch -> do
-    forFetch fetch \format ->
+    forRemote fetch \format ->
       H.modify_ _ { format = format }
   HandleInput input -> do
     state <- H.get

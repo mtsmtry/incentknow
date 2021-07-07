@@ -17,19 +17,20 @@ export class FormatQuery extends SelectFromSingleTableQuery<Format, FormatQuery,
 
     selectRelated() {
         const query = this.qb
-            .leftJoinAndSelect("space", "space")
-            .leftJoinAndSelect("creatorUser", "creatorUser")
-            .leftJoinAndSelect("updaterUser", "updaterUser");
+            .leftJoinAndSelect("x.space", "space")
+            .leftJoinAndSelect("x.creatorUser", "creatorUser")
+            .leftJoinAndSelect("x.updaterUser", "updaterUser")
+            .leftJoinAndSelect("x.currentStructure", "currentStructure");
 
         return mapQuery(query, toRelatedFormat);
     }
 
     selectFocused() {
         let query = this.qb
-            .leftJoinAndSelect("space", "space")
-            .leftJoinAndSelect("creatorUser", "creatorUser")
-            .leftJoinAndSelect("updaterUser", "updaterUser")
-            .leftJoinAndSelect("currentStructure", "currentStructure");
+            .leftJoinAndSelect("x.space", "space")
+            .leftJoinAndSelect("x.creatorUser", "creatorUser")
+            .leftJoinAndSelect("x.updaterUser", "updaterUser")
+            .leftJoinAndSelect("x.currentStructure", "currentStructure");
         let query2 = joinProperties("currentStructure", query);
 
         return mapQuery(query2, toFocusedFormat);

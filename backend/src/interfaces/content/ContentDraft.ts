@@ -1,8 +1,8 @@
 import { ObjectLiteral } from "typeorm";
 import { ContentId } from "../../entities/content/Content";
 import { ContentCommitId } from "../../entities/content/ContentCommit";
-import { ContentDraft, ContentDraftId } from "../../entities/content/ContentDraft";
-import { FocusedFormat, toFocusedFormatFromStructure } from "../format/Format";
+import { ContentChangeType, ContentDraft, ContentDraftId } from "../../entities/content/ContentDraft";
+import { FocusedFormat } from "../format/Format";
 import { FocusedMaterialDraft } from "../material/MaterialDraft";
 import { toTimestamp } from "../Utils";
 
@@ -14,9 +14,10 @@ export interface RelatedContentDraft {
     data: any;
     contentId: ContentId | null;
     format: FocusedFormat;
+    changeType: ContentChangeType;
 }
 
-export function toRelatedContentDraft(draft: ContentDraft): RelatedContentDraft {
+export function toRelatedContentDraft(draft: ContentDraft, format: FocusedFormat): RelatedContentDraft {
     return {
         draftId: draft.entityId,
         createdAt: toTimestamp(draft.createdAt),
@@ -24,7 +25,8 @@ export function toRelatedContentDraft(draft: ContentDraft): RelatedContentDraft 
         basedCommitId: draft.currentEditing?.basedCommit ? draft.currentEditing?.basedCommit?.entityId : null,
         data: draft.data,
         contentId: draft.content?.entityId || null,
-        format: toFocusedFormatFromStructure(draft.structure)
+        format,
+        changeType: draft.changeType
     }
 }
 
@@ -33,19 +35,23 @@ export interface FocusedContentDraft {
     createdAt: number;
     updatedAt: number;
     basedCommitId: ContentCommitId | null;
-    data: ObjectLiteral;    
+    data: ObjectLiteral;
     contentId: ContentId | null;
     materialDrafts: FocusedMaterialDraft[];
+    format: FocusedFormat;
+    changeType: ContentChangeType;
 }
 
-export function toFocusedContentDraft(draft: ContentDraft, data: ObjectLiteral, materialDrafts: FocusedMaterialDraft[]): FocusedContentDraft {
+export function toFocusedContentDraft(draft: ContentDraft, format: FocusedFormat, data: ObjectLiteral, materialDrafts: FocusedMaterialDraft[]): FocusedContentDraft {
     return {
         draftId: draft.entityId,
         createdAt: toTimestamp(draft.createdAt),
         updatedAt: toTimestamp(draft.updatedAt),
         basedCommitId: draft.currentEditing?.basedCommit ? draft.currentEditing?.basedCommit?.entityId : null,
-        data: data,        
+        data: data,
         contentId: draft.content?.entityId || null,
-        materialDrafts: materialDrafts
+        materialDrafts: materialDrafts,
+        format,
+        changeType: draft.changeType
     }
 }

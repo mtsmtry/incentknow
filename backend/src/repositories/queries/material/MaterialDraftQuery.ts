@@ -36,8 +36,8 @@ export class MaterialDraftQuery extends SelectFromSingleTableQuery<MaterialDraft
 
     selectFocused() {
         const query = this.qb
-            .leftJoinAndSelect("material", "material")
-            .leftJoinAndSelect("intendedContentDraft", "intendedContentDraft")
+            .leftJoinAndSelect("x.material", "material")
+            .leftJoinAndSelect("x.intendedContentDraft", "intendedContentDraft")
 
         return mapQuery(query, x => {
             const data = x.data;

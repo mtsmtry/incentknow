@@ -22,16 +22,16 @@ export class ContainerQuery extends SelectFromSingleTableQuery<Container, Contai
 
     selectRelated() {
         const query = this.qb
-            .leftJoinAndSelect("space", "space")
-            .leftJoinAndSelect("format", "format");
+            .leftJoinAndSelect("x.space", "space")
+            .leftJoinAndSelect("x.format", "format");
 
         return mapQuery(query, toRelatedContainer);
     }
 
     selectFocused() {
         const query = this.qb
-            .leftJoinAndSelect("space", "space")
-            .leftJoinAndSelect("format", "format");
+            .leftJoinAndSelect("x.space", "space")
+            .leftJoinAndSelect("x.format", "format");
 
         return mapQuery(query, x => (r: IntactReactor | null) => toFocusedContainer(x, r));
     }

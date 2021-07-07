@@ -1,7 +1,7 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { NewTypeInt, NewTypeString } from "../../Implication";
 import { User, UserSk } from "../user/User";
-import { CreatedAt, EntityId, UpdatedAt } from '../Utils';
+import { CreatedAt, createEntityId, EntityId, UpdatedAt } from '../Utils';
 import { ContentCommit, ContentCommitSk } from "./ContentCommit";
 import { ContentDraft, ContentDraftSk } from "./ContentDraft";
 import { ContentSnapshot } from "./ContentSnapshot";
@@ -64,4 +64,9 @@ export class ContentEditing {
 
     @OneToMany(type => ContentSnapshot, x => x.editing, { onDelete: "RESTRICT" })
     snapshots: ContentSnapshot[];
+
+    @BeforeInsert()
+    onInsert() {
+        this.entityId = createEntityId() as ContentEditingId;
+    }
 }

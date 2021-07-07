@@ -15,8 +15,8 @@ import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (FocusedContent, FocusedFormat)
 import Incentknow.Data.Ids (ContentId(..), FormatId(..))
 import Incentknow.HTML.Utils (maybeElem)
-import Incentknow.Molecules.SelectMenu (SelectMenuItem)
 import Incentknow.Molecules.SelectMenu as SelectMenu
+import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 import Incentknow.Route (ContentSpec, Route)
 
 type Input

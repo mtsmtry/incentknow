@@ -1,15 +1,17 @@
 module Incentknow.Pages.Format.Versions where
 
 import Prelude
+
 import Data.Maybe (Maybe(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (Structure, getFormatStructures)
-import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch)
+import Incentknow.API (getStructures)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
+import Incentknow.Data.Entities (RelatedStructure)
 import Incentknow.Data.Ids (FormatId(..))
 import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.Structure as Structure
@@ -18,11 +20,11 @@ type Input
   = { formatId :: FormatId }
 
 type State
-  = { formatId :: FormatId, versions :: Remote (Array Structure) }
+  = { formatId :: FormatId, versions :: Remote (Array RelatedStructure) }
 
 data Action
   = Initialize
-  | FetchedVersions (Fetch (Array Structure))
+  | FetchedVersions (Fetch (Array RelatedStructure))
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -50,7 +52,7 @@ render state =
         HH.div [ css "list" ] (map renderVersion versions)
     ]
   where
-  renderVersion :: Structure -> H.ComponentHTML Action ChildSlots m
+  renderVersion :: RelatedStructure -> H.ComponentHTML Action ChildSlots m
   renderVersion version =
     HH.div [ css "item" ]
       [ HH.div [] [ HH.text $ show version.version ]
@@ -61,7 +63,7 @@ handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchAPI FetchedVersions $ getFormatStructures state.formatId
+    callbackQuery FetchedVersions $ getStructures state.formatId
   FetchedVersions fetch -> do
-    forFetch fetch \versions ->
+    forRemote fetch \versions ->
       H.modify_ _ { versions = versions }

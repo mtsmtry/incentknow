@@ -12,7 +12,9 @@ import { ContentEditingQuery } from "../../queries/content/ContentEditing";
 import { BaseCommand, BaseRepository, Command, Repository } from "../../Repository";
 import { Transaction } from "../../Transaction";
 
-function getChangeType(prevLength: number, length: number) {
+function getChangeType(prevData: ObjectLiteral, data: ObjectLiteral) {
+    const prevLength = JSON.stringify(prevData).length;
+    const length = JSON.stringify(data).length;
     // 文字数で変更の種類を分類
     if (prevLength <= length) {
         return ContentChangeType.WRITE;
@@ -73,7 +75,7 @@ export class ContentEditingCommand implements BaseCommand {
                 state: ContentEditingState.EDITING
             });
             editing = await this.editings.save(editing);
-            await this.drafts.update(draft, { currentEditingId: editing.id });
+            await this.drafts.update(draft.id, { currentEditingId: editing.id });
         }
 
         return new ContentDraftQueryFromEntity(draft);
@@ -98,54 +100,54 @@ export class ContentEditingCommand implements BaseCommand {
         editing = await this.editings.save(editing);
 
         // set editing to draft
-        await this.drafts.update(draft, { currentEditing: editing });
+        await this.drafts.update(draft.id, { currentEditingId: editing.id });
 
         return new ContentDraftQueryFromEntity(draft);
     }
 
     async updateDraft(draft: ContentDraft, data: any): Promise<ContentSnapshot | null> {
-        if (draft.data == data) {
-            return null;
-        }
-
         if (!draft.currentEditingId) {
             throw "This draft is not active";
         }
 
         if (draft.data) {
-            const changeType = getChangeType(draft.data?.length, data.length);
+            const changeType = getChangeType(draft.data, data);
 
             // create snapshot if the number of characters takes the maximum value
             if (draft.changeType != ContentChangeType.REMOVE && changeType == ContentChangeType.REMOVE) {
                 let snapshot = this.snapshots.create({
+                    draftId: draft.id,
                     editingId: draft.currentEditingId,
+                    structureId: draft.structureId,
                     data: draft.data,
                     timestamp: draft.updatedAt
                 });
 
                 await Promise.all([
                     this.snapshots.save(snapshot),
-                    this.drafts.update(draft, { data, changeType, updatedAtOnlyContent: new Date() })
+                    this.drafts.update(draft.id, { data, changeType, updatedAtOnlyContent: new Date() })
                 ]);
 
                 return snapshot;
+            } else {
+                await this.drafts.update(draft.id, { data, changeType, updatedAtOnlyContent: new Date() });
             }
+        } else {
+            await this.drafts.update(draft.id, { data });
         }
-
-        await this.drafts.update(draft, { data });
         return null;
     }
 
     async cancelEditing(draft: ContentDraft) {
         await Promise.all([
-            this.drafts.update(draft, { data: null, currentEditingId: null }),
+            this.drafts.update(draft.id, { data: null, currentEditingId: null }),
             this.editings.update(draft.currentEditingId, { state: ContentEditingState.CANCELD })
         ]);
     }
 
     async commitEditing(draft: ContentDraft) {
         await Promise.all([
-            this.drafts.update(draft, { data: null, currentEditingId: null }),
+            this.drafts.update(draft.id, { data: null, currentEditingId: null }),
             this.editings.update(draft.currentEditingId, { state: ContentEditingState.COMMITTED })
         ]);
     }

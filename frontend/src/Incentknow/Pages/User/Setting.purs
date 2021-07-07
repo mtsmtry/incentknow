@@ -1,6 +1,7 @@
 module Incentknow.Pages.User.Setting where
 
 import Prelude
+
 import Affjax as AX
 import Affjax.RequestBody as RequestBody
 import Affjax.RequestHeader (RequestHeader(..))
@@ -21,7 +22,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.API (getMyAccount, setMyDisplayName, setMyEmail, setMyPassword)
-import Incentknow.API.Execution (Fetch, Remote(..), callAPI, fetchAPI, forFetch)
+import Incentknow.API.Execution (Fetch, Remote(..), callAPI, callCommand, callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button, submitButton, textarea)
@@ -85,7 +86,7 @@ render state =
   remoteWith state.account \account ->
     HH.div [ css "page-user-setting" ]
       [ HH.slot displayName_ unit SettingText.component
-          { submit: callAPI <<< setMyDisplayName
+          { submit: callCommand <<< setMyDisplayName
           , value: account.displayName
           , title: "表示名"
           , desc: ""
@@ -99,10 +100,10 @@ render state =
       --    }
       --    (Just <<< Edit)
       , HH.slot password_ unit SettingPassword.component
-          { submit: callAPI <<< setMyPassword }
+          { submit: callCommand <<< setMyPassword }
           (Just <<< Edit)
       , HH.slot email_ unit SettingText.component
-          { submit: callAPI <<< setMyEmail
+          { submit: callCommand <<< setMyEmail
           , value: account.email
           , title: "メールアドレス"
           , desc: ""
@@ -114,9 +115,9 @@ render state =
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
-    fetchAPI ChangeAccount getMyAccount
+    callbackQuery ChangeAccount getMyAccount
   ChangeAccount fetch -> do
-    forFetch fetch \account ->
+    forRemote fetch \account ->
       H.modify_ _ { account = account }
   Edit _ -> do
     -- discard $ H.query displayName_ unit $ H.tell Reset

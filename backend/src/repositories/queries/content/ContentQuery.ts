@@ -18,20 +18,20 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
 
     selectRelated() {
         const query = this.qb
-            .leftJoinAndSelect("creatorUser", "creatorUser")
-            .leftJoinAndSelect("updaterUser", "updaterUser");
+            .leftJoinAndSelect("x.creatorUser", "creatorUser")
+            .leftJoinAndSelect("x.updaterUser", "updaterUser");
 
         return mapQuery(query, x => (f: FocusedFormat) => toRelatedContent(x, f));
     }
 
     selectFocused() {
         const query = this.qb
-            .leftJoinAndSelect("creatorUser", "creatorUser")
-            .leftJoinAndSelect("updaterUser", "updaterUser")
-            .leftJoinAndSelect("materials", "materials")
-            .addSelect("data");
+            .leftJoinAndSelect("x.creatorUser", "creatorUser")
+            .leftJoinAndSelect("x.updaterUser", "updaterUser")
+            .leftJoinAndSelect("x.materials", "materials")
+            .addSelect("x.data");
 
-        return mapQuery(query, x => (f: FocusedFormat, d: RelatedContentDraft) => toFocusedContent(x, d, f));
+        return mapQuery(query, x => (f: FocusedFormat, d: RelatedContentDraft | null) => toFocusedContent(x, d, f));
     }
 }
 

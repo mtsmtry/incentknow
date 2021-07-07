@@ -19,7 +19,7 @@ export type MaterialDraftSk = NewTypeInt<"MaterialDraftSk">;
 export type MaterialDraftId = NewTypeString<"MaterialDraftId">;
 
 @Entity()
-@Unique(["unique_by_user_constrain", "user"])
+@Unique(["materialId", "user"])
 export class MaterialDraft {
 
     @PrimaryGeneratedColumn()
@@ -59,9 +59,6 @@ export class MaterialDraft {
 
     @Column({ asExpression: "coalesce(materialId, intendedContentDraftId, intendedSpaceId)", generatedType: "VIRTUAL" })
     not_null_constrain: number;
-
-    @Column({ asExpression: "coalesce(materialId, -createdAt)", generatedType: "VIRTUAL" })
-    unique_by_user_constrain: number;
 
     @ManyToOne(type => User, { onDelete: "CASCADE" })
     @JoinColumn({ name: "userId" })

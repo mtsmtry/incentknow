@@ -1,6 +1,7 @@
 module Incentknow.Pages.User where
 
 import Prelude
+
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Symbol (SProxy(..))
@@ -11,7 +12,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.API (getUser)
-import Incentknow.API.Execution (Fetch, Remote(..), defaultIconUrl, executeAPI, fetchAPI, forFetch, toMaybe)
+import Incentknow.API.Execution (Fetch, Remote(..), callQuery, callbackQuery, defaultIconUrl, executeAPI, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (menuPositiveButton, dangerButton)
@@ -105,9 +106,9 @@ handleAction = case _ of
     state <- H.get
     -- myUserId <- H.liftEffect $ getCurrentUserId
     -- H.modify_ _ { myUserId = toMaybe myUserId }
-    fetchAPI FetchedUser $ getUser state.userId
+    callbackQuery FetchedUser $ getUser state.userId
   FetchedUser fetch -> do
-    forFetch fetch \user ->
+    forRemote fetch \user ->
       H.modify_ _ { user = user }
   HandleInput input -> do
     state <- H.get

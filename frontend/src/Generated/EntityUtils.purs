@@ -13,6 +13,8 @@ foreign import buildType :: E.TypeName -> TypeOptions -> Maybe E.Type
 foreign import getTypeName :: E.Type -> E.TypeName
 foreign import getTypeOptions :: E.Type -> TypeOptions
 
+
+
 type TypeOptions
   = { format :: Maybe E.FormatId
     , subType :: Maybe E.Type
@@ -30,9 +32,13 @@ defaultTypeOptions =
   , enumerators: Nothing
   }
 
+
+
 foreign import buildMaterialComposition :: E.MaterialCompositionType -> MaterialCompositionOptions -> Maybe E.MaterialComposition
 foreign import getMaterialCompositionType :: E.MaterialComposition -> E.MaterialCompositionType
 foreign import getMaterialCompositionOptions :: E.MaterialComposition -> MaterialCompositionOptions
+
+
 
 type MaterialCompositionOptions
   = { propertyId :: Maybe String
@@ -46,4 +52,6 @@ defaultMaterialCompositionOptions =
   , materialId: Nothing
   , data: Nothing
   }
+
+
 

@@ -15,7 +15,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Incentknow.API (getSpaceMembers)
-import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
@@ -69,14 +69,14 @@ renderMembers state members =
   where
   --actualMembers = filter (\x -> x.type /= "pending") members
   --pendingMembers = filter (\x -> x.type == "pending") members
-  isAdmin = false --maybe false (\x -> x.type == "owner" || x.type == "admin") $ toMaybe state.space.myMember
+  isAdmin = true --maybe false (\x -> x.type == "owner" || x.type == "admin") $ toMaybe state.space.myMember
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchAPI FetchedMembers $ getSpaceMembers state.spaceId
+    callbackQuery FetchedMembers $ getSpaceMembers state.spaceId
   FetchedMembers fetch ->
-    forFetch fetch \members ->
+    forRemote fetch \members ->
       H.modify_ _ { members = members }
   Navigate event route -> navigateRoute event route

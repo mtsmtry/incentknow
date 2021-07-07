@@ -20,7 +20,7 @@ import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, checkbox, pulldown)
 import Incentknow.Data.Ids (FormatId(..))
 import Incentknow.Data.Page (CollectionPage, ContentComposition, ContentPage, ContentRelation, fromContentComposition, toContentComposition)
-import Incentknow.Data.Property (Enumerator, Property, PropertyInfo)
+import Incentknow.Data.Property (Enumerator, Property)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.CompositionMenu as CompositionMenu
 import Incentknow.Molecules.DangerChange as DangerChange
@@ -96,7 +96,7 @@ render state =
         [ HH.thead
             []
             [ HH.tr []
-                [ whenElem (not state.readonly) \_->
+                [ whenElem (not state.readonly) \_ ->
                     HH.th [] [ HH.text "" ]
                 , HH.th [] [ HH.text "コンポジション" ]
                 ]
@@ -111,7 +111,7 @@ render state =
   composition index comp =
     HH.tr
       []
-      [ whenElem (not state.readonly) \_->
+      [ whenElem (not state.readonly) \_ ->
           HH.td []
             [ HH.slot (SProxy :: SProxy "delete") index DangerChange.component
                 { text: "削除"
@@ -154,7 +154,7 @@ handleQuery = case _ of
     state <- H.get
     let
       comps = map toContentComposition2 state.compositions
-    pure $ map k $ map (\x-> { compositions: map fromContentComposition x }) $ allJust $ comps
+    pure $ map k $ map (\x -> { compositions: map fromContentComposition x }) $ allJust $ comps
   SetValue value k -> do
     let
       compositions = map convert $ map toContentComposition value.compositions

@@ -17,16 +17,16 @@ export class MaterialQuery extends SelectFromSingleTableQuery<Material, Material
 
     selectRelated() {
         const query = this.qb
-            .leftJoinAndSelect("creatorUser", "creatorUser")
-            .leftJoinAndSelect("updaterUser", "updaterUser");
+            .leftJoinAndSelect("x.creatorUser", "creatorUser")
+            .leftJoinAndSelect("x.updaterUser", "updaterUser");
 
         return mapQuery(query, toRelatedMaterial);
     }
 
     selectFocused() {
         const query = this.qb
-            .leftJoinAndSelect("creatorUser", "creatorUser")
-            .leftJoinAndSelect("updaterUser", "updaterUser")
+            .leftJoinAndSelect("x.creatorUser", "creatorUser")
+            .leftJoinAndSelect("x.updaterUser", "updaterUser")
             .addSelect("data");
 
         return mapQuery(query, x => (d: RelatedMaterialDraft) => toFocusedMaterial(x, d));

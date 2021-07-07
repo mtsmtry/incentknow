@@ -20,7 +20,7 @@ export class SelectFromSingleTableQuery<Entity, T, TSk, TEntityId, TDIsplayId> {
     }
 
     selectId() {
-        return mapQuery(this.qb.select("id"), x => x["id"] as TSk);
+        return mapQuery(this.qb.select("x.id"), x => x["id"] as TSk);
     }
 
     getOne() {

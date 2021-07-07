@@ -24,17 +24,16 @@ export class SpaceMemberQuery extends SelectFromSingleTableQuery<SpaceMember, Sp
 
     selectIntact() {
         const query = this.qb
-            .leftJoinAndSelect("user", "user");
+            .leftJoinAndSelect("x.user", "user");
 
         return mapQuery(query, toIntactSpaceMember);
     }
 
     selectRelatedSpace() {
         const query = this.qb
-            .leftJoinAndSelect("space", "space")
-            .leftJoinAndSelect("space.creatorUser", "creatorUser")
-            .leftJoinAndSelect("space.updaterUser", "updaterUser");
-
+            .leftJoinAndSelect("x.space", "space")
+            .leftJoinAndSelect("space.creatorUser", "creatorUser");
+            
         return mapQuery(query, x => toRelatedSpace(x.space));
     }
 }

@@ -1,0 +1,10 @@
+# 接続
+chmod 600 Incentknow.cer
+ssh -i Incentknow.cer ubuntu@13.113.194.38
+
+# MySQLインストール
+sudo apt-get update
+sudo apt-get install docker.io
+sudo apt install docker-compose
+
+sudo apt install mysql-server mysql-client

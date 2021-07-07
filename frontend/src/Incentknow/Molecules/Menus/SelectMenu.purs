@@ -2,43 +2,29 @@ module Incentknow.Molecules.SelectMenu where
 
 import Prelude
 
-import Control.Promise (Promise)
 import Data.Array (cons, filter, foldr, length)
 import Data.Array as Array
-import Data.Either (Either(..))
 import Data.Foldable (for_, traverse_)
 import Data.Map (Map, union)
 import Data.Map as M
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
 import Data.Maybe.Utils (flatten)
+import Data.Set as S
 import Data.String (Pattern(..), Replacement(..), contains, replace)
 import Data.String.Utils (includes)
 import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
-import Effect (Effect)
-import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
 import Halogen (RefLabel(..), getHTMLElementRef, liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Core (ref)
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
-import Incentknow.API.Execution (Callback, Remote, callbackAPI, executeAPI)
+import Incentknow.API.Execution (Callback, Fetch, Remote, callbackAPI, executeAPI, forItem, forRemote)
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Atoms.Icon (loadingWith)
-import Incentknow.Data.Utils (generateId)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 import Incentknow.Molecules.SelectMenuImpl as SelectMenuImpl
-import Web.DOM (Element)
-import Web.DOM.NonElementParentNode (getElementById)
-import Web.HTML (window)
-import Web.HTML.HTMLElement (focus)
-import Web.HTML.HTMLElement (fromElement)
-import Web.HTML.Window (document)
+import Test.Unit.Console (consoleLog)
 
 {-
   A component for receiving a selection from a list of the certine type
@@ -53,6 +39,9 @@ upsertItems additions src = Array.fromFoldable $ Map.values $ union (toMap addit
   where
   toMap xs = Map.fromFoldable (map (\x -> Tuple x.id x) xs)
 
+emptyCandidateSet :: forall a. CandidateSet a
+emptyCandidateSet = { items: [], completed: false }
+
 type CandidateSet a
   = { items :: Array (SelectMenuItem a)
     , completed :: Boolean
@@ -61,16 +50,18 @@ type CandidateSet a
 type Input a
   = { value :: Maybe a
     , disabled :: Boolean
-    , fetchMultiple :: Maybe String -> Callback (CandidateSet a)
-    , fetchSingle :: a -> Callback (SelectMenuItem a)
+    , fetchMultiple :: Maybe String -> Maybe (Callback (Fetch (CandidateSet a)))
+    , fetchSingle :: Maybe (a -> Callback (Fetch (SelectMenuItem a)))
+    , fetchId :: String
     , initial :: CandidateSet a
     }
 
 type State a
   = { value :: Maybe a
     , disabled :: Boolean
-    , fetchMultiple :: Maybe String -> Callback (CandidateSet a)
-    , fetchSingle :: a -> Callback (SelectMenuItem a)
+    , fetchMultiple :: Maybe String -> Maybe (Callback (Fetch (CandidateSet a)))
+    , fetchSingle :: Maybe (a -> Callback (Fetch (SelectMenuItem a)))
+    , fetchId :: String
     , candidateMap :: Map (Maybe String) (CandidateSet a)
     , searchWord :: Maybe String
     , allItems :: Map a (SelectMenuItem a)
@@ -81,8 +72,8 @@ data Action a
   | Load
   | HandleInput (Input a)
   | ImplAction (SelectMenuImpl.Output a)
-  | GetMultiple (Maybe String) (CandidateSet a)
-  | GetSingle (SelectMenuItem a)
+  | GetMultiple (Maybe String) (Fetch (CandidateSet a))
+  | GetSingle (Fetch (SelectMenuItem a))
 
 data Query id a
   = GetValue (Maybe id -> a)
@@ -96,15 +87,18 @@ type Slot a p
 type ChildSlots a
   = ( impl :: SelectMenuImpl.Slot a Unit )
 
+foreign import equalsFunction :: forall a b. (a -> b) -> (a -> b) -> Boolean
+
 initialState :: forall a. Ord a => Input a -> State a
 initialState input =
   { value: input.value
   , disabled: input.disabled
   , fetchMultiple: input.fetchMultiple
   , fetchSingle: input.fetchSingle
+  , fetchId: input.fetchId
   , candidateMap: M.fromFoldable [ Tuple Nothing input.initial ]
   , searchWord: Nothing
-  , allItems: M.fromFoldable $ map (\x-> Tuple x.id x) input.initial.items
+  , allItems: M.fromFoldable $ map (\x -> Tuple x.id x) input.initial.items
   }
 
 setInput :: forall a. Ord a => State a -> Input a -> State a
@@ -114,8 +108,9 @@ setInput state input =
     , disabled = input.disabled
     , fetchMultiple = input.fetchMultiple
     , fetchSingle = input.fetchSingle
-    , candidateMap = M.insert Nothing input.initial state.candidateMap
-    , allItems = M.fromFoldable $ map (\x-> Tuple x.id x) input.initial.items
+    , fetchId = input.fetchId
+    -- , candidateMap = M.alter (Just <<< fromMaybe input.initial) Nothing state.candidateMap
+    -- , allItems = foldr (\item-> M.insert item.id item) state.allItems input.initial.items
     }
 
 component :: forall m a. Ord a => Eq a => Behaviour m => MonadAff m => H.Component HH.HTML (Query a) (Input a) (Output a) m
@@ -136,9 +131,10 @@ render :: forall m a. Behaviour m => MonadAff m => Ord a => State a -> H.Compone
 render state =
   HH.slot (SProxy :: SProxy "impl") unit SelectMenuImpl.component
     { items: fromMaybe [] cand
-    , selectedItem: flatten $ map (\value-> M.lookup value state.allItems) state.value 
+    , selectedItem: flatten $ map (\value -> M.lookup value state.allItems) state.value
     , message: if isNothing cand then Just $ HH.text "候補はありません" else Nothing
     , searchWord: state.searchWord
+    , disabled: state.disabled
     }
     (Just <<< ImplAction)
   where
@@ -162,13 +158,19 @@ handleAction = case _ of
     handleAction Load
   Load -> do
     state <- H.get
-    callbackAPI (GetMultiple Nothing) $ state.fetchMultiple Nothing
-    for_ state.value \value-> do
+    for_ (state.fetchMultiple Nothing) \fetch -> do
+      callbackAPI (GetMultiple Nothing) fetch
+    for_ state.value \value -> do
       case M.lookup value state.allItems of
-        Nothing -> callbackAPI GetSingle $ state.fetchSingle value
+        Nothing ->
+          for_ state.fetchSingle \fetch ->
+            callbackAPI GetSingle $ fetch value
         _ -> pure unit
   HandleInput input -> do
+    state <- H.get
     H.modify_ $ flip setInput input
+    when (state.fetchId /= input.fetchId) do
+      handleAction Load
   ImplAction output -> case output of
     SelectMenuImpl.ChangeValue value -> do
       H.modify_ _ { value = value }
@@ -177,12 +179,16 @@ handleAction = case _ of
       H.modify_ _ { searchWord = word }
       state <- H.get
       case getAllCandidates state.candidateMap of
-        Nothing -> callbackAPI (GetMultiple word) $ state.fetchMultiple word
+        Nothing -> do
+          for_ (state.fetchMultiple word) \fetch ->
+            callbackAPI (GetMultiple word) fetch
         _ -> pure unit
-  GetMultiple word cands -> do
-    H.modify_ \x -> x 
-      { candidateMap = M.insert word cands x.candidateMap
-      , allItems = foldr (\item-> M.insert item.id item) x.allItems cands.items
-      }
-  GetSingle item -> do
-    H.modify_ \x -> x { allItems = M.insert item.id item x.allItems }
+  GetMultiple word fetch -> do
+    forItem fetch \cands ->
+      H.modify_ \x -> x
+        { candidateMap = M.insert word cands x.candidateMap
+        , allItems = foldr (\item -> M.insert item.id item) x.allItems cands.items
+        }
+  GetSingle fetch -> do
+    forItem fetch \item ->
+      H.modify_ \x -> x { allItems = M.insert item.id item x.allItems }

@@ -10,10 +10,13 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource as ES
+import Incentknow.API (getMyAccount, getMyUser)
+import Incentknow.API.Execution (Fetch, callbackQuery, forRemote)
+import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Data.Entities (IntactAccount)
 import Incentknow.HTML.Utils (css, link, link_, maybeElem)
-import Incentknow.Route (Route(..), UserTab(..))
+import Incentknow.Route (EditTarget(..), Route(..), UserTab(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
@@ -26,7 +29,7 @@ data Action
   = Initialize
   | Navigate MouseEvent Route
   | HandleInput Input
-  | ChangeAccount (Maybe IntactAccount)
+  | ChangeAccount (Fetch IntactAccount)
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -47,12 +50,12 @@ component =
 
 handleAction :: forall o m. MonadAff m => Behaviour m => Action -> H.HalogenM State Action () o m Unit
 handleAction = case _ of
-  Initialize -> do
-   -- _ <- subscribeAPI (toMaybe >>> ChangeAccount) onSnapshotAccount
-    pure unit
+  Initialize -> callbackQuery ChangeAccount getMyAccount
   Navigate event route -> navigateRoute event route
   HandleInput input -> H.modify_ _ { route = input.route }
-  ChangeAccount account -> H.modify_ _ { account = account }
+  ChangeAccount fetch -> do
+    forRemote fetch \account->
+      H.modify_ _ { account = R.toMaybe account }
 
 initialState :: Input -> State
 initialState input = { account: Nothing, route: input.route }
@@ -72,7 +75,7 @@ render state =
         , maybeElem state.account \_ ->
             headerLink "Drafts" DraftList
         , maybeElem state.account \_ ->
-            headerLink "Create" (NewContent Nothing Nothing)
+            headerLink "Create" (EditContent $ TargetBlank Nothing Nothing)
         , HH.span [ css "space" ] []
         , case state.account of
             Just account -> headerUrlLink account.displayName account.iconUrl (User account.displayId UserMain)

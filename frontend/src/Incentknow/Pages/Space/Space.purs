@@ -1,6 +1,7 @@
 module Incentknow.Pages.Space where
 
 import Prelude
+
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Maybe.Utils (flatten)
@@ -12,7 +13,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.Query.HalogenM (SubscriptionId(..))
 import Incentknow.API (getSpace)
-import Incentknow.API.Execution (Fetch, Remote(..), fetchAPI, forFetch)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (menuPositiveButton, dangerButton)
@@ -20,13 +21,11 @@ import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..))
 import Incentknow.Data.Ids (SpaceDisplayId(..), SpaceId(..))
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
-import Incentknow.Pages.Space.ContentList as ContentList
---import Incentknow.Pages.Space.CrawlerList as CrawlerList
 import Incentknow.Pages.Space.FormatList as FormatList
 import Incentknow.Pages.Space.MemberList as MemberList
 import Incentknow.Pages.Space.PageList as PageList
 import Incentknow.Pages.Space.Setting as Setting
-import Incentknow.Route (Route(..), SpaceTab(..))
+import Incentknow.Route (EditTarget(..), Route(..), SpaceTab(..))
 import Incentknow.Templates.Page (section, tabPage)
 
 type Input
@@ -51,9 +50,9 @@ type Slot p
 
 type ChildSlots
   = ( pages :: PageList.Slot Unit
-    , contents :: ContentList.Slot Unit
+   -- , contents :: ContentList.Slot Unit
     , formats :: FormatList.Slot Unit
-    , crawlers :: CrawlerList.Slot Unit
+   -- , crawlers :: CrawlerList.Slot Unit
     , members :: MemberList.Slot Unit
     , delete :: DangerChange.Slot Unit
     , setting :: Setting.Slot Unit
@@ -111,7 +110,7 @@ renderMain state space =
           SpaceSetting -> if isAdmin then "Setting" else "Information"
     }
     [ whenElem writable \_ ->
-        menuPositiveButton "コンテンツを追加" (Navigate $ NewContent (Just space.spaceId) Nothing)
+        menuPositiveButton "コンテンツを追加" (Navigate $ EditContent $ TargetBlank (Just space.spaceId) Nothing)
     ]
     [ HH.div [ css "page-space" ]
         [ HH.div [ css "name" ] [ HH.text space.displayName ]
@@ -133,10 +132,10 @@ renderMain state space =
                       menuPositiveButton "メンバーへの加入を申請" (Navigate $ JoinSpace space.spaceId)
                   _ -> HH.text ""
               ]
-        SpaceContents -> HH.slot (SProxy :: SProxy "contents") unit ContentList.component { spaceId: space.spaceId } absurd
+        SpaceContents -> HH.text "" -- HH.slot (SProxy :: SProxy "contents") unit ContentList.component { spaceId: space.spaceId } absurd
         SpaceFormats -> HH.slot (SProxy :: SProxy "formats") unit FormatList.component { spaceId: space.spaceId } absurd
         SpaceMembers -> HH.slot (SProxy :: SProxy "members") unit MemberList.component { spaceId: space.spaceId, isAdmin } absurd
-        SpaceCrawlers -> HH.slot (SProxy :: SProxy "crawlers") unit CrawlerList.component { spaceId: space.spaceId } absurd
+        SpaceCrawlers -> HH.text "" -- HH.slot (SProxy :: SProxy "crawlers") unit CrawlerList.component { spaceId: space.spaceId } absurd
         SpaceSetting -> HH.slot (SProxy :: SProxy "setting") unit Setting.component { space: space, disabled: not isAdmin } absurd
     ]
   where
@@ -154,9 +153,9 @@ handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchAPI FetchedSpace $ getSpace state.spaceId
+    callbackQuery FetchedSpace $ getSpace state.spaceId
   FetchedSpace fetch ->
-    forFetch fetch \space ->
+    forRemote fetch \space ->
       H.modify_ _ { space = space }
   HandleInput input -> do
     state <- H.get

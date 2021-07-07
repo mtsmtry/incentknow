@@ -74,9 +74,9 @@ export class AuthorityQuery {
         const where = isNumber(contentId) ? { id: contentId } : { entityId: contentId };
         const content = await this.contents
             .where(where)
-            .leftJoinAndSelect("container", "container")
-            .leftJoinAndSelect("container.space", "space")
-            .leftJoinAndSelect("space", "space")
+            .leftJoinAndSelect("x.container", "container")
+            .leftJoinAndSelect("x.container.space", "space")
+            .leftJoinAndSelect("x.space", "space")
             .getOne();
         if (!content) {
             throw new NotFoundEntity();
@@ -89,10 +89,10 @@ export class AuthorityQuery {
         const where = isNumber(materialId) ? { id: materialId } : { entityId: materialId };
         const material = await this.materials
             .where(where)
-            .leftJoinAndSelect("content", "content")
-            .leftJoinAndSelect("content.container", "container")
-            .leftJoinAndSelect("container.space", "space")
-            .leftJoinAndSelect("space", "space")
+            .leftJoinAndSelect("x.content", "content")
+            .leftJoinAndSelect("x.content.container", "container")
+            .leftJoinAndSelect("x.container.space", "space")
+            .leftJoinAndSelect("x.space", "space")
             .getOne();
         if (!material) {
             throw new NotFoundEntity();

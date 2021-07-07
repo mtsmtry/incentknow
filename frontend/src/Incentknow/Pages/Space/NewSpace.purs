@@ -1,6 +1,7 @@
 module Incentknow.Pages.NewSpace where
 
 import Prelude
+
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (wrap)
@@ -11,7 +12,7 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getAvailableSpaceDisplayId, createSpace)
-import Incentknow.API.Execution (callAPI, executeAPI)
+import Incentknow.API.Execution (callAPI, callQuery, executeAPI, executeCommand)
 import Incentknow.AppM (class Behaviour, Message(..), message, navigate)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Data.Utils (generateId)
@@ -69,7 +70,7 @@ render state =
     [ defineText { label: "表示名", value: state.displayName, onChange: ChangeDisplayName }
     , define "ID"
         [ HH.slot (SProxy :: SProxy "displayId") unit DisplayId.component
-            { checkId: callAPI <<< getAvailableSpaceDisplayId <<< wrap
+            { checkId: callQuery <<< getAvailableSpaceDisplayId <<< wrap
             , disabled: false
             , value: state.displayId
             }
@@ -98,7 +99,7 @@ handleAction = case _ of
     state <- H.modify _ { loading = true }
     -- regulation <- H.query regulation_ unit (H.request SpaceRegulation.GetValue)
     response <-
-      executeAPI
+      executeCommand
         $ createSpace
             { displayId: state.displayId.displayId
             , displayName: state.displayName

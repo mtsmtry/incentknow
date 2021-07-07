@@ -1,10 +1,13 @@
-import { Format, FormatUsage } from "../../../entities/format/Format";
-import { Property } from "../../../entities/format/Property";
-import { Structure } from "../../../entities/format/Structure";
+import { Format, FormatId, FormatSk, FormatUsage } from "../../../entities/format/Format";
+import { MetaProperty, MetaPropertyId, MetaPropertyType } from "../../../entities/format/MetaProperty";
+import { Property, PropertyId, PropertySk } from "../../../entities/format/Property";
+import { Structure, StructureSk } from "../../../entities/format/Structure";
 import { SpaceSk } from "../../../entities/space/Space";
 import { UserSk } from "../../../entities/user/User";
 import { PropertyInfo, Type } from "../../../interfaces/format/Structure";
+import { mapByString } from "../../../utils";
 import { FormatQuery, FormatQueryFromEntity } from "../../queries/format/FormatQuery";
+import { PropertyQuery } from "../../queries/format/PropertyQuery";
 import { StructureQuery } from "../../queries/format/StructureQuery";
 import { BaseCommand, BaseRepository, Command, Repository } from "../../Repository";
 import { Transaction } from "../../Transaction";
@@ -13,7 +16,8 @@ export class FormatRepository implements BaseRepository<FormatCommand> {
     constructor(
         private formats: Repository<Format>,
         private structures: Repository<Structure>,
-        private props: Repository<Property>) {
+        private props: Repository<Property>,
+        private metaProps: Repository<MetaProperty>) {
     }
 
     fromFormats(trx?: Transaction) {
@@ -24,11 +28,16 @@ export class FormatRepository implements BaseRepository<FormatCommand> {
         return new StructureQuery(this.structures.createQuery(trx));
     }
 
+    fromProperty(trx?: Transaction) {
+        return new PropertyQuery(this.props.createQuery(trx));
+    }
+
     createCommand(trx: Transaction) {
         return new FormatCommand(
             this.formats.createCommand(trx),
             this.structures.createCommand(trx),
-            this.props.createCommand(trx));
+            this.props.createCommand(trx),
+            this.metaProps.createCommand(trx));
     }
 }
 
@@ -36,7 +45,8 @@ export class FormatCommand implements BaseCommand {
     constructor(
         private formats: Command<Format>,
         private structures: Command<Structure>,
-        private props: Command<Property>) {
+        private props: Command<Property>,
+        private metaProps: Command<MetaProperty>) {
     }
 
     async _createProperty(formatId: number, parentPropertyId: number | null, order: number, info: PropertyInfo) {
@@ -89,7 +99,7 @@ export class FormatCommand implements BaseCommand {
 
     async createFormat(userId: UserSk, spaceId: SpaceSk, displayName: string, description: string, usage: FormatUsage, properties: PropertyInfo[]) {
         const structureVersion = 1;
-        
+
         // Format
         let format = this.formats.create({
             creatorUserId: userId,
@@ -102,20 +112,62 @@ export class FormatCommand implements BaseCommand {
         });
         format = await this.formats.save(format);
 
-        // Structure
-        let structure = this.structures.create({
-            formatId: format.id,
-            version: structureVersion
-        });
-        structure = await this.structures.save(structure);
-
         // Properties
         let props = await Promise.all(properties.map((x, i) => this._createProperty(format.id, null, i, x)));
         props = await this.props.save(props);
+
+        // Structure
+        let structure = this.structures.create({
+            formatId: format.id,
+            version: structureVersion,
+            properties: props
+        });
+        structure = await this.structures.save(structure);
 
         // Format
         this.formats.update(format.id, { currentStructureId: structure.id });
 
         return new FormatQueryFromEntity(format);
+    }
+
+    async updateStructure(format: Format, properties: PropertyInfo[]) {
+
+        const oldProps = format.properties.filter(x => properties.filter(y => x.entityId == y.id).length > 0);
+        const oldProps2 = properties.filter(x => format.properties.filter(y => x.id == y.entityId).length > 0);
+        const newProps = properties.filter(x => format.properties.filter(y => x.id == y.entityId).length == 0);
+
+        // Update old properties
+        const promises = oldProps2.map(async prop => {
+            await this.props.update(prop.id, prop);
+        });
+        await Promise.all(promises);
+
+        // Properties
+        let savedNewProps = await Promise.all(newProps.map((x, i) => this._createProperty(format.id, null, i, x)));
+        savedNewProps = await this.props.save(savedNewProps);
+
+        // Structure
+        let structure = this.structures.create({
+            formatId: format.id,
+            version: format.latestVersion + 1,
+            properties: oldProps.concat(savedNewProps)
+        });
+        structure = await this.structures.save(structure);
+
+        // Format
+        this.formats.update(format.id, { currentStructureId: structure.id });
+    }
+
+    async addMetaProperty(propertyId: PropertySk, type: MetaPropertyType) {
+        const metaProp = this.metaProps.create({
+            propertyId,
+            type
+        });
+
+        await this.metaProps.save(metaProp);
+    }
+
+    async removeMetaProperty(metaPropertyId: MetaPropertyId) {
+        await this.metaProps.delete(metaPropertyId);
     }
 }

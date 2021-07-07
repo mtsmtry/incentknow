@@ -21,9 +21,9 @@ export class MaterialCommitQuery extends SelectFromSingleTableQuery<MaterialComm
 
     selectFocused() {
         const query = this.qb
-            .leftJoinAndSelect("material", "material")
-            .leftJoinAndSelect("basedCommit", "basedCommit")
-            .leftJoinAndSelect("committerUser", "committerUser")
+            .leftJoinAndSelect("x.material", "material")
+            .leftJoinAndSelect("x.basedCommit", "basedCommit")
+            .leftJoinAndSelect("x.committerUser", "committerUser")
         return mapQuery(query, toFocusedMaterialCommit);
     }
 }

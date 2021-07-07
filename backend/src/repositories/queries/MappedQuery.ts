@@ -12,7 +12,7 @@ class MappedQuery<Entity, Result> {
     async getNeededOne() {
         const entity = await this.qb.getOne();
         if (!entity) {
-            throw "";
+            throw "getNeededOne: Null";
         }
         return this.convert(entity);
     }

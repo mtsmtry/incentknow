@@ -10,7 +10,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Incentknow.API (getRelatedUser, getUser)
-import Incentknow.API.Execution (Fetch, Remote(..), defaultIconUrl, executeAPI, fetchAPI, forFetch, toMaybe)
+import Incentknow.API.Execution (Fetch, Remote(..), defaultIconUrl, executeAPI, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (RelatedUser)

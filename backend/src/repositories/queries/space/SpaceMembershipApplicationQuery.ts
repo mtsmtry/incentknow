@@ -23,7 +23,7 @@ export class SpaceMemberApplicationQuery extends SelectFromSingleTableQuery<Spac
 
     selectIntact() {
         const query = this.qb
-            .leftJoinAndSelect("user", "user");
+            .leftJoinAndSelect("x.user", "user");
 
         return mapQuery(query, toIntactSpaceMembershipApplication);
     }

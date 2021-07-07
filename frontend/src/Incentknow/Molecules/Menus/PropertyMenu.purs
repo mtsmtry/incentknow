@@ -1,9 +1,10 @@
 module Incentknow.Molecules.PropertyMenu where
 
 import Prelude
+
 import Data.Array (filter, fromFoldable)
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
@@ -11,14 +12,13 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getFocusedFormat, getFormat, getFormats)
-import Incentknow.API.Execution (Fetch, executeAPI, fetchAPI, forFetch, forFetchItem)
+import Incentknow.API.Execution (Fetch, callbackAPI, executeAPI, forItem, forRemote, toQueryCallback)
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (RelatedFormat, Type, FocusedFormat)
+import Incentknow.Data.Entities (FocusedFormat, RelatedFormat, Type, PropertyInfo)
 import Incentknow.Data.Ids (SpaceId(..), FormatId(..))
-import Incentknow.Data.Property (PropertyInfo)
 import Incentknow.HTML.Utils (css)
-import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
 import Incentknow.Molecules.SelectMenu as SelectMenu
+import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 
 type Input
   = { formatId :: FormatId
@@ -28,7 +28,7 @@ type Input
     }
 
 type State
-  = { props :: Array PropertyInfo
+  = { format :: Maybe FocusedFormat
     , formatId :: FormatId
     , property :: Maybe String
     , type :: Maybe Type
@@ -66,7 +66,7 @@ component =
 
 initialState :: Input -> State
 initialState input =
-  { props: []
+  { format: Nothing
   , formatId: input.formatId
   , property: input.value
   , type: input.type
@@ -76,10 +76,18 @@ initialState input =
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-    { resource: SelectMenuResourceAllCandidates $ map toSelectMenuItem props, value: state.property, disabled: state.disabled }
+    { value: state.property
+    , disabled: state.disabled
+    , fetchMultiple: \_-> Nothing
+    , fetchSingle: Nothing
+    , fetchId: ""
+    , initial: { items: map toSelectMenuItem filteredProps, completed: true }
+    }
     (Just <<< ChangeValue)
   where
-  props = maybe state.props (\ty -> filter (\item -> item.type == ty) state.props) state.type
+  props = maybe [] _.currentStructure.properties state.format
+
+  filteredProps = maybe props (\ty -> filter (\item -> item.type == ty) props) state.type
 
 toSelectMenuItem :: PropertyInfo -> SelectMenuItem String
 toSelectMenuItem prop =
@@ -99,10 +107,10 @@ handleAction :: forall m. Behaviour m => MonadAff m => MonadEffect m => Action -
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchAPI FetchedFormat $ getFocusedFormat state.formatId
+    callbackAPI FetchedFormat $ toQueryCallback $ getFocusedFormat state.formatId
   FetchedFormat fetch ->
-    forFetchItem fetch \format -> do
-      H.modify_ _ { props = format.structure.properties }
+    forItem fetch \format -> do
+      H.modify_ _ { format = Just format }
   HandleInput input -> do
     state <- H.get
     if state.formatId /= input.formatId then do

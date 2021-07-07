@@ -67,7 +67,7 @@ mkValueInput :: Json -> FocusedFormat -> EditEnvironment -> Value.Input
 mkValueInput value format env =
   { value
   , env
-  , type: ObjectType format.structure.properties
+  , type: ObjectType format.currentStructure.properties
   , contentComponent: ContentComponent component
   }
 

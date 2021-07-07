@@ -6,6 +6,7 @@ import { ContentDraft } from "../entities/content/ContentDraft";
 import { ContentEditing } from "../entities/content/ContentEditing";
 import { ContentSnapshot } from "../entities/content/ContentSnapshot";
 import { Format } from "../entities/format/Format";
+import { MetaProperty } from "../entities/format/MetaProperty";
 import { Property } from "../entities/format/Property";
 import { Structure } from "../entities/format/Structure";
 import { Material } from "../entities/material/Material";
@@ -46,7 +47,7 @@ function createRepository<T>(conn: Connection, trg: EntityTarget<T>): Repository
     return new Repository(conn, conn.getMetadata(trg));
 }
 
-export class Service extends BaseService {
+export class Service {
     services: BaseService[];
     containerService: ContainerService;
     contentService: ContentService;
@@ -56,7 +57,6 @@ export class Service extends BaseService {
     userService: UserService;
 
     constructor(ctx: ServiceContext) {
-        super(ctx);
         const conn = ctx.conn;
         const container = new ContainerRepository(createRepository(conn, Container));
         const conCom = new ContentCommitRepository(createRepository(conn, ContentCommit));
@@ -65,7 +65,7 @@ export class Service extends BaseService {
         const con = new ContentRepository(createRepository(conn, Content));
         const mat = new MaterialRepository(createRepository(conn, Material));
         const conWhole = new ContentWholeRepository(con, mat);
-        const format = new FormatRepository(createRepository(conn, Format), createRepository(conn, Structure), createRepository(conn, Property));
+        const format = new FormatRepository(createRepository(conn, Format), createRepository(conn, Structure), createRepository(conn, Property), createRepository(conn, MetaProperty));
         const matCom = new MaterialCommitRepository(createRepository(conn, MaterialCommit));
         const matEdit = new MaterialEditingRepository(createRepository(conn, MaterialDraft), createRepository(conn, MaterialEditing), createRepository(conn, MaterialSnapshot));
         const matRev = new MaterialRevisionRepository(createRepository(conn, MaterialDraft), createRepository(conn, MaterialEditing), createRepository(conn, MaterialSnapshot), createRepository(conn, MaterialCommit));
@@ -90,12 +90,12 @@ export class Service extends BaseService {
 
     async execute(methodName: string, args: any[]): Promise<ObjectLiteral> {
         let method: Promise<ObjectLiteral> | null = null;
-        this.services.forEach(service => {
+        for (let i = 0; i < this.services.length; i++) {
+            method = this.services[i].execute(methodName, args);
             if (method) {
                 return method;
             }
-            method = service.execute(methodName, args);
-        });
+        }
         if (!method) {
             throw "The method does not exist";
         }

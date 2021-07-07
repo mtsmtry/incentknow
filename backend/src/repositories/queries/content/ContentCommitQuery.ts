@@ -15,15 +15,16 @@ export class ContentCommitQuery extends SelectFromSingleTableQuery<ContentCommit
     }
 
     selectRelated() {
-        const query = this.qb;
+        const query = this.qb
+            .leftJoinAndSelect("x.content", "content");
         return mapQuery(query, toRelatedContentCommit);
     }
 
     selectFocused() {
         const query = this.qb
-            .leftJoinAndSelect("content", "content")
-            .leftJoinAndSelect("basedCommit", "basedCommit")
-            .leftJoinAndSelect("committerUser", "committerUser")
+            .leftJoinAndSelect("x.content", "content")
+            .leftJoinAndSelect("x.basedCommit", "basedCommit")
+            .leftJoinAndSelect("x.committerUser", "committerUser")
         return mapQuery(query, toFocusedContentCommit);
     }
 }

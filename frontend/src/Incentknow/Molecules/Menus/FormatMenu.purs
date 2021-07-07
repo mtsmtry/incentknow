@@ -1,6 +1,7 @@
 module Incentknow.Molecules.FormatMenu where
 
 import Prelude
+
 import Data.Array (filter, fromFoldable)
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), isJust, maybe)
@@ -11,12 +12,15 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, forFetch, forFetchItem)
+import Incentknow.API (getFormats, getRelatedFormat)
+import Incentknow.API.Execution (Fetch(..), Remote(..), executeAPI, forItem, forRemote, mapCallback, promptCallback, toQueryCallback)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (FormatUsage, RelatedFormat)
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.HTML.Utils (css)
+import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu
+import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 
 {- 
   A component for selecting a format on the specified constraint
@@ -37,8 +41,6 @@ type Input
 
 type State
   = { filter :: FormatFilter
-    , items :: Array (SelectMenuItem FormatId)
-    , initialFormatId :: Maybe FormatId
     , formatId :: Maybe FormatId
     , disabled :: Boolean
     }
@@ -47,8 +49,6 @@ data Action
   = Initialize
   | HandleInput Input
   | ChangeValue (Maybe FormatId)
-  | FetchedInitialFormat (Fetch RelatedFormat)
-  | FetchedFormats (Fetch (Array RelatedFormat))
 
 type Slot p
   = forall q. H.Slot q Output p
@@ -76,8 +76,6 @@ component =
 initialState :: Input -> State
 initialState input =
   { filter: input.filter
-  , items: []
-  , initialFormatId: input.value
   , formatId: input.value
   , disabled: input.disabled
   }
@@ -85,7 +83,25 @@ initialState input =
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-    { resource: SelectMenuResourceAllCandidates state.items, value: state.formatId, disabled: state.disabled }
+    { value: state.formatId
+    , disabled: state.disabled
+    , fetchMultiple: \maybeWord-> case state.filter of
+        SpaceBy spaceId ->
+          case maybeWord of 
+            Nothing -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) $ getFormats spaceId
+            _ -> Nothing
+        SpaceByAndHasSemanticId spaceId ->
+          case maybeWord of 
+            Nothing -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) $ getFormats spaceId
+            _ -> Nothing
+        _ -> Nothing
+    , fetchSingle: Just $ \x-> toQueryCallback $ map toSelectMenuItem $ getRelatedFormat x
+    , fetchId: case state.filter of 
+        SpaceBy spaceId -> unwrap spaceId
+        SpaceByAndHasSemanticId spaceId -> "Semantic" <> unwrap spaceId
+        _ -> ""
+    , initial: emptyCandidateSet
+    }
     (Just <<< ChangeValue)
 
 toSelectMenuItem :: RelatedFormat -> SelectMenuItem FormatId
@@ -104,27 +120,7 @@ toSelectMenuItem format =
 
 handleAction :: forall m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
-  Initialize -> do
-    state <- H.get
-    for_ state.initialFormatId \formatId -> do
-      fetchAPI FetchedInitialFormat $ getRelatedFormat formatId
-    case state.filter of
-      Formats formats -> H.modify_ _ { items = map toSelectMenuItem formats }
-      SpaceBy spaceId -> fetchAPI FetchedFormats $ getFormats spaceId
-      SpaceByAndHasSemanticId spaceId -> fetchAPI FetchedFormats $ getFormats spaceId
-      None -> pure unit
-  FetchedInitialFormat fetch ->
-    forFetchItem fetch \format ->
-      H.modify_ \s -> s { items = upsertItems [ toSelectMenuItem format ] s.items }
-  FetchedFormats fetch ->
-    forFetchItem fetch \formats -> do
-      state <- H.get
-      case state.filter of
-        SpaceByAndHasSemanticId _ -> do
-          let
-            formats2 = filter (\x -> isJust x.semanticId) formats
-          H.modify_ \s -> s { items = upsertItems (map toSelectMenuItem formats2) s.items }
-        _ -> H.modify_ \s -> s { items = upsertItems (map toSelectMenuItem formats) s.items }
+  Initialize -> pure unit
   HandleInput input -> do
     state <- H.get
     if input.filter /= state.filter then do

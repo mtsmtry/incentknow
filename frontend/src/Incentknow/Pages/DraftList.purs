@@ -1,6 +1,7 @@
 module Incentknow.Pages.DraftList where
 
 import Prelude
+
 import Data.Argonaut.Core (toString)
 import Data.Array (catMaybes, filter, head, range)
 import Data.Map (Map)
@@ -23,18 +24,18 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.API (getMyContentDrafts)
-import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, executeCommand, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button, pulldown)
 import Incentknow.Data.Content (getContentSemanticData)
-import Incentknow.Data.Entities (EditingState(..), FocusedFormat, RelatedContentDraft)
+import Incentknow.Data.Entities (ContentChangeType(..), ContentEditingState(..), FocusedFormat, RelatedContentDraft)
 import Incentknow.Data.Property (mkProperties)
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.TypeMenu as TypeMenu
 import Incentknow.Organisms.ListView (ListViewItem)
 import Incentknow.Organisms.ListView as ListView
-import Incentknow.Route (ContentTab(..), Route(..))
+import Incentknow.Route (ContentTab(..), EditTarget(..), Route(..))
 import Incentknow.Templates.Page (tabGrouping)
 
 data DraftTab
@@ -98,10 +99,11 @@ toListViewItem state draft = map (\format -> toItem draft format) maybeFormat
     , datetime: Just draft.updatedAt
     , title: common.title
     , format: Just format
-    , route: EditDraft draft.draftId
+    , route: EditContent $ TargetDraft draft.draftId
     }
     where
     common = getContentSemanticData draft.data format
+
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
@@ -126,27 +128,27 @@ render state =
         DraftDrafting ->
           remoteWith state.drafts \drafts ->
             HH.slot (SProxy :: SProxy "listView") unit ListView.component
-              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.state == EditingStateEditing) drafts }
+              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.changeType == ContentChangeTypeWrite) drafts }
               absurd
         DraftCommitted ->
           remoteWith state.drafts \drafts ->
             HH.slot (SProxy :: SProxy "listView") unit ListView.component
-              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.state == EditingStateCommitted) drafts }
+              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.changeType == ContentChangeTypeWrite) drafts }
               absurd
         DraftDeleted ->
           remoteWith state.drafts \drafts ->
             HH.slot (SProxy :: SProxy "listView") unit ListView.component
-              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.state == EditingStateCanceld) drafts }
+              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.changeType == ContentChangeTypeRemove) drafts }
               absurd
     ]
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
-    fetchAPI FetchedDrafts $ getMyContentDrafts
+    callbackQuery FetchedDrafts $ getMyContentDrafts
   --workingDrafts <- executeAPI $ getMyDrafts { state: notNull "working" }
   FetchedDrafts fetch -> do
-    forFetch fetch \drafts ->
+    forRemote fetch \drafts ->
       H.modify_ _ { drafts = drafts }
   HandleInput props -> pure unit
   Navigate route -> navigate route

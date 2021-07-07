@@ -2,6 +2,7 @@ import { BeforeInsert, Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToMa
 import { NewTypeInt, NewTypeString } from "../../Implication";
 import { CreatedAt, createEntityId, DisplayName, UpdatedAt } from '../Utils';
 import { Format, FormatSk } from "./Format";
+import { MetaProperty } from "./MetaProperty";
 
 export enum TypeName {
     INT = "integer",
@@ -103,8 +104,11 @@ export class Property {
     @UpdatedAt()
     updatedAt: Date;
 
+    @OneToMany(type => MetaProperty, meta => meta.property, { onDelete: "CASCADE", cascade: ["insert"] })
+    metaProperties: MetaProperty[];
+
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId() as PropertyId;
+        this.entityId = createEntityId(2) as PropertyId;
     }
 }

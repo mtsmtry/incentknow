@@ -11,7 +11,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Incentknow.API (getFormats)
-import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
@@ -66,11 +66,12 @@ render state =
         [ HH.div [ css "header" ]
             [ HH.div [ css "column" ]
                 [ --HH.text "ã‚¹ãƒšãƒ¼ã‚¹"]
-            ]
-        , HH.div [ css "body" ]
-            [ remoteWith state.formats \formats ->
-                HH.text ""
-            --HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map (toCardViewItem state) $ filter (\x-> length x.collectionPage.compositions > 0) formats } absurd
+                ]
+            , HH.div [ css "body" ]
+                [ remoteWith state.formats \formats ->
+                    HH.text ""
+                --HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map (toCardViewItem state) $ filter (\x-> length x.collectionPage.compositions > 0) formats } absurd
+                ]
             ]
         ]
     ]
@@ -79,8 +80,8 @@ handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchAPI FetchedFormats $ getFormats state.spaceId
+    callbackQuery FetchedFormats $ getFormats state.spaceId
   FetchedFormats fetch -> do
-    forFetch fetch \formats ->
+    forRemote fetch \formats ->
       H.modify_ _ { formats = formats }
   Navigate route -> navigate route

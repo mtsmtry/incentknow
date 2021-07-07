@@ -1,27 +1,30 @@
 module Incentknow.Pages.ContentList where
 
 import Prelude
+
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (Content, Space, getContents, getAllSpaceContents)
-import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch)
+import Incentknow.API (getContents)
+import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, forRemote)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
+import Incentknow.Data.Entities (RelatedContent)
+import Incentknow.Data.Ids (SpaceId)
 import Incentknow.Organisms.ContentList as ContentList
 
 type Input
-  = { space :: Space }
+  = { spaceId :: SpaceId }
 
 type State
-  = { space :: Space, contents :: Remote (Array Content) }
+  = { spaceId :: SpaceId, contents :: Remote (Array RelatedContent) }
 
 data Action
   = Initialize
-  | FetchedContents (Fetch (Array Content))
+  | FetchedContents (Fetch (Array RelatedContent))
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -38,7 +41,7 @@ component =
     }
 
 initialState :: Input -> State
-initialState input = { space: input.space, contents: Loading }
+initialState input = { spaceId: input.spaceId, contents: Loading }
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
@@ -49,7 +52,8 @@ handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchAPI FetchedContents $ getAllSpaceContents state.space.spaceId
+    pure unit
+    -- fetchAPI FetchedContents $ getAllSpaceContents state.space.spaceId
   FetchedContents fetch -> do
-    forFetch fetch \contents ->
+    forRemote fetch \contents ->
       H.modify_ _ { contents = contents }

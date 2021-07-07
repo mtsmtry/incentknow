@@ -9,7 +9,7 @@ import { SessionSecurity } from "./Security";
 export class ServiceContext {
     private userId: UserSk | null;
 
-    constructor(public conn: Connection,) {
+    constructor(public conn: Connection) {
         this.userId = null;
     }
 

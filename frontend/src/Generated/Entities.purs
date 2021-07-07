@@ -5,7 +5,9 @@ import Prelude
 
 import Data.Maybe (Maybe)
 import Data.Argonaut.Core (Json)
-import Incentknow.Data.Ids (ContainerSk, ContainerId, ContentSk, ContentId, ContentCommitSk, ContentCommitId, ContentDraftSk, ContentDraftId, ContentEditingSk, ContentEditingId, ContentSnapshotSk, ContentSnapshotId, ContentTransitionSk, ContentTransitionId, FormatSk, FormatId, FormatDisplayId, SemanticId, PropertySk, PropertyId, StructureSk, StructureId, MaterialSk, MaterialId, MaterialCommitSk, MaterialCommitId, MaterialDraftSk, MaterialDraftId, MaterialEditingSk, MaterialEditingId, MaterialSnapshotSk, MaterialSnapshotId, ReactorSk, ReactorId, SpaceSk, SpaceId, SpaceDisplayId, SpaceFollowSk, SpaceMemberSk, SpaceMembershipApplicationSk, UserSk, UserId, UserDisplayId, ContentRevisionId, ContentWholeRevisionId, MaterialRevisionId)
+import Incentknow.Data.Ids (ContainerSk, ContainerId, ContentSk, ContentId, ContentCommitSk, ContentCommitId, ContentDraftSk, ContentDraftId, ContentEditingSk, ContentEditingId, ContentSnapshotSk, ContentSnapshotId, ContentTransitionSk, ContentTransitionId, FormatSk, FormatId, FormatDisplayId, SemanticId, MetaPropertySk, MetaPropertyId, PropertySk, PropertyId, StructureSk, StructureId, MaterialSk, MaterialId, MaterialCommitSk, MaterialCommitId, MaterialDraftSk, MaterialDraftId, MaterialEditingSk, MaterialEditingId, MaterialSnapshotSk, MaterialSnapshotId, ReactorSk, ReactorId, SpaceSk, SpaceId, SpaceDisplayId, SpaceFollowSk, SpaceMemberSk, SpaceMembershipApplicationSk, UserSk, UserId, UserDisplayId, ContentRevisionId, ContentWholeRevisionId, MaterialRevisionId)
+
+
 
 
 data ContentGenerator
@@ -16,6 +18,8 @@ data ContentGenerator
 derive instance eqContentGenerator :: Eq ContentGenerator
 derive instance ordContentGenerator :: Ord ContentGenerator
 
+
+
 data ContentChangeType
   = ContentChangeTypeInitial
   | ContentChangeTypeWrite
@@ -23,6 +27,8 @@ data ContentChangeType
 
 derive instance eqContentChangeType :: Eq ContentChangeType
 derive instance ordContentChangeType :: Ord ContentChangeType
+
+
 
 data ContentEditingState
   = ContentEditingStateEditing
@@ -32,12 +38,26 @@ data ContentEditingState
 derive instance eqContentEditingState :: Eq ContentEditingState
 derive instance ordContentEditingState :: Ord ContentEditingState
 
+
+
 data FormatUsage
   = Internal
   | External
 
 derive instance eqFormatUsage :: Eq FormatUsage
 derive instance ordFormatUsage :: Ord FormatUsage
+
+
+
+data MetaPropertyType
+  = ValueRelatively
+  | MutualExclutively
+  | SeriesDependency
+
+derive instance eqMetaPropertyType :: Eq MetaPropertyType
+derive instance ordMetaPropertyType :: Ord MetaPropertyType
+
+
 
 data TypeName
   = TypeNameInt
@@ -59,6 +79,8 @@ data TypeName
 derive instance eqTypeName :: Eq TypeName
 derive instance ordTypeName :: Ord TypeName
 
+
+
 data Language
   = Python
   | Javascript
@@ -66,12 +88,16 @@ data Language
 derive instance eqLanguage :: Eq Language
 derive instance ordLanguage :: Ord Language
 
+
+
 data MaterialType
   = MaterialTypeFolder
   | MaterialTypeDocument
 
 derive instance eqMaterialType :: Eq MaterialType
 derive instance ordMaterialType :: Ord MaterialType
+
+
 
 data MaterialChangeType
   = MaterialChangeTypeInitial
@@ -81,6 +107,8 @@ data MaterialChangeType
 derive instance eqMaterialChangeType :: Eq MaterialChangeType
 derive instance ordMaterialChangeType :: Ord MaterialChangeType
 
+
+
 data MaterialEditingState
   = MaterialEditingStateEditing
   | MaterialEditingStateCommitted
@@ -89,11 +117,15 @@ data MaterialEditingState
 derive instance eqMaterialEditingState :: Eq MaterialEditingState
 derive instance ordMaterialEditingState :: Ord MaterialEditingState
 
+
+
 data ReactorState
   = Invaild
 
 derive instance eqReactorState :: Eq ReactorState
 derive instance ordReactorState :: Ord ReactorState
+
+
 
 data MembershipMethod
   = MembershipMethodNone
@@ -101,6 +133,8 @@ data MembershipMethod
 
 derive instance eqMembershipMethod :: Eq MembershipMethod
 derive instance ordMembershipMethod :: Ord MembershipMethod
+
+
 
 data SpaceAuth
   = SpaceAuthNone
@@ -111,12 +145,16 @@ data SpaceAuth
 derive instance eqSpaceAuth :: Eq SpaceAuth
 derive instance ordSpaceAuth :: Ord SpaceAuth
 
+
+
 data MemberType
   = Normal
   | Owner
 
 derive instance eqMemberType :: Eq MemberType
 derive instance ordMemberType :: Ord MemberType
+
+
 
 type RelatedContainer
   = { containerId :: ContainerId
@@ -127,6 +165,8 @@ type RelatedContainer
     , generator :: Maybe ContentGenerator
     }
 
+
+
 type FocusedContainer
   = { containerId :: ContainerId
     , space :: RelatedSpace
@@ -136,6 +176,8 @@ type FocusedContainer
     , generator :: Maybe ContentGenerator
     , reactor :: Maybe IntactReactor
     }
+
+
 
 type RelatedContent
   = { contentId :: ContentId
@@ -148,6 +190,8 @@ type RelatedContent
     , format :: FocusedFormat
     , data :: Json
     }
+
+
 
 type FocusedContent
   = { contentId :: ContentId
@@ -162,19 +206,27 @@ type FocusedContent
     , data :: Json
     }
 
+
+
 type RelatedContentCommit
   = { commitId :: ContentCommitId
     , timestamp :: Number
     , basedCommitId :: Maybe ContentCommitId
     , committerUser :: RelatedUser
+    , contentId :: ContentId
     }
+
+
 
 type FocusedContentCommit
   = { commitId :: ContentCommitId
     , timestamp :: Number
     , basedCommitId :: Maybe ContentCommitId
     , committerUser :: RelatedUser
+    , contentId :: ContentId
     }
+
+
 
 type RelatedContentDraft
   = { draftId :: ContentDraftId
@@ -184,7 +236,10 @@ type RelatedContentDraft
     , data :: Json
     , contentId :: Maybe ContentId
     , format :: FocusedFormat
+    , changeType :: ContentChangeType
     }
+
+
 
 type FocusedContentDraft
   = { draftId :: ContentDraftId
@@ -194,7 +249,11 @@ type FocusedContentDraft
     , data :: Json
     , contentId :: Maybe ContentId
     , materialDrafts :: Array FocusedMaterialDraft
+    , format :: FocusedFormat
+    , changeType :: ContentChangeType
     }
+
+
 
 data ContentNodeType
   = ContentNodeTypeCommitted
@@ -204,6 +263,8 @@ data ContentNodeType
 derive instance eqContentNodeType :: Eq ContentNodeType
 derive instance ordContentNodeType :: Ord ContentNodeType
 
+
+
 data ContentNodeTarget
   = ContentNodeTargetContent
   | ContentNodeTargetMaterial
@@ -212,6 +273,8 @@ data ContentNodeTarget
 derive instance eqContentNodeTarget :: Eq ContentNodeTarget
 derive instance ordContentNodeTarget :: Ord ContentNodeTarget
 
+
+
 type ContentNode
   = { type :: ContentNodeType
     , target :: ContentNodeTarget
@@ -219,6 +282,8 @@ type ContentNode
     , editingId :: Maybe String
     , rivision :: RelatedContentRevision
     }
+
+
 
 data ContentRevisionSource
   = ContentRevisionSourceCommit
@@ -229,26 +294,36 @@ data ContentRevisionSource
 derive instance eqContentRevisionSource :: Eq ContentRevisionSource
 derive instance ordContentRevisionSource :: Ord ContentRevisionSource
 
+
+
 type ContentRivisionStructure
   = { source :: ContentRevisionSource
     , entityId :: String
     }
+
+
 
 type ContentWholeRevisionStructure
   = { content :: ContentRevisionId
     , materials :: Array MaterialRevisionId
     }
 
+
+
 type RelatedContentRevision
   = { snapshotId :: ContentWholeRevisionId
     , timestamp :: Number
     }
+
+
 
 type FocusedContentRevision
   = { timestamp :: Number
     , data :: Json
     , materials :: Array FocusedMaterialRevision
     }
+
+
 
 type RelatedFormat
   = { formatId :: FormatId
@@ -265,6 +340,8 @@ type RelatedFormat
     , currentStructure :: RelatedStructure
     }
 
+
+
 type FocusedFormat
   = { formatId :: FormatId
     , displayId :: FormatDisplayId
@@ -280,6 +357,15 @@ type FocusedFormat
     , semanticId :: Maybe String
     }
 
+
+
+type IntactMetaProperty
+  = { id :: MetaPropertyId
+    , type :: MetaPropertyType
+    }
+
+
+
 type PropertyInfo
   = { displayName :: String
     , fieldName :: Maybe String
@@ -287,13 +373,18 @@ type PropertyInfo
     , optional :: Boolean
     , semantic :: Maybe String
     , type :: Type
+    , metaProperties :: Array IntactMetaProperty
     }
+
+
 
 type Enumerator
   = { id :: String
     , displayName :: String
     , fieldName :: Maybe String
     }
+
+
 
 data Type
   = IntType 
@@ -314,12 +405,17 @@ data Type
 
 derive instance eqType :: Eq Type
 
+
+
 type RelatedStructure
-  = { structureId :: StructureId
+  = { formatId :: FormatId
+    , structureId :: StructureId
     , version :: Number
     , title :: Maybe String
     , createdAt :: Number
     }
+
+
 
 type FocusedStructure
   = { structureId :: StructureId
@@ -328,6 +424,8 @@ type FocusedStructure
     , properties :: Array PropertyInfo
     , createdAt :: Number
     }
+
+
 
 type RelatedMaterial
   = { materialId :: MaterialId
@@ -339,6 +437,8 @@ type RelatedMaterial
     , updatedAt :: Number
     , updaterUser :: RelatedUser
     }
+
+
 
 type FocusedMaterial
   = { materialId :: MaterialId
@@ -353,6 +453,8 @@ type FocusedMaterial
     , draft :: Maybe RelatedMaterialDraft
     }
 
+
+
 type RelatedMaterialCommit
   = { commitId :: MaterialCommitId
     , timestamp :: Number
@@ -361,6 +463,8 @@ type RelatedMaterialCommit
     , committerUser :: RelatedUser
     }
 
+
+
 type FocusedMaterialCommit
   = { commitId :: MaterialCommitId
     , timestamp :: Number
@@ -368,12 +472,16 @@ type FocusedMaterialCommit
     , dataSize :: Number
     }
 
+
+
 type RelatedMaterialDraft
   = { draftId :: MaterialDraftId
     , displayName :: String
     , createdAt :: Number
     , updatedAt :: Number
     }
+
+
 
 type FocusedMaterialDraft
   = { draftId :: MaterialDraftId
@@ -386,6 +494,8 @@ type FocusedMaterialDraft
     , data :: String
     }
 
+
+
 data MaterialNodeType
   = MaterialNodeTypeCommitted
   | MaterialNodeTypePresent
@@ -394,12 +504,16 @@ data MaterialNodeType
 derive instance eqMaterialNodeType :: Eq MaterialNodeType
 derive instance ordMaterialNodeType :: Ord MaterialNodeType
 
+
+
 type MaterialNode
   = { type :: MaterialNodeType
     , user :: RelatedUser
     , editingId :: Maybe String
     , revision :: RelatedMaterialRevision
     }
+
+
 
 data MaterialRevisionSource
   = MaterialRevisionSourceCommit
@@ -410,10 +524,14 @@ data MaterialRevisionSource
 derive instance eqMaterialRevisionSource :: Eq MaterialRevisionSource
 derive instance ordMaterialRevisionSource :: Ord MaterialRevisionSource
 
+
+
 type MaterialRevisionStructure
   = { source :: MaterialRevisionSource
     , entityId :: String
     }
+
+
 
 type RelatedMaterialRevision
   = { snapshotId :: MaterialRevisionId
@@ -421,10 +539,14 @@ type RelatedMaterialRevision
     , dataSize :: Number
     }
 
+
+
 type FocusedMaterialRevision
   = { timestamp :: Number
     , data :: String
     }
+
+
 
 type IntactReactor
   = { reactorId :: ReactorId
@@ -434,6 +556,8 @@ type IntactReactor
     , createdAt :: Number
     , creatorUser :: RelatedUser
     }
+
+
 
 type RelatedSpace
   = { spaceId :: SpaceId
@@ -446,6 +570,8 @@ type RelatedSpace
     , membershipMethod :: MembershipMethod
     , defaultAuthority :: SpaceAuth
     }
+
+
 
 type FocusedSpace
   = { spaceId :: SpaceId
@@ -460,16 +586,22 @@ type FocusedSpace
     , defaultAuthority :: SpaceAuth
     }
 
+
+
 type IntactSpaceMember
   = { user :: RelatedUser
     , joinedAt :: Number
     , type :: MemberType
     }
 
+
+
 type IntactSpaceMembershipApplication
   = { user :: RelatedUser
     , appliedAt :: Number
     }
+
+
 
 type IntactAccount
   = { userId :: UserId
@@ -480,6 +612,8 @@ type IntactAccount
     , email :: String
     }
 
+
+
 type RelatedUser
   = { userId :: UserId
     , displayId :: UserDisplayId
@@ -487,6 +621,8 @@ type RelatedUser
     , iconUrl :: Maybe String
     , createdAt :: Number
     }
+
+
 
 type FocusedUser
   = { userId :: UserId
@@ -496,6 +632,8 @@ type FocusedUser
     , createdAt :: Number
     }
 
+
+
 data MaterialCompositionType
   = Creation
   | Move
@@ -503,9 +641,13 @@ data MaterialCompositionType
 derive instance eqMaterialCompositionType :: Eq MaterialCompositionType
 derive instance ordMaterialCompositionType :: Ord MaterialCompositionType
 
+
+
 data MaterialComposition
   = CreationMaterialComposition String String
   | MoveMaterialComposition MaterialId
 
 derive instance eqMaterialComposition :: Eq MaterialComposition
+
+
 

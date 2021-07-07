@@ -1,6 +1,7 @@
 module Incentknow.Pages.SpaceList where
 
 import Prelude
+
 import Ace.Document (getAllLines)
 import Data.Either (isLeft)
 import Data.Foldable (for_)
@@ -13,7 +14,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Incentknow.API (getMySpaces, getPublishedSpaces)
-import Incentknow.API.Execution (Fetch, Remote(..), callAPI, executeAPI, fetchAPI, forFetch, toMaybe)
+import Incentknow.API.Execution (Fetch, Remote(..), callAPI, callbackQuery, executeAPI, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
@@ -86,13 +87,13 @@ render state =
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
-    fetchAPI FetchedPublishedSpaces getPublishedSpaces
-    fetchAPI FetchedFollowedSpaces getMySpaces
+    callbackQuery FetchedPublishedSpaces getPublishedSpaces
+    callbackQuery FetchedFollowedSpaces getMySpaces
   FetchedPublishedSpaces fetch ->
-    forFetch fetch \spaces ->
+    forRemote fetch \spaces ->
       H.modify_ _ { publishedSpaces = spaces }
   FetchedFollowedSpaces fetch ->
-    forFetch fetch \spaces -> do
+    forRemote fetch \spaces -> do
       H.modify_ _ { followedSpaces = spaces }
       when (isNothing $ toMaybe spaces) do
         H.modify_ _ { logined = false }

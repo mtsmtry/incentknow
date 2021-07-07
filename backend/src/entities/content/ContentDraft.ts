@@ -27,7 +27,7 @@ export type ContentDraftSk = NewTypeInt<"ContentDraftSk">;
 export type ContentDraftId = NewTypeString<"ContentDraftId">;
 
 @Entity()
-@Unique(["unique_by_user_constrain", "user"])
+@Unique(["contentId", "user"])
 export class ContentDraft {
 
     @PrimaryGeneratedColumn()
@@ -61,9 +61,6 @@ export class ContentDraft {
     intendedSpaceId: SpaceSk | null;
 
     // =========================================
-
-    @Column({ asExpression: "coalesce(contentId, -createdAt)", generatedType: "VIRTUAL" })
-    unique_by_user_constrain: number;
 
     @ManyToOne(type => User, { onDelete: "CASCADE" })
     @JoinColumn({ name: "userId" })

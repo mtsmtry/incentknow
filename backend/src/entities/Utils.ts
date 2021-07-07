@@ -13,9 +13,8 @@ export function DisplayName() {
     return Column("varchar", { length: 50 });
 }
 
-export function createEntityId() {
+export function createEntityId(N = 12) {
     const S = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    const N = 12;
     return Array.from(crypto.randomFillSync(new Uint8Array(N))).map((n) => S[n % S.length]).join('');
 }
 

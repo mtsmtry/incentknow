@@ -87,7 +87,7 @@ export class SpaceService extends BaseService {
 
     async applySpaceMembership(spaceId: SpaceId): Promise<{}> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
-            const space= await this.spaces.fromSpaces(trx).byEntityId(spaceId).getNeededOne();
+            const space = await this.spaces.fromSpaces(trx).byEntityId(spaceId).getNeededOne();
             await this.spaces.createCommand(trx).applySpaceMembership(space.id, userId);
             return {};
         });
@@ -139,6 +139,50 @@ export class SpaceService extends BaseService {
                 throw new LackOfAuthority();
             }
             await this.spaces.createCommand(trx).setSpaceMembershipMethod(space.id, membershipMethod);
+            return {};
+        });
+    }
+
+    async setSpaceDisplayName(spaceId: SpaceId, displayName: string): Promise<{}> {
+        return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const [auth, space] = await this.auth.fromAuths(trx).getSpaceAuth(SpaceAuth.WRITABLE, userId, spaceId);
+            if (!auth) {
+                throw new LackOfAuthority();
+            }
+            await this.spaces.createCommand(trx).setSpaceDisplayName(space.id, displayName);
+            return {};
+        });
+    }
+
+    async setSpaceDisplayId(spaceId: SpaceId, displayId: SpaceDisplayId): Promise<{}> {
+        return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const [auth, space] = await this.auth.fromAuths(trx).getSpaceAuth(SpaceAuth.WRITABLE, userId, spaceId);
+            if (!auth) {
+                throw new LackOfAuthority();
+            }
+            await this.spaces.createCommand(trx).setSpaceDisplayId(space.id, displayId);
+            return {};
+        });
+    }
+
+    async setSpacePublished(spaceId: SpaceId, published: boolean): Promise<{}> {
+        return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const [auth, space] = await this.auth.fromAuths(trx).getSpaceAuth(SpaceAuth.WRITABLE, userId, spaceId);
+            if (!auth) {
+                throw new LackOfAuthority();
+            }
+            await this.spaces.createCommand(trx).setSpacePublished(space.id, published);
+            return {};
+        });
+    }
+
+    async setSpaceDefaultAuthority(spaceId: SpaceId, defaultAuthority: SpaceAuth): Promise<{}> {
+        return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const [auth, space] = await this.auth.fromAuths(trx).getSpaceAuth(SpaceAuth.WRITABLE, userId, spaceId);
+            if (!auth) {
+                throw new LackOfAuthority();
+            }
+            await this.spaces.createCommand(trx).setSpaceDefaultAuthority(space.id, defaultAuthority);
             return {};
         });
     }

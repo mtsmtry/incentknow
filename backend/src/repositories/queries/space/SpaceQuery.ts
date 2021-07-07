@@ -12,26 +12,24 @@ export class SpaceQuery extends SelectFromSingleTableQuery<Space, SpaceQuery, Sp
 
     byFollower(userId: UserSk) {
         const query = this.qb.leftJoin("followers", "f").where("f.id = :userId", { userId });
-        return new SpaceQuery(query); 
+        return new SpaceQuery(query);
     }
 
     byPublished() {
         const query = this.qb.where({ published: true });
-        return new SpaceQuery(query); 
+        return new SpaceQuery(query);
     }
 
     selectRelated() {
         const query = this.qb
-            .leftJoinAndSelect("creatorUser", "creatorUser")
-            .leftJoinAndSelect("updaterUser", "updaterUser");
+            .leftJoinAndSelect("x.creatorUser", "creatorUser")
 
         return mapQuery(query, toRelatedSpace);
     }
 
     selectFocused() {
         const query = this.qb
-            .leftJoinAndSelect("creatorUser", "creatorUser")
-            .leftJoinAndSelect("updaterUser", "updaterUser");
+            .leftJoinAndSelect("x.creatorUser", "creatorUser")
 
         return mapQuery(query, toFocusedSpace);
     }

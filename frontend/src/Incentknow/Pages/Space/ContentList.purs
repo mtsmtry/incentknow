@@ -1,6 +1,7 @@
 module Incentknow.Pages.Space.ContentList where
 
 import Prelude
+
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
 import Data.Symbol (SProxy(..))
@@ -9,7 +10,7 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getContents)
-import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, fetchAPI, forFetch)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (RelatedContent)
@@ -52,7 +53,7 @@ handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    fetchAPI FetchedContents $ getContents state.spaceId (wrap "")
+    callbackQuery FetchedContents $ getContents state.spaceId (wrap "")
   FetchedContents fetch -> do
-    forFetch fetch \contents ->
+    forRemote fetch \contents ->
       H.modify_ _ { contents = contents }

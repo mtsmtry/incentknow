@@ -21,10 +21,10 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, checkbox, pulldown, textarea)
-import Incentknow.Data.Entities (Type(..), TypeName(..))
+import Incentknow.Data.Entities (Type(..), TypeName(..), PropertyInfo)
 import Incentknow.Data.EntityUtils (getTypeName)
 import Incentknow.Data.Ids (SpaceId(..))
-import Incentknow.Data.Property (Enumerator, Property, PropertyInfo)
+import Incentknow.Data.Property (Enumerator, Property)
 import Incentknow.Data.Utils (generateId)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
@@ -168,7 +168,7 @@ render state =
             ]
         , HH.td []
             [ HH.slot (SProxy :: SProxy "typeMenu") prop.id TypeMenu.component
-                { value: prop.type, exceptions: [ TypeNameObject ], spaceId: state.spaceId, disabled: not state.readonly }
+                { value: prop.type, exceptions: [ TypeNameObject ], spaceId: state.spaceId, disabled: state.readonly }
                 (Just <<< ChangeType prop.id)
             ]
         , HH.td []
@@ -266,6 +266,7 @@ toPropertyInfo prop = do
     , type: ty
     , semantic: prop.semantic
     , optional: prop.optional
+    , metaProperties: []
     }
 
 getTypeArguments :: forall o m a. PendingPropertyInfo -> H.HalogenM State Action ChildSlots o m PendingPropertyInfo
@@ -282,6 +283,7 @@ handleQuery = case _ of
   GetValue k -> do
     state <- H.get
     newProps <- for state.props getTypeArguments
+    
     let
       props = map toPropertyInfo newProps
     pure $ map k $ allJust $ props

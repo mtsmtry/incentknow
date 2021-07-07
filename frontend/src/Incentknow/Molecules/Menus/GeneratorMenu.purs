@@ -14,11 +14,11 @@ import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (ContentGenerator(..))
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
-import Incentknow.Data.Property (Enumerator, PropertyInfo)
+import Incentknow.Data.Property (Enumerator)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.FormatMenu as FormatMenu
-import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
 import Incentknow.Molecules.SelectMenu as SelectMenu
+import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 
 type Input
   = { value :: Maybe ContentGenerator
@@ -96,7 +96,13 @@ render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action
 render state =
   HH.div_
     [ HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-        { resource: SelectMenuResourceAllCandidates $ map toSelectMenuItem generators, value: state.generator, disabled: state.disabled }
+        { value: state.generator
+        , disabled: state.disabled
+        , fetchMultiple: \_-> Nothing
+        , fetchSingle: Nothing
+        , fetchId: ""
+        , initial: { items: map toSelectMenuItem generators, completed: true }
+        }
         (Just <<< Change)
     ]
 

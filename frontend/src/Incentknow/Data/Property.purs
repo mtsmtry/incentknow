@@ -23,7 +23,7 @@ import Data.Tuple (Tuple(..), uncurry)
 import Foreign (F, Foreign, ForeignError(..), readString)
 import Foreign.Object as F
 import Foreign.Object as Object
-import Incentknow.Data.Entities (Type(..))
+import Incentknow.Data.Entities (Type(..), PropertyInfo)
 import Incentknow.Data.Ids (SpaceId(..), ContentId(..), FormatId(..))
 import Incentknow.Route (Route)
 import Simple.JSON (class ReadForeign, class WriteForeign, readImpl, writeImpl)
@@ -45,15 +45,6 @@ fromEnumerator enum = enum { fieldName = toNullable enum.fieldName }
 
 toEnumerator :: EnumeratorImpl -> Enumerator
 toEnumerator enum = enum { fieldName = toMaybe enum.fieldName }
-
-type PropertyInfo
-  = { id :: String
-    , displayName :: String
-    , fieldName :: Maybe String
-    , type :: Type
-    , semantic :: Maybe String
-    , optional :: Boolean
-    }
 
 getDefaultValue :: Array PropertyInfo -> Json
 getDefaultValue props = fromObject $ Object.fromFoldable $ map (\x-> Tuple x.id $ defaultValue x.type) props

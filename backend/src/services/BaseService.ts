@@ -17,6 +17,6 @@ export class BaseService {
         if (!method || !isFunction(method)) {
             return null;
         }
-        return method(...args);
+        return eval(`this.${methodName}(...args)`);
     }
 }

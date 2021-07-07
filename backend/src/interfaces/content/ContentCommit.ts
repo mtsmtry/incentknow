@@ -1,3 +1,4 @@
+import { ContentId } from "../../entities/content/Content";
 import { ContentCommit, ContentCommitId } from "../../entities/content/ContentCommit";
 import { RelatedUser, toRelatedUser } from "../user/User";
 import { toTimestamp } from "../Utils";
@@ -7,6 +8,7 @@ export interface RelatedContentCommit {
     timestamp: number;
     basedCommitId: ContentCommitId | null;
     committerUser: RelatedUser;
+    contentId: ContentId;
 }
 
 export function toRelatedContentCommit(commit: ContentCommit): RelatedContentCommit {
@@ -14,7 +16,8 @@ export function toRelatedContentCommit(commit: ContentCommit): RelatedContentCom
         commitId: commit.entityId,
         timestamp: toTimestamp(commit.timestamp),
         basedCommitId: commit.basedCommit ? commit.basedCommit.entityId : null,
-        committerUser: toRelatedUser(commit.committerUser)
+        committerUser: toRelatedUser(commit.committerUser),
+        contentId: commit.content.entityId
     }
 }
 
@@ -23,6 +26,7 @@ export interface FocusedContentCommit {
     timestamp: number;
     basedCommitId: ContentCommitId | null;
     committerUser: RelatedUser;
+    contentId: ContentId;
 }
 
 export function toFocusedContentCommit(commit: ContentCommit): FocusedContentCommit {
@@ -30,6 +34,7 @@ export function toFocusedContentCommit(commit: ContentCommit): FocusedContentCom
         commitId: commit.entityId,
         timestamp: toTimestamp(commit.timestamp),
         basedCommitId: commit.basedCommit ? commit.basedCommit.entityId : null,
-        committerUser: toRelatedUser(commit.committerUser)
+        committerUser: toRelatedUser(commit.committerUser),
+        contentId: commit.content.entityId
     }
 }

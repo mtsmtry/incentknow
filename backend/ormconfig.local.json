@@ -1,14 +1,13 @@
 {
-   "type": "aurora-data-api",
+   "type": "mysql",
    "database": "main",
-
    "region": "ap-northeast-1",
-   "resourceArn": "arn:aws:rds:ap-northeast-1:203303191911:cluster:incentknow-aurora",
-   "secretArn": "arn:aws:secretsmanager:ap-northeast-1:203303191911:secret:incentknow-aurora-secret-n7U5Hb",
-
-   "logging": "all",
-
-   "synchronize": true, 
+   "host": "localhost",
+   "port": 3306,
+   "username": "root",
+   "password": "2128",
+   "logging": [],
+   "synchronize": true,
    "entities": [
       "dist/src/entities/**/*.js"
    ],

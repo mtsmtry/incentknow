@@ -16,8 +16,8 @@ import Incentknow.Data.Entities (SpaceAuth(..))
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.FormatMenu as FormatMenu
-import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
 import Incentknow.Molecules.SelectMenu as SelectMenu
+import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 
 type Input
   = { value :: Maybe SpaceAuth
@@ -97,7 +97,12 @@ render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action
 render state =
   HH.div_
     [ HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-        { resource: SelectMenuResourceAllCandidates $ map toSelectMenuItem authItems, value: state.auth, disabled: state.disabled }
+        { value: state.auth
+        , disabled: state.disabled
+        , fetchMultiple: \_-> Nothing
+        , fetchSingle: Nothing
+        , fetchId: ""
+        , initial: { items: map toSelectMenuItem authItems, completed: true } }
         (Just <<< Change)
     ]
 

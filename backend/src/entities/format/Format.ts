@@ -46,7 +46,7 @@ export class Format {
     @OneToOne(type => Structure, { onDelete: "RESTRICT" })
     @JoinColumn({ name: "currentStructureId" })
     currentStructure: Structure;
-    @Column()
+    @Column({ nullable: true }) // トランザクション外ではnullにならない
     currentStructureId: StructureSk;
 
     @Column({

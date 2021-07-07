@@ -116,6 +116,7 @@ export class MaterialEditingCommand implements BaseCommand {
             // create snapshot if the number of characters takes the maximum value
             if (draft.changeType != MaterialChangeType.REMOVE && changeType == MaterialChangeType.REMOVE) {
                 let snapshot = this.snapshots.create({
+                    draftId: draft.id,
                     editingId: draft.currentEditingId,
                     data: draft.data,
                     timestamp: draft.updatedAt
@@ -127,10 +128,12 @@ export class MaterialEditingCommand implements BaseCommand {
                 ]);
 
                 return snapshot;
+            } else {
+                await this.drafts.update(draft, { data, changeType });
             }
+        } else {
+            await this.drafts.update(draft, { data });
         }
-
-        await this.drafts.update(draft, { data });
         return null;
     }
 

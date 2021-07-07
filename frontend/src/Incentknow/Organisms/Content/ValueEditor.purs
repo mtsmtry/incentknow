@@ -1,6 +1,7 @@
 module Incentknow.Organisms.Content.ValueEditor where
 
 import Prelude
+
 import Data.Argonaut.Core (Json, fromArray, fromString, jsonNull, stringify, toArray, toBoolean, toString)
 import Data.Argonaut.Decode (decodeJson)
 import Data.Argonaut.Encode (encodeJson)
@@ -17,7 +18,7 @@ import Effect.Class.Console (log, logShow)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getFocusedFormat, getFormat)
-import Incentknow.API.Execution (Fetch, Remote(..), fetchAPI, forFetch)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, checkbox, numberarea, textarea)
@@ -29,8 +30,8 @@ import Incentknow.Molecules.AceEditor as AceEditor
 import Incentknow.Molecules.ContentMenu as ContentMenu
 import Incentknow.Molecules.EntityMenu as EntityMenu
 import Incentknow.Molecules.FormatMenu as FormatMenu
-import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
 import Incentknow.Molecules.SelectMenu as SelectMenu
+import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Organisms.Content.Common (EditEnvironment)
 import Incentknow.Organisms.Document as Document
@@ -127,7 +128,10 @@ render state = case state.type of
       }
   EnumType enums ->
     HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-      { resource: SelectMenuResourceAllCandidates $ map fromEnumeratorToSelectMenuItem enums
+      { initial: { items: map fromEnumeratorToSelectMenuItem enums, completed: true }
+      , fetchMultiple: \_-> Nothing
+      , fetchSingle: Nothing
+      , fetchId: ""
       , value: toString state.value
       , disabled: false
       }
@@ -202,7 +206,7 @@ handleAction = case _ of
     state <- H.get
     case state.format of
       Loading -> case state.type of
-        ContentType formatId -> fetchAPI FetchedFormat $ getFocusedFormat formatId
+        ContentType formatId -> callbackQuery FetchedFormat $ getFocusedFormat formatId
         _ -> pure unit
       _ -> pure unit
   ChangeValue value -> do
@@ -253,6 +257,6 @@ handleAction = case _ of
       H.put $ initialState input
       handleAction Initialize
   FetchedFormat fetch ->
-    forFetch fetch \format -> do
+    forRemote fetch \format -> do
       state <- H.modify _ { format = format }
       H.liftEffect $ consoleLog $ show $ map unwrap $ maybe Nothing (\x -> if x.usage == Internal then Nothing else state.env.spaceId) $ R.toMaybe state.format

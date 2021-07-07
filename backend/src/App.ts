@@ -24,12 +24,28 @@ init().then(conn => {
     const service = new Service(ctx);
 
     router.post('/:method', async (req, res) => {
+        res.header('Access-Control-Allow-Origin', req.headers.origin);
+
+        // リクエストヘッダーに含まれる全てのヘッダーがないとCORSによりリジェクトされる
+        res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Session');       
+        res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+
         const methodName = req.params.method;
         ctx.setHeaders(req.headers);
         const start = Date.now();
         const response = await service.execute(methodName, req.body);
         const time = Date.now() - start;
-        res.status(200).header("Time", time.toString()).send(JSON.stringify(response)).end();
+
+        res.header("Time", time.toString());
+        res.status(200).json(response);
+    });
+
+    router.options('/:any', async (req, res) => {
+        res.header('Access-Control-Allow-Origin', req.headers.origin);
+        res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Session');
+        res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+        res.header('Access-Control-Max-Age', '864000');
+        res.sendStatus(200);
     });
 
     app.use(router);
@@ -39,6 +55,6 @@ init().then(conn => {
         console.log(`App listening on port ${PORT}`);
         console.log('Press Ctrl+C to quit.');
     });
-})
+});
 
 module.exports = app;

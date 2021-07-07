@@ -1,6 +1,7 @@
 module Incentknow.Molecules.SpaceMenu where
 
 import Prelude
+
 import Data.Array (filter, fromFoldable)
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), maybe)
@@ -11,13 +12,14 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getMySpaces, getPublishedSpaces, getRelatedSpace, getSpace)
-import Incentknow.API.Execution (Fetch, executeAPI, fetchAPI, forFetchItem)
+import Incentknow.API.Execution (Fetch, executeAPI, forItem, toQueryCallback)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (RelatedSpace)
 import Incentknow.Data.Ids (SpaceId(..))
 import Incentknow.HTML.Utils (css)
-import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..), upsertItems)
+import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu
+import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 
 type Input
   = { value :: Maybe SpaceId
@@ -25,9 +27,7 @@ type Input
     }
 
 type State
-  = { items :: Array (SelectMenuItem SpaceId)
-    , initialSpaceId :: Maybe SpaceId
-    , spaceId :: Maybe SpaceId
+  = { spaceId :: Maybe SpaceId
     , disabled :: Boolean
     }
 
@@ -35,8 +35,6 @@ data Action
   = Initialize
   | HandleInput Input
   | ChangeValue (Maybe SpaceId)
-  | FetchedSpace (Fetch RelatedSpace)
-  | FetchedSpaces (Fetch (Array RelatedSpace))
 
 type Slot p
   = forall q. H.Slot q Output p
@@ -63,16 +61,22 @@ component =
 
 initialState :: Input -> State
 initialState input =
-  { items: []
-  , initialSpaceId: input.value
-  , spaceId: input.value
+  { spaceId: input.value
   , disabled: input.disabled
   }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-    { resource: SelectMenuResourceAllCandidates state.items, value: state.spaceId, disabled: false }
+    { value: state.spaceId
+    , disabled: false
+    , fetchMultiple: case _ of
+        Just word -> Nothing
+        Nothing -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) getMySpaces
+    , fetchSingle: Just $ \x-> toQueryCallback $ map toSelectMenuItem $ getRelatedSpace x
+    , fetchId: ""
+    , initial: emptyCandidateSet
+    }
     (Just <<< ChangeValue)
 
 toSelectMenuItem :: RelatedSpace -> SelectMenuItem SpaceId
@@ -91,17 +95,6 @@ toSelectMenuItem space =
 
 handleAction :: forall m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
-  Initialize -> do
-    state <- H.get
-    for_ state.initialSpaceId \spaceId -> do
-      fetchAPI FetchedSpace $ getRelatedSpace spaceId
-    fetchAPI FetchedSpaces getPublishedSpaces
-    fetchAPI FetchedSpaces getMySpaces
-  FetchedSpace fetch ->
-    forFetchItem fetch \space ->
-      H.modify_ \s -> s { items = upsertItems [ toSelectMenuItem space ] s.items }
-  FetchedSpaces fetch ->
-    forFetchItem fetch \space ->
-      H.modify_ \s -> s { items = upsertItems (map toSelectMenuItem space) s.items }
+  Initialize -> pure unit
   HandleInput input -> H.modify_ _ { spaceId = input.value, disabled = input.disabled }
   ChangeValue value -> H.raise value

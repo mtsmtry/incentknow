@@ -82,6 +82,7 @@ type Input a
     , selectedItem :: Maybe (SelectMenuItem a)
     , searchWord :: Maybe String
     , message :: forall w i. Maybe (HH.HTML w i)
+    , disabled :: Boolean
     }
 
 type State a
@@ -104,6 +105,7 @@ setInput state input =
     { items = input.items
     , searchWord = input.searchWord
     , selectedItem = input.selectedItem
+    , disabled = input.disabled
     }
 
 textbox_ = RefLabel "textbox"
@@ -134,7 +136,7 @@ render state =
               ]
               [ case state.selectedItem of
                   Just value -> HH.text value.name
-                  Nothing -> loadingWith "読み込み中"
+                  Nothing -> if state.disabled then HH.text "" else loadingWith "読み込み中"
               ]
           , whenElem (not state.disabled) \_ ->
               HH.span

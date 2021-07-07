@@ -1,6 +1,7 @@
 module Incentknow.Pages.Space.Setting where
 
 import Prelude
+
 import Affjax as AX
 import Affjax.RequestBody as RequestBody
 import Affjax.RequestHeader (RequestHeader(..))
@@ -21,8 +22,8 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.API (checkSpaceDisplayId, setSpaceAuthority, setSpaceDisplayId, setSpaceDisplayName, setSpaceMembershipMethod, setSpacePublished)
-import Incentknow.API.Execution (callAPI)
+import Incentknow.API (getAvailableSpaceDisplayId, setSpaceDefaultAuthority, setSpaceDisplayId, setSpaceDisplayName, setSpaceMembershipMethod, setSpacePublished)
+import Incentknow.API.Execution (callAPI, callCommand, callQuery)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, submitButton, textarea)
 import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..), SpaceAuth(..))
@@ -102,7 +103,7 @@ render :: forall m. MonadAff m => Behaviour m => MonadEffect m => State -> H.Com
 render state =
   HH.div [ css "page-user-setting" ]
     [ HH.slot displayName_ unit SettingText.component
-        { submit: callAPI <<< setSpaceDisplayName state.space.spaceId
+        { submit: callCommand <<< setSpaceDisplayName state.space.spaceId
         , value: state.space.displayName
         , title: "表示名"
         , desc: ""
@@ -116,7 +117,7 @@ render state =
     --    }
     --    (Just <<< Edit)
     , HH.slot published_ unit (SettingCheckbox.component "公開する")
-        { submit: callAPI <<< setSpacePublished state.space.spaceId
+        { submit: callCommand <<< setSpacePublished state.space.spaceId
         , value: state.space.published
         , title: "一般公開"
         , desc: "この設定をオンにすると、スペースの検索結果やスペースの一覧にこのスペースの名前や説明が表示されます"
@@ -124,7 +125,7 @@ render state =
         }
         (Just <<< Edit)
     , HH.slot authMenu_ unit SettingAuthMenu.component
-        { submit: callAPI <<< \x -> setSpaceAuthority state.space.spaceId $ fromMaybe SpaceAuthNone x
+        { submit: callCommand <<< \x -> setSpaceDefaultAuthority state.space.spaceId $ fromMaybe SpaceAuthNone x
         , value: Just state.space.defaultAuthority
         , title: "標準権限"
         , desc: "スペースのメンバー以外の人を含む全ての人に適用される権限を設定します"
@@ -132,15 +133,15 @@ render state =
         }
         (Just <<< Edit)
     , HH.slot membershipMethodMenu_ unit MembershipMethodMenu.component
-        { submit: callAPI <<< \x -> setSpaceMembershipMethod state.space.spaceId $ fromMaybe MembershipMethodNone x
+        { submit: callCommand <<< \x -> setSpaceMembershipMethod state.space.spaceId $ fromMaybe MembershipMethodNone x
         , value: Just state.space.membershipMethod
         , title: "メンバー加入方法"
         , desc: "メンバーがどのような方法でスペースに加入するかを設定します"
         , disabled: state.disabled
         }
         (Just <<< Edit)
-    , HH.slot displayId_ unit (SettingDisplayId.component $ callAPI <<< checkSpaceDisplayId <<< wrap)
-        { submit: callAPI <<< \x -> setSpaceDisplayId state.space.spaceId $ wrap x.displayId
+    , HH.slot displayId_ unit (SettingDisplayId.component $ callQuery <<< getAvailableSpaceDisplayId <<< wrap)
+        { submit: callCommand <<< \x -> setSpaceDisplayId state.space.spaceId $ wrap x.displayId
         , value: { displayId: unwrap state.space.displayId, checkState: DisplayId.Available }
         , title: "表示ID"
         , desc: "IDを設定します"

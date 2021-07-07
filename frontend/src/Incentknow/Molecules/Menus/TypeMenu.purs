@@ -2,6 +2,7 @@ module Incentknow.Molecules.TypeMenu where
 
 import Prelude
 
+import CSS.Common (initial)
 import Data.Array (elem, filter, notElem)
 import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
 import Data.Maybe.Utils (flatten)
@@ -15,11 +16,11 @@ import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (Language(..), Type, TypeName(..))
 import Incentknow.Data.EntityUtils (TypeOptions, buildType, defaultTypeOptions, getTypeName)
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
-import Incentknow.Data.Property (Enumerator, PropertyInfo)
+import Incentknow.Data.Property (Enumerator)
 import Incentknow.HTML.Utils (css, whenElem)
 import Incentknow.Molecules.FormatMenu as FormatMenu
-import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
 import Incentknow.Molecules.SelectMenu as SelectMenu
+import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 
 type Input
@@ -142,7 +143,13 @@ render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action
 render state =
   HH.div_
     [ HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-        { resource: SelectMenuResourceAllCandidates $ state.typeNameItems, value: state.typeName, disabled: state.disabled }
+        { value: state.typeName
+        , disabled: state.disabled
+        , fetchMultiple: \_-> Nothing
+        , fetchSingle: Nothing
+        , fetchId: ""
+        , initial: { items: state.typeNameItems, completed: true }
+        }
         (Just <<< ChangeTypeName)
     , case state.typeName of
         Just TypeNameContent ->
@@ -167,7 +174,13 @@ render state =
             ]
         Just TypeNameCode ->
           HH.slot (SProxy :: SProxy "langMenu") unit SelectMenu.component
-            { resource: SelectMenuResourceAllCandidates state.langNameItems, value: state.typeOptions.language, disabled: state.disabled }
+            { initial: { items: state.langNameItems, completed: false }
+            , value: state.typeOptions.language
+            , disabled: state.disabled
+            , fetchMultiple: \_-> Nothing
+            , fetchSingle: Nothing
+            , fetchId: ""
+            }
             (Just <<< ChangeLangName)
         Just TypeNameArray ->
           HH.slot (SProxy :: SProxy "typeMenu") unit component

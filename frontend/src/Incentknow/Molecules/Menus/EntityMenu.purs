@@ -1,6 +1,7 @@
 module Incentknow.Molecules.EntityMenu where
 
 import Prelude
+
 import Control.Promise (Promise)
 import Data.Array (filter, singleton)
 import Data.Array as Array
@@ -21,15 +22,16 @@ import Effect.Class (class MonadEffect)
 import Foreign.NullOrUndefined (null)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API.Execution (callAPI, callbackAPI, executeAPI)
+import Incentknow.API (getRelatedContent)
+import Incentknow.API.Execution (callAPI, callbackAPI, executeAPI, toQueryCallback)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (RelatedContent)
 import Incentknow.Data.Ids (ContentId(..), FormatId(..), SemanticId(..), SpaceId(..))
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.ContentMenu (fromContentToHtml)
-import Incentknow.Molecules.SelectMenu (SelectMenuItem, SelectMenuResource(..))
 import Incentknow.Molecules.SelectMenu as SelectMenu
+import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 
 type Input
   = { value :: Maybe SemanticId
@@ -81,9 +83,12 @@ initialState input =
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
-    { resource: SelectMenuResourceFetchFunctions { search, get }
-    , value: state.semanticId
+    { value: state.semanticId
     , disabled: state.disabled
+    , fetchMultiple: \_-> Nothing
+    , fetchSingle: Nothing--Just $ \x-> toQueryCallback $ map toSelectMenuItem $ getRelatedContent x
+    , fetchId: ""
+    , initial: { items: [], completed: false }
     }
     (Just <<< ChangeValue)
   where
@@ -96,7 +101,7 @@ render state =
   --  where
   --  promise = getContentsByReactor { formatId: state.formatId, words: notNull words, conditions: null }
   -- get :: String -> (SelectMenuItem -> Effect Unit) -> Effect Unit
-  get semanticId callback = pure unit
+  get semanticId callback =  unit
 
 --onLoadContentBySemanticId state.formatId (wrap semanticId) callback2
 --where

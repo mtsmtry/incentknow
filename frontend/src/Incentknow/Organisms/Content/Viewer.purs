@@ -54,7 +54,7 @@ initialState input =
 mkValueInput :: FocusedFormat -> Json -> Value.Input
 mkValueInput format value =
   { value: value
-  , type: ObjectType format.structure.properties
+  , type: ObjectType format.currentStructure.properties
   }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m

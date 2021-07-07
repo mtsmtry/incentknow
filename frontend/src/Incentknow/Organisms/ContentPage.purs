@@ -25,7 +25,7 @@ import Incentknow.Data.Entities (Type(..))
 import Incentknow.Data.EntityUtils (getTypeName)
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.Data.Page (ContentPage, ContentRelation)
-import Incentknow.Data.Property (Enumerator, Property, PropertyInfo)
+import Incentknow.Data.Property (Enumerator, Property)
 import Incentknow.Data.Utils (generateId)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange

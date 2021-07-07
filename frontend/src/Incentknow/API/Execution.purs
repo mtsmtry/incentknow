@@ -23,9 +23,13 @@ import Test.Unit.Console (consoleError)
 
   Functions that starts with "__" are used from only auto generated API code or them.
 -}
+
 -- An API to query including method name to using caches
 data QueryAPI a
   = QueryAPI String (Promise a)
+
+instance mapQueryAPI :: Functor QueryAPI where
+  map f (QueryAPI name api) = QueryAPI name $ mapPromise f api
 
 -- Create a query API
 __queryAPI :: forall a. String -> Promise a -> QueryAPI a
@@ -34,6 +38,9 @@ __queryAPI name api = QueryAPI name (__runAPI name api)
 -- An API to command
 data CommandAPI a
   = CommandAPI (Promise a)
+
+instance mapCommandAPI :: Functor CommandAPI where
+  map f (CommandAPI api) = CommandAPI $ mapPromise f api
 
 -- Create a command API
 __commandAPI :: forall a. String -> Promise a -> CommandAPI a
@@ -68,10 +75,33 @@ foreign import showError :: forall a. a -> String
 
 defaultIconUrl = ""
 
+foreign import makeQueryCallback :: forall a. String -> Promise a -> Callback { result :: a, from :: String } 
+
+toQueryCallback :: forall a. QueryAPI a -> Callback (Fetch a)
+toQueryCallback (QueryAPI name api) = mapCallback toFetch $ makeQueryCallback name api
+
+toFetch :: forall a. { result :: a, from :: String } -> Fetch a
+toFetch { result, from } = case from of
+  "server" -> FromServer result
+  "sache" -> FromCache result
+  _ -> FailedServer ""
+
+callQuery :: forall a. QueryAPI a -> Aff (Either String a)
+callQuery (QueryAPI name api) = callAPI api
+
+callCommand :: forall a. CommandAPI a -> Aff (Either String a)
+callCommand (CommandAPI api) = callAPI api
+
 callAPI :: forall a. Promise a -> Aff (Either String a)
 callAPI = toAff >>> attempt >>> (map $ either (showError >>> Left) Right) >>> liftAff
 
 foreign import mapPromise :: forall a b. (a -> b) -> Promise a -> Promise b
+
+mapCallback :: forall a b. (a -> b) -> Callback a -> Callback b
+mapCallback f callback fun = callback $ fun <<< f
+
+promptCallback :: forall a. a -> Callback a
+promptCallback item fun = fun item
 
 instance functorRemote :: Functor Remote where
   map f = case _ of
@@ -89,30 +119,32 @@ toMaybe = case _ of
   Holding item -> Just item
   Missing _ -> Nothing
 
-forFetch :: forall a m. Behaviour m => Fetch a -> (Remote a -> m Unit) -> m Unit
-forFetch fetch fun = do
+forRemote :: forall a m. Behaviour m => Fetch a -> (Remote a -> m Unit) -> m Unit
+forRemote fetch fun = do
   case fetch of
     FromCache item -> fun $ Holding item
     FromServer item -> fun $ Holding item
     FailedCache _ -> fun $ LoadingForServer
     FailedServer error -> do
       fun $ Missing error
-      H.liftEffect $ consoleError $ "forFetch:" <> error
+      H.liftEffect $ consoleError $ "forRemomee:" <> error
 
-forFetchItem :: forall a m. Behaviour m => Fetch a -> (a -> m Unit) -> m Unit
-forFetchItem fetch fun = do
-  forFetch fetch \remote ->
+forItem :: forall a m. Behaviour m => Fetch a -> (a -> m Unit) -> m Unit
+forItem fetch fun = do
+  forRemote fetch \remote ->
     for_ (toMaybe remote) \item ->
       fun item
-{-|
-fetchAPI ::
+
+callbackQuery ::
   forall state action slots output item m.
   MonadAff m =>
   (Fetch item -> action) ->
-  Promise item ->
+  QueryAPI item ->
   HalogenM state action slots output m Unit
-fetchAPI action onChange = callbackAPI (action <<< FromServer) $ toCallbackAPI onChange
--}
+callbackQuery action query = callbackAPI action $ toQueryCallback query
+
+executeCommand :: forall a m. Behaviour m => MonadAff m => CommandAPI a -> m (Maybe a)
+executeCommand (CommandAPI api) = executeAPI api
 
 executeAPI :: forall a m. Behaviour m => MonadAff m => Promise a -> m (Maybe a)
 executeAPI promise = do

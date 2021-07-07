@@ -1,5 +1,4 @@
 import { SelectQueryBuilder } from "typeorm";
-import { ContentSk } from "../../../entities/content/Content";
 import { FormatSk } from "../../../entities/format/Format";
 import { Structure, StructureSk } from "../../../entities/format/Structure";
 import { toFocusedFormatFromStructure } from "../../../interfaces/format/Format";
@@ -10,6 +9,7 @@ import { SelectFromSingleTableQuery, SelectQueryFromEntity } from "../SelectQuer
 export function joinProperties<T>(alias: string, query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
     return query
         .leftJoinAndSelect(alias + ".properties", "properties")
+        .leftJoinAndSelect("properties.metaProperties", "metaProperties")
         .leftJoinAndSelect("properties.argFormat", "argFormat")
         .leftJoinAndSelect("properties.argProperties", "argProperties")
         .leftJoinAndSelect("argProperties.argFormat", "argFormat2")
@@ -29,15 +29,13 @@ export class StructureQuery extends SelectFromSingleTableQuery<Structure, Struct
 
     selectRelated() {
         const query = this.qb
-            .leftJoinAndSelect("creatorUser", "creatorUser")
-            .leftJoinAndSelect("updaterUser", "updaterUser");
-
+            .leftJoinAndSelect("x.format", "format");
         return mapQuery(query, toRelatedStructure);
     }
 
     selectFocusedFormat() {
         let query = this.qb
-            .leftJoinAndSelect("structure.format", "format")
+            .leftJoinAndSelect("x.format", "format")
             .leftJoinAndSelect("format.space", "space")
             .leftJoinAndSelect("format.creatorUser", "creatorUser")
             .leftJoinAndSelect("format.updaterUser", "updaterUser");

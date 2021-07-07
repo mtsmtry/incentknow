@@ -1,9 +1,21 @@
-import { title } from "process";
 import { FormatId } from "../../entities/format/Format";
+import { MetaProperty, MetaPropertyId, MetaPropertyType } from "../../entities/format/MetaProperty";
 import { Language, Property, TypeName } from "../../entities/format/Property";
 import { Structure } from "../../entities/format/Structure";
 import { Data, DataKind, DataMember } from "../../Implication";
 import { toTimestamp } from "../Utils";
+
+export interface IntactMetaProperty {
+    id: MetaPropertyId;
+    type: MetaPropertyType;
+}
+
+export function toIntactMetaProperty(meta: MetaProperty): IntactMetaProperty {
+    return { 
+        id: meta.entityId,
+        type: meta.type 
+    };
+}
 
 export interface PropertyInfo {
     displayName: string,
@@ -11,7 +23,8 @@ export interface PropertyInfo {
     id: string,
     optional: boolean,
     semantic: string | null,
-    type: Type
+    type: Type,
+    metaProperties: IntactMetaProperty[]
 }
 
 export interface Enumerator {
@@ -46,12 +59,14 @@ export class Type {
 }
 
 export function toPropertyInfo(prop: Property): PropertyInfo {
+    const metaProps = prop.metaProperties || [];
     const res: PropertyInfo = {
         id: prop.entityId,
         displayName: prop.displayName,
         fieldName: prop.fieldName,
         optional: prop.optional,
         semantic: prop.semantic,
+        metaProperties: metaProps.map(toIntactMetaProperty),
         type: new Type({
             name: prop.typeName
         })
@@ -78,6 +93,7 @@ export function toPropertyInfo(prop: Property): PropertyInfo {
 export type StructureId = string;
 
 export interface RelatedStructure {
+    formatId: FormatId;
     structureId: StructureId;
     version: number;
     title: string | null;
@@ -86,6 +102,7 @@ export interface RelatedStructure {
 
 export function toRelatedStructure(structure: Structure): RelatedStructure {
     return {
+        formatId: structure.format.entityId,
         structureId: structure.entityId,
         version: structure.version,
         title: structure.title,

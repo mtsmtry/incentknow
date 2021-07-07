@@ -1,6 +1,7 @@
 module Incentknow.Pages.Format.Setting where
 
 import Prelude
+
 import Affjax as AX
 import Affjax.RequestBody as RequestBody
 import Affjax.RequestHeader (RequestHeader(..))
@@ -20,10 +21,11 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.API (checkSpaceDisplayId, setMyDisplayName, setMyEmail, setMyIcon, setMyPassword, setSpaceAuthority, setSpaceDisplayId, setSpaceDisplayName, setSpaceHomeImage, setSpaceMembershipMethod, setSpacePublished)
-import Incentknow.API.Execution (callAPI, executeAPI, subscribeAPI)
+import Incentknow.API (setMyDisplayName, setMyEmail, setMyIcon, setMyPassword, setSpaceDisplayId, setSpaceDisplayName, setSpaceMembershipMethod, setSpacePublished)
+import Incentknow.API.Execution (callAPI, executeAPI)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, submitButton, textarea)
+import Incentknow.Data.Entities (FocusedFormat)
 import Incentknow.Data.Ids (SpaceId(..), UserId(..))
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DisplayId as DisplayId
@@ -38,12 +40,12 @@ import Incentknow.Organisms.ContentList as ContentList
 import Pipes (discard)
 
 type Input
-  = { format :: Format
+  = { format :: FocusedFormat
     , disabled :: Boolean
     }
 
 type State
-  = { format :: Format
+  = { format :: FocusedFormat
     , disabled :: Boolean
     }
 
@@ -84,15 +86,15 @@ generatorMenu_ = SProxy :: SProxy "generatorMenu"
 render :: forall m. MonadAff m => Behaviour m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div [ css "page-user-setting" ]
-    [ whenElem (state.format.usage == "internal") \_ ->
-        HH.slot generatorMenu_ unit GeneratorMenu.component
-          { submit: callAPI <<< \x -> setContentGenerator state.format.formatId (fromMaybe "" x)
-          , value: Just state.format.generator
-          , title: "ジェネレータの設定"
-          , desc: "コンテンツを自動的に生成する設定をします"
-          , disabled: state.disabled
-          }
-          (Just <<< Edit)
+    [ --whenElem (state.format.usage == "internal") \_ ->
+     --   HH.slot generatorMenu_ unit GeneratorMenu.component
+     --     { submit: callAPI <<< \x -> setContentGenerator state.format.formatId (fromMaybe "" x)
+     --     , value: Just state.format.generator
+      --    , title: "ジェネレータの設定"
+      --    , desc: "コンテンツを自動的に生成する設定をします"
+      --    , disabled: state.disabled
+      --    }
+      --    (Just <<< Edit)
     ]
 
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
