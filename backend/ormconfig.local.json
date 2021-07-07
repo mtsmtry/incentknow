@@ -1,11 +1,10 @@
 {
    "type": "mysql",
-   "database": "main",
-   "region": "ap-northeast-1",
-   "host": "localhost",
+   "database": "incentknow",
+   "host": "13.113.194.38",
    "port": 3306,
-   "username": "root",
-   "password": "2128",
+   "username": "docker",
+   "password": "password",
    "logging": [],
    "synchronize": true,
    "entities": [
