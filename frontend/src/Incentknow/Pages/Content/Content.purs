@@ -2,12 +2,13 @@ module Incentknow.Pages.Content where
 
 import Prelude
 
-import Data.Array (index, length, range)
+import Data.Array (filter, head, index, length, range)
 import Data.Foldable (for_)
 import Data.Int (fromString)
 import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Maybe.Utils (flatten)
+import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Halogen (SubscriptionId)
@@ -23,11 +24,12 @@ import Incentknow.Data.Entities (FocusedContent)
 import Incentknow.Data.Ids (ContentId(..), FormatId(..), SemanticId(..))
 import Incentknow.HTML.Utils (css, link, link_, maybeElem)
 import Incentknow.Organisms.Content.Viewer as Content
-import Incentknow.Organisms.ContentList as ContentList
+import Incentknow.Organisms.RelatedContents as RelatedContents
 import Incentknow.Organisms.UserCard as UserCard
 import Incentknow.Route (ContentSpec(..), EditTarget(..), Route(..))
 import Incentknow.Route as R
 import Incentknow.Templates.Page (section, tabPage)
+import Web.HTML.Event.EventTypes (offline)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
@@ -56,7 +58,7 @@ type Slot p
 type ChildSlots
   = ( content :: Content.Slot Unit
     , userCard :: UserCard.Slot Unit
-    , contentList :: ContentList.Slot String
+    , relatedContents :: RelatedContents.Slot Unit
     )
 
 component :: forall q o m. Behaviour m => MonadAff m => H.Component HH.HTML q Input o m
@@ -105,7 +107,7 @@ render state =
     --  renderContent content
     --else
       tabPage
-        { tabs: [ "main" ] -- <> (map show $ range 0 $ length content.format.contentPage.relations - 1)
+        { tabs: [ "main" ] <> map (\x-> x.property.displayName) content.format.relations -- <> (map show $ range 0 $ length content.format.contentPage.relations - 1)
         , currentTab: state.tab
         , onChangeTab: ChangeTab
         , showTab:
@@ -113,7 +115,7 @@ render state =
               if x == "main" then
                 "Main"
               else
-                "Error" -- maybe "Error" (\r -> r.displayName) $ index content.format.contentPage.relations (fromMaybe 0 (fromString x))
+                x -- maybe "Error" (\r -> r.displayName) $ index content.format.contentPage.relations (fromMaybe 0 (fromString x))
         }
         []
         [ HH.text (getContentSemanticData content.data content.format).title
@@ -121,7 +123,15 @@ render state =
         [ if state.tab == "main" then
             renderContent content
           else
-            HH.text ""
+            case (head $ filter (\x-> x.property.displayName == state.tab) content.format.relations) of
+              Just relation->
+                HH.slot (SProxy :: SProxy "relatedContents") unit RelatedContents.component 
+                  { spaceId: content.format.space.spaceId
+                  , value: unwrap content.contentId
+                  , relation
+                  }
+                  absurd
+              Nothing -> HH.text "Error"
             --maybeElem (M.lookup state.tab state.relationalContents) \remote ->
             --  remoteWith remote \contents ->
             --    HH.slot (SProxy :: SProxy "contentList") state.tab ContentList.component { value: contents } absurd

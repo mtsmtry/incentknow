@@ -24,9 +24,11 @@ import Incentknow.Organisms.Header as Header
 import Incentknow.Pages.Content as Content
 import Incentknow.Pages.DraftList as DraftList
 import Incentknow.Pages.EditContent as EditContent
+import Incentknow.Pages.EditMaterial as EditMaterial
 import Incentknow.Pages.Format as Format
 import Incentknow.Pages.Home as Home
 import Incentknow.Pages.JoinSpace as JoinSpace
+import Incentknow.Pages.Container as Container
 import Incentknow.Pages.NewFormat as NewFormat
 import Incentknow.Pages.NewSpace as NewSpace
 import Incentknow.Pages.Public as Public
@@ -47,12 +49,13 @@ data Action
   = Initialize
 
 type ChildSlots
-  = ( --composition :: Composition.Slot Unit header :: Header.Slot Unit
-    header :: Header.Slot Unit
+  = ( container :: Container.Slot Unit
+    , header :: Header.Slot Unit
     ,  footer :: Footer.Slot Unit
     , content :: Content.Slot Unit
     , public :: Public.Slot Unit
     , editContent :: EditContent.Slot Unit
+    , editMaterial :: EditMaterial.Slot Unit
     -- , editScraper :: EditScraper.Slot Unit
     , format :: Format.Slot Unit
     --  , newCommunity :: NewCommunity.Slot Unit
@@ -116,6 +119,7 @@ component =
     Content contentId -> HH.slot (SProxy :: SProxy "content") unit Content.component { contentSpec: ContentSpecContentId contentId } absurd
     ContentBySemanticId formatId semanticId -> HH.slot (SProxy :: SProxy "content") unit Content.component { contentSpec: ContentSpecSemanticId formatId semanticId } absurd
     EditContent target -> HH.slot (SProxy :: SProxy "editContent") unit EditContent.component target absurd
+    EditMaterial target -> HH.slot (SProxy :: SProxy "editMaterial") unit EditMaterial.component target absurd
     EditScraper contentId -> HH.text "" --HH.slot (SProxy :: SProxy "editScraper") unit EditScraper.component { contentId } absurd
     NewFormat spaceId -> HH.slot (SProxy :: SProxy "newFormat") unit NewFormat.component { spaceId } absurd
     --EditWork workId -> HH.slot (SProxy :: SProxy "newContent") unit NewContent.component (NewContent.DraftInput workId) absurd
@@ -123,7 +127,7 @@ component =
     --NewContent spaceId formatId -> HH.slot (SProxy :: SProxy "newContent") unit NewContent.component (NewContent.NewInput spaceId formatId) absurd
     Format formatId tab -> HH.slot (SProxy :: SProxy "format") unit Format.component { formatId, tab } absurd
     --ContentList spaceId formatId urlParams -> HH.slot (SProxy :: SProxy "pageContentQuery") unit PageContentQuery.component { spaceId, formatId, urlParams } absurd
-    Composition spaceId formatId tab -> HH.text "" --HH.slot (SProxy :: SProxy "composition") unit Composition.component { spaceId, formatId, tab } absurd
+    Container spaceId formatId -> HH.slot (SProxy :: SProxy "container") unit Container.component { spaceId, formatId } absurd
     -- community
     JoinSpace spaceId -> HH.slot (SProxy :: SProxy "joinSpace") unit JoinSpace.component { spaceId } absurd
     SpaceList -> HH.slot (SProxy :: SProxy "spaceList") unit SpaceList.component {} absurd

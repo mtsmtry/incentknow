@@ -43,7 +43,7 @@ type ChildSlots
   = ( value :: Value.Slot Unit
     )
 
-component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q EditorInput Output m
+component :: forall q m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q EditorInput Output m
 component =
   H.mkComponent
     { initialState

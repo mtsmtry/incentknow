@@ -3,11 +3,11 @@ module Incentknow.Molecules.StructureMenu where
 import Prelude
 
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), isJust, isNothing, maybe)
+import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
 import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getFocusedFormat, getRelatedFormat, getRelatedStructure, getStructures)
@@ -21,6 +21,7 @@ import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
+import Test.Unit.Console (consoleLog)
 
 type Input
   = { value :: Maybe StructureId

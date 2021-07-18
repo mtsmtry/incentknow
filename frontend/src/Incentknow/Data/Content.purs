@@ -37,7 +37,7 @@ getContentSemanticData contentData format = { title, semanticId: map wrap semant
   semanticId =
     flatten
       $ map
-          (\id -> head $ catMaybes $ map (\x -> if x.info.id == id then toString x.value else Nothing) props)
+          (\id -> head $ catMaybes $ map (\x -> if unwrap x.info.id == id then toString x.value else Nothing) props)
           (format.semanticId)
 
   title = fromMaybe "" $ head $ catMaybes $ map (\x -> toString x.value) props
@@ -110,4 +110,4 @@ validateContentObject :: Array PropertyInfo -> Json -> Array ValidationError
 validateContentObject = validateContentImpl (\x -> fromMaybe "" x.fieldName) ""
 
 validateContentData :: Array PropertyInfo -> Json -> Array ValidationError
-validateContentData = validateContentImpl (\x -> x.id) ""
+validateContentData = validateContentImpl (\x -> unwrap x.id) ""

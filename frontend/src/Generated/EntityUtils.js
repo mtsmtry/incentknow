@@ -138,7 +138,7 @@ exports.getTypeName = src => {if (src instanceof E.IntType) {
                     
                     if (src instanceof E.ContentType) {
                         return {
-                            format: src.value0,subType: Data_Maybe.Nothing.value,language: Data_Maybe.Nothing.value,properties: Data_Maybe.Nothing.value,enumerators: Data_Maybe.Nothing.value
+                            format: new Data_Maybe.Just(src.value0),subType: Data_Maybe.Nothing.value,language: Data_Maybe.Nothing.value,properties: Data_Maybe.Nothing.value,enumerators: Data_Maybe.Nothing.value
                         }
                     }
                     
@@ -150,7 +150,7 @@ exports.getTypeName = src => {if (src instanceof E.IntType) {
                     
                     if (src instanceof E.ObjectType) {
                         return {
-                            properties: src.value0,format: Data_Maybe.Nothing.value,subType: Data_Maybe.Nothing.value,language: Data_Maybe.Nothing.value,enumerators: Data_Maybe.Nothing.value
+                            properties: new Data_Maybe.Just(src.value0),format: Data_Maybe.Nothing.value,subType: Data_Maybe.Nothing.value,language: Data_Maybe.Nothing.value,enumerators: Data_Maybe.Nothing.value
                         }
                     }
                     
@@ -162,19 +162,19 @@ exports.getTypeName = src => {if (src instanceof E.IntType) {
                     
                     if (src instanceof E.ArrayType) {
                         return {
-                            subType: src.value0,format: Data_Maybe.Nothing.value,language: Data_Maybe.Nothing.value,properties: Data_Maybe.Nothing.value,enumerators: Data_Maybe.Nothing.value
+                            subType: new Data_Maybe.Just(src.value0),format: Data_Maybe.Nothing.value,language: Data_Maybe.Nothing.value,properties: Data_Maybe.Nothing.value,enumerators: Data_Maybe.Nothing.value
                         }
                     }
                     
                     if (src instanceof E.CodeType) {
                         return {
-                            language: src.value0,format: Data_Maybe.Nothing.value,subType: Data_Maybe.Nothing.value,properties: Data_Maybe.Nothing.value,enumerators: Data_Maybe.Nothing.value
+                            language: new Data_Maybe.Just(src.value0),format: Data_Maybe.Nothing.value,subType: Data_Maybe.Nothing.value,properties: Data_Maybe.Nothing.value,enumerators: Data_Maybe.Nothing.value
                         }
                     }
                     
                     if (src instanceof E.EnumType) {
                         return {
-                            enumerators: src.value0,format: Data_Maybe.Nothing.value,subType: Data_Maybe.Nothing.value,language: Data_Maybe.Nothing.value,properties: Data_Maybe.Nothing.value
+                            enumerators: new Data_Maybe.Just(src.value0),format: Data_Maybe.Nothing.value,subType: Data_Maybe.Nothing.value,language: Data_Maybe.Nothing.value,properties: Data_Maybe.Nothing.value
                         }
                     }
                     
@@ -192,7 +192,7 @@ exports.getTypeName = src => {if (src instanceof E.IntType) {
                     
                     if (src instanceof E.EntityType) {
                         return {
-                            format: src.value0,subType: Data_Maybe.Nothing.value,language: Data_Maybe.Nothing.value,properties: Data_Maybe.Nothing.value,enumerators: Data_Maybe.Nothing.value
+                            format: new Data_Maybe.Just(src.value0),subType: Data_Maybe.Nothing.value,language: Data_Maybe.Nothing.value,properties: Data_Maybe.Nothing.value,enumerators: Data_Maybe.Nothing.value
                         }
                     }
                     };
@@ -218,13 +218,13 @@ exports.getMaterialCompositionType = src => {if (src instanceof E.CreationMateri
                 }}};exports.getMaterialCompositionOptions = src => {
                     if (src instanceof E.CreationMaterialComposition) {
                         return {
-                            propertyId: src.value0,data: src.value1,materialId: Data_Maybe.Nothing.value
+                            propertyId: new Data_Maybe.Just(src.value0),data: new Data_Maybe.Just(src.value1),materialId: Data_Maybe.Nothing.value
                         }
                     }
                     
                     if (src instanceof E.MoveMaterialComposition) {
                         return {
-                            materialId: src.value0,propertyId: Data_Maybe.Nothing.value,data: Data_Maybe.Nothing.value
+                            materialId: new Data_Maybe.Just(src.value0),propertyId: Data_Maybe.Nothing.value,data: Data_Maybe.Nothing.value
                         }
                     }
                     };

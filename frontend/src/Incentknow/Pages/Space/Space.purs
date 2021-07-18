@@ -21,9 +21,9 @@ import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..))
 import Incentknow.Data.Ids (SpaceDisplayId(..), SpaceId(..))
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
+import Incentknow.Pages.Space.ContainerList as ContainerList
 import Incentknow.Pages.Space.FormatList as FormatList
 import Incentknow.Pages.Space.MemberList as MemberList
-import Incentknow.Pages.Space.PageList as PageList
 import Incentknow.Pages.Space.Setting as Setting
 import Incentknow.Route (EditTarget(..), Route(..), SpaceTab(..))
 import Incentknow.Templates.Page (section, tabPage)
@@ -49,7 +49,7 @@ type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = ( pages :: PageList.Slot Unit
+  = ( containers :: ContainerList.Slot Unit
    -- , contents :: ContentList.Slot Unit
     , formats :: FormatList.Slot Unit
    -- , crawlers :: CrawlerList.Slot Unit
@@ -95,15 +95,15 @@ renderMain state space =
   tabPage
     { tabs:
         --if readable then
-        [ SpacePages, SpaceContents, SpaceFormats, SpaceMembers, SpaceCrawlers, SpaceSetting ]
+        [ SpaceContainers, SpaceFormats, SpaceMembers, SpaceCrawlers, SpaceSetting ]
     --else
     --  [ SpacePages, SpaceSetting ]
     , currentTab: state.tab
     , onChangeTab: ChangeTab
     , showTab:
         case _ of
-          SpacePages -> if readable then "Pages" else "Caption"
-          SpaceContents -> "Contents"
+        --  SpacePages -> if readable then "Pages" else "Caption"
+          SpaceContainers -> "Containers"
           SpaceFormats -> "Formats"
           SpaceMembers -> "Members"
           SpaceCrawlers -> "Crawlers"
@@ -118,9 +118,9 @@ renderMain state space =
         ]
     ]
     [ case state.tab of
-        SpacePages ->
+        SpaceContainers ->
           if readable then
-            HH.slot (SProxy :: SProxy "pages") unit PageList.component { spaceId: space.spaceId } absurd
+            HH.slot (SProxy :: SProxy "containers") unit ContainerList.component { spaceId: space.spaceId, spaceDisplayId: state.spaceId } absurd
           else
             section ""
               [ HH.text "このスペースはメンバー以外には非公開です"
@@ -132,7 +132,6 @@ renderMain state space =
                       menuPositiveButton "メンバーへの加入を申請" (Navigate $ JoinSpace space.spaceId)
                   _ -> HH.text ""
               ]
-        SpaceContents -> HH.text "" -- HH.slot (SProxy :: SProxy "contents") unit ContentList.component { spaceId: space.spaceId } absurd
         SpaceFormats -> HH.slot (SProxy :: SProxy "formats") unit FormatList.component { spaceId: space.spaceId } absurd
         SpaceMembers -> HH.slot (SProxy :: SProxy "members") unit MemberList.component { spaceId: space.spaceId, isAdmin } absurd
         SpaceCrawlers -> HH.text "" -- HH.slot (SProxy :: SProxy "crawlers") unit CrawlerList.component { spaceId: space.spaceId } absurd
@@ -155,7 +154,7 @@ handleAction = case _ of
     state <- H.get
     callbackQuery FetchedSpace $ getSpace state.spaceId
   FetchedSpace fetch ->
-    forRemote fetch \space ->
+    forRemote fetch \space->
       H.modify_ _ { space = space }
   HandleInput input -> do
     state <- H.get

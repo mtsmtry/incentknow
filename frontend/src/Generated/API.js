@@ -25,15 +25,15 @@ async function requestApi(method, args) {
 const psObjectLiteral = x => x;
 
 function jsContentGenerator(obj) {
-                if(obj instanceof E.ContentGeneratorNone) {
+                if(E.ContentGeneratorNone && obj instanceof E.ContentGeneratorNone) {
                     return "none";
                 }
             
-                if(obj instanceof E.ContentGeneratorReactor) {
+                if(E.ContentGeneratorReactor && obj instanceof E.ContentGeneratorReactor) {
                     return "reactor";
                 }
             
-                if(obj instanceof E.ContentGeneratorCrawler) {
+                if(E.ContentGeneratorCrawler && obj instanceof E.ContentGeneratorCrawler) {
                     return "crawler";
                 }
             }
@@ -84,15 +84,15 @@ const psContentCommitId = x => x;
 
 
 function jsContentChangeType(obj) {
-                if(obj instanceof E.ContentChangeTypeInitial) {
+                if(E.ContentChangeTypeInitial && obj instanceof E.ContentChangeTypeInitial) {
                     return "initial";
                 }
             
-                if(obj instanceof E.ContentChangeTypeWrite) {
+                if(E.ContentChangeTypeWrite && obj instanceof E.ContentChangeTypeWrite) {
                     return "write";
                 }
             
-                if(obj instanceof E.ContentChangeTypeRemove) {
+                if(E.ContentChangeTypeRemove && obj instanceof E.ContentChangeTypeRemove) {
                     return "remove";
                 }
             }
@@ -119,15 +119,15 @@ const psContentDraftId = x => x;
 
 
 function jsContentEditingState(obj) {
-                if(obj instanceof E.ContentEditingStateEditing) {
+                if(E.ContentEditingStateEditing && obj instanceof E.ContentEditingStateEditing) {
                     return "editing";
                 }
             
-                if(obj instanceof E.ContentEditingStateCommitted) {
+                if(E.ContentEditingStateCommitted && obj instanceof E.ContentEditingStateCommitted) {
                     return "committed";
                 }
             
-                if(obj instanceof E.ContentEditingStateCanceld) {
+                if(E.ContentEditingStateCanceld && obj instanceof E.ContentEditingStateCanceld) {
                     return "canceled";
                 }
             }
@@ -178,11 +178,11 @@ const psContentTransitionId = x => x;
 
 
 function jsFormatUsage(obj) {
-                if(obj instanceof E.Internal) {
+                if(E.Internal && obj instanceof E.Internal) {
                     return "internal";
                 }
             
-                if(obj instanceof E.External) {
+                if(E.External && obj instanceof E.External) {
                     return "external";
                 }
             }
@@ -231,15 +231,15 @@ const psMetaPropertyId = x => x;
 
 
 function jsMetaPropertyType(obj) {
-                if(obj instanceof E.ValueRelatively) {
+                if(E.ValueRelatively && obj instanceof E.ValueRelatively) {
                     return "value_relatively";
                 }
             
-                if(obj instanceof E.MutualExclutively) {
+                if(E.MutualExclutively && obj instanceof E.MutualExclutively) {
                     return "mutual_exclutively";
                 }
             
-                if(obj instanceof E.SeriesDependency) {
+                if(E.SeriesDependency && obj instanceof E.SeriesDependency) {
                     return "series_dependency";
                 }
             }
@@ -254,63 +254,63 @@ return (E.SeriesDependency || { value: null }).value;
 }}
 
 function jsTypeName(obj) {
-                if(obj instanceof E.TypeNameInt) {
+                if(E.TypeNameInt && obj instanceof E.TypeNameInt) {
                     return "integer";
                 }
             
-                if(obj instanceof E.TypeNameBool) {
+                if(E.TypeNameBool && obj instanceof E.TypeNameBool) {
                     return "boolean";
                 }
             
-                if(obj instanceof E.TypeNameString) {
+                if(E.TypeNameString && obj instanceof E.TypeNameString) {
                     return "string";
                 }
             
-                if(obj instanceof E.TypeNameFormat) {
+                if(E.TypeNameFormat && obj instanceof E.TypeNameFormat) {
                     return "format";
                 }
             
-                if(obj instanceof E.TypeNameSpace) {
+                if(E.TypeNameSpace && obj instanceof E.TypeNameSpace) {
                     return "space";
                 }
             
-                if(obj instanceof E.TypeNameContent) {
+                if(E.TypeNameContent && obj instanceof E.TypeNameContent) {
                     return "content";
                 }
             
-                if(obj instanceof E.TypeNameUrl) {
+                if(E.TypeNameUrl && obj instanceof E.TypeNameUrl) {
                     return "url";
                 }
             
-                if(obj instanceof E.TypeNameObject) {
+                if(E.TypeNameObject && obj instanceof E.TypeNameObject) {
                     return "object";
                 }
             
-                if(obj instanceof E.TypeNameText) {
+                if(E.TypeNameText && obj instanceof E.TypeNameText) {
                     return "text";
                 }
             
-                if(obj instanceof E.TypeNameArray) {
+                if(E.TypeNameArray && obj instanceof E.TypeNameArray) {
                     return "array";
                 }
             
-                if(obj instanceof E.TypeNameCode) {
+                if(E.TypeNameCode && obj instanceof E.TypeNameCode) {
                     return "code";
                 }
             
-                if(obj instanceof E.TypeNameEnum) {
+                if(E.TypeNameEnum && obj instanceof E.TypeNameEnum) {
                     return "enumerator";
                 }
             
-                if(obj instanceof E.TypeNameDocument) {
+                if(E.TypeNameDocument && obj instanceof E.TypeNameDocument) {
                     return "document";
                 }
             
-                if(obj instanceof E.TypeNameImage) {
+                if(E.TypeNameImage && obj instanceof E.TypeNameImage) {
                     return "image";
                 }
             
-                if(obj instanceof E.TypeNameEntity) {
+                if(E.TypeNameEntity && obj instanceof E.TypeNameEntity) {
                     return "entity";
                 }
             }
@@ -349,11 +349,11 @@ return (E.TypeNameEntity || { value: null }).value;
 }}
 
 function jsLanguage(obj) {
-                if(obj instanceof E.Python) {
+                if(E.Python && obj instanceof E.Python) {
                     return "python";
                 }
             
-                if(obj instanceof E.Javascript) {
+                if(E.Javascript && obj instanceof E.Javascript) {
                     return "javascript";
                 }
             }
@@ -390,11 +390,11 @@ const psStructureId = x => x;
 
 
 function jsMaterialType(obj) {
-                if(obj instanceof E.MaterialTypeFolder) {
+                if(E.MaterialTypeFolder && obj instanceof E.MaterialTypeFolder) {
                     return "folder";
                 }
             
-                if(obj instanceof E.MaterialTypeDocument) {
+                if(E.MaterialTypeDocument && obj instanceof E.MaterialTypeDocument) {
                     return "document";
                 }
             }
@@ -431,15 +431,15 @@ const psMaterialCommitId = x => x;
 
 
 function jsMaterialChangeType(obj) {
-                if(obj instanceof E.MaterialChangeTypeInitial) {
+                if(E.MaterialChangeTypeInitial && obj instanceof E.MaterialChangeTypeInitial) {
                     return "initial";
                 }
             
-                if(obj instanceof E.MaterialChangeTypeWrite) {
+                if(E.MaterialChangeTypeWrite && obj instanceof E.MaterialChangeTypeWrite) {
                     return "write";
                 }
             
-                if(obj instanceof E.MaterialChangeTypeRemove) {
+                if(E.MaterialChangeTypeRemove && obj instanceof E.MaterialChangeTypeRemove) {
                     return "remove";
                 }
             }
@@ -466,15 +466,15 @@ const psMaterialDraftId = x => x;
 
 
 function jsMaterialEditingState(obj) {
-                if(obj instanceof E.MaterialEditingStateEditing) {
+                if(E.MaterialEditingStateEditing && obj instanceof E.MaterialEditingStateEditing) {
                     return "editing";
                 }
             
-                if(obj instanceof E.MaterialEditingStateCommitted) {
+                if(E.MaterialEditingStateCommitted && obj instanceof E.MaterialEditingStateCommitted) {
                     return "committed";
                 }
             
-                if(obj instanceof E.MaterialEditingStateCanceld) {
+                if(E.MaterialEditingStateCanceld && obj instanceof E.MaterialEditingStateCanceld) {
                     return "canceled";
                 }
             }
@@ -513,7 +513,7 @@ const psMaterialSnapshotId = x => x;
 
 
 function jsReactorState(obj) {
-                if(obj instanceof E.Invaild) {
+                if(E.Invaild && obj instanceof E.Invaild) {
                     return "invaild";
                 }
             }
@@ -536,11 +536,11 @@ const psReactorId = x => x;
 
 
 function jsMembershipMethod(obj) {
-                if(obj instanceof E.MembershipMethodNone) {
+                if(E.MembershipMethodNone && obj instanceof E.MembershipMethodNone) {
                     return "none";
                 }
             
-                if(obj instanceof E.MembershipMethodApp) {
+                if(E.MembershipMethodApp && obj instanceof E.MembershipMethodApp) {
                     return "app";
                 }
             }
@@ -553,19 +553,19 @@ return (E.MembershipMethodApp || { value: null }).value;
 }}
 
 function jsSpaceAuth(obj) {
-                if(obj instanceof E.SpaceAuthNone) {
+                if(E.SpaceAuthNone && obj instanceof E.SpaceAuthNone) {
                     return "none";
                 }
             
-                if(obj instanceof E.SpaceAuthVisible) {
+                if(E.SpaceAuthVisible && obj instanceof E.SpaceAuthVisible) {
                     return "visible";
                 }
             
-                if(obj instanceof E.SpaceAuthReadable) {
+                if(E.SpaceAuthReadable && obj instanceof E.SpaceAuthReadable) {
                     return "readable";
                 }
             
-                if(obj instanceof E.SpaceAuthWritable) {
+                if(E.SpaceAuthWritable && obj instanceof E.SpaceAuthWritable) {
                     return "writable";
                 }
             }
@@ -606,11 +606,11 @@ const psSpaceFollowSk = x => x;
 
 
 function jsMemberType(obj) {
-                if(obj instanceof E.Normal) {
+                if(E.Normal && obj instanceof E.Normal) {
                     return "normal";
                 }
             
-                if(obj instanceof E.Owner) {
+                if(E.Owner && obj instanceof E.Owner) {
                     return "owner";
                 }
             }
@@ -839,7 +839,8 @@ function jsRelatedContentDraft(obj){obj.draftId = jsContentDraftId(obj.draftId);
                         }
                     
 obj.format = jsFocusedFormat(obj.format);
-obj.changeType = jsContentChangeType(obj.changeType);return obj;}
+obj.changeType = jsContentChangeType(obj.changeType);
+return obj;}
 
 function psRelatedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
 
@@ -860,7 +861,8 @@ function psRelatedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
                     }
                 
 obj.format = psFocusedFormat(obj.format);
-obj.changeType = psContentChangeType(obj.changeType);return obj;}
+obj.changeType = psContentChangeType(obj.changeType);
+return obj;}
 
 function jsFocusedContentDraft(obj){obj.draftId = jsContentDraftId(obj.draftId);
 
@@ -887,7 +889,8 @@ obj.data = jsObjectLiteral(obj.data);
                             });
                         
 obj.format = jsFocusedFormat(obj.format);
-obj.changeType = jsContentChangeType(obj.changeType);return obj;}
+obj.changeType = jsContentChangeType(obj.changeType);
+return obj;}
 
 function psFocusedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
 
@@ -914,18 +917,19 @@ obj.data = psObjectLiteral(obj.data);
                         });
                     
 obj.format = psFocusedFormat(obj.format);
-obj.changeType = psContentChangeType(obj.changeType);return obj;}
+obj.changeType = psContentChangeType(obj.changeType);
+return obj;}
 
 function jsContentNodeType(obj) {
-                if(obj instanceof E.ContentNodeTypeCommitted) {
+                if(E.ContentNodeTypeCommitted && obj instanceof E.ContentNodeTypeCommitted) {
                     return "committed";
                 }
             
-                if(obj instanceof E.ContentNodeTypePresent) {
+                if(E.ContentNodeTypePresent && obj instanceof E.ContentNodeTypePresent) {
                     return "present";
                 }
             
-                if(obj instanceof E.ContentNodeTypeCanceld) {
+                if(E.ContentNodeTypeCanceld && obj instanceof E.ContentNodeTypeCanceld) {
                     return "canceled";
                 }
             }
@@ -940,15 +944,15 @@ return (E.ContentNodeTypeCanceld || { value: null }).value;
 }}
 
 function jsContentNodeTarget(obj) {
-                if(obj instanceof E.ContentNodeTargetContent) {
+                if(E.ContentNodeTargetContent && obj instanceof E.ContentNodeTargetContent) {
                     return "content";
                 }
             
-                if(obj instanceof E.ContentNodeTargetMaterial) {
+                if(E.ContentNodeTargetMaterial && obj instanceof E.ContentNodeTargetMaterial) {
                     return "material";
                 }
             
-                if(obj instanceof E.ContentNodeTargetWhole) {
+                if(E.ContentNodeTargetWhole && obj instanceof E.ContentNodeTargetWhole) {
                     return "whole";
                 }
             }
@@ -999,19 +1003,19 @@ const psContentWholeRevisionId = x => x;
 
 
 function jsContentRevisionSource(obj) {
-                if(obj instanceof E.ContentRevisionSourceCommit) {
+                if(E.ContentRevisionSourceCommit && obj instanceof E.ContentRevisionSourceCommit) {
                     return "commit";
                 }
             
-                if(obj instanceof E.ContentRevisionSourceSnapshot) {
+                if(E.ContentRevisionSourceSnapshot && obj instanceof E.ContentRevisionSourceSnapshot) {
                     return "snapshot";
                 }
             
-                if(obj instanceof E.ContentRevisionSourceEditing) {
+                if(E.ContentRevisionSourceEditing && obj instanceof E.ContentRevisionSourceEditing) {
                     return "editing";
                 }
             
-                if(obj instanceof E.ContentRevisionSourceDraft) {
+                if(E.ContentRevisionSourceDraft && obj instanceof E.ContentRevisionSourceDraft) {
                     return "draft";
                 }
             }
@@ -1111,6 +1115,14 @@ obj.updaterUser = psRelatedUser(obj.updaterUser);
                 
 obj.currentStructure = psRelatedStructure(obj.currentStructure);return obj;}
 
+function jsRelation(obj){obj.property = jsPropertyInfo(obj.property);
+
+obj.formatId = jsFormatId(obj.formatId);return obj;}
+
+function psRelation(obj){obj.property = psPropertyInfo(obj.property);
+
+obj.formatId = psFormatId(obj.formatId);return obj;}
+
 function jsFocusedFormat(obj){obj.formatId = jsFormatId(obj.formatId);
 obj.displayId = jsFormatDisplayId(obj.displayId);
 
@@ -1128,7 +1140,13 @@ obj.currentStructure = jsFocusedStructure(obj.currentStructure);
                         } else {
                             obj.semanticId = null;
                         }
-                    return obj;}
+                    
+
+                            obj.relations = obj.relations.map(x => {
+                                x = jsRelation(x);
+                                return x;
+                            });
+                        return obj;}
 
 function psFocusedFormat(obj){obj.formatId = psFormatId(obj.formatId);
 obj.displayId = psFormatDisplayId(obj.displayId);
@@ -1147,7 +1165,13 @@ obj.currentStructure = psFocusedStructure(obj.currentStructure);
                     } else {
                         obj.semanticId = Data_Maybe.Nothing.value;
                     }
-                return obj;}
+                
+
+                        obj.relations = obj.relations.map(x => {
+                            x = psRelation(x);
+                            return x;
+                        });
+                    return obj;}
 
 function jsIntactMetaProperty(obj){obj.id = jsMetaPropertyId(obj.id);
 obj.type = jsMetaPropertyType(obj.type);return obj;}
@@ -1163,7 +1187,7 @@ function jsPropertyInfo(obj){
                             obj.fieldName = null;
                         }
                     
-
+obj.id = jsPropertyId(obj.id);
 
 
                         if (obj.semantic instanceof Data_Maybe.Just) {
@@ -1188,7 +1212,7 @@ function psPropertyInfo(obj){
                         obj.fieldName = Data_Maybe.Nothing.value;
                     }
                 
-
+obj.id = psPropertyId(obj.id);
 
 
                     if (obj.semantic) {
@@ -1226,105 +1250,105 @@ function psEnumerator(obj){
                 return obj;}
 
 function jsType(obj) {
-                if(obj instanceof E.IntType) {
+                if(E.IntType && obj instanceof E.IntType) {
                     return {
                         name: "integer",
                         
                     };
                 }
             
-                if(obj instanceof E.BoolType) {
+                if(E.BoolType && obj instanceof E.BoolType) {
                     return {
                         name: "boolean",
                         
                     };
                 }
             
-                if(obj instanceof E.StringType) {
+                if(E.StringType && obj instanceof E.StringType) {
                     return {
                         name: "string",
                         
                     };
                 }
             
-                if(obj instanceof E.FormatType) {
+                if(E.FormatType && obj instanceof E.FormatType) {
                     return {
                         name: "format",
                         
                     };
                 }
             
-                if(obj instanceof E.SpaceType) {
+                if(E.SpaceType && obj instanceof E.SpaceType) {
                     return {
                         name: "space",
                         
                     };
                 }
             
-                if(obj instanceof E.ContentType) {
+                if(E.ContentType && obj instanceof E.ContentType) {
                     return {
                         name: "content",
                         format: obj.value0
                     };
                 }
             
-                if(obj instanceof E.UrlType) {
+                if(E.UrlType && obj instanceof E.UrlType) {
                     return {
                         name: "url",
                         
                     };
                 }
             
-                if(obj instanceof E.ObjectType) {
+                if(E.ObjectType && obj instanceof E.ObjectType) {
                     return {
                         name: "object",
                         properties: obj.value0
                     };
                 }
             
-                if(obj instanceof E.TextType) {
+                if(E.TextType && obj instanceof E.TextType) {
                     return {
                         name: "text",
                         
                     };
                 }
             
-                if(obj instanceof E.ArrayType) {
+                if(E.ArrayType && obj instanceof E.ArrayType) {
                     return {
                         name: "array",
                         subType: obj.value0
                     };
                 }
             
-                if(obj instanceof E.CodeType) {
+                if(E.CodeType && obj instanceof E.CodeType) {
                     return {
                         name: "code",
                         language: obj.value0
                     };
                 }
             
-                if(obj instanceof E.EnumType) {
+                if(E.EnumType && obj instanceof E.EnumType) {
                     return {
                         name: "enumerator",
                         enumerators: obj.value0
                     };
                 }
             
-                if(obj instanceof E.DocumentType) {
+                if(E.DocumentType && obj instanceof E.DocumentType) {
                     return {
                         name: "document",
                         
                     };
                 }
             
-                if(obj instanceof E.ImageType) {
+                if(E.ImageType && obj instanceof E.ImageType) {
                     return {
                         name: "image",
                         
                     };
                 }
             
-                if(obj instanceof E.EntityType) {
+                if(E.EntityType && obj instanceof E.EntityType) {
                     return {
                         name: "entity",
                         format: obj.value0
@@ -1535,9 +1559,11 @@ return obj;}
 function jsRelatedMaterialDraft(obj){obj.draftId = jsMaterialDraftId(obj.draftId);
 
 
+
 return obj;}
 
 function psRelatedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId);
+
 
 
 return obj;}
@@ -1567,6 +1593,7 @@ function jsFocusedMaterialDraft(obj){obj.draftId = jsMaterialDraftId(obj.draftId
                             obj.basedCommitId = null;
                         }
                     
+
 return obj;}
 
 function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId);
@@ -1594,18 +1621,19 @@ function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
                 
+
 return obj;}
 
 function jsMaterialNodeType(obj) {
-                if(obj instanceof E.MaterialNodeTypeCommitted) {
+                if(E.MaterialNodeTypeCommitted && obj instanceof E.MaterialNodeTypeCommitted) {
                     return "committed";
                 }
             
-                if(obj instanceof E.MaterialNodeTypePresent) {
+                if(E.MaterialNodeTypePresent && obj instanceof E.MaterialNodeTypePresent) {
                     return "present";
                 }
             
-                if(obj instanceof E.MaterialNodeTypeCanceld) {
+                if(E.MaterialNodeTypeCanceld && obj instanceof E.MaterialNodeTypeCanceld) {
                     return "canceled";
                 }
             }
@@ -1648,19 +1676,19 @@ const psMaterialRevisionId = x => x;
 
 
 function jsMaterialRevisionSource(obj) {
-                if(obj instanceof E.MaterialRevisionSourceCommit) {
+                if(E.MaterialRevisionSourceCommit && obj instanceof E.MaterialRevisionSourceCommit) {
                     return "commit";
                 }
             
-                if(obj instanceof E.MaterialRevisionSourceSnapshot) {
+                if(E.MaterialRevisionSourceSnapshot && obj instanceof E.MaterialRevisionSourceSnapshot) {
                     return "snapshot";
                 }
             
-                if(obj instanceof E.MaterialRevisionSourceEditing) {
+                if(E.MaterialRevisionSourceEditing && obj instanceof E.MaterialRevisionSourceEditing) {
                     return "editing";
                 }
             
-                if(obj instanceof E.MaterialRevisionSourceDraft) {
+                if(E.MaterialRevisionSourceDraft && obj instanceof E.MaterialRevisionSourceDraft) {
                     return "draft";
                 }
             }
@@ -1890,11 +1918,11 @@ exports.__getContainers = (() => {return async function (spaceId) {
                 return result;};})();
 
 function jsMaterialCompositionType(obj) {
-                if(obj instanceof E.Creation) {
+                if(E.Creation && obj instanceof E.Creation) {
                     return "creation";
                 }
             
-                if(obj instanceof E.Move) {
+                if(E.Move && obj instanceof E.Move) {
                     return "move";
                 }
             }
@@ -1907,14 +1935,14 @@ return (E.Move || { value: null }).value;
 }}
 
 function jsMaterialComposition(obj) {
-                if(obj instanceof E.CreationMaterialComposition) {
+                if(E.CreationMaterialComposition && obj instanceof E.CreationMaterialComposition) {
                     return {
                         type: "creation",
                         propertyId: obj.value0,data: obj.value1
                     };
                 }
             
-                if(obj instanceof E.MoveMaterialComposition) {
+                if(E.MoveMaterialComposition && obj instanceof E.MoveMaterialComposition) {
                     return {
                         type: "move",
                         materialId: obj.value0
@@ -2005,6 +2033,32 @@ exports.__getContents = (() => {return (spaceId) => {return async function (form
                 argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.formatId = jsFormatId(argObject.formatId);
                 argObject = [ argObject.spaceId,argObject.formatId ];
                 let result = await requestApi("getContents", argObject);
+                
+                        result = result.map(x => {
+                            x = psRelatedContent(x);
+                            return x;
+                        });
+                    
+                return result;}};})();
+
+exports.__getContentsByProperty = (() => {return (spaceId) => {return (formatId) => {return (propertyId) => {return async function (value) {
+                let argObject = { spaceId,formatId,propertyId,value };
+                argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.formatId = jsFormatId(argObject.formatId);argObject.propertyId = jsPropertyId(argObject.propertyId);
+                argObject = [ argObject.spaceId,argObject.formatId,argObject.propertyId,argObject.value ];
+                let result = await requestApi("getContentsByProperty", argObject);
+                
+                        result = result.map(x => {
+                            x = psRelatedContent(x);
+                            return x;
+                        });
+                    
+                return result;}}}};})();
+
+exports.__getContentsByDisplayId = (() => {return (spaceId) => {return async function (formatId) {
+                let argObject = { spaceId,formatId };
+                argObject.spaceId = jsSpaceDisplayId(argObject.spaceId);argObject.formatId = jsFormatDisplayId(argObject.formatId);
+                argObject = [ argObject.spaceId,argObject.formatId ];
+                let result = await requestApi("getContentsByDisplayId", argObject);
                 
                         result = result.map(x => {
                             x = psRelatedContent(x);
@@ -2184,13 +2238,25 @@ exports.__startMaterialEditing = (() => {return (materialId) => {return async fu
                 result = psRelatedMaterialDraft(result);
                 return result;}};})();
 
-exports.__startBlankMaterialEditing = (() => {return (spaceId) => {return async function (type) {
-                let argObject = { spaceId,type };
-                argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.type = jsMaterialType(argObject.type);
-                argObject = [ argObject.spaceId,argObject.type ];
-                let result = await requestApi("startBlankMaterialEditing", argObject);
+exports.__createNewMaterialDraft = (() => {return (spaceId) => {return (type) => {return async function (data) {
+                let argObject = { spaceId,type,data };
+                
+                        if (argObject.spaceId instanceof Data_Maybe.Just) {
+                            argObject.spaceId = argObject.spaceId.value0; 
+                        } else {
+                            argObject.spaceId = null;
+                        }
+                    argObject.type = jsMaterialType(argObject.type);
+                        if (argObject.data instanceof Data_Maybe.Just) {
+                            argObject.data = argObject.data.value0; 
+                        } else {
+                            argObject.data = null;
+                        }
+                    
+                argObject = [ argObject.spaceId,argObject.type,argObject.data ];
+                let result = await requestApi("createNewMaterialDraft", argObject);
                 result = psRelatedMaterialDraft(result);
-                return result;}};})();
+                return result;}}};})();
 
 exports.__editMaterialDraft = (() => {return (materialDraftId) => {return async function (data) {
                 let argObject = { materialDraftId,data };
@@ -2206,13 +2272,13 @@ exports.__editMaterialDraft = (() => {return (materialDraftId) => {return async 
                 
                 return result;}};})();
 
-exports.__commitMaterial = (() => {return async function (materialDraftId) {
-                let argObject = { materialDraftId };
+exports.__commitMaterial = (() => {return (materialDraftId) => {return async function (data) {
+                let argObject = { materialDraftId,data };
                 argObject.materialDraftId = jsMaterialDraftId(argObject.materialDraftId);
-                argObject = [ argObject.materialDraftId ];
+                argObject = [ argObject.materialDraftId,argObject.data ];
                 let result = await requestApi("commitMaterial", argObject);
                 result = psRelatedMaterialRevision(result);
-                return result;};})();
+                return result;}};})();
 
 exports.__getMaterial = (() => {return async function (materialId) {
                 let argObject = { materialId };
@@ -2455,6 +2521,19 @@ exports.__setSpaceDefaultAuthority = (() => {return (spaceId) => {return async f
                 let result = await requestApi("setSpaceDefaultAuthority", argObject);
                 
                 return result;}};})();
+
+exports.__getSpaceContainers = (() => {return async function (spaceId) {
+                let argObject = { spaceId };
+                argObject.spaceId = jsSpaceId(argObject.spaceId);
+                argObject = [ argObject.spaceId ];
+                let result = await requestApi("getSpaceContainers", argObject);
+                
+                        result = result.map(x => {
+                            x = psRelatedContainer(x);
+                            return x;
+                        });
+                    
+                return result;};})();
 
 
                 exports.__createUser = (() => {return async function (argObject) {

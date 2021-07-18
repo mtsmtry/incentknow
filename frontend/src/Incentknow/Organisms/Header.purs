@@ -16,7 +16,7 @@ import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Data.Entities (IntactAccount)
 import Incentknow.HTML.Utils (css, link, link_, maybeElem)
-import Incentknow.Route (EditTarget(..), Route(..), UserTab(..))
+import Incentknow.Route (EditTarget(..), MaterialEditTarget(..), Route(..), UserTab(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
@@ -75,7 +75,9 @@ render state =
         , maybeElem state.account \_ ->
             headerLink "Drafts" DraftList
         , maybeElem state.account \_ ->
-            headerLink "Create" (EditContent $ TargetBlank Nothing Nothing)
+            headerLink "CreateContent" (EditContent $ TargetBlank Nothing Nothing)
+        , maybeElem state.account \_ ->
+            headerLink "CreateMatrial" (EditMaterial $ MaterialTargetBlank Nothing)
         , HH.span [ css "space" ] []
         , case state.account of
             Just account -> headerUrlLink account.displayName account.iconUrl (User account.displayId UserMain)

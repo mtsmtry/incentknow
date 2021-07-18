@@ -23,19 +23,19 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Incentknow.API (getMyContentDrafts)
+import Incentknow.API (getMyContentDrafts, getMyMaterialDrafts)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, executeCommand, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button, pulldown)
 import Incentknow.Data.Content (getContentSemanticData)
-import Incentknow.Data.Entities (ContentChangeType(..), ContentEditingState(..), FocusedFormat, RelatedContentDraft)
+import Incentknow.Data.Entities (ContentChangeType(..), ContentEditingState(..), FocusedFormat, RelatedContentDraft, RelatedMaterialDraft)
 import Incentknow.Data.Property (mkProperties)
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.TypeMenu as TypeMenu
 import Incentknow.Organisms.ListView (ListViewItem)
 import Incentknow.Organisms.ListView as ListView
-import Incentknow.Route (ContentTab(..), EditTarget(..), Route(..))
+import Incentknow.Route (ContentTab(..), EditTarget(..), MaterialEditTarget(..), Route(..))
 import Incentknow.Templates.Page (tabGrouping)
 
 data DraftTab
@@ -51,6 +51,7 @@ type Input
 
 type State
   = { drafts :: Remote (Array RelatedContentDraft)
+    , materialDrafts :: Remote (Array RelatedMaterialDraft)
     , tab :: DraftTab
     }
 
@@ -60,6 +61,7 @@ data Action
   | Navigate Route
   | ChangeTab DraftTab
   | FetchedDrafts (Fetch (Array RelatedContentDraft))
+  | FetchedMaterialDrafts (Fetch (Array RelatedMaterialDraft))
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -85,11 +87,12 @@ component =
 initialState :: Input -> State
 initialState input =
   { drafts: Loading
+  , materialDrafts: Loading
   , tab: DraftDrafting
   }
 
-toListViewItem :: State -> RelatedContentDraft -> Maybe ListViewItem
-toListViewItem state draft = map (\format -> toItem draft format) maybeFormat
+toListViewItem :: RelatedContentDraft -> Maybe ListViewItem
+toListViewItem draft = map (\format -> toItem draft format) maybeFormat
   where
   maybeFormat = Just draft.format --M.lookup draft.info.structureId state.formats
 
@@ -104,6 +107,15 @@ toListViewItem state draft = map (\format -> toItem draft format) maybeFormat
     where
     common = getContentSemanticData draft.data format
 
+toListViewItemFromMaterial :: RelatedMaterialDraft -> Maybe ListViewItem
+toListViewItemFromMaterial draft =
+  Just
+    { user: Nothing
+    , datetime: Just draft.updatedAt
+    , title: draft.displayName
+    , format: Nothing
+    , route: EditMaterial $ MaterialTargetDraft draft.draftId
+    }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
@@ -122,23 +134,28 @@ render state =
     [ case state.tab of
         DraftMain ->
           remoteWith state.drafts \drafts ->
-            HH.slot (SProxy :: SProxy "listView") unit ListView.component
-              { items: catMaybes $ map (toListViewItem state) drafts }
-              absurd
+            remoteWith state.materialDrafts \materialDrafts ->
+              HH.slot (SProxy :: SProxy "listView") unit ListView.component
+                { items: catMaybes $ (map toListViewItem drafts) <> (map toListViewItemFromMaterial materialDrafts) }
+                absurd
         DraftDrafting ->
           remoteWith state.drafts \drafts ->
-            HH.slot (SProxy :: SProxy "listView") unit ListView.component
-              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.changeType == ContentChangeTypeWrite) drafts }
-              absurd
+            remoteWith state.materialDrafts \materialDrafts ->
+              HH.slot (SProxy :: SProxy "listView") unit ListView.component
+                { items: catMaybes $ (map toListViewItem $ filter (\x -> x.isEditing) drafts)
+                  <> (map toListViewItemFromMaterial $ filter (\x -> x.isEditing) materialDrafts) }
+                absurd
         DraftCommitted ->
           remoteWith state.drafts \drafts ->
-            HH.slot (SProxy :: SProxy "listView") unit ListView.component
-              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.changeType == ContentChangeTypeWrite) drafts }
-              absurd
+            remoteWith state.materialDrafts \materialDrafts ->
+              HH.slot (SProxy :: SProxy "listView") unit ListView.component
+                { items: catMaybes $ (map toListViewItem $ filter (\x -> not x.isEditing) drafts)
+                  <> (map toListViewItemFromMaterial $ filter (\x -> not x.isEditing) materialDrafts) }
+                absurd
         DraftDeleted ->
           remoteWith state.drafts \drafts ->
             HH.slot (SProxy :: SProxy "listView") unit ListView.component
-              { items: catMaybes $ map (toListViewItem state) $ filter (\x -> x.changeType == ContentChangeTypeRemove) drafts }
+              { items: catMaybes $ map toListViewItem $ filter (\x -> x.changeType == ContentChangeTypeRemove) drafts }
               absurd
     ]
 
@@ -146,10 +163,14 @@ handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action
 handleAction = case _ of
   Initialize -> do
     callbackQuery FetchedDrafts $ getMyContentDrafts
+    callbackQuery FetchedMaterialDrafts $ getMyMaterialDrafts
   --workingDrafts <- executeAPI $ getMyDrafts { state: notNull "working" }
   FetchedDrafts fetch -> do
     forRemote fetch \drafts ->
       H.modify_ _ { drafts = drafts }
-  HandleInput props -> pure unit
+  FetchedMaterialDrafts fetch -> do
+    forRemote fetch \drafts ->
+      H.modify_ _ { materialDrafts = drafts }
+  HandleInput props -> handleAction Initialize
   Navigate route -> navigate route
   ChangeTab tab -> H.modify_ _ { tab = tab }

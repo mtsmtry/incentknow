@@ -9,7 +9,7 @@ import Data.Newtype (unwrap)
 import Data.Nullable (notNull, null)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getFormats, getRelatedFormat)
@@ -21,6 +21,7 @@ import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
+import Test.Unit.Console (consoleLog)
 
 {- 
   A component for selecting a format on the specified constraint
@@ -128,4 +129,6 @@ handleAction = case _ of
       handleAction Initialize
     else
       H.modify_ _ { formatId = input.value, disabled = input.disabled }
-  ChangeValue value -> H.raise value
+  ChangeValue value -> do
+    liftEffect $ consoleLog $ "FormatMenu.ChangeValue:" <> maybe "Nothing" unwrap value
+    H.raise value

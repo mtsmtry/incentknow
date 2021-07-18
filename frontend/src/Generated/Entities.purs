@@ -237,6 +237,7 @@ type RelatedContentDraft
     , contentId :: Maybe ContentId
     , format :: FocusedFormat
     , changeType :: ContentChangeType
+    , isEditing :: Boolean
     }
 
 
@@ -251,6 +252,7 @@ type FocusedContentDraft
     , materialDrafts :: Array FocusedMaterialDraft
     , format :: FocusedFormat
     , changeType :: ContentChangeType
+    , isEditing :: Boolean
     }
 
 
@@ -342,6 +344,14 @@ type RelatedFormat
 
 
 
+type Relation
+  = { property :: PropertyInfo
+    , contentCount :: Number
+    , formatId :: FormatId
+    }
+
+
+
 type FocusedFormat
   = { formatId :: FormatId
     , displayId :: FormatDisplayId
@@ -355,6 +365,7 @@ type FocusedFormat
     , updaterUser :: RelatedUser
     , currentStructure :: FocusedStructure
     , semanticId :: Maybe String
+    , relations :: Array Relation
     }
 
 
@@ -369,7 +380,7 @@ type IntactMetaProperty
 type PropertyInfo
   = { displayName :: String
     , fieldName :: Maybe String
-    , id :: String
+    , id :: PropertyId
     , optional :: Boolean
     , semantic :: Maybe String
     , type :: Type
@@ -479,6 +490,7 @@ type RelatedMaterialDraft
     , displayName :: String
     , createdAt :: Number
     , updatedAt :: Number
+    , isEditing :: Boolean
     }
 
 
@@ -492,6 +504,7 @@ type FocusedMaterialDraft
     , material :: Maybe RelatedMaterial
     , basedCommitId :: Maybe MaterialCommitId
     , data :: String
+    , isEditing :: Boolean
     }
 
 

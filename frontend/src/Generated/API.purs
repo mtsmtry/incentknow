@@ -87,6 +87,22 @@ getContents x0 x1 = __queryAPI "getContents" $ __getContents x0 x1
 
 
 
+foreign import __getContentsByProperty :: 
+  E.SpaceId -> E.FormatId -> E.PropertyId -> String -> Promise (Array E.RelatedContent)
+
+getContentsByProperty :: E.SpaceId -> E.FormatId -> E.PropertyId -> String -> QueryAPI (Array E.RelatedContent)
+getContentsByProperty x0 x1 x2 x3 = __queryAPI "getContentsByProperty" $ __getContentsByProperty x0 x1 x2 x3
+
+
+
+foreign import __getContentsByDisplayId :: 
+  E.SpaceDisplayId -> E.FormatDisplayId -> Promise (Array E.RelatedContent)
+
+getContentsByDisplayId :: E.SpaceDisplayId -> E.FormatDisplayId -> QueryAPI (Array E.RelatedContent)
+getContentsByDisplayId x0 x1 = __queryAPI "getContentsByDisplayId" $ __getContentsByDisplayId x0 x1
+
+
+
 foreign import __getMyContentDrafts :: 
   Promise (Array E.RelatedContentDraft)
 
@@ -240,11 +256,11 @@ startMaterialEditing x0 x1 = __commandAPI "startMaterialEditing" $ __startMateri
 
 
 
-foreign import __startBlankMaterialEditing :: 
-  E.SpaceId -> E.MaterialType -> Promise E.RelatedMaterialDraft
+foreign import __createNewMaterialDraft :: 
+  Maybe E.SpaceId -> E.MaterialType -> Maybe String -> Promise E.RelatedMaterialDraft
 
-startBlankMaterialEditing :: E.SpaceId -> E.MaterialType -> CommandAPI E.RelatedMaterialDraft
-startBlankMaterialEditing x0 x1 = __commandAPI "startBlankMaterialEditing" $ __startBlankMaterialEditing x0 x1
+createNewMaterialDraft :: Maybe E.SpaceId -> E.MaterialType -> Maybe String -> CommandAPI E.RelatedMaterialDraft
+createNewMaterialDraft x0 x1 x2 = __commandAPI "createNewMaterialDraft" $ __createNewMaterialDraft x0 x1 x2
 
 
 
@@ -257,10 +273,10 @@ editMaterialDraft x0 x1 = __commandAPI "editMaterialDraft" $ __editMaterialDraft
 
 
 foreign import __commitMaterial :: 
-  E.MaterialDraftId -> Promise E.RelatedMaterialRevision
+  E.MaterialDraftId -> String -> Promise E.RelatedMaterialRevision
 
-commitMaterial :: E.MaterialDraftId -> CommandAPI E.RelatedMaterialRevision
-commitMaterial x0 = __commandAPI "commitMaterial" $ __commitMaterial x0
+commitMaterial :: E.MaterialDraftId -> String -> CommandAPI E.RelatedMaterialRevision
+commitMaterial x0 x1 = __commandAPI "commitMaterial" $ __commitMaterial x0 x1
 
 
 
@@ -476,6 +492,14 @@ foreign import __setSpaceDefaultAuthority ::
 
 setSpaceDefaultAuthority :: E.SpaceId -> E.SpaceAuth -> CommandAPI {}
 setSpaceDefaultAuthority x0 x1 = __commandAPI "setSpaceDefaultAuthority" $ __setSpaceDefaultAuthority x0 x1
+
+
+
+foreign import __getSpaceContainers :: 
+  E.SpaceId -> Promise (Array E.RelatedContainer)
+
+getSpaceContainers :: E.SpaceId -> QueryAPI (Array E.RelatedContainer)
+getSpaceContainers x0 = __queryAPI "getSpaceContainers" $ __getSpaceContainers x0
 
 
 

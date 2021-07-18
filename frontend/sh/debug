@@ -1,6 +1,6 @@
 
 # ビルド
-spago -q bundle-app --main Incentknow.Main --to public/index.js
+spago -q bundle-app --main Incentknow.Main --to public/index.js >sh/spago.log 2>&1
 
 # cd functions
 # npm run build
@@ -10,8 +10,8 @@ spago -q bundle-app --main Incentknow.Main --to public/index.js
 # コピー
 cp -f index.html public/index.html
 
-open http://localhost:5000
-serve public
+open http://localhost:5432
+serve public -p 5432
 
 
 

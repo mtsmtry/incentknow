@@ -22,11 +22,12 @@ import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, numberarea, textarea)
 import Incentknow.Data.Entities (Type(..))
-import Incentknow.Data.Ids (FormatId(..))
+import Incentknow.Data.Ids (FormatId(..), PropertyId)
 import Incentknow.Data.Property (Property, encodeProperties, mkProperties)
 import Incentknow.HTML.Utils (maybeElem)
 import Incentknow.Molecules.AceEditor as AceEditor
 import Incentknow.Molecules.ContentLink as ContentLink
+import Incentknow.Organisms.Material.Viewer as Material
 import Incentknow.Route (ContentSpec(..))
 
 type Input
@@ -45,7 +46,8 @@ type ChildSlots
   = ( aceEditor :: AceEditor.Slot Unit
     , contentLink :: ContentLink.Slot Unit
     , value :: Slot Int
-    , property :: Slot String
+    , property :: Slot PropertyId
+    , material :: Material.Slot Unit
     )
 
 component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q Input o m
@@ -89,7 +91,8 @@ render state = case state.type of
   EntityType formatId -> case toString state.value of
     Just semanticId -> HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value: ContentSpecSemanticId formatId $ wrap semanticId } absurd
     Nothing -> HH.text ""
-  DocumentType -> HH.text ""
+  DocumentType ->
+    HH.slot (SProxy :: SProxy "material") unit Material.component { value: map wrap $ toString state.value } absurd
   UrlType -> HH.a [ HP.href $ toStringOrEmpty state.value ] [ HH.text $ toStringOrEmpty state.value ]
   ArrayType subType -> HH.div_ $ mapWithIndex renderItem array
     where

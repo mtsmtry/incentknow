@@ -19,7 +19,7 @@ import Data.Validation.Semiring (invalid)
 import Effect (Effect)
 import Effect.Class (class MonadEffect)
 import Effect.Class as H
-import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..), ContentSnapshotId(..), FormatDisplayId(..), FormatId(..), SemanticId(..), SpaceDisplayId(..), SpaceId(..), StructureId(..), UserDisplayId(..), UserId(..))
+import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..), ContentSnapshotId(..), FormatDisplayId(..), FormatId(..), MaterialDraftId(..), MaterialId(..), SemanticId(..), SpaceDisplayId(..), SpaceId(..), StructureId(..), UserDisplayId(..), UserId(..))
 import Routing (match)
 import Routing.Match (Match(..), end, int, lit, param, root, str)
 import Routing.Match.Error (MatchError(..))
@@ -39,8 +39,7 @@ data FormatTab
   | FormatReactor
 
 data SpaceTab
-  = SpacePages
-  | SpaceContents
+  = SpaceContainers
   | SpaceFormats
   | SpaceMembers
   | SpaceCrawlers
@@ -74,7 +73,14 @@ data EditTarget
   | TargetDraft ContentDraftId
   | TargetContent ContentId
 
-derive instance eqInput :: Eq EditTarget
+derive instance eqEditTarget :: Eq EditTarget
+
+data MaterialEditTarget
+  = MaterialTargetBlank (Maybe SpaceId)
+  | MaterialTargetDraft MaterialDraftId
+  | MaterialTargetMaterial MaterialId
+
+derive instance eqMaterialEditTarget :: Eq MaterialEditTarget
 
 data Route
   = Home
@@ -84,8 +90,10 @@ data Route
   | Content ContentId
   | ContentBySemanticId FormatId SemanticId
   | EditContent EditTarget
+  | EditMaterial MaterialEditTarget
   | SpaceList
-  | Composition SpaceId FormatId String
+  | Container SpaceDisplayId FormatDisplayId
+  -- | Composition SpaceId FormatId String
   -- | ContentList (Maybe SpaceId) (Maybe FormatId) (Array (Tuple String (Maybe String)))
   | Public
   | JoinSpace SpaceId
@@ -150,6 +158,9 @@ routeToPath = case _ of
   EditContent (TargetBlank spaceId structureId) -> "/contents/new" <> paramsToUrl [ Tuple "space" $ map unwrap spaceId, Tuple "structure" $ map unwrap structureId ]
   EditContent (TargetDraft id) -> "/contents/" <> unwrap id <> "/edit"
   EditContent (TargetContent contentId) -> "/contents/new" <> paramsToUrl [ Tuple "content" $ Just $ unwrap contentId ]
+  EditMaterial (MaterialTargetBlank spaceId) -> "/materials/new" <> paramsToUrl [ Tuple "space" $ map unwrap spaceId ]
+  EditMaterial (MaterialTargetDraft id) -> "/materials/" <> unwrap id <> "/edit"
+  EditMaterial (MaterialTargetMaterial materialId) -> "/materials/new" <> paramsToUrl [ Tuple "material" $ Just $ unwrap materialId ]
   Rivision id ver -> "/contents/" <> unwrap id <> "/rivisions/" <> show ver
   RivisionList id -> "/contents/" <> unwrap id <> "/rivisions"
   ContentBySemanticId formatId semanticId -> "/contents/" <> unwrap formatId <> "/" <> unwrap semanticId
@@ -159,15 +170,14 @@ routeToPath = case _ of
   --Snapshot draftId diff -> "/drafts/" <> unwrap draftId <> "/" <> show diff
   NewFormat id -> "/spaces/" <> unwrap id <> "/formats/new"
   --ContentList spaceId formatId params -> "/contents" <> paramsToUrl ([ Tuple "space" $ map unwrap spaceId, Tuple "format" $ map unwrap formatId ] <> params)
-  Composition spaceId formatId tab -> "/spaces/" <> unwrap spaceId <> "/" <> unwrap formatId <> "/" <> tab
+  Container spaceId formatId -> "/spaces/" <> unwrap spaceId <> "/" <> unwrap formatId
   -- communities
   SpaceList -> "/spaces"
   JoinSpace id -> "/spaces/" <> unwrap id <> "/join"
   -- space
   NewSpace -> "/spaces/new"
   EditScraper id -> "/contents/" <> unwrap id <> "/edit/scraper"
-  Space id SpacePages -> "/spaces/" <> unwrap id
-  Space id SpaceContents -> "/spaces/" <> unwrap id <> "/contents"
+  Space id SpaceContainers -> "/spaces/" <> unwrap id
   Space id SpaceFormats -> "/spaces/" <> unwrap id <> "/formats"
   Space id SpaceMembers -> "/spaces/" <> unwrap id <> "/members"
   Space id SpaceCrawlers -> "/spaces/" <> unwrap id <> "/crawlers"
@@ -234,9 +244,15 @@ matchRoute =
         --, EditDraft <$> (map wrap $ lit "drafts" *> str <* lit "edit" <* end)
         -- content
         , EditScraper <$> (map ContentId $ lit "contents" *> str <* lit "edit" <* lit "scraper" <* end)
+
         , (EditContent <<< TargetDraft) <$> (map ContentDraftId $ lit "contents" *> str <* lit "edit" <* end)
         , (\x-> \y-> EditContent $ TargetBlank x y) <$> (lit "contents" <* lit "new" *> space) <*> structure <* end
         , (EditContent <<< TargetContent) <$> (map ContentId $ lit "contents" *> str <* lit "edit" <* end)
+
+        , (EditMaterial <<< MaterialTargetDraft) <$> (map MaterialDraftId $ lit "materials" *> str <* lit "edit" <* end)
+        , (\x-> EditMaterial $ MaterialTargetBlank x) <$> (lit "materials" <* lit "new" *> space) -- <*> structure <* end
+        , (EditMaterial <<< MaterialTargetMaterial) <$> (map MaterialId $ lit "materials" *> str <* lit "edit" <* end)
+        
         , Content <$> (map ContentId $ lit "contents" *> str <* end)
         , RivisionList <$> (map ContentId $ lit "contents" *> str <* lit "rivisions" <* end)
         , Rivision <$> (map ContentId $ lit "contents" *> str) <*> (lit "rivisions" *> int <* end)
@@ -251,13 +267,12 @@ matchRoute =
         -- spaces
         , NewSpace <$ (lit "spaces" <* lit "new")
         , NewFormat <$> (map SpaceId $ lit "spaces" *> str <* lit "formats" <* lit "new" <* end)
-        , (flip Space SpacePages) <$> (map wrap $ lit "spaces" *> str <* end)
-        , (flip Space SpaceContents) <$> (map wrap $ lit "spaces" *> str <* lit "contents" <* end)
+        , (flip Space SpaceContainers) <$> (map wrap $ lit "spaces" *> str <* end)
         , (flip Space SpaceFormats) <$> (map wrap $ lit "spaces" *> str <* lit "formats" <* end)
         , (flip Space SpaceMembers) <$> (map wrap $ lit "spaces" *> str <* lit "members" <* end)
         , (flip Space SpaceSetting) <$> (map wrap $ lit "spaces" *> str <* lit "setting" <* end)
-        , (\x -> \y -> Composition x y "") <$> (lit "spaces" *> (map SpaceId str)) <*> (map FormatId str)
-        , Composition <$> (lit "spaces" *> (map SpaceId str)) <*> (map FormatId str) <*> str
+       -- , (\x -> \y -> Composition x y "") <$> (lit "spaces" *> (map SpaceId str)) <*> (map FormatId str)
+        , Container <$> (lit "spaces" *> (map SpaceDisplayId str)) <*> (map FormatDisplayId str) 
         , NotFound <$ (lit "not-found")
         -- crawlers
        -- , NewCrawler <$ (lit "crawlers" <* lit "new" <* end)

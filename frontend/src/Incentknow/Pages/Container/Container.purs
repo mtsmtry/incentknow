@@ -1,4 +1,4 @@
-module Incentknow.Pages.Space.ContentList where
+module Incentknow.Pages.Container where
 
 import Prelude
 
@@ -9,19 +9,19 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getContents)
+import Incentknow.API (getContents, getContentsByDisplayId)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (RelatedContent)
-import Incentknow.Data.Ids (SpaceId(..))
+import Incentknow.Data.Ids (FormatDisplayId, SpaceDisplayId, SpaceId(..))
 import Incentknow.Organisms.ContentList as ContentList
 
 type Input
-  = { spaceId :: SpaceId }
+  = { spaceId :: SpaceDisplayId, formatId :: FormatDisplayId }
 
 type State
-  = { spaceId :: SpaceId, contents :: Remote (Array RelatedContent) }
+  = { spaceId :: SpaceDisplayId, formatId :: FormatDisplayId, contents :: Remote (Array RelatedContent) }
 
 data Action
   = Initialize
@@ -42,7 +42,7 @@ component =
     }
 
 initialState :: Input -> State
-initialState input = { spaceId: input.spaceId, contents: Loading }
+initialState input = { spaceId: input.spaceId, formatId: input.formatId, contents: Loading }
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
@@ -53,7 +53,7 @@ handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    callbackQuery FetchedContents $ getContents state.spaceId (wrap "")
+    callbackQuery FetchedContents $ getContentsByDisplayId state.spaceId state.formatId
   FetchedContents fetch -> do
     forRemote fetch \contents ->
       H.modify_ _ { contents = contents }

@@ -3,7 +3,7 @@ module Incentknow.Organisms.Structure where
 import Prelude
 
 import Data.Array (concat, filter, length, range)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Maybe.Utils (allJust, flatten)
 import Data.Newtype (unwrap, wrap)
 import Data.Nullable (toMaybe, toNullable)
@@ -23,7 +23,7 @@ import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, checkbox, pulldown, textarea)
 import Incentknow.Data.Entities (Type(..), TypeName(..), PropertyInfo)
 import Incentknow.Data.EntityUtils (getTypeName)
-import Incentknow.Data.Ids (SpaceId(..))
+import Incentknow.Data.Ids (PropertyId, SpaceId(..))
 import Incentknow.Data.Property (Enumerator, Property)
 import Incentknow.Data.Utils (generateId)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
@@ -31,6 +31,7 @@ import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.TypeMenu as TypeMenu
 import Incentknow.Organisms.Enumeration as Enumeration
+import Test.Unit.Console (consoleLog)
 
 type Input
   = { readonly :: Boolean
@@ -38,7 +39,7 @@ type Input
     }
 
 type PendingPropertyInfo
-  = { id :: String
+  = { id :: PropertyId
     , displayName :: Maybe String
     , fieldName :: Maybe String
     , type :: Maybe Type
@@ -53,13 +54,13 @@ type State
     }
 
 data Action
-  = ChangeDisplayName String String
-  | ChangeFieldName String String
-  | ChangeType String (Maybe Type)
-  | ChangeSemantic String String
-  | ChangeOptional String Boolean
+  = ChangeDisplayName PropertyId String
+  | ChangeFieldName PropertyId String
+  | ChangeType PropertyId (Maybe Type)
+  | ChangeSemantic PropertyId String
+  | ChangeOptional PropertyId Boolean
   | AddProperty
-  | DeleteProperty String
+  | DeleteProperty PropertyId
   | HandleInput Input
 
 data Query a
@@ -70,11 +71,11 @@ type Slot
   = H.Slot Query Void
 
 type ChildSlots
-  = ( typeMenu :: TypeMenu.Slot String
-    , formatMenu :: FormatMenu.Slot String
-    , structure :: Slot String
-    , enumeration :: Enumeration.Slot String
-    , delete :: DangerChange.Slot String
+  = ( typeMenu :: TypeMenu.Slot PropertyId
+    , formatMenu :: FormatMenu.Slot PropertyId
+    , structure :: Slot PropertyId
+    , enumeration :: Enumeration.Slot PropertyId
+    , delete :: DangerChange.Slot PropertyId
     )
 
 component :: forall o m. Behaviour m => MonadAff m => MonadEffect m => H.Component HH.HTML Query Input o m
@@ -140,12 +141,12 @@ render state =
               [ HH.slot (SProxy :: SProxy "delete") prop.id DangerChange.component
                   { text: "削除"
                   , title: "プロパティの削除"
-                  , message: "プロパティ「" <> (fromMaybe prop.id prop.displayName) <> "」" <> "を本当に削除しますか？"
+                  , message: "プロパティ「" <> (fromMaybe (unwrap prop.id) prop.displayName) <> "」" <> "を本当に削除しますか？"
                   }
                   (\_ -> Just $ DeleteProperty prop.id)
               ]
         , HH.td []
-            [ HH.text prop.id ]
+            [ HH.text $ unwrap prop.id ]
         , HH.td []
             [ if state.readonly then
                 HH.text $ fromMaybe "" prop.fieldName
@@ -239,7 +240,7 @@ handleAction = case _ of
     H.modify_ (\x -> x { props = modifyProp id (_ { displayName = toMaybeString displayName }) x.props })
   ChangeFieldName id fieldName -> do
     H.modify_ (\x -> x { props = modifyProp id (_ { fieldName = toMaybeString fieldName }) x.props })
-  ChangeType id ty -> do
+  ChangeType id ty -> do    
     H.modify_ (\x -> x { props = modifyProp id (_ { type = ty }) x.props })
   ChangeSemantic id semantic -> do
     H.modify_ (\x -> x { props = modifyProp id (_ { semantic = toMaybeString semantic }) x.props })
@@ -247,12 +248,12 @@ handleAction = case _ of
     H.modify_ (\x -> x { props = modifyProp id (_ { optional = optional }) x.props })
   AddProperty -> do
     newId <- generateId 4
-    H.modify_ (\x -> x { props = x.props <> [ { displayName: Nothing, fieldName: Nothing, semantic: Nothing, id: newId, type: Nothing, optional: false } ] })
+    H.modify_ (\x -> x { props = x.props <> [ { displayName: Nothing, fieldName: Nothing, semantic: Nothing, id: wrap newId, type: Nothing, optional: false } ] })
   DeleteProperty id -> do
     H.modify_ \x -> x { props = filter (\y -> y.id /= id) x.props }
   HandleInput input -> H.modify_ $ setInput input
   where
-  modifyProp :: String -> (PendingPropertyInfo -> PendingPropertyInfo) -> Array PendingPropertyInfo -> Array PendingPropertyInfo
+  modifyProp :: PropertyId -> (PendingPropertyInfo -> PendingPropertyInfo) -> Array PendingPropertyInfo -> Array PendingPropertyInfo
   modifyProp id modify = map (\x -> if x.id == id then modify x else x)
 
 toPropertyInfo :: PendingPropertyInfo -> Maybe PropertyInfo

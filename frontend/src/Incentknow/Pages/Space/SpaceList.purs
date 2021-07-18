@@ -58,7 +58,7 @@ initialState input = { publishedSpaces: Loading, followedSpaces: Loading, logine
 toCardViewItem :: RelatedSpace -> CardViewItem
 toCardViewItem space =
   { title: space.displayName
-  , route: Space space.displayId SpacePages
+  , route: Space space.displayId SpaceContainers
   , desc: ""
   , info: "" --"コンテンツ数:" <> show space.contentCount
   }

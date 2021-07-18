@@ -91,7 +91,7 @@ render state =
 
 toSelectMenuItem :: PropertyInfo -> SelectMenuItem String
 toSelectMenuItem prop =
-  { id: prop.id
+  { id: unwrap prop.id
   , name: prop.displayName
   , searchWord: prop.displayName
   , html: html

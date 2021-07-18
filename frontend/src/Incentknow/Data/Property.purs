@@ -47,7 +47,7 @@ toEnumerator :: EnumeratorImpl -> Enumerator
 toEnumerator enum = enum { fieldName = toMaybe enum.fieldName }
 
 getDefaultValue :: Array PropertyInfo -> Json
-getDefaultValue props = fromObject $ Object.fromFoldable $ map (\x-> Tuple x.id $ defaultValue x.type) props
+getDefaultValue props = fromObject $ Object.fromFoldable $ map (\x-> Tuple (unwrap x.id) $ defaultValue x.type) props
   where
   defaultValue :: Type -> Json
   defaultValue = case _ of
@@ -75,14 +75,14 @@ type Property
 encodeProperties :: Array Property -> Json
 encodeProperties props = encodeJson $ Object.fromFoldable $ map toTuple props
   where
-  toTuple prop = Tuple prop.info.id $ encodeJson prop.value
+  toTuple prop = Tuple (unwrap prop.info.id) $ encodeJson prop.value
 
 mkProperty :: Json -> PropertyInfo -> Property
 mkProperty value prop = { value: value, info: prop }
 
 mkProperties :: Json -> Array PropertyInfo -> Array Property
 mkProperties json props = case decodeToMap json of
-  Just values -> map (\x -> toContentProp x $ M.lookup x.id values) props
+  Just values -> map (\x -> toContentProp x $ M.lookup (unwrap x.id) values) props
   Nothing -> map (\x -> toContentProp x Nothing) props
   where
   toContentProp :: PropertyInfo -> Maybe Json -> Property
@@ -130,7 +130,7 @@ difference before after = { diffs: diffs, changeType: getChangeType diffs }
       if 0 < length (filter (\x -> x.changeType == MajorChange) props) then MajorChange else MinorChange
 
   diffs :: Array PropertyInfoDiffrence
-  diffs = concat $ fromFoldable $ map (uncurry propDifference) $ values $ mergeFromArray (\(Tuple _ x) -> x.id) (\(Tuple _ x) -> x.id) (withIndex 1 before) (withIndex 1 after)
+  diffs = concat $ fromFoldable $ map (uncurry propDifference) $ values $ mergeFromArray (\(Tuple _ x) -> unwrap x.id) (\(Tuple _ x) -> unwrap x.id) (withIndex 1 before) (withIndex 1 after)
 
   withIndex :: forall a. Int -> Array a -> Array (Tuple Int a)
   withIndex start array = case uncons array of
@@ -176,7 +176,7 @@ difference before after = { diffs: diffs, changeType: getChangeType diffs }
                 Nothing
             ]
       where
-      mkDiff item changeType bb aa = { item, id: after.id, name: after.displayName, changeType, before: bb, after: aa }
-    Just (Tuple bfIndex before), Nothing -> singleton { item: DeletionItem, id: before.id, name: before.displayName, changeType: MajorChange, before: Nothing, after: Nothing }
-    Nothing, Just (Tuple afIndex after) -> singleton { item: CreationItem, id: after.id, name: after.displayName, changeType: MajorChange, before: Nothing, after: Nothing }
+      mkDiff item changeType bb aa = { item, id: unwrap after.id, name: after.displayName, changeType, before: bb, after: aa }
+    Just (Tuple bfIndex before), Nothing -> singleton { item: DeletionItem, id: unwrap before.id, name: before.displayName, changeType: MajorChange, before: Nothing, after: Nothing }
+    Nothing, Just (Tuple afIndex after) -> singleton { item: CreationItem, id: unwrap after.id, name: after.displayName, changeType: MajorChange, before: Nothing, after: Nothing }
     Nothing, Nothing -> singleton { item: DeletionItem, id: "", name: "", changeType: MinorChange, before: Nothing, after: Nothing }

@@ -1,6 +1,8 @@
 
 
 exports.showError = obj => {
+    console.log("showError");
+    console.log(obj);
     if(obj.error) {
         return obj.error;
     }

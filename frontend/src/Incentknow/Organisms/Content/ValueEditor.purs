@@ -21,9 +21,10 @@ import Incentknow.API (getFocusedFormat, getFormat)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button, checkbox, numberarea, textarea)
 import Incentknow.Data.Entities (FocusedFormat, FormatUsage(..), Type(..))
-import Incentknow.Data.Ids (FormatId(..))
+import Incentknow.Data.Ids (FormatId(..), PropertyId)
 import Incentknow.Data.Property (Enumerator, Property, encodeProperties, mkProperties)
 import Incentknow.HTML.Utils (maybeElem)
 import Incentknow.Molecules.AceEditor as AceEditor
@@ -34,8 +35,8 @@ import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Organisms.Content.Common (EditEnvironment)
-import Incentknow.Organisms.Document as Document
-import Incentknow.Organisms.Document.Section (ContentComponent(..))
+import Incentknow.Organisms.Document.Section (ContentComponent)
+import Incentknow.Organisms.Material.SlotEditor as Material
 import Test.Unit.Console (consoleLog)
 
 type Input
@@ -53,7 +54,7 @@ data Action
   = Initialize
   | HandleInput Input
   | ChangeValue Json
-  | ChangeAttribute String Json
+  | ChangeAttribute PropertyId Json
   | ChangeItem Int Json
   | DeleteItem Int
   | FetchedFormat (Fetch FocusedFormat)
@@ -70,9 +71,9 @@ type ChildSlots
     , spaceMenu :: SpaceMenu.Slot Unit
     , contentMenu :: ContentMenu.Slot Unit
     , selectMenu :: SelectMenu.Slot String Unit
-    , document :: Document.Slot Unit
+    , material :: Material.Slot Unit
     , value :: Slot Int
-    , property :: Slot String
+    , property :: Slot PropertyId
     , entityMenu :: EntityMenu.Slot Unit
     )
 
@@ -150,12 +151,19 @@ render state = case state.type of
     HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component { value: map wrap $ toString state.value, disabled: false }
       (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
   ContentType formatId ->
-    HH.slot (SProxy :: SProxy "contentMenu") unit ContentMenu.component { spaceId: maybe Nothing (\x -> if x.usage == Internal then Nothing else state.env.spaceId) $ R.toMaybe state.format, value: map wrap $ toString state.value, formatId, disabled: false }
-      (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
+    remoteWith state.format \format->
+      HH.slot (SProxy :: SProxy "contentMenu") unit ContentMenu.component 
+        { spaceId: if format.usage == Internal then Just format.space.spaceId else state.env.spaceId
+        , value: map wrap $ toString state.value
+        , formatId
+        , disabled: false }
+        (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
   EntityType formatId ->
     HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: map wrap $ toString state.value, formatId, disabled: false }
       (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  DocumentType -> HH.slot (SProxy :: SProxy "document") unit Document.component { value: state.value, env: state.env, contentComponent: state.contentComponent } (Just <<< ChangeValue)
+  DocumentType ->
+    HH.slot (SProxy :: SProxy "material") unit Material.component { value: map wrap $ toString state.value }
+      (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
   UrlType ->
     textarea
       { onChange: ChangeValue <<< fromStringOrNull
@@ -214,9 +222,6 @@ handleAction = case _ of
     H.raise value
   ChangeAttribute id value -> do
     state <- H.get
-    logShow "ChangeAttribute"
-    logShow id
-    logShow $ stringify value
     let
       properties = case state.type of
         ObjectType props -> props

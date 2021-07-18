@@ -1,6 +1,7 @@
-module Incentknow.Pages.Space.PageList where
+module Incentknow.Pages.Space.ContainerList where
 
 import Prelude
+
 import Ace.Document (getAllLines)
 import Data.Array (filter, length)
 import Data.Maybe (Maybe(..))
@@ -10,13 +11,13 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Incentknow.API (getFormats)
+import Incentknow.API (getSpaceContainers)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
-import Incentknow.Data.Entities (RelatedFormat)
-import Incentknow.Data.Ids (SpaceId(..))
+import Incentknow.Data.Entities (RelatedFormat, RelatedContainer)
+import Incentknow.Data.Ids (SpaceDisplayId, SpaceId(..))
 import Incentknow.Data.Page (ContentComposition)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.CardView (CardViewItem)
@@ -24,15 +25,15 @@ import Incentknow.Organisms.CardView as CardView
 import Incentknow.Route (FormatTab(..), Route(..), SpaceTab(..))
 
 type Input
-  = { spaceId :: SpaceId }
+  = { spaceId :: SpaceId, spaceDisplayId :: SpaceDisplayId }
 
 type State
-  = { spaceId :: SpaceId, formats :: Remote (Array RelatedFormat) }
+  = { spaceId :: SpaceId, spaceDisplayId :: SpaceDisplayId, containers :: Remote (Array RelatedContainer) }
 
 data Action
   = Initialize
   | Navigate Route
-  | FetchedFormats (Fetch (Array RelatedFormat))
+  | FetchedContainers (Fetch (Array RelatedContainer))
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -49,12 +50,12 @@ component =
     }
 
 initialState :: Input -> State
-initialState input = { spaceId: input.spaceId, formats: Loading }
+initialState input = { spaceId: input.spaceId, spaceDisplayId: input.spaceDisplayId, containers: Loading }
 
-toCardViewItem :: State -> RelatedFormat -> CardViewItem
-toCardViewItem state format =
-  { title: format.displayName
-  , route: Composition state.spaceId format.formatId ""
+toCardViewItem :: State -> RelatedContainer -> CardViewItem
+toCardViewItem state container =
+  { title: container.format.displayName
+  , route: Container state.spaceDisplayId container.format.displayId
   , desc: ""
   , info: ""
   }
@@ -68,9 +69,8 @@ render state =
                 [ --HH.text "ã‚¹ãƒšãƒ¼ã‚¹"]
                 ]
             , HH.div [ css "body" ]
-                [ remoteWith state.formats \formats ->
-                    HH.text ""
-                --HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map (toCardViewItem state) $ filter (\x-> length x.collectionPage.compositions > 0) formats } absurd
+                [ remoteWith state.containers \containers ->
+                    HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map (toCardViewItem state) containers } absurd
                 ]
             ]
         ]
@@ -80,8 +80,8 @@ handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    callbackQuery FetchedFormats $ getFormats state.spaceId
-  FetchedFormats fetch -> do
-    forRemote fetch \formats ->
-      H.modify_ _ { formats = formats }
+    callbackQuery FetchedContainers $ getSpaceContainers state.spaceId
+  FetchedContainers fetch -> do
+    forRemote fetch \containers ->
+      H.modify_ _ { containers = containers }
   Navigate route -> navigate route

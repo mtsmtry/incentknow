@@ -1,16 +1,22 @@
-module Incentknow.Pages.EditContent where
+module Incentknow.Pages.EditMaterial where
 
 import Prelude
 
 import Control.Monad.Rec.Class (forever)
 import Data.Argonaut.Core (Json, jsonNull, stringify)
+import Data.Argonaut.Parser (jsonParser)
+import Data.Either (either)
 import Data.Foldable (for_, traverse_)
 import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
+import Data.Maybe.Utils (flatten)
+import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
+import Data.Traversable (for)
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
+import Effect.Class.Console (logShow)
 import Effect.Exception (error)
 import Halogen as H
 import Halogen.HTML as HH
@@ -18,60 +24,58 @@ import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
 import Halogen.Query.HalogenM (SubscriptionId(..))
-import Incentknow.API (commitContent, createNewContentDraft, editContentDraft, getContentDraft, getFocusedFormat, getFocusedFormatByStructure, getFormat, startContentEditing)
+import Incentknow.API (commitContent, commitMaterial, createNewContentDraft, createNewMaterialDraft, editContentDraft, editMaterialDraft, getContentDraft, getFocusedFormat, getFocusedFormatByStructure, getFormat, getMaterialDraft, startContentEditing, startMaterialEditing)
 import Incentknow.API.Execution (Fetch, Remote(..), callCommand, callbackQuery, executeAPI, executeCommand, forItem, forRemote, toMaybe)
 import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigate, pushState)
+import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Atoms.Message (SaveState(..), saveState)
-import Incentknow.Data.Entities (FocusedFormat, FocusedContentDraft)
+import Incentknow.Data.Entities (FocusedContentDraft, FocusedFormat, FocusedMaterialDraft, MaterialType(..))
 import Incentknow.Data.Ids (ContentDraftId, ContentId, FormatId(..), SpaceId(..), StructureId)
 import Incentknow.Data.Property (getDefaultValue)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.FormatMenu as FormatMenu
+import Incentknow.Molecules.PlainTextEditor as PlainTextEditor
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Molecules.StructureMenu as StructureMenu
 import Incentknow.Organisms.Content.Editor as Editor
-import Incentknow.Route (EditTarget(..), Route(..))
+import Incentknow.Route (EditTarget(..), MaterialEditTarget(..), Route(..))
 import Incentknow.Templates.Page (section)
 
 -- A type which defines the draft by three kind sources
 type State
-  = { -- the format and the value of the editor
-      format :: Maybe FocusedFormat
-    , value :: Json
+  = { -- the format and the value of the editor value :: Json
     -- the save state
-    , saveState :: SaveState
+    saveState :: SaveState
     -- is loading of a commit
     , loading :: Boolean
     -- the subscription id of a interval save timer
     , timerSubId :: Maybe SubscriptionId
-    , target :: EditTarget
-    , draft :: Remote FocusedContentDraft
+    , target :: MaterialEditTarget
+    , text :: String
+    , draft :: Remote FocusedMaterialDraft
     }
 
 data Action
   = Initialize
   | Load
-  | HandleInput EditTarget
+  | HandleInput MaterialEditTarget
   | ChangeSpace (Maybe SpaceId)
-  | ChangeStructure (Maybe StructureId)
-  | ChangeValue Json
+  | ChangeText String
   | CheckChage
-  | FetchedFormat (Fetch FocusedFormat)
-  | FetchedDraft (Fetch FocusedContentDraft)
+  | FetchedDraft (Fetch FocusedMaterialDraft)
   | Commit
 
 type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = ( editor :: Editor.Slot Unit
+  = ( plainTextEditor :: PlainTextEditor.Slot Unit
     , spaceMenu :: SpaceMenu.Slot Unit
-    , structureMenu :: StructureMenu.Slot Unit
     )
 
-component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q EditTarget o m
+component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q MaterialEditTarget o m
 component =
   H.mkComponent
     { initialState
@@ -85,14 +89,13 @@ component =
             }
     }
 
-initialState :: EditTarget -> State
+initialState :: MaterialEditTarget -> State
 initialState input =
-  { format: Nothing
-  , value: jsonNull
-  , target: input
+  { target: input
   , saveState: HasNotChange
   , loading: false
   , timerSubId: Nothing
+  , text: ""
   , draft: Loading
   }
 
@@ -104,33 +107,15 @@ render state =
     [ HH.div [ css "page-new-content" ]
         [ saveState state.saveState
         , case state.target of
-            TargetBlank spaceId structureId ->
-              HH.div
-                [ css "menu" ]
-                [ HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
-                    { value: spaceId, disabled: false }
-                    (Just <<< ChangeSpace)
-                , HH.slot (SProxy :: SProxy "structureMenu") unit StructureMenu.component
-                    { value: structureId, filter: maybe FormatMenu.None FormatMenu.SpaceBy spaceId, disabled: false }
-                    (Just <<< ChangeStructure)
-                ]
+            MaterialTargetBlank spaceId ->
+              HH.text ""
             _ -> HH.text ""
-        , maybeElem state.format \format ->
-            HH.slot editor_ unit Editor.component
-              { format: format
-              , value: state.value
-              , env:
-                  { spaceId:
-                      case state.target of
-                        TargetBlank spaceId structureId -> spaceId
-                        _ -> Nothing
-                  }
-              }
-              (Just <<< ChangeValue)
+        , HH.slot (SProxy :: SProxy "plainTextEditor") unit PlainTextEditor.component { value: state.text, variableHeight: true, readonly: false }
+            (Just <<< ChangeText)
         , case state.target, state.draft of
-            TargetBlank _ _, _ -> HH.text ""
-            TargetDraft _, Holding draft ->
-              if draft.contentId == Nothing then
+            MaterialTargetBlank _, _ -> HH.text ""
+            MaterialTargetDraft _, Holding draft ->
+              if draft.material == Nothing then
                 submitButton
                   { isDisabled: state.loading
                   , isLoading: state.loading
@@ -146,17 +131,17 @@ render state =
                   , loadingText: "変更中"
                   , onClick: Commit
                   }
-            TargetDraft _, _ ->
-                submitButton
-                  { isDisabled: state.loading
-                  , isLoading: state.loading
-                  , text: "変更"
-                  , loadingText: "変更中"
-                  , onClick: Commit
-                  }
-            TargetContent _, _ ->
+            MaterialTargetDraft _, _ ->
               submitButton
-                { isDisabled: state.loading 
+                { isDisabled: state.loading
+                , isLoading: state.loading
+                , text: "変更"
+                , loadingText: "変更中"
+                , onClick: Commit
+                }
+            MaterialTargetMaterial _, _ ->
+              submitButton
+                { isDisabled: state.loading
                 , isLoading: state.loading
                 , text: "変更"
                 , loadingText: "変更中"
@@ -200,87 +185,65 @@ handleAction = case _ of
   Load -> do
     state <- H.get
     case state.target of
-      TargetBlank spaceId structureId -> do
+      MaterialTargetBlank spaceId -> do
         -- set the selected value
-        H.modify_ _ { target = TargetBlank spaceId structureId }
-        -- fetch the format
-        for_ structureId \structureId ->
-          callbackQuery FetchedFormat $ getFocusedFormatByStructure structureId
-      TargetDraft draftId -> do
+        H.modify_ _ { target = MaterialTargetBlank spaceId }
+      MaterialTargetDraft draftId -> do
         -- fetch the draft
-        callbackQuery FetchedDraft $ getContentDraft draftId
-      TargetContent contentId -> do
+        callbackQuery FetchedDraft $ getMaterialDraft draftId
+      MaterialTargetMaterial materialId -> do
         -- get or create a draft of the specified content and fetch the draft id
-        maybeDraftId <- executeCommand $ startContentEditing contentId Nothing
-        for_ maybeDraftId \draftId ->
-          navigate $ EditContent $ TargetDraft draftId
+        maybeDraft <- executeCommand $ startMaterialEditing materialId Nothing
+        for_ maybeDraft \draft ->
+          navigate $ EditMaterial $ MaterialTargetDraft draft.draftId
   -- Fetch
-  FetchedFormat fetch -> do
-    forRemote fetch \format ->
-      H.modify_ _ { format = R.toMaybe format, value = fromMaybe jsonNull $ map getDefaultValue $ map _.currentStructure.properties $ R.toMaybe format }
   FetchedDraft fetch -> do
     forRemote fetch \draft ->
-      H.modify_ _ { format = map _.format $ R.toMaybe draft, value = fromMaybe jsonNull $ map _.data $ R.toMaybe draft, draft = draft }
+      H.modify_ _ { text = fromMaybe "" $ map _.data $ R.toMaybe draft, draft = draft }
   -- Change
   ChangeSpace spaceId -> do
     state <- H.get
     -- Change url if the draft is not created
     case state.target of
-      TargetBlank oldSpaceId structureId -> do
-        H.modify_ _ { target = TargetBlank spaceId structureId }
+      MaterialTargetBlank oldSpaceId -> do
+        H.modify_ _ { target = MaterialTargetBlank spaceId }
         when (spaceId /= oldSpaceId) do
-          navigate $ EditContent $ TargetBlank spaceId structureId
+          navigate $ EditMaterial $ MaterialTargetBlank spaceId
       _ -> pure unit
-  ChangeStructure structureId -> do
-    state <- H.get
-    -- Change url if the draft is not created
-    case state.target of
-      TargetBlank spaceId oldStructureId -> do
-        H.modify_ _ { target = TargetBlank spaceId structureId }
-        when (structureId /= oldStructureId) do
-          navigate $ EditContent $ TargetBlank spaceId structureId
-      _ -> pure unit
-    -- Reload the format
-    H.modify_ _ { format = Nothing }
-    for_ structureId \structureId -> do
-      callbackQuery FetchedFormat $ getFocusedFormatByStructure structureId
-  ChangeValue value -> do
+  ChangeText text -> do
     state <- H.get
     -- Set the value and change the save state
     case state.saveState of
-      Saving -> H.modify_ _ { value = value, saveState = SavingButChanged }
-      _ -> H.modify_ _ { value = value, saveState = NotSaved }
+      Saving -> H.modify_ _ { text = text, saveState = SavingButChanged }
+      _ -> H.modify_ _ { text = text, saveState = NotSaved }
   -- Save changes if they happened
   CheckChage -> do
     state <- H.get
     -- when active state for save
     when (state.saveState == NotSaved && not state.loading) do
-      for_ state.format \format -> do
-        -- Set the save state
-        H.modify_ _ { saveState = Saving }
-        case state.target of
-          TargetBlank spaceId structureId -> do
-            for_ structureId \structureId -> do
-              result <- executeCommand $ createNewContentDraft structureId spaceId (Just state.value)
-              case result of
-                Just draftId -> do
-                  pushState $ EditContent $ TargetDraft draftId
-                  H.modify_ _ { target = TargetDraft draftId }
-                  makeSaveStateSaved
-                Nothing -> H.modify_ _ { saveState = NotSaved }
-          TargetDraft draftId -> do
-            -- result <- executeAPI $ edit { structureId: format.defaultStructureId, workId, spaceId: toNullable state.spaceId, formatId, data: state.value }
-            result <- executeCommand $ editContentDraft draftId state.value
-            case result of
-              Just _ -> makeSaveStateSaved
-              Nothing -> H.modify_ _ { saveState = NotSaved }
-          TargetContent _ -> pure unit
+      -- Set the save state
+      H.modify_ _ { saveState = Saving }
+      case state.target of
+        MaterialTargetBlank spaceId -> do
+          result <- executeCommand $ createNewMaterialDraft spaceId MaterialTypeDocument (Just state.text)
+          case result of
+            Just draft -> do
+              pushState $ EditMaterial $ MaterialTargetDraft draft.draftId
+              H.modify_ _ { target = MaterialTargetDraft draft.draftId }
+              makeSaveStateSaved
+            Nothing -> H.modify_ _ { saveState = NotSaved }
+        MaterialTargetDraft draftId -> do
+          result <- executeCommand $ editMaterialDraft draftId state.text
+          case result of
+            Just _ -> makeSaveStateSaved
+            Nothing -> H.modify_ _ { saveState = NotSaved }
+        MaterialTargetMaterial _ -> pure unit
   Commit -> do
     state <- H.get
     case state.target of
-      TargetDraft draftId -> do
+      MaterialTargetDraft draftId -> do
         H.modify_ _ { loading = true }
-        result <- executeCommand $ commitContent draftId state.value
+        result <- executeCommand $ commitMaterial draftId state.text
         --for_ (flatten result) \commit -> do
         --  navigate $ EditContent $  commit.contentId
         H.modify_ _ { loading = false }

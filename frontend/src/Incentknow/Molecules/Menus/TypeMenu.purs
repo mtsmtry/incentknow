@@ -9,12 +9,12 @@ import Data.Maybe.Utils (flatten)
 import Data.Newtype (unwrap, wrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (Language(..), Type, TypeName(..))
-import Incentknow.Data.EntityUtils (TypeOptions, buildType, defaultTypeOptions, getTypeName)
+import Incentknow.Data.Entities (Language(..), Type(..), TypeName(..))
+import Incentknow.Data.EntityUtils (TypeOptions, buildType, defaultTypeOptions, getTypeName, getTypeOptions)
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.Data.Property (Enumerator)
 import Incentknow.HTML.Utils (css, whenElem)
@@ -22,6 +22,7 @@ import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
+import Test.Unit.Console (consoleLog)
 
 type Input
   = { value :: Maybe Type
@@ -132,7 +133,7 @@ initialState input =
   { typeNameItems: map toSelectMenuItem $ filter (\x -> notElem x.id input.exceptions) typeItems
   , langNameItems: map toSelectMenuItem langItems
   , typeName: map getTypeName input.value
-  , typeOptions: defaultTypeOptions
+  , typeOptions: maybe defaultTypeOptions getTypeOptions input.value
   , exceptions: input.exceptions
   , spaceId: input.spaceId
   , selectedSpaceId: Just input.spaceId
@@ -209,8 +210,12 @@ raiseOrModify state = case buildReturnType state of
 handleAction :: forall m. MonadEffect m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
   Initialize -> pure unit
-  HandleInput input -> when (isJust input.value) $ H.put $ initialState input
-  ChangeFormat formatId -> do
+  HandleInput input -> do
+    when (isJust input.value) $ H.put $ initialState input
+    state <- H.get
+    liftEffect $ consoleLog $ "TypeMenu.HandleInput:" <> maybe "Nothing" unwrap state.typeOptions.format
+  ChangeFormat formatId -> do    
+    liftEffect $ consoleLog $ "TypeMenu.ChangeFormat:" <> maybe "Nothing" unwrap formatId
     state <- H.get
     raiseOrModify $ state { typeOptions = state.typeOptions { format = formatId } }
   ChangeTypeName typeName -> do
