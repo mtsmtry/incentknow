@@ -2,41 +2,32 @@ module Incentknow.Organisms.ContentList where
 
 import Prelude
 
-import Data.Argonaut.Core (toString)
-import Data.Array (catMaybes, filter, head, length, nubByEq, range)
+import Data.Array (catMaybes, filter, head, length, nubByEq)
 import Data.Map (Map)
 import Data.Map as M
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Maybe (Maybe(..), maybe)
 import Data.Set (fromFoldable, toUnfoldable)
-import Data.Set as S
-import Data.Set as Set
-import Data.String as String
-import Data.String.CodeUnits (charAt, fromCharArray)
 import Data.Symbol (SProxy(..))
-import Data.Traversable (for)
-import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
-import Effect.Random (randomInt)
-import Halogen (liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour, navigate)
-import Incentknow.Atoms.Inputs (button, pulldown)
+import Incentknow.Atoms.Inputs (button)
 import Incentknow.Data.Content (getContentSemanticData)
-import Incentknow.Data.Entities (FocusedContent, RelatedContent, RelatedFormat, RelatedUser, FocusedFormat)
-import Incentknow.Data.Ids (FormatId(..), StructureId(..), UserId(..))
-import Incentknow.Data.Property (mkProperties)
-import Incentknow.HTML.DateTime (dateTime)
-import Incentknow.HTML.Utils (css, maybeElem, whenElem)
+import Incentknow.Data.Entities (FocusedFormat, RelatedContent, RelatedUser)
+import Incentknow.Data.Ids (FormatId, UserId)
 import Incentknow.Molecules.FormatMenu as FormatMenu
-import Incentknow.Molecules.TypeMenu as TypeMenu
 import Incentknow.Organisms.ListView (ListViewItem)
 import Incentknow.Organisms.ListView as ListView
-import Incentknow.Route (ContentTab(..), FormatTab(..), Route(..))
-import Incentknow.Templates.Page (tabGrouping)
+import Incentknow.Organisms.BoxView as BoxView
+import Incentknow.Organisms.DataGridView as DataGridView
+import Incentknow.Route (Route(..))
+
+data ViewType
+  = ListView
+  | DataGridView
+  | BoxView
 
 type Input
   = { value :: Array RelatedContent }
@@ -47,14 +38,14 @@ type State
     , formatId :: Maybe FormatId
     , formats :: Array FocusedFormat
     , formatNum :: Int
-    , tab :: ContentTab
+    , viewType :: ViewType
     }
 
 data Action
   = HandleInput Input
   | Navigate Route
   | ChangeFormat (Maybe FormatId)
-  | ChangeTab ContentTab
+  | ChageViewType ViewType
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -62,6 +53,8 @@ type Slot p
 type ChildSlots
   = ( formatMenu :: FormatMenu.Slot Unit
     , listView :: ListView.Slot Unit
+    , dataGridView :: DataGridView.Slot Unit
+    , boxView :: BoxView.Slot Unit
     )
 
 component :: forall o q m. Behaviour m => MonadAff m => MonadEffect m => H.Component HH.HTML q Input o m
@@ -84,7 +77,7 @@ initialState input =
   , formatId: if length formatIds == 1 then head formatIds else Nothing
   , formatNum: length formatIds
   , formats: formats
-  , tab: ContentMain
+  , viewType: ListView
   }
   where
   formats = nubByEq (\x -> \y -> x.formatId == y.formatId) $ map (\x -> x.format) input.value
@@ -109,7 +102,7 @@ toListViewItem state content = Just $ toItem content maybeUser
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  tabGrouping
+  {- tabGrouping
     { tabs: [ ContentMain ]
     , onChangeTab: ChangeTab
     , currentTab: state.tab
@@ -125,12 +118,24 @@ render state =
     ]
     [ HH.slot (SProxy :: SProxy "listView") unit ListView.component { items } absurd
     ]
+  -}
+  HH.div []
+    [ HH.div []
+      [ button "List" (ChageViewType ListView)
+      , button "DataGrid" (ChageViewType DataGridView)
+      , button "Box" (ChageViewType BoxView)
+      ]
+    , case state.viewType of
+        ListView -> HH.slot (SProxy :: SProxy "listView") unit ListView.component { items } absurd
+        DataGridView -> HH.slot (SProxy :: SProxy "dataGridView") unit DataGridView.component { items: state.contents } absurd
+        BoxView -> HH.slot (SProxy :: SProxy "boxView") unit BoxView.component { items: state.contents } absurd
+    ]
   where
   items = catMaybes $ map (toListViewItem state) $ filter (\x -> maybe true (\y -> x.format.formatId == y) state.formatId) state.contents
 
-handleAction :: forall o s m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   HandleInput props -> H.put $ initialState props
   Navigate route -> navigate route
   ChangeFormat formatId -> H.modify_ _ { formatId = formatId }
-  ChangeTab tab -> H.modify_ _ { tab = tab }
+  ChageViewType viewType -> H.modify_ _ { viewType = viewType }

@@ -2,36 +2,28 @@ module Incentknow.Organisms.Structure where
 
 import Prelude
 
-import Data.Array (concat, filter, length, range)
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Array (concat, filter)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Maybe.Utils (allJust, flatten)
 import Data.Newtype (unwrap, wrap)
-import Data.Nullable (toMaybe, toNullable)
-import Data.String as String
-import Data.String.CodeUnits (charAt, fromCharArray)
 import Data.Symbol (SProxy(..))
 import Data.Traversable (for, for_)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
-import Effect.Random (randomInt)
-import Halogen (liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Atoms.Inputs (button, checkbox, pulldown, textarea)
+import Incentknow.Atoms.Inputs (button, checkbox, textarea)
 import Incentknow.Data.Entities (Type(..), TypeName(..), PropertyInfo)
-import Incentknow.Data.EntityUtils (getTypeName)
-import Incentknow.Data.Ids (PropertyId, SpaceId(..))
-import Incentknow.Data.Property (Enumerator, Property)
+import Incentknow.Data.Ids (PropertyId, SpaceId)
+import Incentknow.Data.Property (Enumerator)
 import Incentknow.Data.Utils (generateId)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.TypeMenu as TypeMenu
 import Incentknow.Organisms.Enumeration as Enumeration
-import Test.Unit.Console (consoleLog)
 
 type Input
   = { readonly :: Boolean

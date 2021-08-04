@@ -1,14 +1,15 @@
-import { Format, FormatId, FormatSk, FormatUsage } from "../../../entities/format/Format";
+import { Content } from "../../../entities/content/Content";
+import { Format, FormatSk, FormatUsage } from "../../../entities/format/Format";
 import { MetaProperty, MetaPropertyId, MetaPropertyType } from "../../../entities/format/MetaProperty";
-import { Property, PropertyId, PropertySk } from "../../../entities/format/Property";
-import { Structure, StructureSk } from "../../../entities/format/Structure";
+import { Property, PropertySk } from "../../../entities/format/Property";
+import { Structure } from "../../../entities/format/Structure";
 import { SpaceSk } from "../../../entities/space/Space";
 import { UserSk } from "../../../entities/user/User";
-import { PropertyInfo, Type } from "../../../interfaces/format/Structure";
-import { mapByString } from "../../../utils";
+import { Relation } from "../../../interfaces/format/Format";
+import { PropertyInfo, toPropertyInfo, Type } from "../../../interfaces/format/Structure";
 import { FormatQuery, FormatQueryFromEntity } from "../../queries/format/FormatQuery";
 import { PropertyQuery } from "../../queries/format/PropertyQuery";
-import { StructureQuery } from "../../queries/format/StructureQuery";
+import { joinPropertyArguments, StructureQuery } from "../../queries/format/StructureQuery";
 import { BaseCommand, BaseRepository, Command, Repository } from "../../Repository";
 import { Transaction } from "../../Transaction";
 
@@ -39,6 +40,29 @@ export class FormatRepository implements BaseRepository<FormatCommand> {
             this.props.createCommand(trx),
             this.metaProps.createCommand(trx));
     }
+
+    async getRelations(formatId: FormatSk) {
+        let qb = this.props.createQuery().where({ argFormat: formatId });
+        qb = joinPropertyArguments("x", qb);
+        qb = qb.innerJoinAndSelect("x.format", "format")
+        qb = qb.addSelect(
+            qb =>
+                qb.select('COUNT(*)', 'contentCount')
+                    .from(Content, 'c')
+                    .innerJoin("c.container", "container")
+                    .where('container.formatId = x.formatId'),
+            'contentCount',
+        );
+        const props = await qb.getRawAndEntities();
+        const relations: Relation[] = props.entities.map((prop, i) => {
+            return {
+                property: toPropertyInfo(prop),
+                contentCount: parseInt(props.raw[i].contentCount),
+                formatId: prop.format.entityId
+            }
+        });
+        return relations;
+    }
 }
 
 export class FormatCommand implements BaseCommand {
@@ -49,25 +73,25 @@ export class FormatCommand implements BaseCommand {
         private metaProps: Command<MetaProperty>) {
     }
 
+    async _setTypeArguments(prop: Property, tyArgs: Type) {
+        if (tyArgs.language) {
+            prop.argLanguage = tyArgs.language;
+        }
+        if (tyArgs.subType) {
+            prop.argType = tyArgs.subType.name;
+        }
+        if (tyArgs.format) {
+            prop.argFormat = await this.formats.findOne({ entityId: tyArgs.format }) || null;
+        }
+    }
+
+    async _setSubProperties(formatId: number, prop: Property, tyArgs: Type) {
+        if (tyArgs.properties) {
+            await Promise.all(tyArgs.properties.map((x, i) => this._createProperty(formatId, prop.id, i, x)));
+        }
+    }
+
     async _createProperty(formatId: number, parentPropertyId: number | null, order: number, info: PropertyInfo) {
-        async function setTypeArguments(prop: Property, tyArgs: Type) {
-            if (tyArgs.language) {
-                prop.argLanguage = tyArgs.language;
-            }
-            if (tyArgs.subType) {
-                prop.argType = tyArgs.subType.name;
-            }
-            if (tyArgs.format) {
-                prop.argFormat = await this.formats.findOne({ entityId: tyArgs.format });
-            }
-        }
-
-        async function setSubProperties(prop: Property, tyArgs: Type) {
-            if (tyArgs.properties) {
-                await Promise.all(tyArgs.properties.map((x, i) => this.createProperty(formatId, prop.id, i, x)));
-            }
-        }
-
         let prop = this.props.create({
             formatId,
             parentPropertyId: parentPropertyId,
@@ -80,18 +104,18 @@ export class FormatCommand implements BaseCommand {
         });
 
         // set arguments
-        await setTypeArguments(prop, info.type);
+        await this._setTypeArguments(prop, info.type);
         if (info.type.subType) {
-            await setTypeArguments(prop, info.type.subType);
+            await this._setTypeArguments(prop, info.type.subType);
         }
 
         // save
         prop = await this.props.save(prop);
 
         // set properties
-        await setSubProperties(prop, info.type);
+        await this._setSubProperties(formatId, prop, info.type);
         if (info.type.subType) {
-            await setSubProperties(prop, info.type.subType);
+            await this._setSubProperties(formatId, prop, info.type.subType);
         }
 
         return prop;
@@ -132,13 +156,19 @@ export class FormatCommand implements BaseCommand {
 
     async updateStructure(format: Format, properties: PropertyInfo[]) {
 
+        // 新プロパティにもある旧プロパティ (古い共通のプロパティ)
         const oldProps = format.properties.filter(x => properties.filter(y => x.entityId == y.id).length > 0);
+        // 旧プロパティにもある新プロパティ (新しい共通のプロパティ)
         const oldProps2 = properties.filter(x => format.properties.filter(y => x.id == y.entityId).length > 0);
+        // 新規のプロパティ
         const newProps = properties.filter(x => format.properties.filter(y => x.id == y.entityId).length == 0);
 
         // Update old properties
         const promises = oldProps2.map(async prop => {
-            await this.props.update(prop.id, prop);
+            await this.props.update({ formatId: format.id, entityId: prop.id }, {
+                displayName: prop.displayName,
+                fieldName: prop.fieldName
+            });
         });
         await Promise.all(promises);
 

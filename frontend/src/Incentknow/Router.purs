@@ -3,32 +3,24 @@ module Incentknow.Router where
 import Prelude
 
 import Control.Monad.Reader.Trans (class MonadAsk, asks)
-import Data.Foldable (traverse_)
-import Data.Maybe (Maybe(..), isJust)
-import Data.Newtype (unwrap)
-import Data.Nullable (toMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.AVar as AVar
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class.Console (log)
 import Foreign (unsafeToForeign)
 import Halogen as H
-import Halogen.HTML (lazy, memoized)
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.API.Execution (executeAPI)
-import Incentknow.AppM (class Behaviour, AppM(..), Env, GlobalMessage(..), Message)
-import Incentknow.HTML.Utils (maybeElem)
+import Incentknow.AppM (class Behaviour, Env, GlobalMessage(..), Message)
 import Incentknow.Organisms.Footer as Footer
 import Incentknow.Organisms.Header as Header
+import Incentknow.Pages.Container as Container
 import Incentknow.Pages.Content as Content
 import Incentknow.Pages.DraftList as DraftList
-import Incentknow.Pages.EditContent as EditContent
-import Incentknow.Pages.EditMaterial as EditMaterial
+import Incentknow.Pages.EditDraft as EditDraft
 import Incentknow.Pages.Format as Format
 import Incentknow.Pages.Home as Home
 import Incentknow.Pages.JoinSpace as JoinSpace
-import Incentknow.Pages.Container as Container
 import Incentknow.Pages.NewFormat as NewFormat
 import Incentknow.Pages.NewSpace as NewSpace
 import Incentknow.Pages.Public as Public
@@ -54,8 +46,7 @@ type ChildSlots
     ,  footer :: Footer.Slot Unit
     , content :: Content.Slot Unit
     , public :: Public.Slot Unit
-    , editContent :: EditContent.Slot Unit
-    , editMaterial :: EditMaterial.Slot Unit
+    , editDraft :: EditDraft.Slot Unit
     -- , editScraper :: EditScraper.Slot Unit
     , format :: Format.Slot Unit
     --  , newCommunity :: NewCommunity.Slot Unit
@@ -74,7 +65,9 @@ type ChildSlots
     --, rivisionList :: RivisionList.Slot Unit
     --, workList :: WorkList.Slot Unit
     , home :: Home.Slot Unit
+
     , draftList :: DraftList.Slot Unit
+
     --, snapshot :: Snapshot.Slot Unit
     -- , workViewer :: WorkViewer.Slot Unit
     --, contentQuery :: ContentQuery.Slot Unit
@@ -112,14 +105,14 @@ component =
   initialState :: Unit -> State
   initialState _ = { route: Home, loading: 0, msgs: [] }
 
+  renderBody :: forall m. Behaviour m => MonadAff m => Route -> H.ComponentHTML Action ChildSlots m
   renderBody = case _ of
     Home -> HH.slot (SProxy :: SProxy "home") unit Home.component {} absurd
     NotFound -> HH.text ""
     Public -> HH.slot (SProxy :: SProxy "public") unit Public.component {} absurd
     Content contentId -> HH.slot (SProxy :: SProxy "content") unit Content.component { contentSpec: ContentSpecContentId contentId } absurd
     ContentBySemanticId formatId semanticId -> HH.slot (SProxy :: SProxy "content") unit Content.component { contentSpec: ContentSpecSemanticId formatId semanticId } absurd
-    EditContent target -> HH.slot (SProxy :: SProxy "editContent") unit EditContent.component target absurd
-    EditMaterial target -> HH.slot (SProxy :: SProxy "editMaterial") unit EditMaterial.component target absurd
+    EditDraft target -> HH.slot (SProxy :: SProxy "editDraft") unit EditDraft.component target absurd
     EditScraper contentId -> HH.text "" --HH.slot (SProxy :: SProxy "editScraper") unit EditScraper.component { contentId } absurd
     NewFormat spaceId -> HH.slot (SProxy :: SProxy "newFormat") unit NewFormat.component { spaceId } absurd
     --EditWork workId -> HH.slot (SProxy :: SProxy "newContent") unit NewContent.component (NewContent.DraftInput workId) absurd
@@ -168,7 +161,8 @@ component =
                 0 -> HH.text ""
                 _ -> HH.div [ HP.class_ $ H.ClassName "loading" ] []
             --, HH.slot (SProxy :: SProxy "pathBar") unit PathBar.component { route: state.route } absurd
-            , memoized eq renderBody state.route
+            --, memoized eq renderBody state.route
+            , renderBody state.route
             ]
       }
 

@@ -1,22 +1,16 @@
 module Incentknow.Organisms.UserCard where
 
 import Prelude
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Maybe.Utils (flatten)
-import Data.Newtype (unwrap)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.API (getRelatedUser, getUser)
-import Incentknow.API.Execution (Fetch, Remote(..), defaultIconUrl, executeAPI, forRemote, toMaybe)
+import Incentknow.API.Execution (defaultIconUrl)
 import Incentknow.AppM (class Behaviour, navigateRoute)
-import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (RelatedUser)
-import Incentknow.Data.Ids (UserId(..))
 import Incentknow.HTML.DateTime (dateTime)
-import Incentknow.HTML.Utils (css, link, link_, maybeElem)
+import Incentknow.HTML.Utils (css, link, link_)
 import Incentknow.Route (UserTab(..))
 import Incentknow.Route as R
 import Web.UIEvent.MouseEvent (MouseEvent)

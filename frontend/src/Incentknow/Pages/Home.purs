@@ -3,14 +3,12 @@ module Incentknow.Pages.Home where
 import Prelude
 
 import Affjax as AX
-import Affjax.RequestBody as RequestBody
 import Affjax.ResponseFormat as ResponseFormat
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Utils (fromEither)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
-import Halogen (liftAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.HTML.RawHTML as RawHtml

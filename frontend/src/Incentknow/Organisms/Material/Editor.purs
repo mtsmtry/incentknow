@@ -3,9 +3,7 @@ module Incentknow.Organisms.Material.Editor where
 import Prelude
 
 import Control.Monad.Rec.Class (forever)
-import Data.Argonaut.Core (Json, jsonNull, stringify)
-import Data.Foldable (for_, traverse_)
-import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Symbol (SProxy(..))
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
@@ -16,19 +14,19 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
-import Halogen.Query.HalogenM (SubscriptionId(..))
-import Incentknow.API (commitContent, commitMaterial, createNewContentDraft, createNewMaterialDraft, editContentDraft, editMaterialDraft, getContentDraft, getFocusedFormat, getFocusedFormatByStructure, getFormat, getMaterialDraft, startContentEditing, startMaterialEditing)
-import Incentknow.API.Execution (Fetch, Remote(..), callCommand, callbackQuery, executeAPI, executeCommand, forItem, forRemote, toMaybe)
+import Halogen.Query.HalogenM (SubscriptionId)
+import Incentknow.API (createNewMaterialDraft, editMaterialDraft, getMaterialDraft)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeCommand, forRemote)
 import Incentknow.API.Execution as R
-import Incentknow.AppM (class Behaviour, navigate, pushState)
+import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Message (SaveState(..), saveState)
-import Incentknow.Data.Entities (FocusedContentDraft, FocusedFormat, FocusedMaterialDraft, MaterialType(..))
-import Incentknow.Data.Ids (ContentDraftId, ContentId, FormatId(..), MaterialDraftId, SpaceId(..), StructureId)
-import Incentknow.HTML.Utils (css, maybeElem, whenElem)
-import Incentknow.Molecules.FormatMenu as FormatMenu
+import Incentknow.Data.Entities (FocusedMaterialDraft, MaterialType(..))
+import Incentknow.Data.Ids (MaterialDraftId)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.PlainTextEditor as PlainTextEditor
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
-import Incentknow.Route (EditTarget(..), MaterialEditTarget(..), Route(..))
+import Incentknow.Organisms.DocumentEditor as DocumentEditor
+import Incentknow.Route (Route)
 
 type Input 
   = { value :: Maybe MaterialDraftId }
@@ -62,6 +60,7 @@ type Slot p
 type ChildSlots
   = ( plainTextEditor :: PlainTextEditor.Slot Unit
     , spaceMenu :: SpaceMenu.Slot Unit
+    , documentEditor :: DocumentEditor.Slot Unit
     )
 
 component :: forall q m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q Input Output m
@@ -94,7 +93,9 @@ render :: forall m. Behaviour m => MonadEffect m => MonadAff m => State -> H.Com
 render state =
   HH.div [ css "page-new-content" ]
     [ saveState state.saveState
-    , HH.slot (SProxy :: SProxy "plainTextEditor") unit PlainTextEditor.component { value: state.text, variableHeight: true, readonly: false }
+    --, HH.slot (SProxy :: SProxy "plainTextEditor") unit PlainTextEditor.component { value: state.text, variableHeight: true, readonly: false }
+    --   (Just <<< ChangeText)
+    , HH.slot (SProxy :: SProxy "documentEditor") unit DocumentEditor.component { value: state.text, readonly: false }
         (Just <<< ChangeText)
     ]
 

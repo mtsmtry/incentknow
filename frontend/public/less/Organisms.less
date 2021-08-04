@@ -260,7 +260,7 @@
     }
 }
 
-.org-cardview {
+.org-space-cardview {
     display       : flex;
     flex-direction: row;
     flex-wrap     : wrap;
@@ -268,19 +268,95 @@
     margin: -6px -4px;
 
     >.item {
-        .section;
+        box-shadow: 0 1.3px 3px rgba(0, 0, 0, .2);
+        border-radius: 5px;
 
+        display: flex;
+        flex-direction: column;
         width : calc(100%/3 - 8px);
         margin: 6px 4px;
         height: 150px;
 
-        >.title {
-            font-size: 17px;
+        >.upper {
+            .section;
+            padding: 0px;
+            border-bottom: 0px;
+            border-bottom-left-radius: 0px;
+            border-bottom-right-radius: 0px;
+            box-shadow: none;
+
+            overflow: hidden;
+            position: relative;
+            flex: 3;
+
+            img {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                -webkit-transform: translate(-50%, -50%);
+                -ms-transform: translate(-50%, -50%);
+                transform: translate(-50%, -50%);
+                width: 105%;
+                height: auto;
+            }
         }
 
-        >.info {
-            font-size: 13px;
-            color    : #666;
+        >.upper:after{
+            position: absolute;
+            content:"";
+            top:0;
+            left:0;
+            width: 100%;
+            height:100%;
+            background: linear-gradient(rgba(255,255,255,0) 60%, rgba(255,255,255,1));
+        }
+
+        >.lower {
+            .section;
+            border-top: 0px;
+            border-top-left-radius: 0px;
+            border-top-right-radius: 0px;
+            box-shadow: none;
+
+            padding: 15px 25px;
+            flex: 2;
+
+            >.title {
+                font-size: 17px;
+            }
+
+            >.info {
+                font-size: 13px;
+                color    : #666;
+            }
+            
+            >.private {
+                font-size: 13px;
+                color: white;
+                background: rgb(255, 208, 0);
+                border-radius: 5px;
+                float: right;
+                padding: 2px;
+                font-weight: bold;
+            }
+            >.group {
+                font-size: 13px;
+                color: white;
+                background:rgb(1, 136, 247);
+                border-radius: 5px;
+                float: right;
+                padding: 2px;
+                font-weight: bold;
+            }
+            >.public {
+                font-size: 13px;
+                color: white;
+                background:rgba(255, 255, 255, 0);
+                border-radius: 5px;
+                float: right;
+                padding: 2px;
+                font-weight: bold;
+            }
         }
     }
 }

@@ -2,27 +2,20 @@ module Incentknow.Pages.Space.ContainerList where
 
 import Prelude
 
-import Ace.Document (getAllLines)
-import Data.Array (filter, length)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
 import Incentknow.API (getSpaceContainers)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (submitButton)
-import Incentknow.Data.Entities (RelatedFormat, RelatedContainer)
-import Incentknow.Data.Ids (SpaceDisplayId, SpaceId(..))
-import Incentknow.Data.Page (ContentComposition)
+import Incentknow.Data.Entities (RelatedContainer)
+import Incentknow.Data.Ids (SpaceDisplayId, SpaceId)
 import Incentknow.HTML.Utils (css)
-import Incentknow.Organisms.CardView (CardViewItem)
-import Incentknow.Organisms.CardView as CardView
-import Incentknow.Route (FormatTab(..), Route(..), SpaceTab(..))
+import Incentknow.Route (Route(..))
 
 type Input
   = { spaceId :: SpaceId, spaceDisplayId :: SpaceDisplayId }
@@ -39,7 +32,7 @@ type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = ( cardview :: CardView.Slot Unit )
+  = ( )
 
 component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q Input o m
 component =
@@ -52,7 +45,7 @@ component =
 initialState :: Input -> State
 initialState input = { spaceId: input.spaceId, spaceDisplayId: input.spaceDisplayId, containers: Loading }
 
-toCardViewItem :: State -> RelatedContainer -> CardViewItem
+-- toCardViewItem :: State -> RelatedContainer -> CardViewItem
 toCardViewItem state container =
   { title: container.format.displayName
   , route: Container state.spaceDisplayId container.format.displayId
@@ -70,7 +63,7 @@ render state =
                 ]
             , HH.div [ css "body" ]
                 [ remoteWith state.containers \containers ->
-                    HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map (toCardViewItem state) containers } absurd
+                    HH.text "" --HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map (toCardViewItem state) containers } absurd
                 ]
             ]
         ]

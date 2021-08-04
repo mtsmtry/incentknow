@@ -2,40 +2,23 @@ module Incentknow.Pages.User.Setting where
 
 import Prelude
 
-import Affjax as AX
-import Affjax.RequestBody as RequestBody
-import Affjax.RequestHeader (RequestHeader(..))
-import Affjax.ResponseFormat as ResponseFormat
-import DOM.HTML.Indexed.InputAcceptType (mediaType)
-import Data.Either (Either(..))
-import Data.Foldable (for_, traverse_)
-import Data.HTTP.Method (Method(..))
-import Data.Maybe (Maybe(..), isNothing)
-import Data.Maybe.Utils (flatten)
-import Data.MediaType (MediaType(..))
-import Data.Nullable (toMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
 import Incentknow.API (getMyAccount, setMyDisplayName, setMyEmail, setMyPassword)
-import Incentknow.API.Execution (Fetch, Remote(..), callAPI, callCommand, callbackQuery, forRemote)
+import Incentknow.API.Execution (Fetch, Remote(..), callCommand, callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (button, submitButton, textarea)
 import Incentknow.Data.Entities (IntactAccount)
-import Incentknow.Data.Ids (UserId(..))
-import Incentknow.HTML.Utils (css, maybeElem)
-import Incentknow.Molecules.Setting (SettingOutput, SettingQuery(..))
+import Incentknow.HTML.Utils (css)
+import Incentknow.Molecules.Setting (SettingOutput)
 import Incentknow.Molecules.Setting.DisplayId as SettingDisplayId
 import Incentknow.Molecules.Setting.Image as SettingImage
 import Incentknow.Molecules.Setting.Password as SettingPassword
 import Incentknow.Molecules.Setting.Text as SettingText
-import Incentknow.Organisms.ContentList as ContentList
-import Pipes (discard)
 
 type Input
   = {}

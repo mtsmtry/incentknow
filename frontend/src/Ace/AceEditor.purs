@@ -2,25 +2,21 @@ module Incentknow.Molecules.AceEditor where
 
 import Prelude
 
-import Ace (Completion, EditSession, Position(..), VirtualRenderer, getColumn, getRow)
+import Ace (Completion, EditSession, Position(..), getColumn, getRow)
 import Ace as Ace
 import Ace.Completer (setCompleters)
 import Ace.EditSession as Session
 import Ace.Editor as Editor
 import Ace.Ext.LanguageTools.Completer (CompleterCallback, mkCompleter)
 import Ace.Types (Editor)
-import Ace.VirtualRenderer (showCursor)
-import Ace.VirtualRenderer as Renderer
 import Data.Foldable (for_, traverse_)
 import Data.Function.Uncurried (Fn2, runFn2)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect, liftEffect)
-import Effect.Class.Console (log)
 import Global (infinity)
 import Halogen as H
-import Halogen.HTML (lazy)
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource as ES

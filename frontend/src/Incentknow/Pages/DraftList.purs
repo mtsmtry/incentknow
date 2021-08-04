@@ -2,40 +2,22 @@ module Incentknow.Pages.DraftList where
 
 import Prelude
 
-import Data.Argonaut.Core (toString)
-import Data.Array (catMaybes, filter, head, range)
-import Data.Map (Map)
-import Data.Map as M
-import Data.Map as Map
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Newtype (wrap)
-import Data.Nullable (notNull, null, toMaybe)
-import Data.String as String
-import Data.String.CodeUnits (charAt, fromCharArray)
+import Data.Array (catMaybes, filter)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
-import Data.Traversable (for, for_)
-import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
-import Effect.Random (randomInt)
-import Halogen (liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
 import Incentknow.API (getMyContentDrafts, getMyMaterialDrafts)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, executeCommand, forRemote)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (button, pulldown)
 import Incentknow.Data.Content (getContentSemanticData)
-import Incentknow.Data.Entities (ContentChangeType(..), ContentEditingState(..), FocusedFormat, RelatedContentDraft, RelatedMaterialDraft)
-import Incentknow.Data.Property (mkProperties)
-import Incentknow.HTML.Utils (css, maybeElem)
-import Incentknow.Molecules.TypeMenu as TypeMenu
+import Incentknow.Data.Entities (ContentChangeType(..), FocusedFormat, RelatedContentDraft, RelatedMaterialDraft)
 import Incentknow.Organisms.ListView (ListViewItem)
 import Incentknow.Organisms.ListView as ListView
-import Incentknow.Route (ContentTab(..), EditTarget(..), MaterialEditTarget(..), Route(..))
+import Incentknow.Route (EditContentTarget(..), EditMaterialTarget(..), EditTarget(..), Route(..))
 import Incentknow.Templates.Page (tabGrouping)
 
 data DraftTab
@@ -102,7 +84,7 @@ toListViewItem draft = map (\format -> toItem draft format) maybeFormat
     , datetime: Just draft.updatedAt
     , title: common.title
     , format: Just format
-    , route: EditContent $ TargetDraft draft.draftId
+    , route: EditDraft $ ContentTarget $ TargetDraft draft.draftId
     }
     where
     common = getContentSemanticData draft.data format
@@ -114,7 +96,7 @@ toListViewItemFromMaterial draft =
     , datetime: Just draft.updatedAt
     , title: draft.displayName
     , format: Nothing
-    , route: EditMaterial $ MaterialTargetDraft draft.draftId
+    , route: EditDraft $ MaterialTarget $ MaterialTargetDraft draft.draftId
     }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
@@ -171,6 +153,6 @@ handleAction = case _ of
   FetchedMaterialDrafts fetch -> do
     forRemote fetch \drafts ->
       H.modify_ _ { materialDrafts = drafts }
-  HandleInput props -> handleAction Initialize
+  HandleInput _ -> handleAction Initialize
   Navigate route -> navigate route
   ChangeTab tab -> H.modify_ _ { tab = tab }

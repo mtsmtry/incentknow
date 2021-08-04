@@ -1,6 +1,6 @@
 import { FormatId } from "../../entities/format/Format";
 import { MetaProperty, MetaPropertyId, MetaPropertyType } from "../../entities/format/MetaProperty";
-import { Language, Property, TypeName } from "../../entities/format/Property";
+import { Language, Property, PropertyId, TypeName } from "../../entities/format/Property";
 import { Structure } from "../../entities/format/Structure";
 import { Data, DataKind, DataMember } from "../../Implication";
 import { toTimestamp } from "../Utils";
@@ -11,16 +11,16 @@ export interface IntactMetaProperty {
 }
 
 export function toIntactMetaProperty(meta: MetaProperty): IntactMetaProperty {
-    return { 
+    return {
         id: meta.entityId,
-        type: meta.type 
+        type: meta.type
     };
 }
 
 export interface PropertyInfo {
     displayName: string,
     fieldName: string | null,
-    id: string,
+    id: PropertyId,
     optional: boolean,
     semantic: string | null,
     type: Type,

@@ -2,43 +2,26 @@ module Incentknow.Pages.Space.Setting where
 
 import Prelude
 
-import Affjax as AX
-import Affjax.RequestBody as RequestBody
-import Affjax.RequestHeader (RequestHeader(..))
-import Affjax.ResponseFormat as ResponseFormat
-import DOM.HTML.Indexed.InputAcceptType (mediaType)
-import Data.Either (Either(..))
-import Data.Foldable (for_, traverse_)
-import Data.HTTP.Method (Method(..))
-import Data.Maybe (Maybe(..), fromMaybe, isNothing, maybe)
-import Data.Maybe.Utils (flatten)
-import Data.MediaType (MediaType(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap, wrap)
-import Data.Nullable (toMaybe)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
 import Incentknow.API (getAvailableSpaceDisplayId, setSpaceDefaultAuthority, setSpaceDisplayId, setSpaceDisplayName, setSpaceMembershipMethod, setSpacePublished)
-import Incentknow.API.Execution (callAPI, callCommand, callQuery)
+import Incentknow.API.Execution (callCommand, callQuery)
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Atoms.Inputs (button, submitButton, textarea)
 import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..), SpaceAuth(..))
-import Incentknow.Data.Ids (SpaceId(..), UserId(..))
-import Incentknow.HTML.Utils (css, maybeElem)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.DisplayId as DisplayId
-import Incentknow.Molecules.Setting (SettingOutput, SettingQuery(..))
+import Incentknow.Molecules.Setting (SettingOutput)
 import Incentknow.Molecules.Setting.AuthMenu as SettingAuthMenu
 import Incentknow.Molecules.Setting.Checkbox as SettingCheckbox
 import Incentknow.Molecules.Setting.DisplayId as SettingDisplayId
 import Incentknow.Molecules.Setting.Image as SettingImage
 import Incentknow.Molecules.Setting.MembershipMethodMenu as MembershipMethodMenu
 import Incentknow.Molecules.Setting.Text as SettingText
-import Incentknow.Organisms.ContentList as ContentList
-import Pipes (discard)
 
 type Input
   = { space :: FocusedSpace

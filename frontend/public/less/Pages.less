@@ -325,6 +325,8 @@
 
             >.left {
                 flex-grow: 1;
+                .unselectable;
+                cursor: default;
 
                 >label {
                     color: rgba(0, 0, 0, .4);
@@ -515,6 +517,15 @@
         >.caption {
             font-size: 17px;
             margin: 20px 0px;
+
+            >.count {
+                font-size: 15px;
+                color: gray;
+            }
+
+            >.creation {
+                float: right;
+            }
         }
 
         padding-bottom: 40px;

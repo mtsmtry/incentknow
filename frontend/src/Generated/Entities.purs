@@ -490,7 +490,6 @@ type RelatedMaterialDraft
     , displayName :: String
     , createdAt :: Number
     , updatedAt :: Number
-    , isEditing :: Boolean
     }
 
 
@@ -504,7 +503,6 @@ type FocusedMaterialDraft
     , material :: Maybe RelatedMaterial
     , basedCommitId :: Maybe MaterialCommitId
     , data :: String
-    , isEditing :: Boolean
     }
 
 
@@ -572,6 +570,14 @@ type IntactReactor
 
 
 
+type AdditionalSpaceInfo
+  = { memberCount :: Number
+    , contentCount :: Number
+    , formatCount :: Number
+    }
+
+
+
 type RelatedSpace
   = { spaceId :: SpaceId
     , displayId :: SpaceDisplayId
@@ -597,6 +603,9 @@ type FocusedSpace
     , published :: Boolean
     , membershipMethod :: MembershipMethod
     , defaultAuthority :: SpaceAuth
+    , memberCount :: Number
+    , contentCount :: Number
+    , formatCount :: Number
     }
 
 

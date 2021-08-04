@@ -3,10 +3,9 @@ module Incentknow.Organisms.Footer where
 import Prelude
 
 import Data.Newtype (wrap)
-import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
+import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.HTML.Utils (css, link_)
 import Incentknow.Route (Route(..))
 import Web.UIEvent.MouseEvent (MouseEvent)

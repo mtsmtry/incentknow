@@ -18,7 +18,7 @@ import Incentknow.Data.Entities (FocusedContentDraft, FocusedFormat, FocusedMate
 import Incentknow.Data.Ids (ContentDraftId, ContentId, FormatId(..), MaterialDraftId, SpaceId(..), StructureId)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Organisms.Material.Editor as Editor
-import Incentknow.Route (EditTarget(..), MaterialEditTarget(..), Route(..))
+import Incentknow.Route (EditContentTarget(..), EditMaterialTarget(..), Route(..))
 import Incentknow.Templates.Page (section)
 
 type Input 

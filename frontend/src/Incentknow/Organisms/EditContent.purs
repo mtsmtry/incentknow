@@ -1,11 +1,11 @@
-module Incentknow.Pages.EditContent where
+module Incentknow.Organisms.EditContent where
 
 import Prelude
 
 import Control.Monad.Rec.Class (forever)
-import Data.Argonaut.Core (Json, jsonNull, stringify)
-import Data.Foldable (for_, traverse_)
-import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
+import Data.Argonaut.Core (Json, jsonNull)
+import Data.Foldable (for_)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing, maybe)
 import Data.Symbol (SProxy(..))
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
@@ -14,26 +14,24 @@ import Effect.Class (class MonadEffect)
 import Effect.Exception (error)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
-import Halogen.Query.HalogenM (SubscriptionId(..))
-import Incentknow.API (commitContent, createNewContentDraft, editContentDraft, getContentDraft, getFocusedFormat, getFocusedFormatByStructure, getFormat, startContentEditing)
-import Incentknow.API.Execution (Fetch, Remote(..), callCommand, callbackQuery, executeAPI, executeCommand, forItem, forRemote, toMaybe)
+import Halogen.Query.HalogenM (SubscriptionId)
+import Incentknow.API (commitContent, createNewContentDraft, editContentDraft, getContentDraft, getFocusedFormatByStructure, startContentEditing)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeCommand, forRemote)
 import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigate, pushState)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Atoms.Message (SaveState(..), saveState)
 import Incentknow.Data.Entities (FocusedFormat, FocusedContentDraft)
-import Incentknow.Data.Ids (ContentDraftId, ContentId, FormatId(..), SpaceId(..), StructureId)
+import Incentknow.Data.Ids (SpaceId, StructureId)
 import Incentknow.Data.Property (getDefaultValue)
-import Incentknow.HTML.Utils (css, maybeElem, whenElem)
+import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Molecules.StructureMenu as StructureMenu
 import Incentknow.Organisms.Content.Editor as Editor
-import Incentknow.Route (EditTarget(..), Route(..))
-import Incentknow.Templates.Page (section)
+import Incentknow.Route (EditContentTarget(..), EditTarget(..), Route(..))
 
 -- A type which defines the draft by three kind sources
 type State
@@ -46,14 +44,14 @@ type State
     , loading :: Boolean
     -- the subscription id of a interval save timer
     , timerSubId :: Maybe SubscriptionId
-    , target :: EditTarget
+    , target :: EditContentTarget
     , draft :: Remote FocusedContentDraft
     }
 
 data Action
   = Initialize
   | Load
-  | HandleInput EditTarget
+  | HandleInput EditContentTarget
   | ChangeSpace (Maybe SpaceId)
   | ChangeStructure (Maybe StructureId)
   | ChangeValue Json
@@ -71,7 +69,7 @@ type ChildSlots
     , structureMenu :: StructureMenu.Slot Unit
     )
 
-component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q EditTarget o m
+component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q EditContentTarget o m
 component =
   H.mkComponent
     { initialState
@@ -85,7 +83,7 @@ component =
             }
     }
 
-initialState :: EditTarget -> State
+initialState :: EditContentTarget -> State
 initialState input =
   { format: Nothing
   , value: jsonNull
@@ -100,70 +98,68 @@ editor_ = SProxy :: SProxy "editor"
 
 render :: forall m. Behaviour m => MonadEffect m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  section "page-new-content"
-    [ HH.div [ css "page-new-content" ]
-        [ saveState state.saveState
-        , case state.target of
-            TargetBlank spaceId structureId ->
-              HH.div
-                [ css "menu" ]
-                [ HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
-                    { value: spaceId, disabled: false }
-                    (Just <<< ChangeSpace)
-                , HH.slot (SProxy :: SProxy "structureMenu") unit StructureMenu.component
-                    { value: structureId, filter: maybe FormatMenu.None FormatMenu.SpaceBy spaceId, disabled: false }
-                    (Just <<< ChangeStructure)
-                ]
-            _ -> HH.text ""
-        , maybeElem state.format \format ->
-            HH.slot editor_ unit Editor.component
-              { format: format
-              , value: state.value
-              , env:
-                  { spaceId:
-                      case state.target of
-                        TargetBlank spaceId structureId -> spaceId
-                        _ -> Nothing
-                  }
-              }
-              (Just <<< ChangeValue)
-        , case state.target, state.draft of
-            TargetBlank _ _, _ -> HH.text ""
-            TargetDraft _, Holding draft ->
-              if draft.contentId == Nothing then
-                submitButton
-                  { isDisabled: state.loading
-                  , isLoading: state.loading
-                  , text: "作成"
-                  , loadingText: "作成中"
-                  , onClick: Commit
-                  }
-              else
-                submitButton
-                  { isDisabled: state.loading
-                  , isLoading: state.loading
-                  , text: "変更"
-                  , loadingText: "変更中"
-                  , onClick: Commit
-                  }
-            TargetDraft _, _ ->
-                submitButton
-                  { isDisabled: state.loading
-                  , isLoading: state.loading
-                  , text: "変更"
-                  , loadingText: "変更中"
-                  , onClick: Commit
-                  }
-            TargetContent _, _ ->
+  HH.div [ css "page-new-content" ]
+      [ saveState state.saveState
+      , case state.target of
+          TargetBlank spaceId structureId ->
+            HH.div
+              [ css "menu" ]
+              [ HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
+                  { value: spaceId, disabled: false }
+                  (Just <<< ChangeSpace)
+              , HH.slot (SProxy :: SProxy "structureMenu") unit StructureMenu.component
+                  { value: structureId, filter: maybe FormatMenu.None FormatMenu.SpaceBy spaceId, disabled: false }
+                  (Just <<< ChangeStructure)
+              ]
+          _ -> HH.text ""
+      , maybeElem state.format \format ->
+          HH.slot editor_ unit Editor.component
+            { format: format
+            , value: state.value
+            , env:
+                { spaceId:
+                    case state.target of
+                      TargetBlank spaceId structureId -> spaceId
+                      _ -> Nothing
+                }
+            }
+            (Just <<< ChangeValue)
+      , case state.target, state.draft of
+          TargetBlank _ _, _ -> HH.text ""
+          TargetDraft _, Holding draft ->
+            if draft.contentId == Nothing then
               submitButton
-                { isDisabled: state.loading 
+                { isDisabled: state.loading
+                , isLoading: state.loading
+                , text: "作成"
+                , loadingText: "作成中"
+                , onClick: Commit
+                }
+            else
+              submitButton
+                { isDisabled: state.loading
                 , isLoading: state.loading
                 , text: "変更"
                 , loadingText: "変更中"
                 , onClick: Commit
                 }
-        ]
-    ]
+          TargetDraft _, _ ->
+              submitButton
+                { isDisabled: state.loading
+                , isLoading: state.loading
+                , text: "変更"
+                , loadingText: "変更中"
+                , onClick: Commit
+                }
+          TargetContent _, _ ->
+            submitButton
+              { isDisabled: state.loading 
+              , isLoading: state.loading
+              , text: "変更"
+              , loadingText: "変更中"
+              , onClick: Commit
+              }
+      ]
 
 timer :: forall m. MonadAff m => EventSource m Action
 timer =
@@ -204,8 +200,8 @@ handleAction = case _ of
         -- set the selected value
         H.modify_ _ { target = TargetBlank spaceId structureId }
         -- fetch the format
-        for_ structureId \structureId ->
-          callbackQuery FetchedFormat $ getFocusedFormatByStructure structureId
+        for_ structureId \structureId2 ->
+          callbackQuery FetchedFormat $ getFocusedFormatByStructure structureId2
       TargetDraft draftId -> do
         -- fetch the draft
         callbackQuery FetchedDraft $ getContentDraft draftId
@@ -213,7 +209,7 @@ handleAction = case _ of
         -- get or create a draft of the specified content and fetch the draft id
         maybeDraftId <- executeCommand $ startContentEditing contentId Nothing
         for_ maybeDraftId \draftId ->
-          navigate $ EditContent $ TargetDraft draftId
+          navigate $ EditDraft $ ContentTarget $ TargetDraft draftId
   -- Fetch
   FetchedFormat fetch -> do
     forRemote fetch \format ->
@@ -229,7 +225,7 @@ handleAction = case _ of
       TargetBlank oldSpaceId structureId -> do
         H.modify_ _ { target = TargetBlank spaceId structureId }
         when (spaceId /= oldSpaceId) do
-          navigate $ EditContent $ TargetBlank spaceId structureId
+          navigate $ EditDraft $ ContentTarget $ TargetBlank spaceId structureId
       _ -> pure unit
   ChangeStructure structureId -> do
     state <- H.get
@@ -238,12 +234,12 @@ handleAction = case _ of
       TargetBlank spaceId oldStructureId -> do
         H.modify_ _ { target = TargetBlank spaceId structureId }
         when (structureId /= oldStructureId) do
-          navigate $ EditContent $ TargetBlank spaceId structureId
+          navigate $ EditDraft $ ContentTarget $ TargetBlank spaceId structureId
       _ -> pure unit
     -- Reload the format
     H.modify_ _ { format = Nothing }
-    for_ structureId \structureId -> do
-      callbackQuery FetchedFormat $ getFocusedFormatByStructure structureId
+    for_ structureId \structureId2 -> do
+      callbackQuery FetchedFormat $ getFocusedFormatByStructure structureId2
   ChangeValue value -> do
     state <- H.get
     -- Set the value and change the save state
@@ -260,11 +256,11 @@ handleAction = case _ of
         H.modify_ _ { saveState = Saving }
         case state.target of
           TargetBlank spaceId structureId -> do
-            for_ structureId \structureId -> do
-              result <- executeCommand $ createNewContentDraft structureId spaceId (Just state.value)
+            for_ structureId \structureId2 -> do
+              result <- executeCommand $ createNewContentDraft structureId2 spaceId (Just state.value)
               case result of
                 Just draftId -> do
-                  pushState $ EditContent $ TargetDraft draftId
+                  pushState $ EditDraft $ ContentTarget $ TargetDraft draftId
                   H.modify_ _ { target = TargetDraft draftId }
                   makeSaveStateSaved
                 Nothing -> H.modify_ _ { saveState = NotSaved }

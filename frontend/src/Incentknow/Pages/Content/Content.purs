@@ -2,12 +2,10 @@ module Incentknow.Pages.Content where
 
 import Prelude
 
-import Data.Array (filter, head, index, length, range)
+import Data.Array (filter, head)
 import Data.Foldable (for_)
-import Data.Int (fromString)
 import Data.Map as M
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Maybe.Utils (flatten)
+import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
@@ -15,21 +13,18 @@ import Halogen (SubscriptionId)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getContent)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackAPI, callbackQuery, executeAPI, forItem, forRemote, toMaybe)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forItem, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute, pushState)
-import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button)
 import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (FocusedContent)
-import Incentknow.Data.Ids (ContentId(..), FormatId(..), SemanticId(..))
-import Incentknow.HTML.Utils (css, link, link_, maybeElem)
+import Incentknow.HTML.Utils (css, link_, maybeElem)
 import Incentknow.Organisms.Content.Viewer as Content
 import Incentknow.Organisms.RelatedContents as RelatedContents
 import Incentknow.Organisms.UserCard as UserCard
-import Incentknow.Route (ContentSpec(..), EditTarget(..), Route(..))
+import Incentknow.Route (ContentSpec(..), EditContentTarget(..), EditTarget(..), Route(..))
 import Incentknow.Route as R
 import Incentknow.Templates.Page (section, tabPage)
-import Web.HTML.Event.EventTypes (offline)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
@@ -93,7 +88,7 @@ renderContent content =
         , HH.div [ css "buttons" ]
             [ HH.div [ css "container" ]
                 [ HH.div [ css "rivision" ] [ link_ Navigate (RivisionList content.contentId) [ HH.text "リビジョン" ] ]
-                , HH.div [ css "edit" ] [ button "編集" $ NavigateRoute $ EditContent $ TargetContent content.contentId ]
+                , HH.div [ css "edit" ] [ button "編集" $ NavigateRoute $ EditDraft $ ContentTarget $ TargetContent content.contentId ]
                 ]
             ]
         ]
@@ -160,7 +155,7 @@ handleAction = case _ of
     forRemote fetch \content->
       H.modify_ _ { content = content }
   HandleInput input -> do
-    state <- H.get
+    state <- H.get 
     when (input.contentSpec /= state.contentSpec) do
       H.put $ initialState input
       handleAction Initialize

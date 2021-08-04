@@ -3,7 +3,7 @@ module Incentknow.Pages.NewSpace where
 import Prelude
 
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
 import Data.String (length)
 import Data.Symbol (SProxy(..))
@@ -12,7 +12,7 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getAvailableSpaceDisplayId, createSpace)
-import Incentknow.API.Execution (callAPI, callQuery, executeAPI, executeCommand)
+import Incentknow.API.Execution (callQuery, executeCommand)
 import Incentknow.AppM (class Behaviour, Message(..), message, navigate)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Data.Utils (generateId)
@@ -20,7 +20,7 @@ import Incentknow.Molecules.DisplayId (CheckState(..))
 import Incentknow.Molecules.DisplayId as DisplayId
 import Incentknow.Molecules.Form (define, defineText)
 import Incentknow.Route (Route(..), SpaceTab(..))
-import Incentknow.Templates.Page (creationPage, section)
+import Incentknow.Templates.Page (creationPage)
 
 type Input
   = {}
@@ -66,7 +66,7 @@ regulation_ = SProxy :: SProxy "regulation"
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  creationPage { title: "新しいスペースを作成する", desc: "スペースは、コンテンツとフォーマットを保持します。また、スペースではコンテンツとフォーマットの閲覧および編集の権限を管理するメンバーを保持します。" }
+  creationPage { title: "新しいスペースを作成", desc: "スペースは、コンテンツとフォーマットを保持します。また、スペースではコンテンツとフォーマットの閲覧および編集の権限を管理するメンバーを保持します。" }
     [ defineText { label: "表示名", value: state.displayName, onChange: ChangeDisplayName }
     , define "ID"
         [ HH.slot (SProxy :: SProxy "displayId") unit DisplayId.component

@@ -33,7 +33,7 @@ export class MaterialSnapshot {
     @Column()
     editingId: MaterialEditingSk;
 
-    @Column({ select: false })
+    @Column({ type: "text", select: false })
     data: string;
 
     @Column({ asExpression: "char_length(`data`)", generatedType: "STORED" })

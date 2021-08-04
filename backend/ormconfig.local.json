@@ -1,9 +1,9 @@
 {
    "type": "mysql",
    "database": "incentknow",
-   "host": "13.113.194.38",
+   "host": "localhost",
    "port": 3306,
-   "username": "docker",
+   "username": "root",
    "password": "password",
    "logging": [],
    "synchronize": true,

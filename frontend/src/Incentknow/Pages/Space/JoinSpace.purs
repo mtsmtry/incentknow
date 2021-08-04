@@ -2,19 +2,17 @@ module Incentknow.Pages.JoinSpace where
 
 import Prelude
 
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Symbol (SProxy(..))
+import Data.Maybe (Maybe(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (applySpaceMembership, getSpace)
-import Incentknow.API.Execution (Fetch, Remote(..), executeAPI, executeCommand, forRemote)
+import Incentknow.API (applySpaceMembership)
+import Incentknow.API.Execution (Fetch, Remote(..), executeCommand, forRemote)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Data.Entities (FocusedSpace)
-import Incentknow.Data.Ids (SpaceId(..))
-import Incentknow.Molecules.Form (defineText)
+import Incentknow.Data.Ids (SpaceId)
 import Incentknow.Templates.Page (section)
 
 type Input

@@ -2,26 +2,19 @@ module Incentknow.Organisms.CollectionPage where
 
 import Prelude
 
-import Data.Array (catMaybes, concat, filter, length, mapWithIndex, range)
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Maybe.Utils (allJust, flatten)
-import Data.Nullable (toMaybe, toNullable)
-import Data.String as String
+import Data.Array (catMaybes, mapWithIndex)
+import Data.Maybe (Maybe(..))
+import Data.Maybe.Utils (allJust)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
-import Effect.Random (randomInt)
-import Halogen (liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Atoms.Inputs (button, checkbox, pulldown)
-import Incentknow.Data.Ids (FormatId(..))
-import Incentknow.Data.Page (CollectionPage, ContentComposition, ContentPage, ContentRelation, fromContentComposition, toContentComposition)
-import Incentknow.Data.Property (Enumerator, Property)
-import Incentknow.HTML.Utils (css, maybeElem, whenElem)
+import Incentknow.Atoms.Inputs (button)
+import Incentknow.Data.Ids (FormatId)
+import Incentknow.Data.Page (CollectionPage, ContentComposition, fromContentComposition, toContentComposition)
+import Incentknow.HTML.Utils (css, whenElem)
 import Incentknow.Molecules.CompositionMenu as CompositionMenu
 import Incentknow.Molecules.DangerChange as DangerChange
 

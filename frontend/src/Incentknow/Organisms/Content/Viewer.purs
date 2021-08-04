@@ -2,12 +2,8 @@ module Incentknow.Organisms.Content.Viewer where
 
 import Prelude
 
-import Data.Argonaut.Core (Json, jsonNull)
-import Data.Argonaut.Parser (jsonParser)
-import Data.Either (either)
-import Data.Foldable (traverse_)
+import Data.Argonaut.Core (Json)
 import Data.Maybe (Maybe(..))
-import Data.Newtype (wrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
@@ -15,8 +11,6 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (FocusedFormat, Type(..))
-import Incentknow.Data.Ids (ContentId)
-import Incentknow.HTML.Utils (maybeElem)
 import Incentknow.Organisms.Content.ValueViewer as Value
 
 type Input

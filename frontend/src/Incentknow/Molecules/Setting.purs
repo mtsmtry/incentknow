@@ -43,6 +43,7 @@ data Action val
   | Edit
   | Submit
   | Cancel
+  | DoubleClicked
 
 type Slot
   = H.Slot SettingQuery SettingOutput
@@ -86,7 +87,7 @@ setInput input state =
 
 render :: forall val slots m. Eq val => MonadAff m => StaticState val slots m -> State val -> H.ComponentHTML (Action val) slots m
 render static state =
-  HH.div [ css "item" ]
+  HH.div [ css "item", HE.onDoubleClick (\_-> Just DoubleClicked) ]
     [ HH.div [ css "main" ]
         [ HH.div [ css "left" ]
             [ HH.label_ [ HH.text state.title ]
@@ -114,6 +115,9 @@ handleAction static = case _ of
   Initialize -> pure unit
   HandleInput input -> H.modify_ $ setInput input
   Change value -> H.modify_ _ { typingValue = value }
+  DoubleClicked -> do
+    H.modify_ _ { state = Changing }
+    H.raise Edited
   Edit -> do
     H.modify_ _ { state = Changing }
     H.raise Edited

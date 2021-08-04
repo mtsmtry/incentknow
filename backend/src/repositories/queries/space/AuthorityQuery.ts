@@ -75,8 +75,7 @@ export class AuthorityQuery {
         const content = await this.contents
             .where(where)
             .leftJoinAndSelect("x.container", "container")
-            .leftJoinAndSelect("x.container.space", "space")
-            .leftJoinAndSelect("x.space", "space")
+            .leftJoinAndSelect("container.space", "space")
             .getOne();
         if (!content) {
             throw new NotFoundEntity();

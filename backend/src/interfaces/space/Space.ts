@@ -6,6 +6,12 @@ export type SpaceId = string;
 
 export type SpaceDisplayId = string;
 
+export interface AdditionalSpaceInfo {
+    memberCount: number;
+    contentCount: number;
+    formatCount: number;
+};
+
 export interface RelatedSpace {
     spaceId: SpaceId;
     displayId: SpaceDisplayId;
@@ -43,9 +49,12 @@ export interface FocusedSpace {
     published: boolean;
     membershipMethod: MembershipMethod;
     defaultAuthority: SpaceAuth;
+    memberCount: number;
+    contentCount: number;
+    formatCount: number;
 }
 
-export function toFocusedSpace(space: Space): FocusedSpace {
+export function toFocusedSpace(space: Space, additional: AdditionalSpaceInfo): FocusedSpace {
     return {
         spaceId: space.entityId,
         displayId: space.displayId,
@@ -56,6 +65,7 @@ export function toFocusedSpace(space: Space): FocusedSpace {
         homeUrl: space.homeUrl,
         published: space.published,
         membershipMethod: space.membershipMethod,
-        defaultAuthority: space.defaultAuthority
+        defaultAuthority: space.defaultAuthority,
+        ...additional
     };
 }

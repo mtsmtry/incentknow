@@ -3,18 +3,17 @@ module Incentknow.Pages.Container where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Data.Newtype (wrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getContents, getContentsByDisplayId)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote)
+import Incentknow.API (getContentsByDisplayId)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (RelatedContent)
-import Incentknow.Data.Ids (FormatDisplayId, SpaceDisplayId, SpaceId(..))
+import Incentknow.Data.Ids (FormatDisplayId, SpaceDisplayId)
 import Incentknow.Organisms.ContentList as ContentList
 
 type Input

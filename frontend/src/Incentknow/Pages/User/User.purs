@@ -2,8 +2,7 @@ module Incentknow.Pages.User where
 
 import Prelude
 
-import Data.Foldable (traverse_)
-import Data.Maybe (Maybe(..), fromMaybe, isJust)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
@@ -12,17 +11,15 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.API (getUser)
-import Incentknow.API.Execution (Fetch, Remote(..), callQuery, callbackQuery, defaultIconUrl, executeAPI, forRemote, toMaybe)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, defaultIconUrl, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (menuPositiveButton, dangerButton)
 import Incentknow.Data.Entities (FocusedUser)
-import Incentknow.Data.Ids (SpaceId(..), UserDisplayId(..), UserId(..))
-import Incentknow.HTML.Utils (css, link, maybeElem, whenElem)
-import Incentknow.Molecules.DangerChange as DangerChange
+import Incentknow.Data.Ids (UserDisplayId, UserId)
+import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Pages.User.Main as Main
 import Incentknow.Pages.User.Setting as Setting
-import Incentknow.Route (SpaceTab(..), Route(..), UserTab(..))
+import Incentknow.Route (Route(..), UserTab(..))
 import Incentknow.Templates.Page (tabPage)
 
 type Input

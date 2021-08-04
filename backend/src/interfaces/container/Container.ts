@@ -16,6 +16,7 @@ export interface RelatedContainer {
 }
 
 export function toRelatedContainer(container: Container): RelatedContainer {
+    container.format.space = container.space;
     return {
         containerId: container.entityId,
         space: toRelatedSpace(container.space),
@@ -37,6 +38,7 @@ export interface FocusedContainer {
 }
 
 export function toFocusedContainer(container: Container, reactor: IntactReactor | null): FocusedContainer {
+    container.format.space = container.space;
     return {
         containerId: container.entityId,
         space: toRelatedSpace(container.space),

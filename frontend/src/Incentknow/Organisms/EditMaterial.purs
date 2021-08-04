@@ -1,47 +1,33 @@
-module Incentknow.Pages.EditMaterial where
+module Incentknow.Organisms.EditMaterial where
 
 import Prelude
 
 import Control.Monad.Rec.Class (forever)
-import Data.Argonaut.Core (Json, jsonNull, stringify)
-import Data.Argonaut.Parser (jsonParser)
-import Data.Either (either)
-import Data.Foldable (for_, traverse_)
-import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
-import Data.Maybe.Utils (flatten)
-import Data.Newtype (unwrap)
+import Data.Foldable (for_)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Symbol (SProxy(..))
-import Data.Traversable (for)
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
-import Effect.Class.Console (logShow)
 import Effect.Exception (error)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
-import Halogen.Query.HalogenM (SubscriptionId(..))
-import Incentknow.API (commitContent, commitMaterial, createNewContentDraft, createNewMaterialDraft, editContentDraft, editMaterialDraft, getContentDraft, getFocusedFormat, getFocusedFormatByStructure, getFormat, getMaterialDraft, startContentEditing, startMaterialEditing)
-import Incentknow.API.Execution (Fetch, Remote(..), callCommand, callbackQuery, executeAPI, executeCommand, forItem, forRemote, toMaybe)
+import Halogen.Query.HalogenM (SubscriptionId)
+import Incentknow.API (commitMaterial, createNewMaterialDraft, editMaterialDraft, getMaterialDraft, startMaterialEditing)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeCommand, forRemote)
 import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigate, pushState)
-import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Atoms.Message (SaveState(..), saveState)
-import Incentknow.Data.Entities (FocusedContentDraft, FocusedFormat, FocusedMaterialDraft, MaterialType(..))
-import Incentknow.Data.Ids (ContentDraftId, ContentId, FormatId(..), SpaceId(..), StructureId)
-import Incentknow.Data.Property (getDefaultValue)
-import Incentknow.HTML.Utils (css, maybeElem, whenElem)
-import Incentknow.Molecules.FormatMenu as FormatMenu
-import Incentknow.Molecules.PlainTextEditor as PlainTextEditor
+import Incentknow.Data.Entities (FocusedMaterialDraft, MaterialType(..))
+import Incentknow.Data.Ids (SpaceId)
+import Incentknow.HTML.Utils (css)
+import Incentknow.Organisms.DocumentEditor as DocumentEditor
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
-import Incentknow.Molecules.StructureMenu as StructureMenu
-import Incentknow.Organisms.Content.Editor as Editor
-import Incentknow.Route (EditTarget(..), MaterialEditTarget(..), Route(..))
-import Incentknow.Templates.Page (section)
+import Incentknow.Route (EditMaterialTarget(..), EditTarget(..), Route(..))
 
 -- A type which defines the draft by three kind sources
 type State
@@ -52,7 +38,7 @@ type State
     , loading :: Boolean
     -- the subscription id of a interval save timer
     , timerSubId :: Maybe SubscriptionId
-    , target :: MaterialEditTarget
+    , target :: EditMaterialTarget
     , text :: String
     , draft :: Remote FocusedMaterialDraft
     }
@@ -60,7 +46,7 @@ type State
 data Action
   = Initialize
   | Load
-  | HandleInput MaterialEditTarget
+  | HandleInput EditMaterialTarget
   | ChangeSpace (Maybe SpaceId)
   | ChangeText String
   | CheckChage
@@ -71,11 +57,11 @@ type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = ( plainTextEditor :: PlainTextEditor.Slot Unit
+  = ( documentEditor :: DocumentEditor.Slot Unit
     , spaceMenu :: SpaceMenu.Slot Unit
     )
 
-component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q MaterialEditTarget o m
+component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q EditMaterialTarget o m
 component =
   H.mkComponent
     { initialState
@@ -89,7 +75,7 @@ component =
             }
     }
 
-initialState :: MaterialEditTarget -> State
+initialState :: EditMaterialTarget -> State
 initialState input =
   { target: input
   , saveState: HasNotChange
@@ -103,52 +89,52 @@ editor_ = SProxy :: SProxy "editor"
 
 render :: forall m. Behaviour m => MonadEffect m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  section "page-new-content"
-    [ HH.div [ css "page-new-content" ]
-        [ saveState state.saveState
-        , case state.target of
-            MaterialTargetBlank spaceId ->
-              HH.text ""
-            _ -> HH.text ""
-        , HH.slot (SProxy :: SProxy "plainTextEditor") unit PlainTextEditor.component { value: state.text, variableHeight: true, readonly: false }
-            (Just <<< ChangeText)
-        , case state.target, state.draft of
-            MaterialTargetBlank _, _ -> HH.text ""
-            MaterialTargetDraft _, Holding draft ->
-              if draft.material == Nothing then
-                submitButton
-                  { isDisabled: state.loading
-                  , isLoading: state.loading
-                  , text: "作成"
-                  , loadingText: "作成中"
-                  , onClick: Commit
-                  }
-              else
-                submitButton
-                  { isDisabled: state.loading
-                  , isLoading: state.loading
-                  , text: "変更"
-                  , loadingText: "変更中"
-                  , onClick: Commit
-                  }
-            MaterialTargetDraft _, _ ->
-              submitButton
-                { isDisabled: state.loading
-                , isLoading: state.loading
-                , text: "変更"
-                , loadingText: "変更中"
-                , onClick: Commit
-                }
-            MaterialTargetMaterial _, _ ->
-              submitButton
-                { isDisabled: state.loading
-                , isLoading: state.loading
-                , text: "変更"
-                , loadingText: "変更中"
-                , onClick: Commit
-                }
-        ]
-    ]
+  HH.div [ css "page-new-content" ]
+    [ saveState state.saveState
+    , case state.target of
+        MaterialTargetBlank spaceId ->
+          HH.text ""
+        _ -> HH.text ""
+    --, HH.slot (SProxy :: SProxy "plainTextEditor") unit PlainTextEditor.component { value: state.text, variableHeight: true, readonly: false }
+    --    (Just <<< ChangeText)
+    , HH.slot (SProxy :: SProxy "documentEditor") unit DocumentEditor.component { value: state.text, readonly: false }
+        (Just <<< ChangeText)
+    , case state.target, state.draft of
+        MaterialTargetBlank _, _ -> HH.text ""
+        MaterialTargetDraft _, Holding draft ->
+          if draft.material == Nothing then
+            submitButton
+              { isDisabled: state.loading
+              , isLoading: state.loading
+              , text: "作成"
+              , loadingText: "作成中"
+              , onClick: Commit
+              }
+          else
+            submitButton
+              { isDisabled: state.loading
+              , isLoading: state.loading
+              , text: "変更"
+              , loadingText: "変更中"
+              , onClick: Commit
+              }
+        MaterialTargetDraft _, _ ->
+          submitButton
+            { isDisabled: state.loading
+            , isLoading: state.loading
+            , text: "変更"
+            , loadingText: "変更中"
+            , onClick: Commit
+            }
+        MaterialTargetMaterial _, _ ->
+          submitButton
+            { isDisabled: state.loading
+            , isLoading: state.loading
+            , text: "変更"
+            , loadingText: "変更中"
+            , onClick: Commit
+            }
+      ]
 
 timer :: forall m. MonadAff m => EventSource m Action
 timer =
@@ -195,7 +181,7 @@ handleAction = case _ of
         -- get or create a draft of the specified content and fetch the draft id
         maybeDraft <- executeCommand $ startMaterialEditing materialId Nothing
         for_ maybeDraft \draft ->
-          navigate $ EditMaterial $ MaterialTargetDraft draft.draftId
+          navigate $ EditDraft $ MaterialTarget $ MaterialTargetDraft draft.draftId
   -- Fetch
   FetchedDraft fetch -> do
     forRemote fetch \draft ->
@@ -208,7 +194,7 @@ handleAction = case _ of
       MaterialTargetBlank oldSpaceId -> do
         H.modify_ _ { target = MaterialTargetBlank spaceId }
         when (spaceId /= oldSpaceId) do
-          navigate $ EditMaterial $ MaterialTargetBlank spaceId
+          navigate $ EditDraft $ MaterialTarget $ MaterialTargetBlank spaceId
       _ -> pure unit
   ChangeText text -> do
     state <- H.get
@@ -228,7 +214,7 @@ handleAction = case _ of
           result <- executeCommand $ createNewMaterialDraft spaceId MaterialTypeDocument (Just state.text)
           case result of
             Just draft -> do
-              pushState $ EditMaterial $ MaterialTargetDraft draft.draftId
+              pushState $ EditDraft $ MaterialTarget $ MaterialTargetDraft draft.draftId
               H.modify_ _ { target = MaterialTargetDraft draft.draftId }
               makeSaveStateSaved
             Nothing -> H.modify_ _ { saveState = NotSaved }

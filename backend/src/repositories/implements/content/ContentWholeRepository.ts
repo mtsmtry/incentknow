@@ -1,16 +1,4 @@
-import { ObjectLiteral } from "typeorm";
-import { ContainerSk } from "../../../entities/container/Container";
-import { ContentSk } from "../../../entities/content/Content";
-import { StructureSk } from "../../../entities/format/Structure";
-import { MaterialSk, MaterialType } from "../../../entities/material/Material";
-import { UserSk } from "../../../entities/user/User";
-import { PropertyInfo } from "../../../interfaces/format/Structure";
-import { mapByString } from "../../../utils";
-import { BaseCommand, BaseRepository } from "../../Repository";
-import { Transaction } from "../../Transaction";
-import { MaterialCommand, MaterialRepository } from "../material/MaterialRepository";
-import { ContentCommand, ContentRepository } from "./ContentRepository.";
-
+/*
 export class ContentWholeRepository implements BaseRepository<ContentWholeCommand> {
     constructor(
         private contents: ContentRepository,
@@ -80,4 +68,4 @@ export class ContentWholeCommand implements BaseCommand {
             });
         }
     }
-}
+}*/

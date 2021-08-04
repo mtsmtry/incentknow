@@ -2,46 +2,45 @@ module Incentknow.Pages.SpaceList where
 
 import Prelude
 
-import Ace.Document (getAllLines)
-import Data.Either (isLeft)
-import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), isNothing)
+import Data.Array (length)
+import Data.Maybe (Maybe(..), isNothing, maybe)
 import Data.Symbol (SProxy(..))
-import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
 import Incentknow.API (getMySpaces, getPublishedSpaces)
-import Incentknow.API.Execution (Fetch, Remote(..), callAPI, callbackQuery, executeAPI, forRemote, toMaybe)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (submitButton)
-import Incentknow.Data.Entities (RelatedSpace)
+import Incentknow.Atoms.Inputs (menuPositiveButton, submitButton)
+import Incentknow.Data.Entities (RelatedSpace, FocusedSpace)
 import Incentknow.HTML.Utils (css, whenElem)
-import Incentknow.Organisms.CardView (CardViewItem)
-import Incentknow.Organisms.CardView as CardView
-import Incentknow.Route (FormatTab(..), Route(..), SpaceTab(..))
+import Incentknow.Organisms.SpaceCardView as SpaceCardView
+import Incentknow.Route (Route(..), SpaceTab(..))
 
 type Input
   = {}
 
 type State
-  = { publishedSpaces :: Remote (Array RelatedSpace), followedSpaces :: Remote (Array RelatedSpace), logined :: Boolean }
+  = { publishedSpaces :: Remote (Array FocusedSpace)
+    , followedSpaces :: Remote (Array FocusedSpace)
+    , logined :: Boolean
+    }
 
 data Action
   = Initialize
+  | HandleInput Input
   | Navigate Route
-  | FetchedPublishedSpaces (Fetch (Array RelatedSpace))
-  | FetchedFollowedSpaces (Fetch (Array RelatedSpace))
+  | FetchedPublishedSpaces (Fetch (Array FocusedSpace))
+  | FetchedFollowedSpaces (Fetch (Array FocusedSpace))
 
 type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = ( cardview :: CardView.Slot Unit
-    , cardview2 :: CardView.Slot Unit
+  = ( cardview :: SpaceCardView.Slot Unit
+    , cardview2 :: SpaceCardView.Slot Unit
     )
 
 component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q Input o m
@@ -49,38 +48,38 @@ component =
   H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval H.defaultEval { initialize = Just Initialize, handleAction = handleAction }
+    , eval: H.mkEval H.defaultEval 
+        { initialize = Just Initialize
+        , handleAction = handleAction
+        , receive = Just <<< HandleInput }
     }
 
 initialState :: Input -> State
 initialState input = { publishedSpaces: Loading, followedSpaces: Loading, logined: true }
 
-toCardViewItem :: RelatedSpace -> CardViewItem
-toCardViewItem space =
-  { title: space.displayName
-  , route: Space space.displayId SpaceContainers
-  , desc: ""
-  , info: "" --"コンテンツ数:" <> show space.contentCount
-  }
-
 render :: forall m. MonadEffect m => Behaviour m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div [ css "page-spaces" ]
-    [ submitButton { isDisabled: false, isLoading: false, loadingText: "", onClick: Navigate NewSpace, text: "新しいスペースを作成する" }
-    , whenElem state.logined \_ ->
+    [ whenElem state.logined \_ ->
         HH.div [ css "part" ]
           [ HH.div [ css "caption" ]
-              [ HH.text "登録しているスペース"
+              [ HH.text "My spaces"
+              , HH.span [ css "count" ] [ HH.text $ maybe "" (\x-> "(" <> show (length x) <> ")") $ toMaybe state.followedSpaces ]
+              , HH.span [ css "creation" ] [
+                  -- submitButton { isDisabled: false, isLoading: false, loadingText: "", onClick: Navigate NewSpace, text: "スペースを作成" }
+                  menuPositiveButton "スペースを作成" $ Navigate NewSpace
+                ]
               ]
           , remoteWith state.followedSpaces \spaces ->
-              HH.slot (SProxy :: SProxy "cardview") unit CardView.component { items: map toCardViewItem spaces } absurd
+              HH.slot (SProxy :: SProxy "cardview") unit SpaceCardView.component { value: spaces } absurd
           ]
     , HH.div [ css "part" ]
         [ HH.div [ css "caption" ]
-            [ HH.text "公開されているスペース"
+            [ HH.text $ "Public spaces"
+            , HH.span [ css "count" ] [ HH.text $ maybe "" (\x-> "(" <> show (length x) <> ")") $ toMaybe state.publishedSpaces ]
             ]
         , remoteWith state.publishedSpaces \spaces ->
-            HH.slot (SProxy :: SProxy "cardview2") unit CardView.component { items: map toCardViewItem spaces } absurd
+            HH.slot (SProxy :: SProxy "cardview2") unit SpaceCardView.component { value: spaces } absurd
         ]
     ]
 
@@ -89,6 +88,8 @@ handleAction = case _ of
   Initialize -> do
     callbackQuery FetchedPublishedSpaces getPublishedSpaces
     callbackQuery FetchedFollowedSpaces getMySpaces
+  HandleInput _ -> do
+    handleAction Initialize
   FetchedPublishedSpaces fetch ->
     forRemote fetch \spaces ->
       H.modify_ _ { publishedSpaces = spaces }

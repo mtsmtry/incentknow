@@ -4,6 +4,7 @@ import { FormatSk } from "../../../entities/format/Format";
 import { SpaceSk } from "../../../entities/space/Space";
 import { toFocusedContainer, toRelatedContainer } from "../../../interfaces/container/Container";
 import { IntactReactor } from "../../../interfaces/reactor/Reactor";
+import { joinProperties } from "../format/StructureQuery";
 import { mapQuery } from "../MappedQuery";
 import { SelectFromSingleTableQuery } from "../SelectQuery";
 
@@ -21,17 +22,25 @@ export class ContainerQuery extends SelectFromSingleTableQuery<Container, Contai
     }
 
     selectRelated() {
-        const query = this.qb
+        let query = this.qb
             .leftJoinAndSelect("x.space", "space")
-            .leftJoinAndSelect("x.format", "format");
+            .leftJoinAndSelect("x.format", "format")
+            .leftJoinAndSelect("format.creatorUser", "creatorUser")
+            .leftJoinAndSelect("format.updaterUser", "updaterUser")
+            .leftJoinAndSelect("format.currentStructure", "currentStructure")
+        query = joinProperties("currentStructure", query);
 
         return mapQuery(query, toRelatedContainer);
     }
 
     selectFocused() {
-        const query = this.qb
+        let query = this.qb
             .leftJoinAndSelect("x.space", "space")
-            .leftJoinAndSelect("x.format", "format");
+            .leftJoinAndSelect("x.format", "format")
+            .leftJoinAndSelect("format.creatorUser", "creatorUser")
+            .leftJoinAndSelect("format.updaterUser", "updaterUser")
+            .leftJoinAndSelect("format.currentStructure", "currentStructure");
+        query = joinProperties("currentStructure", query);
 
         return mapQuery(query, x => (r: IntactReactor | null) => toFocusedContainer(x, r));
     }

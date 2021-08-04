@@ -5,24 +5,19 @@ import Prelude
 import Data.Array (fromFoldable, toUnfoldable)
 import Data.Either (Either(..))
 import Data.Foldable (oneOf)
-import Data.Int (toNumber)
 import Data.List (List(..))
 import Data.List (fromFoldable) as List
-import Data.Map (Map)
 import Data.Map as M
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap, wrap)
-import Data.Semiring.Free (free)
 import Data.String (Pattern(..), joinWith, split)
 import Data.Tuple (Tuple(..))
-import Data.Validation.Semiring (invalid)
 import Effect (Effect)
 import Effect.Class (class MonadEffect)
 import Effect.Class as H
-import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..), ContentSnapshotId(..), FormatDisplayId(..), FormatId(..), MaterialDraftId(..), MaterialId(..), SemanticId(..), SpaceDisplayId(..), SpaceId(..), StructureId(..), UserDisplayId(..), UserId(..))
+import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..), ContentSnapshotId, FormatDisplayId(..), FormatId(..), MaterialDraftId(..), MaterialId(..), SemanticId(..), SpaceDisplayId(..), SpaceId(..), StructureId(..), UserDisplayId)
 import Routing (match)
-import Routing.Match (Match(..), end, int, lit, param, root, str)
-import Routing.Match.Error (MatchError(..))
+import Routing.Match (Match(..), end, int, lit, root, str)
 import Routing.Types (RoutePart(..))
 
 data ContentSpec
@@ -55,9 +50,6 @@ data UserTab
   = UserMain
   | UserSetting
 
-data ContentTab
-  = ContentMain
-
 data SnapshotDiff
   = InitialSnapshot ContentSnapshotId
   | SnapshotDiff ContentSnapshotId ContentSnapshotId
@@ -68,19 +60,25 @@ instance showSnapshotDiff :: Show SnapshotDiff where
   show (InitialSnapshot id) = unwrap id
   show (SnapshotDiff id1 id2) = unwrap id1 <> "-" <> unwrap id2
 
-data EditTarget
+data EditContentTarget
   = TargetBlank (Maybe SpaceId) (Maybe StructureId)
   | TargetDraft ContentDraftId
   | TargetContent ContentId
 
-derive instance eqEditTarget :: Eq EditTarget
+derive instance eqEditContentTarget :: Eq EditContentTarget
 
-data MaterialEditTarget
+data EditMaterialTarget
   = MaterialTargetBlank (Maybe SpaceId)
   | MaterialTargetDraft MaterialDraftId
   | MaterialTargetMaterial MaterialId
 
-derive instance eqMaterialEditTarget :: Eq MaterialEditTarget
+derive instance eqEditMaterialTarget :: Eq EditMaterialTarget
+
+data EditTarget
+  = ContentTarget EditContentTarget
+  | MaterialTarget EditMaterialTarget
+
+derive instance eqEditTarget :: Eq EditTarget
 
 data Route
   = Home
@@ -89,8 +87,7 @@ data Route
   | DraftList
   | Content ContentId
   | ContentBySemanticId FormatId SemanticId
-  | EditContent EditTarget
-  | EditMaterial MaterialEditTarget
+  | EditDraft EditTarget
   | SpaceList
   | Container SpaceDisplayId FormatDisplayId
   -- | Composition SpaceId FormatId String
@@ -117,8 +114,6 @@ derive instance eqSpaceTab :: Eq SpaceTab
 --derive instance eqCrawlerTab :: Eq CrawlerTab
 
 derive instance eqUserTab :: Eq UserTab
-
-derive instance eqContentTab :: Eq ContentTab
 
 derive instance eqRoute :: Eq Route
 
@@ -155,12 +150,12 @@ routeToPath = case _ of
   User id UserMain -> "/users/" <> unwrap id
   User id UserSetting -> "/users/" <> unwrap id <> "/setting"
   Content id -> "/contents/" <> unwrap id
-  EditContent (TargetBlank spaceId structureId) -> "/contents/new" <> paramsToUrl [ Tuple "space" $ map unwrap spaceId, Tuple "structure" $ map unwrap structureId ]
-  EditContent (TargetDraft id) -> "/contents/" <> unwrap id <> "/edit"
-  EditContent (TargetContent contentId) -> "/contents/new" <> paramsToUrl [ Tuple "content" $ Just $ unwrap contentId ]
-  EditMaterial (MaterialTargetBlank spaceId) -> "/materials/new" <> paramsToUrl [ Tuple "space" $ map unwrap spaceId ]
-  EditMaterial (MaterialTargetDraft id) -> "/materials/" <> unwrap id <> "/edit"
-  EditMaterial (MaterialTargetMaterial materialId) -> "/materials/new" <> paramsToUrl [ Tuple "material" $ Just $ unwrap materialId ]
+  EditDraft (ContentTarget (TargetBlank spaceId structureId)) -> "/contents/new" <> paramsToUrl [ Tuple "space" $ map unwrap spaceId, Tuple "structure" $ map unwrap structureId ]
+  EditDraft (ContentTarget (TargetDraft id)) -> "/contents/" <> unwrap id <> "/edit"
+  EditDraft (ContentTarget (TargetContent contentId)) -> "/contents/new" <> paramsToUrl [ Tuple "content" $ Just $ unwrap contentId ]
+  EditDraft (MaterialTarget (MaterialTargetBlank spaceId)) -> "/materials/new" <> paramsToUrl [ Tuple "space" $ map unwrap spaceId ]
+  EditDraft (MaterialTarget (MaterialTargetDraft id)) -> "/materials/" <> unwrap id <> "/edit"
+  EditDraft (MaterialTarget (MaterialTargetMaterial materialId)) -> "/materials/new" <> paramsToUrl [ Tuple "material" $ Just $ unwrap materialId ]
   Rivision id ver -> "/contents/" <> unwrap id <> "/rivisions/" <> show ver
   RivisionList id -> "/contents/" <> unwrap id <> "/rivisions"
   ContentBySemanticId formatId semanticId -> "/contents/" <> unwrap formatId <> "/" <> unwrap semanticId
@@ -245,13 +240,13 @@ matchRoute =
         -- content
         , EditScraper <$> (map ContentId $ lit "contents" *> str <* lit "edit" <* lit "scraper" <* end)
 
-        , (EditContent <<< TargetDraft) <$> (map ContentDraftId $ lit "contents" *> str <* lit "edit" <* end)
-        , (\x-> \y-> EditContent $ TargetBlank x y) <$> (lit "contents" <* lit "new" *> space) <*> structure <* end
-        , (EditContent <<< TargetContent) <$> (map ContentId $ lit "contents" *> str <* lit "edit" <* end)
+        , (EditDraft <<< ContentTarget <<< TargetDraft) <$> (map ContentDraftId $ lit "contents" *> str <* lit "edit" <* end)
+        , (\x-> \y-> EditDraft <<< ContentTarget $ TargetBlank x y) <$> (lit "contents" <* lit "new" *> space) <*> structure <* end
+        , (EditDraft <<< ContentTarget <<< TargetContent) <$> (map ContentId $ lit "contents" *> str <* lit "edit" <* end)
 
-        , (EditMaterial <<< MaterialTargetDraft) <$> (map MaterialDraftId $ lit "materials" *> str <* lit "edit" <* end)
-        , (\x-> EditMaterial $ MaterialTargetBlank x) <$> (lit "materials" <* lit "new" *> space) -- <*> structure <* end
-        , (EditMaterial <<< MaterialTargetMaterial) <$> (map MaterialId $ lit "materials" *> str <* lit "edit" <* end)
+        , (EditDraft <<< MaterialTarget <<< MaterialTargetDraft) <$> (map MaterialDraftId $ lit "materials" *> str <* lit "edit" <* end)
+        , (\x-> EditDraft <<< MaterialTarget $ MaterialTargetBlank x) <$> (lit "materials" <* lit "new" *> space) -- <*> structure <* end
+        , (EditDraft <<< MaterialTarget <<< MaterialTargetMaterial) <$> (map MaterialId $ lit "materials" *> str <* lit "edit" <* end)
         
         , Content <$> (map ContentId $ lit "contents" *> str <* end)
         , RivisionList <$> (map ContentId $ lit "contents" *> str <* lit "rivisions" <* end)

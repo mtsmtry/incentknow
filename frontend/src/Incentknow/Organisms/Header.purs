@@ -3,20 +3,17 @@ module Incentknow.Organisms.Header where
 import Prelude
 
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Nullable (toMaybe)
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Halogen.Query.EventSource as ES
-import Incentknow.API (getMyAccount, getMyUser)
+import Incentknow.API (getMyAccount)
 import Incentknow.API.Execution (Fetch, callbackQuery, forRemote)
 import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Data.Entities (IntactAccount)
 import Incentknow.HTML.Utils (css, link, link_, maybeElem)
-import Incentknow.Route (EditTarget(..), MaterialEditTarget(..), Route(..), UserTab(..))
+import Incentknow.Route (EditMaterialTarget(..), EditTarget(..), Route(..), UserTab(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
@@ -75,9 +72,7 @@ render state =
         , maybeElem state.account \_ ->
             headerLink "Drafts" DraftList
         , maybeElem state.account \_ ->
-            headerLink "CreateContent" (EditContent $ TargetBlank Nothing Nothing)
-        , maybeElem state.account \_ ->
-            headerLink "CreateMatrial" (EditMaterial $ MaterialTargetBlank Nothing)
+            headerLinkEditDraft "Create"
         , HH.span [ css "space" ] []
         , case state.account of
             Just account -> headerUrlLink account.displayName account.iconUrl (User account.displayId UserMain)
@@ -89,6 +84,14 @@ render state =
   headerLink name route =
     link Navigate route
       [ css $ if route == state.route then "link link-selected" else "link" ]
+      [ HH.span [ css "text" ] [ HH.text name ] ]
+
+  headerLinkEditDraft :: String -> H.ComponentHTML Action () m
+  headerLinkEditDraft name =
+    link Navigate (EditDraft $ MaterialTarget $ MaterialTargetBlank Nothing)
+      [ css $ case state.route of
+          EditDraft _ -> "link link-selected"
+          _ -> "link" ]
       [ HH.span [ css "text" ] [ HH.text name ] ]
 
   headerUrlLink :: String -> Maybe String -> Route -> H.ComponentHTML Action () m

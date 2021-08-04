@@ -1559,11 +1559,9 @@ return obj;}
 function jsRelatedMaterialDraft(obj){obj.draftId = jsMaterialDraftId(obj.draftId);
 
 
-
 return obj;}
 
 function psRelatedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId);
-
 
 
 return obj;}
@@ -1593,7 +1591,6 @@ function jsFocusedMaterialDraft(obj){obj.draftId = jsMaterialDraftId(obj.draftId
                             obj.basedCommitId = null;
                         }
                     
-
 return obj;}
 
 function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId);
@@ -1621,7 +1618,6 @@ function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
                 
-
 return obj;}
 
 function jsMaterialNodeType(obj) {
@@ -1750,6 +1746,14 @@ obj.state = psReactorState(obj.state);
 
 obj.creatorUser = psRelatedUser(obj.creatorUser);return obj;}
 
+function jsAdditionalSpaceInfo(obj){
+
+return obj;}
+
+function psAdditionalSpaceInfo(obj){
+
+return obj;}
+
 function jsRelatedSpace(obj){obj.spaceId = jsSpaceId(obj.spaceId);
 obj.displayId = jsSpaceDisplayId(obj.displayId);
 
@@ -1797,7 +1801,10 @@ obj.creatorUser = jsRelatedUser(obj.creatorUser);
                     
 
 obj.membershipMethod = jsMembershipMethod(obj.membershipMethod);
-obj.defaultAuthority = jsSpaceAuth(obj.defaultAuthority);return obj;}
+obj.defaultAuthority = jsSpaceAuth(obj.defaultAuthority);
+
+
+return obj;}
 
 function psFocusedSpace(obj){obj.spaceId = psSpaceId(obj.spaceId);
 obj.displayId = psSpaceDisplayId(obj.displayId);
@@ -1814,7 +1821,10 @@ obj.creatorUser = psRelatedUser(obj.creatorUser);
                 
 
 obj.membershipMethod = psMembershipMethod(obj.membershipMethod);
-obj.defaultAuthority = psSpaceAuth(obj.defaultAuthority);return obj;}
+obj.defaultAuthority = psSpaceAuth(obj.defaultAuthority);
+
+
+return obj;}
 
 function jsIntactSpaceMember(obj){obj.user = jsRelatedUser(obj.user);
 
@@ -2429,7 +2439,7 @@ exports.__getAvailableSpaceDisplayId = (() => {return async function (spaceDispl
                     let result = await requestApi("getFollowingSpaces", []);
                     
                         result = result.map(x => {
-                            x = psRelatedSpace(x);
+                            x = psFocusedSpace(x);
                             return x;
                         });
                     
@@ -2442,7 +2452,7 @@ exports.__getAvailableSpaceDisplayId = (() => {return async function (spaceDispl
                     let result = await requestApi("getPublishedSpaces", []);
                     
                         result = result.map(x => {
-                            x = psRelatedSpace(x);
+                            x = psFocusedSpace(x);
                             return x;
                         });
                     

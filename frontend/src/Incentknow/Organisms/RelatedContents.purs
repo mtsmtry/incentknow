@@ -2,28 +2,20 @@ module Incentknow.Organisms.RelatedContents where
 
 import Prelude
 
-import Data.Array (catMaybes, filter, head, length, nubByEq, range)
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Set (fromFoldable, toUnfoldable)
-import Data.String.CodeUnits (charAt, fromCharArray)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
-import Data.Traversable (for)
-import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Class (class MonadEffect)
 import Halogen (liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getContentsByProperty)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
-import Incentknow.AppM (class Behaviour, navigate)
+import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (button, pulldown)
-import Incentknow.Data.Entities (FocusedContent, FocusedFormat, RelatedFormat, RelatedUser, Relation, RelatedContent)
-import Incentknow.Data.Ids (FormatId(..), SpaceId(..), StructureId(..), UserId(..))
-import Incentknow.HTML.Utils (css, maybeElem, whenElem)
+import Incentknow.Data.Entities (RelatedContent, Relation)
+import Incentknow.Data.Ids (SpaceId)
 import Incentknow.Organisms.ContentList as ContentList
-import Incentknow.Route (ContentTab(..), FormatTab(..), Route(..))
 import Test.Unit.Console (consoleLog)
 
 type Input

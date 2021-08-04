@@ -11,7 +11,15 @@ export class MaterialCommitQuery extends SelectFromSingleTableQuery<MaterialComm
     }
 
     byMaterial(id: MaterialSk) {
-        return new MaterialCommitQuery(this.qb.where("materialId = :id", { id }));
+        return new MaterialCommitQuery(this.qb.where("x.materialId = :id", { id }));
+    }
+
+    latest() {
+        return new MaterialCommitQuery(this.qb.orderBy("x.id", "DESC"));
+    }
+
+    selectAll() {
+        return new MaterialCommitQuery(this.qb.select("x.data"));
     }
 
     selectRelated() {

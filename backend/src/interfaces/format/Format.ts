@@ -3,7 +3,7 @@ import { Structure } from "../../entities/format/Structure";
 import { RelatedSpace, toRelatedSpace } from "../space/Space";
 import { RelatedUser, toRelatedUser } from "../user/User";
 import { toTimestamp } from "../Utils";
-import { FocusedStructure, RelatedStructure, toFocusedStructure, toRelatedStructure } from "./Structure";
+import { FocusedStructure, PropertyInfo, RelatedStructure, toFocusedStructure, toRelatedStructure } from "./Structure";
 
 export interface RelatedFormat {
     formatId: FormatId;
@@ -38,6 +38,12 @@ export function toRelatedFormat(format: Format): RelatedFormat {
     }
 }
 
+export interface Relation {
+    property: PropertyInfo;
+    contentCount: number;
+    formatId: FormatId;
+}
+
 export interface FocusedFormat {
     formatId: FormatId;
     displayId: FormatDisplayId;
@@ -51,9 +57,10 @@ export interface FocusedFormat {
     updaterUser: RelatedUser;
     currentStructure: FocusedStructure;
     semanticId: string | null;
+    relations: Relation[];
 }
 
-export function toFocusedFormat(format: Format): FocusedFormat {
+export function toFocusedFormat(format: Format, relations: Relation[]): FocusedFormat {
     return {
         formatId: format.entityId,
         displayId: format.displayId,
@@ -66,11 +73,12 @@ export function toFocusedFormat(format: Format): FocusedFormat {
         updatedAt: toTimestamp(format.updatedAt),
         updaterUser: toRelatedUser(format.updaterUser),
         currentStructure: toFocusedStructure(format.currentStructure),
-        semanticId: format.semanticId
+        semanticId: format.semanticId,
+        relations
     }
 }
 
-export function toFocusedFormatFromStructure(structure: Structure): FocusedFormat {
+export function toFocusedFormatFromStructure(structure: Structure, relations: Relation[]): FocusedFormat {
     return {
         formatId: structure.format.entityId,
         displayId: structure.format.displayId,
@@ -83,6 +91,7 @@ export function toFocusedFormatFromStructure(structure: Structure): FocusedForma
         updatedAt: toTimestamp(structure.format.updatedAt),
         updaterUser: toRelatedUser(structure.format.updaterUser),
         currentStructure: toFocusedStructure(structure),
-        semanticId: structure.format.semanticId
+        semanticId: structure.format.semanticId,
+        relations
     }
 }

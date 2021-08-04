@@ -39,7 +39,7 @@ export class MaterialCommit {
     @Column("int", { nullable: true })
     editingId: MaterialEditingSk | null;
 
-    @Column({ select: false })
+    @Column({ type: "text", select: false })
     data: string;
 
     @Column({ asExpression: "char_length(`data`)", generatedType: "STORED" })

@@ -408,17 +408,17 @@ getAvailableSpaceDisplayId x0 = __queryAPI "getAvailableSpaceDisplayId" $ __getA
 
 
 foreign import __getFollowingSpaces :: 
-  Promise (Array E.RelatedSpace)
+  Promise (Array E.FocusedSpace)
 
-getFollowingSpaces :: QueryAPI (Array E.RelatedSpace)
+getFollowingSpaces :: QueryAPI (Array E.FocusedSpace)
 getFollowingSpaces  = __queryAPI "getFollowingSpaces" $ __getFollowingSpaces 
 
 
 
 foreign import __getPublishedSpaces :: 
-  Promise (Array E.RelatedSpace)
+  Promise (Array E.FocusedSpace)
 
-getPublishedSpaces :: QueryAPI (Array E.RelatedSpace)
+getPublishedSpaces :: QueryAPI (Array E.FocusedSpace)
 getPublishedSpaces  = __queryAPI "getPublishedSpaces" $ __getPublishedSpaces 
 
 

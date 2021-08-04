@@ -24,7 +24,6 @@ import { ContentCommitRepository } from "../repositories/implements/content/Cont
 import { ContentEditingRepository } from "../repositories/implements/content/ContentEditingRepository";
 import { ContentRepository } from "../repositories/implements/content/ContentRepository.";
 import { ContentRevisionRepository } from "../repositories/implements/content/ContentRevisionRepository.";
-import { ContentWholeRepository } from "../repositories/implements/content/ContentWholeRepository";
 import { FormatRepository } from "../repositories/implements/format/FormatRepository";
 import { MaterialCommitRepository } from "../repositories/implements/material/MaterialCommitRepository";
 import { MaterialEditingRepository } from "../repositories/implements/material/MaterialEditingRepository";
@@ -64,7 +63,6 @@ export class Service {
         const conEdit = new ContentEditingRepository(createRepository(conn, ContentDraft), createRepository(conn, ContentEditing), createRepository(conn, ContentSnapshot));
         const con = new ContentRepository(createRepository(conn, Content));
         const mat = new MaterialRepository(createRepository(conn, Material));
-        const conWhole = new ContentWholeRepository(con, mat);
         const format = new FormatRepository(createRepository(conn, Format), createRepository(conn, Structure), createRepository(conn, Property), createRepository(conn, MetaProperty));
         const matCom = new MaterialCommitRepository(createRepository(conn, MaterialCommit));
         const matEdit = new MaterialEditingRepository(createRepository(conn, MaterialDraft), createRepository(conn, MaterialEditing), createRepository(conn, MaterialSnapshot));
@@ -73,10 +71,10 @@ export class Service {
         const space = new SpaceRepository(createRepository(conn, Space), createRepository(conn, SpaceMember), createRepository(conn, SpaceMembershipApplication), createRepository(conn, SpaceFollow));
         const user = new UserRepository(createRepository(conn, User));
         this.containerService = new ContainerService(ctx, container, auth);
-        this.contentService = new ContentService(ctx, con, conEdit, conCom, conRev, mat, matEdit, matRev, space, container, format, auth);
+        this.contentService = new ContentService(ctx, con, conEdit, conCom, conRev, mat, matEdit, matCom, matRev, space, container, format, auth);
         this.formatService = new FormatService(ctx, format, auth);
         this.materialService = new MaterialService(ctx, mat, matEdit, matRev, matCom, con, conEdit, space, auth);
-        this.spaceService = new SpaceService(ctx, space, user, auth);
+        this.spaceService = new SpaceService(ctx, space, user, auth, container);
         this.userService = new UserService(ctx, user, auth);
         this.services = [
             this.containerService,

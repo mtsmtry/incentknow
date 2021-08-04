@@ -5,7 +5,7 @@ import { ContentDraft, ContentDraftSk } from "../content/ContentDraft";
 import { Space, SpaceSk } from "../space/Space";
 import { User, UserSk } from "../user/User";
 import { CreatedAt, createEntityId, EntityId, UpdatedAt } from '../Utils';
-import { Material, MaterialSk, MaterialType } from "./Material";
+import { Material, MaterialSk } from "./Material";
 import { MaterialEditing, MaterialEditingSk } from "./MaterialEditing";
 
 export enum MaterialChangeType {
@@ -35,8 +35,8 @@ export class MaterialDraft {
     @Column("int", { nullable: true })
     currentEditingId: MaterialEditingSk | null;
 
-   // @Column("enum", { enum: MaterialType, nullable: true })
-    intendedMaterialType: MaterialType | null;
+    //@Column("enum", { enum: MaterialType })
+    //intendedMaterialType: MaterialType;
 
     // one of content or space is specified and material is priority and content is secondary
     @ManyToOne(type => Content, { onDelete: "SET NULL" })
@@ -57,8 +57,8 @@ export class MaterialDraft {
     @Column("int", { nullable: true })
     intendedSpaceId: SpaceSk | null;
 
-    @Column({ asExpression: "coalesce(materialId, intendedContentDraftId, intendedSpaceId)", generatedType: "VIRTUAL" })
-    not_null_constrain: number;
+    //@Column({ asExpression: "coalesce(materialId, intendedContentDraftId, intendedSpaceId)", generatedType: "VIRTUAL" })
+    //not_null_constrain: number;
 
     @ManyToOne(type => User, { onDelete: "CASCADE" })
     @JoinColumn({ name: "userId" })
@@ -86,7 +86,7 @@ export class MaterialDraft {
     changeType: MaterialChangeType;
 
     // null when committed
-    @Column("varchar", { select: false, nullable: true })
+    @Column("text", { select: false, nullable: true })
     data: string | null;
 
     @Column({ type: "varchar", length: 140, nullable: true, asExpression: "left(data, 140)", generatedType: "STORED" })

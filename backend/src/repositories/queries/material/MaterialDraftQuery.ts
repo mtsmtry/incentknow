@@ -5,6 +5,7 @@ import { MaterialDraft, MaterialDraftId, MaterialDraftSk } from "../../../entiti
 import { UserSk } from "../../../entities/user/User";
 import { RelatedMaterial } from "../../../interfaces/material/Material";
 import { toFocusedMaterialDraft, toRelatedMaterialDraft } from "../../../interfaces/material/MaterialDraft";
+import { InternalError } from "../../../services/Errors";
 import { mapQuery } from "../MappedQuery";
 import { SelectFromSingleTableQuery, SelectQueryFromEntity } from "../SelectQuery";
 
@@ -29,6 +30,10 @@ export class MaterialDraftQuery extends SelectFromSingleTableQuery<MaterialDraft
         return new MaterialDraftQuery(this.qb.where({ intendedContentDraftId }));
     }
 
+    selectRaw() {
+        return new MaterialDraftQuery(this.qb.addSelect("x.data"));
+    }
+
     selectRelated() {
         const query = this.qb;
         return mapQuery(query, toRelatedMaterialDraft);
@@ -38,10 +43,14 @@ export class MaterialDraftQuery extends SelectFromSingleTableQuery<MaterialDraft
         const query = this.qb
             .leftJoinAndSelect("x.material", "material")
             .leftJoinAndSelect("x.intendedContentDraft", "intendedContentDraft")
+            .addSelect("x.data");
 
         return mapQuery(query, x => {
             const data = x.data;
-            return data ? (m: RelatedMaterial | null) => toFocusedMaterialDraft(x, data, m) : null;
+            if (!data) {
+                throw new InternalError("data is null");
+            }
+            return (m: RelatedMaterial | null) => toFocusedMaterialDraft(x, data, m);
         });
     }
 }

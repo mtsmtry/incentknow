@@ -1,10 +1,12 @@
+import { ContentDraftSk } from "../../../entities/content/ContentDraft";
 import { MaterialSk, MaterialType } from "../../../entities/material/Material";
 import { MaterialCommit } from "../../../entities/material/MaterialCommit";
-import { MaterialChangeType, MaterialDraft } from "../../../entities/material/MaterialDraft";
+import { MaterialChangeType, MaterialDraft, MaterialDraftSk } from "../../../entities/material/MaterialDraft";
 import { MaterialEditing, MaterialEditingState } from "../../../entities/material/MaterialEditing";
 import { MaterialSnapshot } from "../../../entities/material/MaterialSnapshot";
 import { SpaceSk } from "../../../entities/space/Space";
 import { UserSk } from "../../../entities/user/User";
+import { InternalError } from "../../../services/Errors";
 import { MaterialDraftQuery, MaterialDraftQueryFromEntity } from "../../queries/material/MaterialDraftQuery";
 import { MaterialEditingQuery } from "../../queries/material/MaterialEditingQuery";
 import { BaseCommand, BaseRepository, Command, Repository } from "../../Repository";
@@ -50,21 +52,32 @@ export class MaterialEditingCommand implements BaseCommand {
         private snapshots: Command<MaterialSnapshot>) {
     }
 
-    async getOrCreateActiveDraft(userId: UserSk, materialId: MaterialSk, basedCommit: MaterialCommit | null) {
+    async trasferToContentDraft(materialDraftId: MaterialDraftSk, contentDraftId: ContentDraftSk) {
+        await this.drafts.update({ id: materialDraftId }, { intendedSpaceId: null, intendedContentDraftId: contentDraftId });
+    }
+
+    async trasferToSpace(materialDraftId: MaterialDraftSk, spaceId: SpaceSk) {
+        await this.drafts.update({ id: materialDraftId }, { intendedSpaceId: spaceId, intendedContentDraftId: null });
+    }
+
+    async getOrCreateActiveDraft(userId: UserSk, materialId: MaterialSk, data: string, basedCommit: MaterialCommit | null) {
         // validate basedCommit
         if (basedCommit && basedCommit.materialId != materialId) {
             throw "The material of the specified forked commit is not the specified material";
         }
 
         // get or create draft
-        let draft = await this.drafts.findOne({ materialId });
+        let draft = await this.drafts.findOne({ materialId, userId });
         if (!draft) {
-            draft = this.drafts.create({ materialId, userId });
+            draft = this.drafts.create({ materialId, userId, data });
             draft = await this.drafts.save(draft);
+        } else if (!draft.data) {
+            await this.drafts.update({ id: draft.id }, { data });
+            draft.data = data;
         }
 
         // activate draft
-        if (!draft.currentEditing) {
+        if (!draft.currentEditingId) {
             let editing = this.editings.create({
                 draftId: draft.id,
                 basedCommitId: basedCommit?.id,
@@ -72,17 +85,43 @@ export class MaterialEditingCommand implements BaseCommand {
                 state: MaterialEditingState.EDITING
             });
             editing = await this.editings.save(editing);
-            await this.drafts.update(draft, { currentEditingId: editing.id });
+            await this.drafts.update(draft.id, { currentEditingId: editing.id });
         }
 
         return new MaterialDraftQueryFromEntity(draft);
     }
 
-    async getOrCreateActiveBlankDraft(userId: UserSk, spaceId: SpaceSk, type: MaterialType) {
+    async activateDraft(materialDraftId: MaterialDraftSk, basedCommit: MaterialCommit) {
+        // get or create draft
+        let draft = await this.drafts.findOne({ id: materialDraftId });
+        if (!draft) {
+            throw new InternalError();
+        }
+
+        console.log(draft);
+
+        // activate draft
+        if (!draft.currentEditingId) {
+            let editing = this.editings.create({
+                draftId: draft.id,
+                basedCommitId: basedCommit.id,
+                userId: draft.userId,
+                state: MaterialEditingState.EDITING
+            });
+            editing = await this.editings.save(editing);
+            console.log(editing);
+            await this.drafts.update(draft.id, { currentEditingId: editing.id, data: basedCommit.data });
+        }
+
+        return new MaterialDraftQueryFromEntity(draft);
+    }
+
+    async createActiveBlankDraft(userId: UserSk, spaceId: SpaceSk | null, type: MaterialType, data: string | null) {
         // create draft
         let draft = this.drafts.create({
-            intendedMaterialType: type,
+            //intendedMaterialType: type,
             intendedSpaceId: spaceId,
+            data,
             userId
         });
         draft = await this.drafts.save(draft);
@@ -96,7 +135,7 @@ export class MaterialEditingCommand implements BaseCommand {
         editing = await this.editings.save(editing);
 
         // set editing to draft
-        await this.drafts.update(draft, { currentEditing: editing });
+        await this.drafts.update(draft.id, { currentEditingId: editing.id });
 
         return new MaterialDraftQueryFromEntity(draft);
     }
@@ -124,15 +163,15 @@ export class MaterialEditingCommand implements BaseCommand {
 
                 await Promise.all([
                     this.snapshots.save(snapshot),
-                    this.drafts.update(draft, { data, changeType })
+                    this.drafts.update(draft.id, { data, changeType })
                 ]);
 
                 return snapshot;
             } else {
-                await this.drafts.update(draft, { data, changeType });
+                await this.drafts.update(draft.id, { data, changeType });
             }
         } else {
-            await this.drafts.update(draft, { data });
+            await this.drafts.update(draft.id, { data });
         }
         return null;
     }
@@ -142,8 +181,15 @@ export class MaterialEditingCommand implements BaseCommand {
             throw "Editing is not closed state";
         }
         await Promise.all([
-            this.drafts.update(draft, { data: null, currentEditingId: null }),
+            this.drafts.update(draft.id, { data: null, currentEditingId: null }),
             this.editings.update(draft.currentEditingId, { state })
         ]);
+    }
+
+    async makeDraftContent(draftId: MaterialDraftSk, materialId: MaterialSk) {
+        await this.drafts.update(draftId, {
+            materialId,
+            intendedSpaceId: null
+        });
     }
 }

@@ -23,11 +23,11 @@ export class MaterialCommand implements BaseCommand {
     constructor(private materials: Command<Material>) {
     }
 
-    async moveMaterialToContent(materialId: MaterialSk, contentId: ContentSk) {
+    async transferToContent(materialId: MaterialSk, contentId: ContentSk) {
         await this.materials.update(materialId, { spaceId: null, contentId });
     }
 
-    async moveMaterialToSpace(materialId: MaterialSk, spaceId: SpaceSk) {
+    async transferToSpace(materialId: MaterialSk, spaceId: SpaceSk) {
         await this.materials.update(materialId, { spaceId, contentId: null });
     }
 

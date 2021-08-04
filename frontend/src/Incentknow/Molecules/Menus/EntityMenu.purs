@@ -2,33 +2,19 @@ module Incentknow.Molecules.EntityMenu where
 
 import Prelude
 
-import Control.Promise (Promise)
-import Data.Array (filter, singleton)
-import Data.Array as Array
-import Data.Either (Either(..), either)
-import Data.Foldable (for_)
-import Data.Map as M
-import Data.Map as Map
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Either (Either(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (unwrap, wrap)
-import Data.Nullable (notNull, toMaybe)
-import Data.Set as Set
 import Data.Symbol (SProxy(..))
-import Data.Tuple (Tuple(..))
-import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
-import Foreign.NullOrUndefined (null)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getRelatedContent)
-import Incentknow.API.Execution (callAPI, callbackAPI, executeAPI, toQueryCallback)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (RelatedContent)
-import Incentknow.Data.Ids (ContentId(..), FormatId(..), SemanticId(..), SpaceId(..))
-import Incentknow.HTML.Utils (css, maybeElem)
+import Incentknow.Data.Ids (FormatId, SemanticId)
 import Incentknow.Molecules.ContentMenu (fromContentToHtml)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)

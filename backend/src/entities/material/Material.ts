@@ -48,7 +48,7 @@ export class Material {
     })
     materialType: MaterialType;
 
-    @Column({ select: false })
+    @Column({ type: "text", select: false })
     data: string;
 
     @CreatedAt()

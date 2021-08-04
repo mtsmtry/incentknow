@@ -2,17 +2,14 @@ module Incentknow.API.Execution where
 
 import Prelude
 
-import Affjax.RequestBody (RequestBody(..))
 import Control.Promise (Promise, toAff)
 import Data.Either (Either(..), either)
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), maybe)
-import Data.Nullable (Nullable)
-import Data.Nullable as N
+import Data.Maybe (Maybe(..))
 import Effect (Effect)
-import Effect.Aff (Aff, attempt, forkAff)
+import Effect.Aff (Aff, attempt)
 import Effect.Aff.Class (class MonadAff, liftAff)
-import Halogen (HalogenM(..), SubscriptionId)
+import Halogen (HalogenM)
 import Halogen as H
 import Halogen.Query.EventSource as ES
 import Incentknow.AppM (class Behaviour, Message(..), message)
@@ -73,6 +70,7 @@ data Fetch a
 
 foreign import showError :: forall a. a -> String
 
+defaultIconUrl :: String
 defaultIconUrl = ""
 
 foreign import makeQueryCallback :: forall a. String -> Promise a -> Callback { result :: a, from :: String } 

@@ -3,9 +3,9 @@ import { SpaceFollow } from "../../../entities/space/SpaceFollow";
 import { MemberType, SpaceMember } from "../../../entities/space/SpaceMember";
 import { SpaceMembershipApplication, SpaceMembershipApplicationSk } from "../../../entities/space/SpaceMembershipApplication";
 import { UserSk } from "../../../entities/user/User";
-import { SpaceQuery, SpaceQueryFromEntity } from "../../queries/space/SpaceQuery";
 import { SpaceMemberQuery } from "../../queries/space/SpaceMemberQuery";
 import { SpaceMemberApplicationQuery } from "../../queries/space/SpaceMembershipApplicationQuery";
+import { SpaceQuery, SpaceQueryFromEntity } from "../../queries/space/SpaceQuery";
 import { BaseCommand, BaseRepository, Command, Repository } from "../../Repository";
 import { Transaction } from "../../Transaction";
 

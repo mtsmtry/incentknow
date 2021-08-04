@@ -1,12 +1,11 @@
 module Incentknow.Organisms.Table where
 
 import Prelude
-import Data.Array (singleton)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
+import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.HTML.Utils (css, link_)
 import Incentknow.Route (Route)
 import Web.UIEvent.MouseEvent (MouseEvent)

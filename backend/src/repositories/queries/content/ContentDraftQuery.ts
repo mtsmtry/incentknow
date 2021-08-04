@@ -5,6 +5,7 @@ import { UserSk } from "../../../entities/user/User";
 import { toFocusedContentDraft, toRelatedContentDraft } from "../../../interfaces/content/ContentDraft";
 import { FocusedFormat } from "../../../interfaces/format/Format";
 import { FocusedMaterialDraft } from "../../../interfaces/material/MaterialDraft";
+import { InternalError } from "../../../services/Errors";
 import { mapQuery } from "../MappedQuery";
 import { SelectFromSingleTableQuery, SelectQueryFromEntity } from "../SelectQuery";
 
@@ -43,7 +44,10 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
             .addSelect("x.data");
         return mapQuery(query, x => (f: FocusedFormat, m: FocusedMaterialDraft[]) => {
             const data = x.data;
-            return data ? toFocusedContentDraft(x, f, data, m) : null;
+            if (!data) {
+                throw new InternalError("data is null");
+            }
+            return toFocusedContentDraft(x, f, data, m);
         });
     }
 }

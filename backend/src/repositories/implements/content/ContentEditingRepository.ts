@@ -53,17 +53,20 @@ export class ContentEditingCommand implements BaseCommand {
         private snapshots: Command<ContentSnapshot>) {
     }
 
-    async getOrCreateActiveDraft(userId: UserSk, contentId: ContentSk, basedCommit: ContentCommit | null) {
+    async getOrCreateActiveDraft(userId: UserSk, contentId: ContentSk, data: any, basedCommit: ContentCommit | null) {
         // validate basedCommit
         if (basedCommit && basedCommit.contentId != contentId) {
             throw "The content of the specified forked commit is not the specified content";
         }
 
         // get or create draft
-        let draft = await this.drafts.findOne({ contentId });
+        let draft = await this.drafts.findOne({ contentId, userId });
         if (!draft) {
-            draft = this.drafts.create({ contentId, userId, updatedAtOnlyContent: new Date() });
+            draft = this.drafts.create({ contentId, userId, updatedAtOnlyContent: new Date(), data });
             draft = await this.drafts.save(draft);
+        } else if (!draft.data) {
+            await this.drafts.update({ id: draft.id }, { data });
+            draft.data = data;
         }
 
         // activate draft
@@ -76,6 +79,8 @@ export class ContentEditingCommand implements BaseCommand {
             });
             editing = await this.editings.save(editing);
             await this.drafts.update(draft.id, { currentEditingId: editing.id });
+            draft.currentEditing = editing;
+            draft.currentEditingId = editing.id;
         }
 
         return new ContentDraftQueryFromEntity(draft);
@@ -156,5 +161,12 @@ export class ContentEditingCommand implements BaseCommand {
         await this.drafts.update(draftId, {
             updatedAt: new Date()
         })
+    }
+
+    async makeDraftContent(draftId: ContentDraftSk, contentId: ContentSk) {
+        await this.drafts.update(draftId, {
+            contentId,
+            intendedSpaceId: null
+        });
     }
 }

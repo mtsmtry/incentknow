@@ -3,25 +3,22 @@ module Incentknow.Pages.NewFormat where
 import Prelude
 
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (createFormat)
-import Incentknow.API.Execution (executeAPI, executeCommand)
+import Incentknow.API.Execution (executeCommand)
 import Incentknow.AppM (class Behaviour, Message(..), message, navigate)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Data.Entities (FormatUsage(..), PropertyInfo)
-import Incentknow.Data.Ids (SpaceId(..))
-import Incentknow.Data.Property (Property)
-import Incentknow.HTML.Utils (css)
+import Incentknow.Data.Ids (SpaceId)
 import Incentknow.Molecules.Form (define, defineText)
 import Incentknow.Molecules.FormatUsageMenu as FormatUsageMenu
 import Incentknow.Organisms.Structure as Structure
 import Incentknow.Route (FormatTab(..), Route(..))
-import Incentknow.Templates.Entity (entity)
 import Incentknow.Templates.Page (creationPage)
 
 type Input

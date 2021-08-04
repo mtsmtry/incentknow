@@ -2,25 +2,25 @@ module Incentknow.Pages.Format where
 
 import Prelude
 
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getFocusedFormat, getFormat)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote, toMaybe)
+import Incentknow.API (getFormat)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (menuPositiveButton, dangerButton)
+import Incentknow.Atoms.Inputs (menuPositiveButton)
 import Incentknow.Data.Entities (FocusedFormat)
-import Incentknow.Data.Ids (FormatDisplayId, FormatId(..))
+import Incentknow.Data.Ids (FormatDisplayId)
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Pages.Format.Main as Main
 import Incentknow.Pages.Format.Setting as Setting
 import Incentknow.Pages.Format.Versions as Versions
-import Incentknow.Route (EditTarget(..), FormatTab(..), Route(..))
+import Incentknow.Route (EditContentTarget(..), EditTarget(..), FormatTab(..), Route(..))
 import Incentknow.Templates.Page (tabPage)
 
 type Input
@@ -89,7 +89,7 @@ render state =
           FormatReactor -> "Reactor"
     }
     [ maybeElem (toMaybe state.format) \x ->
-        menuPositiveButton "このフォーマットでコンテンツを作成" (Navigate $ EditContent $ TargetBlank (Just x.space.spaceId) (Just x.currentStructure.structureId))
+        menuPositiveButton "コンテンツを作成" (Navigate $ EditDraft $ ContentTarget $ TargetBlank (Just x.space.spaceId) (Just x.currentStructure.structureId))
     ]
     [ remoteWith state.format \x ->
         HH.div [ css "page-format" ]

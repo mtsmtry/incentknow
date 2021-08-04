@@ -2,7 +2,6 @@ module Incentknow.Pages.Sign where
 
 import Prelude
 
-import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)

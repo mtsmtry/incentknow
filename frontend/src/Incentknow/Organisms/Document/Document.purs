@@ -5,12 +5,9 @@ import Prelude
 import Data.Argonaut.Core (Json, jsonNull)
 import Data.Argonaut.Decode (decodeJson)
 import Data.Argonaut.Encode (encodeJson)
-import Data.Argonaut.Parser (jsonParser)
 import Data.Array (cons)
 import Data.Either (either)
-import Data.Foldable (traverse_)
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Newtype (wrap)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
@@ -19,11 +16,8 @@ import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button)
 import Incentknow.Data.Document (Section)
-import Incentknow.Data.Ids (ContentId)
 import Incentknow.Data.Utils (generateId)
-import Incentknow.HTML.Utils (maybeElem)
 import Incentknow.Organisms.Content.Common (EditEnvironment)
-import Incentknow.Organisms.Content.ValueViewer as Value
 import Incentknow.Organisms.Document.Section (ContentComponent)
 import Incentknow.Organisms.Document.Section as Section
 

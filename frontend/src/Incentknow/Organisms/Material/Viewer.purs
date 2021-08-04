@@ -2,34 +2,22 @@ module Incentknow.Organisms.Material.Viewer where
 
 import Prelude
 
-import Control.Monad.Rec.Class (forever)
-import Data.Argonaut.Core (Json, jsonNull, stringify)
-import Data.Foldable (for_, traverse_)
-import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
-import Effect.Aff (Milliseconds(..))
-import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
-import Effect.Exception (error)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.Query.EventSource (EventSource)
-import Halogen.Query.EventSource as EventSource
-import Halogen.Query.HalogenM (SubscriptionId(..))
-import Incentknow.API (commitContent, commitMaterial, createNewContentDraft, createNewMaterialDraft, editContentDraft, editMaterialDraft, getContentDraft, getFocusedFormat, getFocusedFormatByStructure, getFormat, getMaterial, getMaterialDraft, startContentEditing, startMaterialEditing)
-import Incentknow.API.Execution (Fetch, Remote(..), callCommand, callbackQuery, executeAPI, executeCommand, forItem, forRemote, toMaybe)
-import Incentknow.API.Execution as R
-import Incentknow.AppM (class Behaviour, navigate, pushState)
+import Halogen.Query.HalogenM (SubscriptionId)
+import Incentknow.API (getMaterial)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
+import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Message (SaveState(..), saveState)
-import Incentknow.Data.Entities (FocusedContentDraft, FocusedFormat, FocusedMaterialDraft, MaterialType(..), FocusedMaterial)
-import Incentknow.Data.Ids (ContentDraftId, ContentId, FormatId(..), MaterialDraftId, MaterialId(..), SpaceId(..), StructureId)
-import Incentknow.HTML.Utils (css, maybeElem, whenElem)
-import Incentknow.Molecules.FormatMenu as FormatMenu
+import Incentknow.Atoms.Message (SaveState(..))
+import Incentknow.Data.Entities (FocusedMaterial)
+import Incentknow.Data.Ids (MaterialId)
 import Incentknow.Molecules.PlainTextViewer as PlainTextViewer
-import Incentknow.Molecules.SpaceMenu as SpaceMenu
-import Incentknow.Route (EditTarget(..), MaterialEditTarget(..), Route(..))
+import Incentknow.Route (Route)
 
 type Input 
   = { value :: Maybe MaterialId }

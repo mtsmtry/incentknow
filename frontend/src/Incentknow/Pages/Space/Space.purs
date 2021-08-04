@@ -2,30 +2,26 @@ module Incentknow.Pages.Space where
 
 import Prelude
 
-import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), maybe)
-import Data.Maybe.Utils (flatten)
-import Data.Nullable (null, toMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.Query.HalogenM (SubscriptionId(..))
 import Incentknow.API (getSpace)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (menuPositiveButton, dangerButton)
+import Incentknow.Atoms.Inputs (menuPositiveButton)
 import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..))
-import Incentknow.Data.Ids (SpaceDisplayId(..), SpaceId(..))
-import Incentknow.HTML.Utils (css, maybeElem, whenElem)
+import Incentknow.Data.Ids (SpaceDisplayId)
+import Incentknow.HTML.Utils (css, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Pages.Space.ContainerList as ContainerList
 import Incentknow.Pages.Space.FormatList as FormatList
 import Incentknow.Pages.Space.MemberList as MemberList
 import Incentknow.Pages.Space.Setting as Setting
-import Incentknow.Route (EditTarget(..), Route(..), SpaceTab(..))
+import Incentknow.Route (EditContentTarget(..), EditTarget(..), Route(..), SpaceTab(..))
 import Incentknow.Templates.Page (section, tabPage)
 
 type Input
@@ -110,7 +106,7 @@ renderMain state space =
           SpaceSetting -> if isAdmin then "Setting" else "Information"
     }
     [ whenElem writable \_ ->
-        menuPositiveButton "コンテンツを追加" (Navigate $ EditContent $ TargetBlank (Just space.spaceId) Nothing)
+        menuPositiveButton "コンテンツを追加" (Navigate $ EditDraft $ ContentTarget $ TargetBlank (Just space.spaceId) Nothing)
     ]
     [ HH.div [ css "page-space" ]
         [ HH.div [ css "name" ] [ HH.text space.displayName ]

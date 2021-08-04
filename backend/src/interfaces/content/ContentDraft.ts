@@ -15,6 +15,7 @@ export interface RelatedContentDraft {
     contentId: ContentId | null;
     format: FocusedFormat;
     changeType: ContentChangeType;
+    isEditing: boolean;
 }
 
 export function toRelatedContentDraft(draft: ContentDraft, format: FocusedFormat): RelatedContentDraft {
@@ -26,7 +27,8 @@ export function toRelatedContentDraft(draft: ContentDraft, format: FocusedFormat
         data: draft.data,
         contentId: draft.content?.entityId || null,
         format,
-        changeType: draft.changeType
+        changeType: draft.changeType,
+        isEditing: draft.currentEditingId != null
     }
 }
 
@@ -40,6 +42,7 @@ export interface FocusedContentDraft {
     materialDrafts: FocusedMaterialDraft[];
     format: FocusedFormat;
     changeType: ContentChangeType;
+    isEditing: boolean;
 }
 
 export function toFocusedContentDraft(draft: ContentDraft, format: FocusedFormat, data: ObjectLiteral, materialDrafts: FocusedMaterialDraft[]): FocusedContentDraft {
@@ -52,6 +55,7 @@ export function toFocusedContentDraft(draft: ContentDraft, format: FocusedFormat
         contentId: draft.content?.entityId || null,
         materialDrafts: materialDrafts,
         format,
-        changeType: draft.changeType
+        changeType: draft.changeType,
+        isEditing: draft.currentEditingId != null
     }
 }

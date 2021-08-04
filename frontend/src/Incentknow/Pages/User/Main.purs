@@ -10,7 +10,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (RelatedContent)
-import Incentknow.Data.Ids (UserId(..))
+import Incentknow.Data.Ids (UserId)
 import Incentknow.Organisms.ContentList as ContentList
 
 type Input

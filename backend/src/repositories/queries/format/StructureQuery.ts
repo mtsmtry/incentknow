@@ -1,21 +1,25 @@
 import { SelectQueryBuilder } from "typeorm";
 import { FormatSk } from "../../../entities/format/Format";
 import { Structure, StructureSk } from "../../../entities/format/Structure";
-import { toFocusedFormatFromStructure } from "../../../interfaces/format/Format";
+import { Relation, toFocusedFormatFromStructure } from "../../../interfaces/format/Format";
 import { StructureId, toRelatedStructure } from "../../../interfaces/format/Structure";
 import { mapQuery } from "../MappedQuery";
 import { SelectFromSingleTableQuery, SelectQueryFromEntity } from "../SelectQuery";
 
-export function joinProperties<T>(alias: string, query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
+export function joinPropertyArguments<T>(alias: string, query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
     return query
-        .leftJoinAndSelect(alias + ".properties", "properties")
-        .leftJoinAndSelect("properties.metaProperties", "metaProperties")
-        .leftJoinAndSelect("properties.argFormat", "argFormat")
-        .leftJoinAndSelect("properties.argProperties", "argProperties")
+        .leftJoinAndSelect(alias + ".metaProperties", "metaProperties")
+        .leftJoinAndSelect(alias + ".argFormat", "argFormat")
+        .leftJoinAndSelect(alias + ".argProperties", "argProperties")
         .leftJoinAndSelect("argProperties.argFormat", "argFormat2")
         .leftJoinAndSelect("argProperties.argProperties", "argProperties2")
         .leftJoinAndSelect("argProperties2.argFormat", "argFormat3")
         .leftJoinAndSelect("argProperties2.argProperties", "argProperties3");
+}
+
+export function joinProperties<T>(alias: string, query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
+    query = query.leftJoinAndSelect(alias + ".properties", "properties");
+    return joinPropertyArguments("properties", query);
 }
 
 export class StructureQuery extends SelectFromSingleTableQuery<Structure, StructureQuery, StructureSk, StructureId, null> {
@@ -25,6 +29,10 @@ export class StructureQuery extends SelectFromSingleTableQuery<Structure, Struct
 
     byFormat(formatId: FormatSk) {
         return new StructureQuery(this.qb.where({ formatId }));
+    }
+
+    selectPropertiesJoined() {
+        return new StructureQuery(joinProperties("x", this.qb));
     }
 
     selectRelated() {
@@ -40,7 +48,7 @@ export class StructureQuery extends SelectFromSingleTableQuery<Structure, Struct
             .leftJoinAndSelect("format.creatorUser", "creatorUser")
             .leftJoinAndSelect("format.updaterUser", "updaterUser");
         query = joinProperties("x", query);
-        return mapQuery(query, toFocusedFormatFromStructure);
+        return mapQuery(query, x => (relations: Relation[]) => toFocusedFormatFromStructure(x, relations));
     }
 }
 

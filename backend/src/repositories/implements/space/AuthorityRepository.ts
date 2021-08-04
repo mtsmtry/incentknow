@@ -1,9 +1,7 @@
-import { SelectQueryBuilder } from "typeorm";
 import { Content } from "../../../entities/content/Content";
 import { Material } from "../../../entities/material/Material";
-import { Space, SpaceAuth } from "../../../entities/space/Space";
+import { Space } from "../../../entities/space/Space";
 import { SpaceMember } from "../../../entities/space/SpaceMember";
-import { UserSk } from "../../../entities/user/User";
 import { AuthorityQuery } from "../../queries/space/AuthorityQuery";
 import { Repository } from "../../Repository";
 import { Transaction } from "../../Transaction";

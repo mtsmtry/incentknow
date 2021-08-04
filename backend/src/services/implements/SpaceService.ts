@@ -1,9 +1,11 @@
 import { MembershipMethod, SpaceAuth, SpaceDisplayId, SpaceId } from "../../entities/space/Space";
 import { MemberType } from "../../entities/space/SpaceMember";
 import { UserId } from "../../entities/user/User";
+import { RelatedContainer } from "../../interfaces/container/Container";
 import { FocusedSpace, RelatedSpace } from "../../interfaces/space/Space";
 import { IntactSpaceMember } from "../../interfaces/space/SpaceMember";
 import { IntactSpaceMembershipApplication } from "../../interfaces/space/SpaceMembershipApplication";
+import { ContainerRepository } from "../../repositories/implements/container/ContainerRepository";
 import { AuthorityRepository } from "../../repositories/implements/space/AuthorityRepository";
 import { SpaceRepository } from "../../repositories/implements/space/SpaceRepository";
 import { UserRepository } from "../../repositories/implements/user/UserDto";
@@ -16,7 +18,8 @@ export class SpaceService extends BaseService {
         ctx: ServiceContext,
         private spaces: SpaceRepository,
         private users: UserRepository,
-        private auth: AuthorityRepository) {
+        private auth: AuthorityRepository,
+        private con: ContainerRepository) {
         super(ctx);
     }
 
@@ -76,13 +79,13 @@ export class SpaceService extends BaseService {
         return spaces.length == 0;
     }
 
-    async getFollowingSpaces(): Promise<RelatedSpace[]> {
+    async getFollowingSpaces(): Promise<FocusedSpace[]> {
         const userId = this.ctx.getAuthorized();
-        return await this.spaces.fromSpaces().byFollower(userId).selectRelated().getMany();
+        return await this.spaces.fromSpaces().byFollower(userId).selectFocused().getMany();
     }
 
-    async getPublishedSpaces(): Promise<RelatedSpace[]> {
-        return await this.spaces.fromSpaces().byPublished().selectRelated().getMany();
+    async getPublishedSpaces(): Promise<FocusedSpace[]> {
+        return await this.spaces.fromSpaces().byPublished().selectFocused().getMany();
     }
 
     async applySpaceMembership(spaceId: SpaceId): Promise<{}> {
@@ -185,5 +188,14 @@ export class SpaceService extends BaseService {
             await this.spaces.createCommand(trx).setSpaceDefaultAuthority(space.id, defaultAuthority);
             return {};
         });
+    }
+
+    async getSpaceContainers(spaceId: SpaceId): Promise<RelatedContainer[]> {
+        const userId = this.ctx.getAuthorized();
+        const [auth, space] = await this.auth.fromAuths().getSpaceAuth(SpaceAuth.READABLE, userId, spaceId);
+        if (!auth) {
+            throw new LackOfAuthority();
+        }
+        return await this.con.fromContainers().bySpace(space.id).selectRelated().getMany();
     }
 }

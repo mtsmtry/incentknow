@@ -4,7 +4,7 @@ import { PropertyId } from '../../entities/format/Property';
 import { StructureId } from '../../entities/format/Structure';
 import { SpaceAuth, SpaceId } from '../../entities/space/Space';
 import { FocusedFormat, RelatedFormat } from '../../interfaces/format/Format';
-import { PropertyInfo, RelatedStructure, Type } from '../../interfaces/format/Structure';
+import { PropertyInfo, RelatedStructure, toPropertyInfo, Type } from '../../interfaces/format/Structure';
 import { FormatRepository } from '../../repositories/implements/format/FormatRepository';
 import { AuthorityRepository } from "../../repositories/implements/space/AuthorityRepository";
 import { mapByString } from '../../utils';
@@ -16,7 +16,7 @@ function hasTypeDeepChange(oldType: Type, newType: Type) {
     return oldType.name != newType.name
         || oldType.format != newType.format
         || oldType.language != newType.language
-        || (oldType.subType 
+        || (oldType.subType
             && newType.subType
             && hasTypeDeepChange(oldType.subType, newType.subType))
         || (oldType.properties
@@ -65,11 +65,15 @@ export class FormatService extends BaseService {
     }
 
     async getFormat(formatDisplayId: FormatDisplayId): Promise<FocusedFormat> {
-        return await this.formats.fromFormats().byDisplayId(formatDisplayId).selectFocused().getNeededOne();
+        const [buildFormat, formatRaw] = await this.formats.fromFormats().byDisplayId(formatDisplayId).selectFocused().getNeededOneWithRaw();
+        const relations = await this.formats.getRelations(formatRaw.id);
+        return buildFormat(relations);
     }
 
     async getFocusedFormat(formatId: FormatId): Promise<FocusedFormat> {
-        return await this.formats.fromFormats().byEntityId(formatId).selectFocused().getNeededOne();
+        const [buildFormat, formatRaw] = await this.formats.fromFormats().byEntityId(formatId).selectFocused().getNeededOneWithRaw();
+        const relations = await this.formats.getRelations(formatRaw.id);
+        return buildFormat(relations);
     }
 
     async getRelatedFormat(formatId: FormatId): Promise<RelatedFormat> {
@@ -77,7 +81,9 @@ export class FormatService extends BaseService {
     }
 
     async getFocusedFormatByStructure(structureId: StructureId): Promise<FocusedFormat> {
-        return await this.formats.fromStructures().byEntityId(structureId).selectFocusedFormat().getNeededOne();
+        const [buildFormat, struct] = await this.formats.fromStructures().byEntityId(structureId).selectFocusedFormat().getNeededOneWithRaw();
+        const relations = await this.formats.getRelations(struct.formatId);
+        return buildFormat(relations);
     }
 
     async getRelatedStructure(structureId: StructureId): Promise<RelatedStructure> {
@@ -97,9 +103,9 @@ export class FormatService extends BaseService {
 
     async updateFormatStructure(formatId: FormatId, properties: PropertyInfo[]): Promise<{}> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
-            const format = await this.formats.fromFormats().byEntityId(formatId).getNeededOne();
-            const struct = await this.formats.fromStructures().byId(format.currentStructureId).selectFocusedFormat().getNeededOne();
-            if (hasDeepChange(struct.currentStructure.properties, properties)) {
+            const format = await this.formats.fromFormats().byEntityId(formatId).joinProperties().getNeededOne();
+            const struct = await this.formats.fromStructures().byId(format.currentStructureId).selectPropertiesJoined().getNeededOne();
+            if (hasDeepChange(struct.properties.map(toPropertyInfo), properties)) {
                 await this.formats.createCommand(trx).updateStructure(format, properties);
             }
             return {};
