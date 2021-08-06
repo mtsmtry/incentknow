@@ -45,7 +45,7 @@ export class MaterialDraft {
     @Column("int", { nullable: true })
     materialId: MaterialSk | null;
 
-    @ManyToOne(type => Space, { onDelete: "SET NULL" })
+    @ManyToOne(type => ContentDraft, { onDelete: "SET NULL" })
     @JoinColumn({ name: "intendedContentDraftId" })
     intendedContentDraft: ContentDraft | null;
     @Column("int", { nullable: true })

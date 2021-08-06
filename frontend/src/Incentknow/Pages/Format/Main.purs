@@ -1,9 +1,7 @@
 module Incentknow.Pages.Format.Main where
 
 import Prelude
-import CSS (properties)
-import Data.Either (Either(..))
-import Data.Foldable (for_, traverse_)
+import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
@@ -11,11 +9,10 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (updateFormatStructure)
-import Incentknow.API.Execution (executeAPI, executeCommand)
+import Incentknow.API.Execution (executeCommand)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Inputs (button, submitButton)
 import Incentknow.Data.Entities (FocusedFormat)
-import Incentknow.Data.Ids (SpaceId(..))
 import Incentknow.Data.Property (ChangeType(..), difference)
 import Incentknow.Organisms.Structure as Structure
 

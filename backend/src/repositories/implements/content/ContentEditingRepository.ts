@@ -70,7 +70,7 @@ export class ContentEditingCommand implements BaseCommand {
         }
 
         // activate draft
-        if (!draft.currentEditing) {
+        if (!draft.currentEditingId) {
             let editing = this.editings.create({
                 draftId: draft.id,
                 basedCommitId: basedCommit?.id,

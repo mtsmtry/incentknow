@@ -125,4 +125,42 @@ export class FormatService extends BaseService {
             await this.formats.createCommand(trx).removeMetaProperty(metaPropertyId);
         });
     }
+
+    async setFormatDisplayName(formatId: FormatId, displayName: string): Promise<{}> {
+        return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const [auth, format] = await this.auth.fromAuths(trx).getFormatAuth(SpaceAuth.WRITABLE, userId, formatId);
+            if (!auth) {
+                throw new LackOfAuthority();
+            }
+            await this.formats.createCommand(trx).setFormatDisplayName(format.id, displayName);
+            return {};
+        });
+    }
+
+    async setFormatDisplayId(formatId: FormatId, displayId: FormatDisplayId): Promise<{}> {
+        return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const [auth, format] = await this.auth.fromAuths(trx).getFormatAuth(SpaceAuth.WRITABLE, userId, formatId);
+            if (!auth) {
+                throw new LackOfAuthority();
+            }
+            await this.formats.createCommand(trx).setFormatDisplayId(format.id, displayId);
+            return {};
+        });
+    }
+
+    async setFormatFontawesome(formatId: FormatId, fontawesome: string | null): Promise<{}> {
+        return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const [auth, format] = await this.auth.fromAuths(trx).getFormatAuth(SpaceAuth.WRITABLE, userId, formatId);
+            if (!auth) {
+                throw new LackOfAuthority();
+            }
+            await this.formats.createCommand(trx).setFormatFontawesome(format.id, fontawesome);
+            return {};
+        });
+    }
+
+    async getAvailableFormatDisplayId(formatDisplayId: FormatDisplayId): Promise<boolean> {
+        const spaces = await this.formats.fromFormats().byDisplayId(formatDisplayId).selectId().getMany();
+        return spaces.length == 0;
+    }
 }

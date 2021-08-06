@@ -85,6 +85,9 @@ export class Format {
     @Column()
     latestVersion: number;
 
+    @Column("varchar", { nullable: true })
+    fontawesome: string | null;
+
     @BeforeInsert()
     onInsert() {
         this.displayId = createDisplayId() as FormatDisplayId;

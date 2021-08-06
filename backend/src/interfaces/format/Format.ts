@@ -1,23 +1,20 @@
 import { Format, FormatDisplayId, FormatId, FormatUsage } from "../../entities/format/Format";
-import { Structure } from "../../entities/format/Structure";
+import { Structure, StructureId } from "../../entities/format/Structure";
 import { RelatedSpace, toRelatedSpace } from "../space/Space";
 import { RelatedUser, toRelatedUser } from "../user/User";
 import { toTimestamp } from "../Utils";
-import { FocusedStructure, PropertyInfo, RelatedStructure, toFocusedStructure, toRelatedStructure } from "./Structure";
+import { FocusedStructure, PropertyInfo, toFocusedStructure } from "./Structure";
 
 export interface RelatedFormat {
     formatId: FormatId;
     displayId: FormatDisplayId;
     displayName: string;
     description: string;
+    fontawesome: string | null;
     space: RelatedSpace;
     usage: FormatUsage;
-    createdAt: number;
-    creatorUser: RelatedUser;
-    updatedAt: number;
-    updaterUser: RelatedUser;
     semanticId: string | null;
-    currentStructure: RelatedStructure;
+    currentStructureId: StructureId;
 }
 
 export function toRelatedFormat(format: Format): RelatedFormat {
@@ -27,14 +24,11 @@ export function toRelatedFormat(format: Format): RelatedFormat {
         displayId: format.displayId,
         displayName: format.displayName,
         description: format.description,
+        fontawesome: format.fontawesome,
         space: toRelatedSpace(format.space),
         usage: format.usage,
-        createdAt: toTimestamp(format.createdAt),
-        creatorUser: toRelatedUser(format.creatorUser),
-        updatedAt: toTimestamp(format.updatedAt),
-        updaterUser: toRelatedUser(format.updaterUser),
         semanticId: format.semanticId,
-        currentStructure: toRelatedStructure(format.currentStructure)
+        currentStructureId: format.currentStructure.entityId
     }
 }
 
@@ -49,6 +43,7 @@ export interface FocusedFormat {
     displayId: FormatDisplayId;
     displayName: string;
     description: string;
+    fontawesome: string | null,
     space: RelatedSpace;
     usage: FormatUsage;
     createdAt: number;
@@ -66,6 +61,7 @@ export function toFocusedFormat(format: Format, relations: Relation[]): FocusedF
         displayId: format.displayId,
         displayName: format.displayName,
         description: format.description,
+        fontawesome: format.fontawesome,
         space: toRelatedSpace(format.space),
         usage: format.usage,
         createdAt: toTimestamp(format.createdAt),
@@ -84,6 +80,7 @@ export function toFocusedFormatFromStructure(structure: Structure, relations: Re
         displayId: structure.format.displayId,
         displayName: structure.format.displayName,
         description: structure.format.description,
+        fontawesome: structure.format.fontawesome,
         space: toRelatedSpace(structure.format.space),
         usage: structure.format.usage,
         createdAt: toTimestamp(structure.format.createdAt),

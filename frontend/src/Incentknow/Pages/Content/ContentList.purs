@@ -15,6 +15,7 @@ import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (RelatedContent)
 import Incentknow.Data.Ids (SpaceId)
 import Incentknow.Organisms.ContentList as ContentList
+import Incentknow.Templates.Main (centerLayout)
 
 type Input
   = { spaceId :: SpaceId }
@@ -45,8 +46,10 @@ initialState input = { spaceId: input.spaceId, contents: Loading }
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  remoteWith state.contents \contents ->
-    HH.slot (SProxy :: SProxy "contentList") unit ContentList.component { value: contents } absurd
+  centerLayout { leftSide: [], rightSide: [] }
+    [ remoteWith state.contents \contents ->
+      HH.slot (SProxy :: SProxy "contentList") unit ContentList.component { value: contents } absurd
+    ]
 
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of

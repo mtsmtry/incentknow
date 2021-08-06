@@ -41,11 +41,6 @@ export class SpaceService extends BaseService {
         return space;
     }
 
-    async getMySpaces(): Promise<RelatedSpace[]> {
-        const userId = this.ctx.getAuthorized();
-        return await this.spaces.fromMembers().byUser(userId).selectRelatedSpace().getMany();
-    }
-
     async getRelatedSpace(spaceId: SpaceId): Promise<RelatedSpace> {
         const userId = this.ctx.getAuthorized();
         const [space, spaceRaw] = await this.spaces.fromSpaces().byEntityId(spaceId).selectRelated().getNeededOneWithRaw();
@@ -77,6 +72,16 @@ export class SpaceService extends BaseService {
     async getAvailableSpaceDisplayId(spaceDisplayId: SpaceDisplayId): Promise<boolean> {
         const spaces = await this.spaces.fromSpaces().byDisplayId(spaceDisplayId).selectId().getMany();
         return spaces.length == 0;
+    }
+
+    async getCandidateSpaces(): Promise<RelatedSpace[]> {
+        const userId = this.ctx.getAuthorized();
+        return await this.spaces.fromSpaces().byMember(userId).selectRelated().getMany();
+    }
+
+    async getMySpaces(): Promise<FocusedSpace[]> {
+        const userId = this.ctx.getAuthorized();
+        return await this.spaces.fromSpaces().byMember(userId).selectFocused().getMany();
     }
 
     async getFollowingSpaces(): Promise<FocusedSpace[]> {

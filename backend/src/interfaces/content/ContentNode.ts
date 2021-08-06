@@ -61,7 +61,7 @@ export function toContentNodes(
             return null;
         }
 
-        const materials = materialEditingsByParent[editing.id].map(toRelatedMaterialRevisionFromEditing);
+        const materials = (materialEditingsByParent[editing.id] || []).map(toRelatedMaterialRevisionFromEditing);
 
         return {
             type: type,
@@ -73,7 +73,7 @@ export function toContentNodes(
     }
 
     function fromCommit(commit: ContentCommit): ContentNode {
-        const materials = materialCommitsByParent[commit.id].map(toRelatedMaterialRevisionFromCommit);
+        const materials = (materialCommitsByParent[commit.id] || []).map(toRelatedMaterialRevisionFromCommit);
 
         return {
             type: ContentNodeType.COMMITTED,

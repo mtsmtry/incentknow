@@ -9,6 +9,7 @@ export interface RelatedMaterialDraft {
     displayName: string;
     createdAt: number;
     updatedAt: number;
+    isEditing: boolean;
 }
 
 export function toRelatedMaterialDraft(draft: MaterialDraft): RelatedMaterialDraft {
@@ -17,6 +18,7 @@ export function toRelatedMaterialDraft(draft: MaterialDraft): RelatedMaterialDra
         displayName: draft.material?.beginning || draft.beginning || "",
         createdAt: toTimestamp(draft.createdAt),
         updatedAt: toTimestamp(draft.updatedAt),
+        isEditing: draft.currentEditingId != null
     };
 }
 
@@ -29,6 +31,7 @@ export interface FocusedMaterialDraft {
     material: RelatedMaterial | null;
     basedCommitId: MaterialCommitId | null;
     data: string;
+    isEditing: boolean;
 }
 
 export function toFocusedMaterialDraft(draft: MaterialDraft, data: string, material: RelatedMaterial | null): FocusedMaterialDraft {
@@ -40,6 +43,7 @@ export function toFocusedMaterialDraft(draft: MaterialDraft, data: string, mater
         contentDraftId: draft.intendedContentDraft?.entityId || null,
         material: material,
         basedCommitId: draft.currentEditing?.basedCommit?.entityId || null,
-        data: data
+        data: data,
+        isEditing: draft.currentEditingId != null
     };
 }

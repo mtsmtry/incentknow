@@ -145,8 +145,8 @@ handleAction = case _ of
     forRemote fetch \format->
       H.modify_ _ { format = format }
     forItem fetch \format-> do
-      H.modify_ _ { structureId = Just format.currentStructure.structureId }
-      H.raise $ Just format.currentStructure.structureId
+      H.modify_ _ { structureId = Just format.currentStructureId }
+      H.raise $ Just format.currentStructureId
   GetStructure fetch -> do
     forRemote fetch \structure->
       H.modify_ _ { structure = structure, formatId = map _.formatId $ R.toMaybe structure }

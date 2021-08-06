@@ -1,0 +1,1 @@
+spago -q bundle-app --main Incentknow.Main --to public/index.js -w

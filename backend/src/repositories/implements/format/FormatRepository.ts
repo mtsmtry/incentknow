@@ -1,5 +1,5 @@
 import { Content } from "../../../entities/content/Content";
-import { Format, FormatSk, FormatUsage } from "../../../entities/format/Format";
+import { Format, FormatDisplayId, FormatSk, FormatUsage } from "../../../entities/format/Format";
 import { MetaProperty, MetaPropertyId, MetaPropertyType } from "../../../entities/format/MetaProperty";
 import { Property, PropertySk } from "../../../entities/format/Property";
 import { Structure } from "../../../entities/format/Structure";
@@ -81,7 +81,7 @@ export class FormatCommand implements BaseCommand {
             prop.argType = tyArgs.subType.name;
         }
         if (tyArgs.format) {
-            prop.argFormat = await this.formats.findOne({ entityId: tyArgs.format }) || null;
+            prop.argFormat = await this.formats.findOne({ entityId: tyArgs.format.formatId }) || null;
         }
     }
 
@@ -199,5 +199,17 @@ export class FormatCommand implements BaseCommand {
 
     async removeMetaProperty(metaPropertyId: MetaPropertyId) {
         await this.metaProps.delete(metaPropertyId);
+    }
+
+    async setFormatDisplayId(formatId: FormatSk, displayId: FormatDisplayId) {
+        await this.formats.update(formatId, { displayId });
+    }
+
+    async setFormatDisplayName(formatId: FormatSk, displayName: string) {
+        await this.formats.update(formatId, { displayName });
+    }
+
+    async setFormatFontawesome(formatId: FormatSk, fontawesome: string | null) {
+        await this.formats.update(formatId, { fontawesome });
     }
 }

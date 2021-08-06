@@ -2,6 +2,7 @@
 // Content ------------------------------
 
 import { Content, ContentId } from "../../entities/content/Content";
+import { Int } from "../../Implication";
 import { FocusedFormat } from "../format/Format";
 import { RelatedUser, toRelatedUser } from "../user/User";
 import { toTimestamp } from "../Utils";
@@ -13,8 +14,8 @@ export interface RelatedContent {
     updatedAt: number;
     creatorUser: RelatedUser;
     updaterUser: RelatedUser;
-    updateCount: number;
-    viewCount: number;
+    updateCount: Int;
+    viewCount: Int;
     format: FocusedFormat;
     data: any;
 }

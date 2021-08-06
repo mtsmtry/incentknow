@@ -4,6 +4,7 @@ import { Language, Property, PropertyId, TypeName } from "../../entities/format/
 import { Structure } from "../../entities/format/Structure";
 import { Data, DataKind, DataMember } from "../../Implication";
 import { toTimestamp } from "../Utils";
+import { FocusedFormat, toFocusedFormat } from "./Format";
 
 export interface IntactMetaProperty {
     id: MetaPropertyId;
@@ -39,7 +40,7 @@ export class Type {
     name: TypeName;
 
     @DataMember([TypeName.CONTENT, TypeName.ENTITY])
-    format?: FormatId;
+    format?: FocusedFormat;
 
     @DataMember([TypeName.ARRAY])
     subType?: Type;
@@ -75,13 +76,13 @@ export function toPropertyInfo(prop: Property): PropertyInfo {
     if (prop.typeName == TypeName.ARRAY) {
         Object.assign(res.type, {
             name: prop.argType,
-            format: prop.argFormat?.entityId,
+            format: prop.argFormat ? toFocusedFormat(prop.argFormat, []) : null,
             language: prop.argLanguage,
             properties: prop.argProperties.map(toPropertyInfo)
         });
     } else {
         Object.assign(res.type, {
-            format: prop.argFormat?.entityId,
+            format: prop.argFormat ? toFocusedFormat(prop.argFormat, []) : null,
             language: prop.argLanguage,
             properties: prop.argProperties.map(toPropertyInfo),
         });

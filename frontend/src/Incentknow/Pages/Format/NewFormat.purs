@@ -118,7 +118,7 @@ handleAction = case _ of
         H.modify_ _ { loading = true }
         response <- executeCommand $ createFormat newFormat
         for_ response \displayId -> do
-          navigate $ Format displayId FormatMain
+          -- navigate $ Format displayId FormatMain
           message $ Success "フォーマットの作成に成功しました"
         H.modify_ _ { loading = false }
       Nothing, _ -> message $ Error "データ定義の入力が終わっていません"

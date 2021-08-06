@@ -60,3 +60,8 @@ export function toFocusedUser(user: User): FocusedUser {
         createdAt: toTimestamp(user.createdAt)
     }
 }
+
+export interface AuthInfo {
+    session: string;
+    userId: UserId;
+}

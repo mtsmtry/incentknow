@@ -2,15 +2,13 @@ module Incentknow.Organisms.ListView where
 
 import Prelude
 
-import Data.Array (singleton)
-import Data.DateTime (DateTime(..))
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
-import Incentknow.Data.Entities (RelatedFormat, RelatedUser, FocusedFormat)
+import Incentknow.AppM (class Behaviour, navigateRoute)
+import Incentknow.Data.Entities (FocusedFormat, RelatedUser)
 import Incentknow.HTML.DateTime (dateTime)
 import Incentknow.HTML.Utils (css, link, link_, maybeElem)
 import Incentknow.Route (Route)
@@ -67,7 +65,7 @@ render state =
       [ css "item" ]
       [ maybeElem item.format \format ->
           HH.div [ css "format" ]
-            [ link_ Navigate (R.Format format.displayId R.FormatMain) [ HH.text $ format.displayName ] ]
+            [ link_ Navigate (R.Space format.space.displayId $ R.SpaceFormat format.displayId R.FormatMain) [ HH.text $ format.displayName ] ]
       , HH.div [ css "title" ]
           [ HH.text item.title ]
       , case item.user, item.datetime of

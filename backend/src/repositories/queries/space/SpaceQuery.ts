@@ -11,12 +11,17 @@ export class SpaceQuery extends SelectFromSingleTableQuery<Space, SpaceQuery, Sp
     }
 
     byFollower(userId: UserSk) {
-        const query = this.qb.leftJoin("followers", "f").where("f.id = :userId", { userId });
+        const query = this.qb.leftJoin("x.followers", "f").where("f.userId = :userId", { userId });
         return new SpaceQuery(query);
     }
 
     byPublished() {
         const query = this.qb.where({ published: true });
+        return new SpaceQuery(query);
+    }
+
+    byMember(userId: UserSk) {
+        const query = this.qb.leftJoin("x.members", "m").where("m.userId = :userId", { userId });
         return new SpaceQuery(query);
     }
 
@@ -30,6 +35,7 @@ export class SpaceQuery extends SelectFromSingleTableQuery<Space, SpaceQuery, Sp
     selectFocused() {
         const query = this.qb
             .leftJoinAndSelect("x.creatorUser", "creatorUser")
+            .addSelect("(SELECT COUNT(*) FROM container WHERE spaceId = x.id)", "containerCount")
             .addSelect("(SELECT COUNT(*) FROM space_member WHERE spaceId = x.id)", "memberCount")
             .addSelect("(SELECT COUNT(*) FROM format WHERE spaceId = x.id)", "formatCount")
             .addSelect("(SELECT COUNT(*) FROM content as c INNER JOIN container as con ON c.containerId = con.id WHERE con.spaceId = x.id)", "contentCount");

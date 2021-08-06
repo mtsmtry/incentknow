@@ -23,8 +23,6 @@ main ::
   , footer :: H.ComponentHTML a s m
   , body :: H.ComponentHTML a s m
   , messages :: Array Message
-  , leftSide :: H.ComponentHTML a s m
-  , rightSide :: H.ComponentHTML a s m
   } ->
   H.ComponentHTML a s m
 main input =
@@ -33,14 +31,8 @@ main input =
     [ HH.div [ css "header" ] [ centerize [ input.header ] ]
     , HH.div
         [ css "body" ]
-        [ HH.div_
-            [ HH.div [ css "side" ] [ HH.div_ [ input.leftSide ] ]
-            , HH.div [ css "main" ]
-                [ HH.div [] (map message input.messages)
-                , HH.div [ css "tmp-main_section" ] [ input.body ]
-                ]
-            , HH.div [ css "side" ] [ HH.div_ [ input.rightSide ] ]
-            ]
+        [ HH.div [] (map message input.messages)
+        , input.body
         ]
     , HH.div [ css "footer" ] [ centerize [ input.footer ] ]
     ]
@@ -52,3 +44,19 @@ main input =
           Error text -> error text
           Success text -> success text
       ]
+
+centerLayout :: 
+  forall a s m.
+    { leftSide :: Array (H.ComponentHTML a s m)
+    , rightSide :: Array (H.ComponentHTML a s m)
+    }
+    -> Array (H.ComponentHTML a s m)
+    -> H.ComponentHTML a s m
+centerLayout input body =
+  HH.div [ css "tmp-center-layout" ]
+    [ HH.div [ css "side leftside" ] input.leftSide 
+    , HH.div [ css "main" ]
+        [ HH.div [ css "tmp-main_section" ] body
+        ]
+    , HH.div [ css "side rightside" ] input.rightSide
+    ]

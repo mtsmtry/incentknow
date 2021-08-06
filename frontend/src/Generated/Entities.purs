@@ -5,8 +5,11 @@ import Prelude
 
 import Data.Maybe (Maybe)
 import Data.Argonaut.Core (Json)
+
 import Incentknow.Data.Ids (ContainerSk, ContainerId, ContentSk, ContentId, ContentCommitSk, ContentCommitId, ContentDraftSk, ContentDraftId, ContentEditingSk, ContentEditingId, ContentSnapshotSk, ContentSnapshotId, ContentTransitionSk, ContentTransitionId, FormatSk, FormatId, FormatDisplayId, SemanticId, MetaPropertySk, MetaPropertyId, PropertySk, PropertyId, StructureSk, StructureId, MaterialSk, MaterialId, MaterialCommitSk, MaterialCommitId, MaterialDraftSk, MaterialDraftId, MaterialEditingSk, MaterialEditingId, MaterialSnapshotSk, MaterialSnapshotId, ReactorSk, ReactorId, SpaceSk, SpaceId, SpaceDisplayId, SpaceFollowSk, SpaceMemberSk, SpaceMembershipApplicationSk, UserSk, UserId, UserDisplayId, ContentRevisionId, ContentWholeRevisionId, MaterialRevisionId)
 
+
+type Date = String
 
 
 
@@ -167,6 +170,13 @@ type RelatedContainer
 
 
 
+type AdditionalContainerInfo
+  = { contentCount :: Int
+    , latestUpdatedAt :: Date
+    }
+
+
+
 type FocusedContainer
   = { containerId :: ContainerId
     , space :: RelatedSpace
@@ -175,6 +185,8 @@ type FocusedContainer
     , updatedAt :: Number
     , generator :: Maybe ContentGenerator
     , reactor :: Maybe IntactReactor
+    , contentCount :: Int
+    , latestUpdatedAt :: Number
     }
 
 
@@ -185,8 +197,8 @@ type RelatedContent
     , updatedAt :: Number
     , creatorUser :: RelatedUser
     , updaterUser :: RelatedUser
-    , updateCount :: Number
-    , viewCount :: Number
+    , updateCount :: Int
+    , viewCount :: Int
     , format :: FocusedFormat
     , data :: Json
     }
@@ -332,14 +344,11 @@ type RelatedFormat
     , displayId :: FormatDisplayId
     , displayName :: String
     , description :: String
+    , fontawesome :: Maybe String
     , space :: RelatedSpace
     , usage :: FormatUsage
-    , createdAt :: Number
-    , creatorUser :: RelatedUser
-    , updatedAt :: Number
-    , updaterUser :: RelatedUser
     , semanticId :: Maybe String
-    , currentStructure :: RelatedStructure
+    , currentStructureId :: StructureId
     }
 
 
@@ -357,6 +366,7 @@ type FocusedFormat
     , displayId :: FormatDisplayId
     , displayName :: String
     , description :: String
+    , fontawesome :: Maybe String
     , space :: RelatedSpace
     , usage :: FormatUsage
     , createdAt :: Number
@@ -403,7 +413,7 @@ data Type
   | StringType 
   | FormatType 
   | SpaceType 
-  | ContentType FormatId
+  | ContentType FocusedFormat
   | UrlType 
   | ObjectType (Array PropertyInfo)
   | TextType 
@@ -412,7 +422,7 @@ data Type
   | EnumType (Array Enumerator)
   | DocumentType 
   | ImageType 
-  | EntityType FormatId
+  | EntityType FocusedFormat
 
 derive instance eqType :: Eq Type
 
@@ -490,6 +500,7 @@ type RelatedMaterialDraft
     , displayName :: String
     , createdAt :: Number
     , updatedAt :: Number
+    , isEditing :: Boolean
     }
 
 
@@ -503,6 +514,7 @@ type FocusedMaterialDraft
     , material :: Maybe RelatedMaterial
     , basedCommitId :: Maybe MaterialCommitId
     , data :: String
+    , isEditing :: Boolean
     }
 
 
@@ -571,7 +583,8 @@ type IntactReactor
 
 
 type AdditionalSpaceInfo
-  = { memberCount :: Number
+  = { containerCount :: Int
+    , memberCount :: Number
     , contentCount :: Number
     , formatCount :: Number
     }
@@ -603,9 +616,10 @@ type FocusedSpace
     , published :: Boolean
     , membershipMethod :: MembershipMethod
     , defaultAuthority :: SpaceAuth
-    , memberCount :: Number
-    , contentCount :: Number
-    , formatCount :: Number
+    , containerCount :: Int
+    , memberCount :: Int
+    , contentCount :: Int
+    , formatCount :: Int
     }
 
 
@@ -652,6 +666,13 @@ type FocusedUser
     , displayName :: String
     , iconUrl :: Maybe String
     , createdAt :: Number
+    }
+
+
+
+type AuthInfo
+  = { session :: String
+    , userId :: UserId
     }
 
 

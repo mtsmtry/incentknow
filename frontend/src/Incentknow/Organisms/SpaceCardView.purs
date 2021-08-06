@@ -8,8 +8,9 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour, navigateRoute)
+import Incentknow.Atoms.Icon (spaceScopeIcon)
 import Incentknow.Data.Entities (MembershipMethod(..), RelatedSpace, SpaceAuth(..), FocusedSpace)
-import Incentknow.HTML.Utils (css, link)
+import Incentknow.HTML.Utils (css, link, whenElem)
 import Incentknow.Route (Route(..), SpaceTab(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
 
@@ -51,20 +52,19 @@ render state =
   where
   renderItem :: FocusedSpace -> H.ComponentHTML Action ChildSlots m
   renderItem space =
-    link Navigate (Space space.displayId SpaceContainers)
+    link Navigate (Space space.displayId SpaceHome)
       [ css "item" ]
       [ HH.div [ css "upper"]
-        [ HH.img [ HP.src "https://pakutaso.cdn.rabify.me/shared/img/thumb/elly20160701265118.jpg" ]
+        [ HH.img [ HP.src "/assets/imgs/default.jpg" ]
         ]
       , HH.div [ css "lower" ]
         [ HH.span [ css "title" ] [ HH.text space.displayName ]
-        , if space.defaultAuthority == SpaceAuthNone && space.membershipMethod == MembershipMethodNone then
-            HH.span [ css "private" ] [ HH.text "Private" ]
-          else if space.defaultAuthority == SpaceAuthNone then
-            HH.span [ css "group" ] [ HH.text "Group" ]
-          else 
-            HH.span [ css "public" ] [ HH.text "Public" ]
-        , HH.span [ css "info" ] [ HH.text $ "メンバー: " <> show space.memberCount <> "人" <> " コンテンツ: " <> show space.contentCount <> "個" ]
+        , HH.span [ css "scope" ] [ spaceScopeIcon space ]
+        , HH.span [ css "info" ] 
+            [ whenElem (space.memberCount > 1) \_->
+                HH.text $ show space.memberCount <> "人のメンバー "
+            , HH.text $ show space.contentCount <> "件のコンテンツ"
+            ]
         ]
       ]
 

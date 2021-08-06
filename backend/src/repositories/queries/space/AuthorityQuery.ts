@@ -1,6 +1,7 @@
 import { SelectQueryBuilder } from "typeorm";
 import { isNumber } from "util";
 import { Content, ContentId, ContentSk } from "../../../entities/content/Content";
+import { Format, FormatId, FormatSk } from "../../../entities/format/Format";
 import { Material, MaterialId, MaterialSk } from "../../../entities/material/Material";
 import { Space, SpaceAuth, SpaceId, SpaceSk } from "../../../entities/space/Space";
 import { SpaceMember } from "../../../entities/space/SpaceMember";
@@ -11,6 +12,7 @@ export class AuthorityQuery {
     constructor(
         private spaces: SelectQueryBuilder<Space>,
         private members: SelectQueryBuilder<SpaceMember>,
+        private formats: SelectQueryBuilder<Format>,
         private contents: SelectQueryBuilder<Content>,
         private materials: SelectQueryBuilder<Material>) {
     }
@@ -68,6 +70,19 @@ export class AuthorityQuery {
         }
         const result = await this.getSpaceAuthByEntity(auth, userId, space);
         return [result, space];
+    }
+
+    async getFormatAuth(auth: SpaceAuth, userId: UserSk | null, formatId: FormatSk | FormatId): Promise<[boolean, Format]> {
+        const where = isNumber(formatId) ? { id: formatId } : { entityId: formatId };
+        const format = await this.formats
+            .where(where)
+            .leftJoinAndSelect("x.space", "space")
+            .getOne();
+        if (!format) {
+            throw new NotFoundEntity();
+        }
+        const result = await this.getSpaceAuthByEntity(auth, userId, format.space);
+        return [result, format];
     }
 
     async getContentAuth(auth: SpaceAuth, userId: UserSk | null, contentId: ContentSk | ContentId): Promise<[boolean, Content]> {

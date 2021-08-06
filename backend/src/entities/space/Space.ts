@@ -3,6 +3,7 @@ import { NewTypeInt, NewTypeString } from "../../Implication";
 import { User, UserSk } from "../user/User";
 import { CreatedAt, createDisplayId, createEntityId, DisplayId, DisplayName, EntityId } from '../Utils';
 import { SpaceFollow } from "./SpaceFollow";
+import { SpaceMember } from "./SpaceMember";
 
 export enum MembershipMethod {
     NONE = "none",
@@ -69,8 +70,11 @@ export class Space {
     })
     defaultAuthority: SpaceAuth;
 
-    @OneToMany(type => SpaceFollow, strc => strc.spaceId, { onDelete: "CASCADE" })
+    @OneToMany(type => SpaceFollow, s => s.space, { onDelete: "CASCADE" })
     followers: SpaceFollow[];
+
+    @OneToMany(type => SpaceMember, s => s.space, { onDelete: "CASCADE" })
+    members: SpaceMember[];
 
     @BeforeInsert()
     onInsert() {

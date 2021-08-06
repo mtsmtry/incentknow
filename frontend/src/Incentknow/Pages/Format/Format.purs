@@ -9,25 +9,24 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getFormat)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote, toMaybe)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (menuPositiveButton)
 import Incentknow.Data.Entities (FocusedFormat)
-import Incentknow.Data.Ids (FormatDisplayId)
-import Incentknow.HTML.Utils (css, maybeElem)
+import Incentknow.Data.Ids (FormatDisplayId, SpaceDisplayId)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Pages.Format.Main as Main
 import Incentknow.Pages.Format.Setting as Setting
 import Incentknow.Pages.Format.Versions as Versions
-import Incentknow.Route (EditContentTarget(..), EditTarget(..), FormatTab(..), Route(..))
-import Incentknow.Templates.Page (tabPage)
+import Incentknow.Route (FormatTab(..), Route(..), SpaceTab(..))
+import Incentknow.Templates.Page (verticalTabPage)
 
 type Input
-  = { formatId :: FormatDisplayId, tab :: FormatTab }
+  = { formatId :: FormatDisplayId, spaceId :: SpaceDisplayId, tab :: FormatTab }
 
 type State
-  = { formatId :: FormatDisplayId, tab :: FormatTab, format :: Remote FocusedFormat }
+  = { formatId :: FormatDisplayId, spaceId :: SpaceDisplayId, tab :: FormatTab, format :: Remote FocusedFormat }
 
 data Action
   = Initialize
@@ -64,7 +63,7 @@ component =
     }
 
 initialState :: Input -> State
-initialState input = { formatId: input.formatId, format: Loading, tab: input.tab }
+initialState input = { formatId: input.formatId, spaceId: input.spaceId, format: Loading, tab: input.tab }
 
 --HH.slot (SProxy :: SProxy "delete") unit DangerChange.component
 --                    { text: "削除"
@@ -74,9 +73,9 @@ initialState input = { formatId: input.formatId, format: Loading, tab: input.tab
 --                    (\_ -> Just Delete)
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  tabPage
+  verticalTabPage
     { tabs:
-        [ FormatMain, FormatPage, FormatVersions, FormatSetting ]
+        [ FormatMain, FormatSetting ]
          -- <> if maybe false (\x -> x.generator == "reactor") (toMaybe state.format) then [ FormatReactor ] else []
     , currentTab: state.tab
     , onChangeTab: ChangeTab
@@ -88,9 +87,6 @@ render state =
           FormatSetting -> "Setting"
           FormatReactor -> "Reactor"
     }
-    [ maybeElem (toMaybe state.format) \x ->
-        menuPositiveButton "コンテンツを作成" (Navigate $ EditDraft $ ContentTarget $ TargetBlank (Just x.space.spaceId) (Just x.currentStructure.structureId))
-    ]
     [ remoteWith state.format \x ->
         HH.div [ css "page-format" ]
           [ HH.div [ css "name" ] [ HH.text x.displayName ]
@@ -122,7 +118,7 @@ handleAction = case _ of
       H.modify_ $ _ { tab = input.tab }
   ChangeTab tab -> do
     state <- H.get
-    navigate $ Format state.formatId tab
+    navigate $ Space state.spaceId $ SpaceFormat state.formatId tab
   Navigate route -> navigate route
   Delete -> do
     state <- H.get

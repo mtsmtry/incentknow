@@ -17,6 +17,8 @@ class NewTypeIdentity<T extends string> {
 
 type NewType<T, Identity extends string> = NewTypeIdentity<Identity> & T;
 
+export type Int = number;
+
 export type NewTypeInt<Identity extends string> = NewType<number, Identity>;
 
 export type NewTypeString<Identity extends string> = NewType<string, Identity>;

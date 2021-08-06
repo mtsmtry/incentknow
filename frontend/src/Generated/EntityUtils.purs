@@ -16,7 +16,7 @@ foreign import getTypeOptions :: E.Type -> TypeOptions
 
 
 type TypeOptions
-  = { format :: Maybe E.FormatId
+  = { format :: Maybe E.FocusedFormat
     , subType :: Maybe E.Type
     , language :: Maybe E.Language
     , properties :: Maybe (Array E.PropertyInfo)

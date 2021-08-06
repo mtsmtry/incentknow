@@ -1,5 +1,27 @@
 import { SelectQueryBuilder } from "typeorm";
 
+/*
+    Typeormは対象となるEntityに対してentitiesを1つにまとめるが、rawに対してはそれが機能しないため、
+    x_idを基準に独自にまとめる。
+*/
+function settleRaw(raws: any[]) {
+    if (raws.length <= 1) {
+        return raws;
+    }
+    if (raws[0].x_id === undefined) {
+        return raws;
+    }
+    const result: any[] = [];
+    let prevId: number | null = null;
+    raws.forEach(raw => {
+        if (prevId != raw.x_id) {
+            result.push(raw);
+        }
+        prevId = raw.x_id;
+    });
+    return result;
+}
+
 class MappedQuery<Entity, Result> {
     constructor(private qb: SelectQueryBuilder<Entity>, private convert: (ent: Entity, raw: any) => Result) {
     }
@@ -19,6 +41,7 @@ class MappedQuery<Entity, Result> {
 
     async getMany() {
         const result = await this.qb.getRawAndEntities();
+        result.raw = settleRaw(result.raw);
         return result.entities.map((ent, i) => this.convert(ent, result.raw[i]));
     }
 
@@ -37,6 +60,7 @@ class MappedQuery<Entity, Result> {
 
     async getManyWithRaw(): Promise<{ result: Result, raw: Entity }[]> {
         const result = await this.qb.getRawAndEntities();
+        result.raw = settleRaw(result.raw);
         return result.entities.map((ent, i) => ({ result: this.convert(ent, result.raw[i]), raw: ent }));
     }
 }

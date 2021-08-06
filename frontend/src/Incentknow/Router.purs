@@ -14,11 +14,10 @@ import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour, Env, GlobalMessage(..), Message)
 import Incentknow.Organisms.Footer as Footer
 import Incentknow.Organisms.Header as Header
-import Incentknow.Pages.Container as Container
 import Incentknow.Pages.Content as Content
+import Incentknow.Pages.Container as Container
 import Incentknow.Pages.DraftList as DraftList
 import Incentknow.Pages.EditDraft as EditDraft
-import Incentknow.Pages.Format as Format
 import Incentknow.Pages.Home as Home
 import Incentknow.Pages.JoinSpace as JoinSpace
 import Incentknow.Pages.NewFormat as NewFormat
@@ -41,14 +40,13 @@ data Action
   = Initialize
 
 type ChildSlots
-  = ( container :: Container.Slot Unit
-    , header :: Header.Slot Unit
-    ,  footer :: Footer.Slot Unit
+  = ( header :: Header.Slot Unit
+    , footer :: Footer.Slot Unit
     , content :: Content.Slot Unit
+    , container :: Container.Slot Unit
     , public :: Public.Slot Unit
     , editDraft :: EditDraft.Slot Unit
     -- , editScraper :: EditScraper.Slot Unit
-    , format :: Format.Slot Unit
     --  , newCommunity :: NewCommunity.Slot Unit
    -- , newContent :: NewContent.Slot Unit
     , newFormat :: NewFormat.Slot Unit
@@ -118,7 +116,6 @@ component =
     --EditWork workId -> HH.slot (SProxy :: SProxy "newContent") unit NewContent.component (NewContent.DraftInput workId) absurd
     --Snapshot workId changeId snapshotDiff -> HH.slot (SProxy :: SProxy "snapshot") unit Snapshot.component { workId, changeId, snapshotDiff } absurd
     --NewContent spaceId formatId -> HH.slot (SProxy :: SProxy "newContent") unit NewContent.component (NewContent.NewInput spaceId formatId) absurd
-    Format formatId tab -> HH.slot (SProxy :: SProxy "format") unit Format.component { formatId, tab } absurd
     --ContentList spaceId formatId urlParams -> HH.slot (SProxy :: SProxy "pageContentQuery") unit PageContentQuery.component { spaceId, formatId, urlParams } absurd
     Container spaceId formatId -> HH.slot (SProxy :: SProxy "container") unit Container.component { spaceId, formatId } absurd
     -- community
@@ -137,12 +134,6 @@ component =
     RivisionList contentId -> HH.text "" --HH.slot (SProxy :: SProxy "rivisionList") unit RivisionList.component { contentId } absurd
     DraftList -> HH.slot (SProxy :: SProxy "draftList") unit DraftList.component { } absurd
 
-  renderLeftWidget = case _ of
-    --ContentList spaceId formatId urlParams -> HH.slot (SProxy :: SProxy "contentQuery") unit ContentQuery.component { spaceId, formatId, urlParams } absurd
-    _ -> HH.text ""
-
-  renderRightWidget route = HH.text "" --case route of
-
   --  EditWork workId -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId, route } absurd
   --  EditContent contentId -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId: WorkId $ unwrap contentId, route } absurd
   --  Snapshot workId _ _ -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId, route } absurd
@@ -152,8 +143,6 @@ component =
     Layout.main
       { header: HH.slot (SProxy :: SProxy "header") unit Header.component { route: state.route } absurd
       , footer: HH.slot (SProxy :: SProxy "footer") unit Footer.component unit absurd
-      , leftSide: renderLeftWidget state.route
-      , rightSide: renderRightWidget state.route
       , messages: state.msgs
       , body:
           HH.div_

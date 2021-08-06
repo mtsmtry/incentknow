@@ -18,6 +18,7 @@ import Incentknow.Data.Entities (ContentChangeType(..), FocusedFormat, RelatedCo
 import Incentknow.Organisms.ListView (ListViewItem)
 import Incentknow.Organisms.ListView as ListView
 import Incentknow.Route (EditContentTarget(..), EditMaterialTarget(..), EditTarget(..), Route(..))
+import Incentknow.Templates.Main (centerLayout)
 import Incentknow.Templates.Page (tabGrouping)
 
 data DraftTab
@@ -101,44 +102,46 @@ toListViewItemFromMaterial draft =
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  tabGrouping
-    { tabs: [ DraftDrafting, DraftCommitted, DraftDeleted, DraftMain ]
-    , onChangeTab: ChangeTab
-    , currentTab: state.tab
-    , showTab:
-        case _ of
-          DraftMain -> "全て"
-          DraftDrafting -> "作業中"
-          DraftCommitted -> "作業終了"
-          DraftDeleted -> "ゴミ箱"
-    }
-    []
-    [ case state.tab of
-        DraftMain ->
-          remoteWith state.drafts \drafts ->
-            remoteWith state.materialDrafts \materialDrafts ->
+  centerLayout { leftSide: [], rightSide: [] }
+    [ tabGrouping
+      { tabs: [ DraftDrafting, DraftCommitted, DraftDeleted, DraftMain ]
+      , onChangeTab: ChangeTab
+      , currentTab: state.tab
+      , showTab:
+          case _ of
+            DraftMain -> "全て"
+            DraftDrafting -> "作業中"
+            DraftCommitted -> "作業終了"
+            DraftDeleted -> "ゴミ箱"
+      }
+      []
+      [ case state.tab of
+          DraftMain ->
+            remoteWith state.drafts \drafts ->
+              remoteWith state.materialDrafts \materialDrafts ->
+                HH.slot (SProxy :: SProxy "listView") unit ListView.component
+                  { items: catMaybes $ (map toListViewItem drafts) <> (map toListViewItemFromMaterial materialDrafts) }
+                  absurd
+          DraftDrafting ->
+            remoteWith state.drafts \drafts ->
+              remoteWith state.materialDrafts \materialDrafts ->
+                HH.slot (SProxy :: SProxy "listView") unit ListView.component
+                  { items: catMaybes $ (map toListViewItem $ filter (\x -> x.isEditing) drafts)
+                    <> (map toListViewItemFromMaterial $ filter (\x -> x.isEditing) materialDrafts) }
+                  absurd
+          DraftCommitted ->
+            remoteWith state.drafts \drafts ->
+              remoteWith state.materialDrafts \materialDrafts ->
+                HH.slot (SProxy :: SProxy "listView") unit ListView.component
+                  { items: catMaybes $ (map toListViewItem $ filter (\x -> not x.isEditing) drafts)
+                    <> (map toListViewItemFromMaterial $ filter (\x -> not x.isEditing) materialDrafts) }
+                  absurd
+          DraftDeleted ->
+            remoteWith state.drafts \drafts ->
               HH.slot (SProxy :: SProxy "listView") unit ListView.component
-                { items: catMaybes $ (map toListViewItem drafts) <> (map toListViewItemFromMaterial materialDrafts) }
+                { items: catMaybes $ map toListViewItem $ filter (\x -> x.changeType == ContentChangeTypeRemove) drafts }
                 absurd
-        DraftDrafting ->
-          remoteWith state.drafts \drafts ->
-            remoteWith state.materialDrafts \materialDrafts ->
-              HH.slot (SProxy :: SProxy "listView") unit ListView.component
-                { items: catMaybes $ (map toListViewItem $ filter (\x -> x.isEditing) drafts)
-                  <> (map toListViewItemFromMaterial $ filter (\x -> x.isEditing) materialDrafts) }
-                absurd
-        DraftCommitted ->
-          remoteWith state.drafts \drafts ->
-            remoteWith state.materialDrafts \materialDrafts ->
-              HH.slot (SProxy :: SProxy "listView") unit ListView.component
-                { items: catMaybes $ (map toListViewItem $ filter (\x -> not x.isEditing) drafts)
-                  <> (map toListViewItemFromMaterial $ filter (\x -> not x.isEditing) materialDrafts) }
-                absurd
-        DraftDeleted ->
-          remoteWith state.drafts \drafts ->
-            HH.slot (SProxy :: SProxy "listView") unit ListView.component
-              { items: catMaybes $ map toListViewItem $ filter (\x -> x.changeType == ContentChangeTypeRemove) drafts }
-              absurd
+      ]
     ]
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit

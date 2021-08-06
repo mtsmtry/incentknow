@@ -1,6 +1,6 @@
 
 import { UserDisplayId, UserId } from "../../entities/user/User";
-import { FocusedUser, IntactAccount, RelatedUser } from "../../interfaces/user/User";
+import { AuthInfo, FocusedUser, IntactAccount, RelatedUser } from "../../interfaces/user/User";
 import { AuthorityRepository } from "../../repositories/implements/space/AuthorityRepository";
 import { UserRepository } from '../../repositories/implements/user/UserDto';
 import { BaseService } from "../BaseService";
@@ -37,12 +37,13 @@ export class UserService extends BaseService {
         return await this.users.fromUsers().byDisplayId(displayId).selectFocused().getNeededOne();
     }
 
-    async authenticate(email: string, password: string): Promise<string> {
+    async authenticate(email: string, password: string): Promise<AuthInfo> {
         const user = await this.users.fromUsers().byEmail(email).getNeededOne();
         if (!PasswordSecurity.compare(password, user.passwordHash)) {
             throw "Wrong password";
         }
-        return SessionSecurity.getToken(user.id);
+        const session = SessionSecurity.getToken(user.id);
+        return { session, userId: user.entityId };
     }
 
     async getFocusedUser(userId: UserId): Promise<FocusedUser> {

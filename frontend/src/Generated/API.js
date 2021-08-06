@@ -23,6 +23,7 @@ async function requestApi(method, args) {
 }
 
 const psObjectLiteral = x => x;
+const psInt = x => x;
 
 function jsContentGenerator(obj) {
                 if(E.ContentGeneratorNone && obj instanceof E.ContentGeneratorNone) {
@@ -678,6 +679,12 @@ obj.format = psRelatedFormat(obj.format);
                     }
                 return obj;}
 
+function jsAdditionalContainerInfo(obj){obj.contentCount = jsInt(obj.contentCount);
+obj.latestUpdatedAt = jsDate(obj.latestUpdatedAt);return obj;}
+
+function psAdditionalContainerInfo(obj){obj.contentCount = psInt(obj.contentCount);
+obj.latestUpdatedAt = psDate(obj.latestUpdatedAt);return obj;}
+
 function jsFocusedContainer(obj){obj.containerId = jsContainerId(obj.containerId);
 obj.space = jsRelatedSpace(obj.space);
 obj.format = jsRelatedFormat(obj.format);
@@ -696,7 +703,9 @@ obj.format = jsRelatedFormat(obj.format);
                         } else {
                             obj.reactor = null;
                         }
-                    return obj;}
+                    
+obj.contentCount = jsInt(obj.contentCount);
+return obj;}
 
 function psFocusedContainer(obj){obj.containerId = psContainerId(obj.containerId);
 obj.space = psRelatedSpace(obj.space);
@@ -716,15 +725,17 @@ obj.format = psRelatedFormat(obj.format);
                     } else {
                         obj.reactor = Data_Maybe.Nothing.value;
                     }
-                return obj;}
+                
+obj.contentCount = psInt(obj.contentCount);
+return obj;}
 
 function jsRelatedContent(obj){obj.contentId = jsContentId(obj.contentId);
 
 
 obj.creatorUser = jsRelatedUser(obj.creatorUser);
 obj.updaterUser = jsRelatedUser(obj.updaterUser);
-
-
+obj.updateCount = jsInt(obj.updateCount);
+obj.viewCount = jsInt(obj.viewCount);
 obj.format = jsFocusedFormat(obj.format);
 return obj;}
 
@@ -733,8 +744,8 @@ function psRelatedContent(obj){obj.contentId = psContentId(obj.contentId);
 
 obj.creatorUser = psRelatedUser(obj.creatorUser);
 obj.updaterUser = psRelatedUser(obj.updaterUser);
-
-
+obj.updateCount = psInt(obj.updateCount);
+obj.viewCount = psInt(obj.viewCount);
 obj.format = psFocusedFormat(obj.format);
 return obj;}
 
@@ -1081,12 +1092,15 @@ function jsRelatedFormat(obj){obj.formatId = jsFormatId(obj.formatId);
 obj.displayId = jsFormatDisplayId(obj.displayId);
 
 
+
+                        if (obj.fontawesome instanceof Data_Maybe.Just) {
+                            obj.fontawesome = obj.fontawesome.value0; 
+                        } else {
+                            obj.fontawesome = null;
+                        }
+                    
 obj.space = jsRelatedSpace(obj.space);
 obj.usage = jsFormatUsage(obj.usage);
-
-obj.creatorUser = jsRelatedUser(obj.creatorUser);
-
-obj.updaterUser = jsRelatedUser(obj.updaterUser);
 
                         if (obj.semanticId instanceof Data_Maybe.Just) {
                             obj.semanticId = obj.semanticId.value0; 
@@ -1094,18 +1108,21 @@ obj.updaterUser = jsRelatedUser(obj.updaterUser);
                             obj.semanticId = null;
                         }
                     
-obj.currentStructure = jsRelatedStructure(obj.currentStructure);return obj;}
+obj.currentStructureId = jsStructureId(obj.currentStructureId);return obj;}
 
 function psRelatedFormat(obj){obj.formatId = psFormatId(obj.formatId);
 obj.displayId = psFormatDisplayId(obj.displayId);
 
 
+
+                    if (obj.fontawesome) {
+                        obj.fontawesome = new Data_Maybe.Just(obj.fontawesome);
+                    } else {
+                        obj.fontawesome = Data_Maybe.Nothing.value;
+                    }
+                
 obj.space = psRelatedSpace(obj.space);
 obj.usage = psFormatUsage(obj.usage);
-
-obj.creatorUser = psRelatedUser(obj.creatorUser);
-
-obj.updaterUser = psRelatedUser(obj.updaterUser);
 
                     if (obj.semanticId) {
                         obj.semanticId = new Data_Maybe.Just(obj.semanticId);
@@ -1113,7 +1130,7 @@ obj.updaterUser = psRelatedUser(obj.updaterUser);
                         obj.semanticId = Data_Maybe.Nothing.value;
                     }
                 
-obj.currentStructure = psRelatedStructure(obj.currentStructure);return obj;}
+obj.currentStructureId = psStructureId(obj.currentStructureId);return obj;}
 
 function jsRelation(obj){obj.property = jsPropertyInfo(obj.property);
 
@@ -1127,6 +1144,13 @@ function jsFocusedFormat(obj){obj.formatId = jsFormatId(obj.formatId);
 obj.displayId = jsFormatDisplayId(obj.displayId);
 
 
+
+                        if (obj.fontawesome instanceof Data_Maybe.Just) {
+                            obj.fontawesome = obj.fontawesome.value0; 
+                        } else {
+                            obj.fontawesome = null;
+                        }
+                    
 obj.space = jsRelatedSpace(obj.space);
 obj.usage = jsFormatUsage(obj.usage);
 
@@ -1152,6 +1176,13 @@ function psFocusedFormat(obj){obj.formatId = psFormatId(obj.formatId);
 obj.displayId = psFormatDisplayId(obj.displayId);
 
 
+
+                    if (obj.fontawesome) {
+                        obj.fontawesome = new Data_Maybe.Just(obj.fontawesome);
+                    } else {
+                        obj.fontawesome = Data_Maybe.Nothing.value;
+                    }
+                
 obj.space = psRelatedSpace(obj.space);
 obj.usage = psFormatUsage(obj.usage);
 
@@ -1251,6 +1282,7 @@ function psEnumerator(obj){
 
 function jsType(obj) {
                 if(E.IntType && obj instanceof E.IntType) {
+                    
                     return {
                         name: "integer",
                         
@@ -1258,6 +1290,7 @@ function jsType(obj) {
                 }
             
                 if(E.BoolType && obj instanceof E.BoolType) {
+                    
                     return {
                         name: "boolean",
                         
@@ -1265,6 +1298,7 @@ function jsType(obj) {
                 }
             
                 if(E.StringType && obj instanceof E.StringType) {
+                    
                     return {
                         name: "string",
                         
@@ -1272,6 +1306,7 @@ function jsType(obj) {
                 }
             
                 if(E.FormatType && obj instanceof E.FormatType) {
+                    
                     return {
                         name: "format",
                         
@@ -1279,6 +1314,7 @@ function jsType(obj) {
                 }
             
                 if(E.SpaceType && obj instanceof E.SpaceType) {
+                    
                     return {
                         name: "space",
                         
@@ -1286,6 +1322,7 @@ function jsType(obj) {
                 }
             
                 if(E.ContentType && obj instanceof E.ContentType) {
+                    obj.value0 = jsFocusedFormat(obj.value0);
                     return {
                         name: "content",
                         format: obj.value0
@@ -1293,6 +1330,7 @@ function jsType(obj) {
                 }
             
                 if(E.UrlType && obj instanceof E.UrlType) {
+                    
                     return {
                         name: "url",
                         
@@ -1300,6 +1338,12 @@ function jsType(obj) {
                 }
             
                 if(E.ObjectType && obj instanceof E.ObjectType) {
+                    
+                            obj.value0 = obj.value0.map(x => {
+                                x = jsPropertyInfo(x);
+                                return x;
+                            });
+                        
                     return {
                         name: "object",
                         properties: obj.value0
@@ -1307,6 +1351,7 @@ function jsType(obj) {
                 }
             
                 if(E.TextType && obj instanceof E.TextType) {
+                    
                     return {
                         name: "text",
                         
@@ -1314,6 +1359,7 @@ function jsType(obj) {
                 }
             
                 if(E.ArrayType && obj instanceof E.ArrayType) {
+                    obj.value0 = jsType(obj.value0);
                     return {
                         name: "array",
                         subType: obj.value0
@@ -1321,6 +1367,7 @@ function jsType(obj) {
                 }
             
                 if(E.CodeType && obj instanceof E.CodeType) {
+                    obj.value0 = jsLanguage(obj.value0);
                     return {
                         name: "code",
                         language: obj.value0
@@ -1328,6 +1375,12 @@ function jsType(obj) {
                 }
             
                 if(E.EnumType && obj instanceof E.EnumType) {
+                    
+                            obj.value0 = obj.value0.map(x => {
+                                x = jsEnumerator(x);
+                                return x;
+                            });
+                        
                     return {
                         name: "enumerator",
                         enumerators: obj.value0
@@ -1335,6 +1388,7 @@ function jsType(obj) {
                 }
             
                 if(E.DocumentType && obj instanceof E.DocumentType) {
+                    
                     return {
                         name: "document",
                         
@@ -1342,6 +1396,7 @@ function jsType(obj) {
                 }
             
                 if(E.ImageType && obj instanceof E.ImageType) {
+                    
                     return {
                         name: "image",
                         
@@ -1349,6 +1404,7 @@ function jsType(obj) {
                 }
             
                 if(E.EntityType && obj instanceof E.EntityType) {
+                    obj.value0 = jsFocusedFormat(obj.value0);
                     return {
                         name: "entity",
                         format: obj.value0
@@ -1367,25 +1423,35 @@ return new E.FormatType();
 case "space":
 return new E.SpaceType();
 case "content":
-return new E.ContentType(obj.format);
+obj.format = psFocusedFormat(obj.format);return new E.ContentType(obj.format);
 case "url":
 return new E.UrlType();
 case "object":
-return new E.ObjectType(obj.properties);
+
+                        obj.properties = obj.properties.map(x => {
+                            x = psPropertyInfo(x);
+                            return x;
+                        });
+                    return new E.ObjectType(obj.properties);
 case "text":
 return new E.TextType();
 case "array":
-return new E.ArrayType(obj.subType);
+obj.subType = psType(obj.subType);return new E.ArrayType(obj.subType);
 case "code":
-return new E.CodeType(obj.language);
+obj.language = psLanguage(obj.language);return new E.CodeType(obj.language);
 case "enumerator":
-return new E.EnumType(obj.enumerators);
+
+                        obj.enumerators = obj.enumerators.map(x => {
+                            x = psEnumerator(x);
+                            return x;
+                        });
+                    return new E.EnumType(obj.enumerators);
 case "document":
 return new E.DocumentType();
 case "image":
 return new E.ImageType();
 case "entity":
-return new E.EntityType(obj.format);
+obj.format = psFocusedFormat(obj.format);return new E.EntityType(obj.format);
 }}
 
 function jsRelatedStructure(obj){obj.formatId = jsFormatId(obj.formatId);
@@ -1559,9 +1625,11 @@ return obj;}
 function jsRelatedMaterialDraft(obj){obj.draftId = jsMaterialDraftId(obj.draftId);
 
 
+
 return obj;}
 
 function psRelatedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId);
+
 
 
 return obj;}
@@ -1591,6 +1659,7 @@ function jsFocusedMaterialDraft(obj){obj.draftId = jsMaterialDraftId(obj.draftId
                             obj.basedCommitId = null;
                         }
                     
+
 return obj;}
 
 function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId);
@@ -1618,6 +1687,7 @@ function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
                 
+
 return obj;}
 
 function jsMaterialNodeType(obj) {
@@ -1746,11 +1816,13 @@ obj.state = psReactorState(obj.state);
 
 obj.creatorUser = psRelatedUser(obj.creatorUser);return obj;}
 
-function jsAdditionalSpaceInfo(obj){
+function jsAdditionalSpaceInfo(obj){obj.containerCount = jsInt(obj.containerCount);
+
 
 return obj;}
 
-function psAdditionalSpaceInfo(obj){
+function psAdditionalSpaceInfo(obj){obj.containerCount = psInt(obj.containerCount);
+
 
 return obj;}
 
@@ -1802,9 +1874,10 @@ obj.creatorUser = jsRelatedUser(obj.creatorUser);
 
 obj.membershipMethod = jsMembershipMethod(obj.membershipMethod);
 obj.defaultAuthority = jsSpaceAuth(obj.defaultAuthority);
-
-
-return obj;}
+obj.containerCount = jsInt(obj.containerCount);
+obj.memberCount = jsInt(obj.memberCount);
+obj.contentCount = jsInt(obj.contentCount);
+obj.formatCount = jsInt(obj.formatCount);return obj;}
 
 function psFocusedSpace(obj){obj.spaceId = psSpaceId(obj.spaceId);
 obj.displayId = psSpaceDisplayId(obj.displayId);
@@ -1822,9 +1895,10 @@ obj.creatorUser = psRelatedUser(obj.creatorUser);
 
 obj.membershipMethod = psMembershipMethod(obj.membershipMethod);
 obj.defaultAuthority = psSpaceAuth(obj.defaultAuthority);
-
-
-return obj;}
+obj.containerCount = psInt(obj.containerCount);
+obj.memberCount = psInt(obj.memberCount);
+obj.contentCount = psInt(obj.contentCount);
+obj.formatCount = psInt(obj.formatCount);return obj;}
 
 function jsIntactSpaceMember(obj){obj.user = jsRelatedUser(obj.user);
 
@@ -1914,6 +1988,12 @@ obj.displayId = psUserDisplayId(obj.displayId);
                 
 return obj;}
 
+function jsAuthInfo(obj){
+obj.userId = jsUserId(obj.userId);return obj;}
+
+function psAuthInfo(obj){
+obj.userId = psUserId(obj.userId);return obj;}
+
 exports.__getContainers = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
@@ -1921,7 +2001,7 @@ exports.__getContainers = (() => {return async function (spaceId) {
                 let result = await requestApi("getContainers", argObject);
                 
                         result = result.map(x => {
-                            x = psRelatedContainer(x);
+                            x = psFocusedContainer(x);
                             return x;
                         });
                     
@@ -1946,6 +2026,7 @@ return (E.Move || { value: null }).value;
 
 function jsMaterialComposition(obj) {
                 if(E.CreationMaterialComposition && obj instanceof E.CreationMaterialComposition) {
+                    ;
                     return {
                         type: "creation",
                         propertyId: obj.value0,data: obj.value1
@@ -1953,6 +2034,7 @@ function jsMaterialComposition(obj) {
                 }
             
                 if(E.MoveMaterialComposition && obj instanceof E.MoveMaterialComposition) {
+                    obj.value0 = jsMaterialId(obj.value0);
                     return {
                         type: "move",
                         materialId: obj.value0
@@ -1961,9 +2043,9 @@ function jsMaterialComposition(obj) {
             }
 
 function psMaterialComposition(obj) {switch(obj.type){case "creation":
-return new E.CreationMaterialComposition(obj.propertyId,obj.data);
+;return new E.CreationMaterialComposition(obj.propertyId,obj.data);
 case "move":
-return new E.MoveMaterialComposition(obj.materialId);
+obj.materialId = psMaterialId(obj.materialId);return new E.MoveMaterialComposition(obj.materialId);
 }}
 
 exports.__startContentEditing = (() => {return (contentId) => {return async function (basedCommitId) {
@@ -2140,6 +2222,19 @@ exports.__getContentCommit = (() => {return async function (commitId) {
                 result = psFocusedContentCommit(result);
                 return result;};})();
 
+exports.__getSpaceLatestContents = (() => {return async function (spaceId) {
+                let argObject = { spaceId };
+                argObject.spaceId = jsSpaceId(argObject.spaceId);
+                argObject = [ argObject.spaceId ];
+                let result = await requestApi("getSpaceLatestContents", argObject);
+                
+                        result = result.map(x => {
+                            x = psRelatedContent(x);
+                            return x;
+                        });
+                    
+                return result;};})();
+
 
                 exports.__createFormat = (() => {return async function (argObject) {
                     argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.usage = jsFormatUsage(argObject.usage);
@@ -2233,6 +2328,44 @@ exports.__updateFormatStructure = (() => {return (formatId) => {return async fun
                 let result = await requestApi("updateFormatStructure", argObject);
                 
                 return result;}};})();
+
+exports.__setFormatDisplayName = (() => {return (formatId) => {return async function (displayName) {
+                let argObject = { formatId,displayName };
+                argObject.formatId = jsFormatId(argObject.formatId);
+                argObject = [ argObject.formatId,argObject.displayName ];
+                let result = await requestApi("setFormatDisplayName", argObject);
+                
+                return result;}};})();
+
+exports.__setFormatDisplayId = (() => {return (formatId) => {return async function (displayId) {
+                let argObject = { formatId,displayId };
+                argObject.formatId = jsFormatId(argObject.formatId);argObject.displayId = jsFormatDisplayId(argObject.displayId);
+                argObject = [ argObject.formatId,argObject.displayId ];
+                let result = await requestApi("setFormatDisplayId", argObject);
+                
+                return result;}};})();
+
+exports.__setFormatFontawesome = (() => {return (formatId) => {return async function (fontawesome) {
+                let argObject = { formatId,fontawesome };
+                argObject.formatId = jsFormatId(argObject.formatId);
+                        if (argObject.fontawesome instanceof Data_Maybe.Just) {
+                            argObject.fontawesome = argObject.fontawesome.value0; 
+                        } else {
+                            argObject.fontawesome = null;
+                        }
+                    
+                argObject = [ argObject.formatId,argObject.fontawesome ];
+                let result = await requestApi("setFormatFontawesome", argObject);
+                
+                return result;}};})();
+
+exports.__getAvailableFormatDisplayId = (() => {return async function (formatDisplayId) {
+                let argObject = { formatDisplayId };
+                argObject.formatDisplayId = jsFormatDisplayId(argObject.formatDisplayId);
+                argObject = [ argObject.formatDisplayId ];
+                let result = await requestApi("getAvailableFormatDisplayId", argObject);
+                
+                return result;};})();
 
 exports.__startMaterialEditing = (() => {return (materialId) => {return async function (basedCommitId) {
                 let argObject = { materialId,basedCommitId };
@@ -2379,19 +2512,6 @@ exports.__getSpace = (() => {return async function (spaceDisplayId) {
                 result = psFocusedSpace(result);
                 return result;};})();
 
-
-                exports.__getMySpaces = (() => { return async function () { 
-                    let result = await requestApi("getMySpaces", []);
-                    
-                        result = result.map(x => {
-                            x = psRelatedSpace(x);
-                            return x;
-                        });
-                    
-                    return result;
-                }})()();
-            
-
 exports.__getRelatedSpace = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
@@ -2433,6 +2553,32 @@ exports.__getAvailableSpaceDisplayId = (() => {return async function (spaceDispl
                 let result = await requestApi("getAvailableSpaceDisplayId", argObject);
                 
                 return result;};})();
+
+
+                exports.__getCandidateSpaces = (() => { return async function () { 
+                    let result = await requestApi("getCandidateSpaces", []);
+                    
+                        result = result.map(x => {
+                            x = psRelatedSpace(x);
+                            return x;
+                        });
+                    
+                    return result;
+                }})()();
+            
+
+
+                exports.__getMySpaces = (() => { return async function () { 
+                    let result = await requestApi("getMySpaces", []);
+                    
+                        result = result.map(x => {
+                            x = psFocusedSpace(x);
+                            return x;
+                        });
+                    
+                    return result;
+                }})()();
+            
 
 
                 exports.__getFollowingSpaces = (() => { return async function () { 
@@ -2584,7 +2730,7 @@ exports.__getUser = (() => {return async function (displayId) {
                     
                     let args = [ argObject.email,argObject.password ];
                     let result = await requestApi("authenticate", args);
-                    
+                    result = psAuthInfo(result);
                     return result;
                 } })();
             

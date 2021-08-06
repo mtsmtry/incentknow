@@ -57,8 +57,8 @@ render state =
   renderContent :: Int -> RelatedContent -> H.ComponentHTML Action ChildSlots m
   renderContent index item =
     section "page-content"
-      [ HH.slot (SProxy :: SProxy "contentViewer") index ContentViewer.component 
-          { format: item.format, value: item.data } absurd
+      [ --HH.slot (SProxy :: SProxy "contentViewer") index ContentViewer.component 
+        --  { format: item.format, value: item.data } absurd
       ]
 
 handleAction :: forall o s m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit

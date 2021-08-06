@@ -106,6 +106,6 @@ handleAction = case _ of
             , description: state.description
             }
     for_ response \displayId -> do
-      navigate $ Space displayId SpaceContainers
+      navigate $ Space displayId SpaceHome
       message $ Success "スペースの作成に成功しました"
     H.modify_ _ { loading = false }

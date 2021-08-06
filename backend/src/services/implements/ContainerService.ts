@@ -1,5 +1,5 @@
 import { SpaceAuth, SpaceId } from "../../entities/space/Space";
-import { RelatedContainer } from "../../interfaces/container/Container";
+import { FocusedContainer } from "../../interfaces/container/Container";
 import { ContainerRepository } from "../../repositories/implements/container/ContainerRepository";
 import { AuthorityRepository } from "../../repositories/implements/space/AuthorityRepository";
 import { BaseService } from "../BaseService";
@@ -14,12 +14,12 @@ export class ContainerService extends BaseService {
         super(ctx);
     }
 
-    async getContainers(spaceId: SpaceId): Promise<RelatedContainer[]> {
+    async getContainers(spaceId: SpaceId): Promise<FocusedContainer[]> {
         const userId = this.ctx.getAuthorized();
         const [auth, space] = await this.auth.fromAuths().getSpaceAuth(SpaceAuth.VISIBLE, userId, spaceId);
         if (!auth) {
             throw new LackOfAuthority();
         }
-        return await this.containers.fromContainers().bySpace(space.id).selectRelated().getMany();
+        return await this.containers.fromContainers().bySpace(space.id).selectFocused().getMany();
     }
 }

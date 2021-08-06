@@ -34,8 +34,9 @@ data FormatTab
   | FormatReactor
 
 data SpaceTab
-  = SpaceContainers
-  | SpaceFormats
+  = SpaceHome
+  | SpaceContainers
+  | SpaceFormat FormatDisplayId FormatTab
   | SpaceMembers
   | SpaceCrawlers
   | SpaceSetting
@@ -102,7 +103,6 @@ data Route
   | RivisionList ContentId
   -- | Snapshot ContentDraftId SnapshotDiff
   | NewSpace
-  | Format FormatDisplayId FormatTab
  -- | NewCrawler
  -- | Crawler CrawlerId CrawlerTab
   | NotFound
@@ -172,17 +172,17 @@ routeToPath = case _ of
   -- space
   NewSpace -> "/spaces/new"
   EditScraper id -> "/contents/" <> unwrap id <> "/edit/scraper"
-  Space id SpaceContainers -> "/spaces/" <> unwrap id
-  Space id SpaceFormats -> "/spaces/" <> unwrap id <> "/formats"
+  Space id SpaceHome -> "/spaces/" <> unwrap id
+  Space id SpaceContainers -> "/spaces/" <> unwrap id <> "/formats"
   Space id SpaceMembers -> "/spaces/" <> unwrap id <> "/members"
   Space id SpaceCrawlers -> "/spaces/" <> unwrap id <> "/crawlers"
   Space id SpaceSetting -> "/spaces/" <> unwrap id <> "/setting"
   -- format
-  Format id FormatMain -> "/formats/" <> unwrap id
-  Format id FormatPage -> "/formats/" <> unwrap id <> "/page"
-  Format id FormatVersions -> "/formats/" <> unwrap id <> "/versions"
-  Format id FormatSetting -> "/formats/" <> unwrap id <> "/setting"
-  Format id FormatReactor -> "/formats/" <> unwrap id <> "/reactor"
+  Space id (SpaceFormat formatId FormatMain) -> "/spaces/" <> unwrap id <> "/formats/" <> unwrap formatId
+  Space id (SpaceFormat formatId FormatPage) -> "/spaces/" <> unwrap id <> "/formats/" <> unwrap formatId <> "/page"
+  Space id (SpaceFormat formatId FormatVersions) -> "/spaces/" <> unwrap id <> "/formats/" <> unwrap formatId <> "/versions"
+  Space id (SpaceFormat formatId FormatSetting) -> "/spaces/" <> unwrap id <> "/formats/" <> unwrap formatId <> "/setting"
+  Space id (SpaceFormat formatId FormatReactor) -> "/spaces/" <> unwrap id <> "/formats/" <> unwrap formatId <> "/reactor"
   -- crawler
   --NewCrawler -> "/crawlers/new"
   --Crawler id CrawlerMain -> "/crawlers/" <> unwrap id
@@ -254,16 +254,16 @@ matchRoute =
         , ContentBySemanticId <$> (lit "contents" *> (map FormatId str)) <*> (map SemanticId str) <* end
         --, ContentList <$ lit "contents" <*> space <*> format <*> matchParams <* end
         -- format
-        , (flip Format FormatMain) <$> (map wrap $ lit "formats" *> str <* end)
-        , (flip Format FormatPage) <$> (map wrap $ lit "formats" *> str <* lit "page" <* end)
-        , (flip Format FormatVersions) <$> (map wrap $ lit "formats" *> str <* lit "versions" <* end)
-        , (flip Format FormatSetting) <$> (map wrap $ lit "formats" *> str <* lit "setting" <* end)
-        , (flip Format FormatReactor) <$> (map wrap $ lit "formats" *> str <* lit "reactor" <* end)
+        , (\x-> \y-> Space x $ SpaceFormat y FormatMain) <$> (map wrap $ lit "spaces" *> str) <*> (map wrap $ lit "formats" *> str <* end)
+        , (\x-> \y-> Space x $ SpaceFormat y FormatPage) <$> (map wrap $ lit "spaces" *> str) <*> (map wrap $ lit "page" *> str <* end)
+        , (\x-> \y-> Space x $ SpaceFormat y FormatVersions) <$> (map wrap $ lit "spaces" *> str) <*> (map wrap $ lit "versions" *> str <* end)
+        , (\x-> \y-> Space x $ SpaceFormat y FormatSetting) <$> (map wrap $ lit "spaces" *> str) <*> (map wrap $ lit "setting" *> str <* end)
+        , (\x-> \y-> Space x $ SpaceFormat y FormatReactor) <$> (map wrap $ lit "spaces" *> str) <*> (map wrap $ lit "reactor" *> str <* end)
         -- spaces
         , NewSpace <$ (lit "spaces" <* lit "new")
         , NewFormat <$> (map SpaceId $ lit "spaces" *> str <* lit "formats" <* lit "new" <* end)
-        , (flip Space SpaceContainers) <$> (map wrap $ lit "spaces" *> str <* end)
-        , (flip Space SpaceFormats) <$> (map wrap $ lit "spaces" *> str <* lit "formats" <* end)
+        , (flip Space SpaceHome) <$> (map wrap $ lit "spaces" *> str <* end)
+        , (flip Space SpaceContainers) <$> (map wrap $ lit "spaces" *> str <* lit "formats" <* end)
         , (flip Space SpaceMembers) <$> (map wrap $ lit "spaces" *> str <* lit "members" <* end)
         , (flip Space SpaceSetting) <$> (map wrap $ lit "spaces" *> str <* lit "setting" <* end)
        -- , (\x -> \y -> Composition x y "") <$> (lit "spaces" *> (map SpaceId str)) <*> (map FormatId str)

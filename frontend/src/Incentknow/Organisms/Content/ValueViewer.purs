@@ -19,16 +19,21 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.AppM (class Behaviour)
+import Incentknow.API (getRelatedFormat)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
+import Incentknow.AppM (class Behaviour, navigateRoute)
+import Incentknow.Atoms.Icon (icon, iconSolid, remoteWith, typeIcon)
 import Incentknow.Atoms.Inputs (button, numberarea, textarea)
-import Incentknow.Data.Entities (Type(..))
+import Incentknow.Data.Entities (Type(..), RelatedFormat)
+import Incentknow.Data.EntityUtils (getTypeName)
 import Incentknow.Data.Ids (FormatId(..), PropertyId)
 import Incentknow.Data.Property (Property, encodeProperties, mkProperties)
-import Incentknow.HTML.Utils (maybeElem)
+import Incentknow.HTML.Utils (css, link, maybeElem)
 import Incentknow.Molecules.AceEditor as AceEditor
 import Incentknow.Molecules.ContentLink as ContentLink
 import Incentknow.Organisms.Material.Viewer as Material
-import Incentknow.Route (ContentSpec(..))
+import Incentknow.Route (ContentSpec(..), FormatTab(..), Route(..), SpaceTab(..))
+import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
   = { value :: Json, type :: Type }
@@ -37,7 +42,9 @@ type State
   = { value :: Json, type :: Type }
 
 data Action
-  = HandleInput Input
+  = Initialize
+  | HandleInput Input
+  | Navigate MouseEvent Route
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -58,7 +65,8 @@ component =
     , eval:
         H.mkEval
           H.defaultEval
-            { handleAction = handleAction
+            { initialize = Just Initialize
+            , handleAction = handleAction
             , receive = Just <<< HandleInput
             }
     }
@@ -88,8 +96,8 @@ render state = case state.type of
   ContentType formatId -> case toString state.value of
     Just contentId -> HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value: ContentSpecContentId $ wrap contentId } absurd
     Nothing -> HH.text ""
-  EntityType formatId -> case toString state.value of
-    Just semanticId -> HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value: ContentSpecSemanticId formatId $ wrap semanticId } absurd
+  EntityType format -> case toString state.value of
+    Just semanticId -> HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value: ContentSpecSemanticId format.formatId $ wrap semanticId } absurd
     Nothing -> HH.text ""
   DocumentType ->
     HH.slot (SProxy :: SProxy "material") unit Material.component { value: map wrap $ toString state.value } absurd
@@ -99,17 +107,31 @@ render state = case state.type of
     renderItem num item = HH.slot (SProxy :: SProxy "value") num component { value: fromMaybe jsonNull $ index array num, type: subType } absurd
 
     array = fromMaybe [] $ toArray state.value
-  ObjectType propInfos -> HH.div_ $ map renderProperty props
+  ObjectType propInfos -> HH.table_ [ HH.tbody_ $ map renderProperty props ]
     where
     props = mkProperties state.value propInfos
 
     renderProperty :: Property -> H.ComponentHTML Action ChildSlots m
     renderProperty prop =
-      HH.dl
+      HH.tr
         []
-        [ HH.dt []
-            [ HH.label_ [ HH.text prop.info.displayName ] ]
-        , HH.dd []
+        [ HH.th [ css "property-type" ]
+            ( case prop.info.type of
+                ContentType format -> 
+                  [ link Navigate (Space format.space.displayId $ SpaceFormat format.displayId FormatMain)
+                      []
+                      [ case format.fontawesome of
+                          Just i -> iconSolid i
+                          Nothing -> icon "fas fa-file"
+                      , HH.text prop.info.displayName
+                      ]
+                  ]
+                ty ->
+                  [ typeIcon $ getTypeName ty
+                  , HH.text prop.info.displayName
+                  ]
+            )
+        , HH.th [ css "property-value" ]
             [ HH.slot (SProxy :: SProxy "property") prop.info.id component { value: prop.value, type: prop.info.type } absurd ]
         ]
   ImageType ->
@@ -125,4 +147,8 @@ render state = case state.type of
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
-  HandleInput input -> H.put $ initialState input
+  Initialize -> pure unit
+  HandleInput input -> do
+    H.put $ initialState input
+    handleAction Initialize
+  Navigate e route -> navigateRoute e route

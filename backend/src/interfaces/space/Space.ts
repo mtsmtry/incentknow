@@ -1,4 +1,5 @@
 import { MembershipMethod, Space, SpaceAuth } from "../../entities/space/Space";
+import { Int } from "../../Implication";
 import { RelatedUser, toRelatedUser } from "../user/User";
 import { toTimestamp } from "../Utils";
 
@@ -7,6 +8,7 @@ export type SpaceId = string;
 export type SpaceDisplayId = string;
 
 export interface AdditionalSpaceInfo {
+    containerCount: Int;
     memberCount: number;
     contentCount: number;
     formatCount: number;
@@ -49,9 +51,10 @@ export interface FocusedSpace {
     published: boolean;
     membershipMethod: MembershipMethod;
     defaultAuthority: SpaceAuth;
-    memberCount: number;
-    contentCount: number;
-    formatCount: number;
+    containerCount: Int;
+    memberCount: Int;
+    contentCount: Int;
+    formatCount: Int;
 }
 
 export function toFocusedSpace(space: Space, additional: AdditionalSpaceInfo): FocusedSpace {
@@ -66,6 +69,9 @@ export function toFocusedSpace(space: Space, additional: AdditionalSpaceInfo): F
         published: space.published,
         membershipMethod: space.membershipMethod,
         defaultAuthority: space.defaultAuthority,
-        ...additional
+        containerCount: additional.containerCount,
+        memberCount: additional.memberCount,
+        contentCount: additional.contentCount,
+        formatCount: additional.formatCount
     };
 }

@@ -18,9 +18,9 @@ import Incentknow.API.Execution (__queryAPI, __commandAPI, QueryAPI, CommandAPI)
 
 
 foreign import __getContainers :: 
-  E.SpaceId -> Promise (Array E.RelatedContainer)
+  E.SpaceId -> Promise (Array E.FocusedContainer)
 
-getContainers :: E.SpaceId -> QueryAPI (Array E.RelatedContainer)
+getContainers :: E.SpaceId -> QueryAPI (Array E.FocusedContainer)
 getContainers x0 = __queryAPI "getContainers" $ __getContainers x0
 
 
@@ -151,6 +151,14 @@ getContentCommit x0 = __queryAPI "getContentCommit" $ __getContentCommit x0
 
 
 
+foreign import __getSpaceLatestContents :: 
+  E.SpaceId -> Promise (Array E.RelatedContent)
+
+getSpaceLatestContents :: E.SpaceId -> QueryAPI (Array E.RelatedContent)
+getSpaceLatestContents x0 = __queryAPI "getSpaceLatestContents" $ __getSpaceLatestContents x0
+
+
+
 ---------------------------------------------------------
 --  FormatService
 ---------------------------------------------------------
@@ -239,6 +247,38 @@ foreign import __updateFormatStructure ::
 
 updateFormatStructure :: E.FormatId -> Array E.PropertyInfo -> CommandAPI {}
 updateFormatStructure x0 x1 = __commandAPI "updateFormatStructure" $ __updateFormatStructure x0 x1
+
+
+
+foreign import __setFormatDisplayName :: 
+  E.FormatId -> String -> Promise {}
+
+setFormatDisplayName :: E.FormatId -> String -> CommandAPI {}
+setFormatDisplayName x0 x1 = __commandAPI "setFormatDisplayName" $ __setFormatDisplayName x0 x1
+
+
+
+foreign import __setFormatDisplayId :: 
+  E.FormatId -> E.FormatDisplayId -> Promise {}
+
+setFormatDisplayId :: E.FormatId -> E.FormatDisplayId -> CommandAPI {}
+setFormatDisplayId x0 x1 = __commandAPI "setFormatDisplayId" $ __setFormatDisplayId x0 x1
+
+
+
+foreign import __setFormatFontawesome :: 
+  E.FormatId -> Maybe String -> Promise {}
+
+setFormatFontawesome :: E.FormatId -> Maybe String -> CommandAPI {}
+setFormatFontawesome x0 x1 = __commandAPI "setFormatFontawesome" $ __setFormatFontawesome x0 x1
+
+
+
+foreign import __getAvailableFormatDisplayId :: 
+  E.FormatDisplayId -> Promise Boolean
+
+getAvailableFormatDisplayId :: E.FormatDisplayId -> QueryAPI Boolean
+getAvailableFormatDisplayId x0 = __queryAPI "getAvailableFormatDisplayId" $ __getAvailableFormatDisplayId x0
 
 
 
@@ -367,14 +407,6 @@ getSpace x0 = __queryAPI "getSpace" $ __getSpace x0
 
 
 
-foreign import __getMySpaces :: 
-  Promise (Array E.RelatedSpace)
-
-getMySpaces :: QueryAPI (Array E.RelatedSpace)
-getMySpaces  = __queryAPI "getMySpaces" $ __getMySpaces 
-
-
-
 foreign import __getRelatedSpace :: 
   E.SpaceId -> Promise E.RelatedSpace
 
@@ -404,6 +436,22 @@ foreign import __getAvailableSpaceDisplayId ::
 
 getAvailableSpaceDisplayId :: E.SpaceDisplayId -> QueryAPI Boolean
 getAvailableSpaceDisplayId x0 = __queryAPI "getAvailableSpaceDisplayId" $ __getAvailableSpaceDisplayId x0
+
+
+
+foreign import __getCandidateSpaces :: 
+  Promise (Array E.RelatedSpace)
+
+getCandidateSpaces :: QueryAPI (Array E.RelatedSpace)
+getCandidateSpaces  = __queryAPI "getCandidateSpaces" $ __getCandidateSpaces 
+
+
+
+foreign import __getMySpaces :: 
+  Promise (Array E.FocusedSpace)
+
+getMySpaces :: QueryAPI (Array E.FocusedSpace)
+getMySpaces  = __queryAPI "getMySpaces" $ __getMySpaces 
 
 
 
@@ -554,13 +602,13 @@ foreign import __authenticate ::
   { email :: String
   , password :: String
   }
-  -> Promise String
+  -> Promise E.AuthInfo
 
 authenticate :: 
   { email :: String
   , password :: String
   }
-  -> CommandAPI String
+  -> CommandAPI E.AuthInfo
 authenticate x0 = __commandAPI "authenticate" $ __authenticate x0
 
 

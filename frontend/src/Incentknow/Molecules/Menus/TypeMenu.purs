@@ -13,7 +13,8 @@ import Effect.Class (class MonadEffect, liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (Language(..), Type(..), TypeName(..))
+import Incentknow.Atoms.Icon (typeIcon)
+import Incentknow.Data.Entities (Language(..), RelatedFormat, Type(..), TypeName(..), FocusedFormat)
 import Incentknow.Data.EntityUtils (TypeOptions, buildType, defaultTypeOptions, getTypeName, getTypeOptions)
 import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.Data.Property (Enumerator)
@@ -128,9 +129,25 @@ toSelectMenuItem format =
       , HH.div [ css "desc" ] [ HH.text format.desc ]
       ]
 
+toSelectMenuItemFromType :: forall a. Item TypeName -> SelectMenuItem TypeName
+toSelectMenuItemFromType format =
+  { id: format.id
+  , name: format.name
+  , searchWord: format.name
+  , html
+  }
+  where
+  html :: forall a s m. H.ComponentHTML a s m
+  html =
+    HH.div []
+      [ typeIcon format.id
+      , HH.div [ css "name" ] [ HH.text format.name ]
+      , HH.div [ css "desc" ] [ HH.text format.desc ]
+      ]
+
 initialState :: Input -> State
 initialState input =
-  { typeNameItems: map toSelectMenuItem $ filter (\x -> notElem x.id input.exceptions) typeItems
+  { typeNameItems: map toSelectMenuItemFromType $ filter (\x -> notElem x.id input.exceptions) typeItems
   , langNameItems: map toSelectMenuItem langItems
   , typeName: map getTypeName input.value
   , typeOptions: maybe defaultTypeOptions getTypeOptions input.value
@@ -160,7 +177,7 @@ render state =
                   { value: state.selectedSpaceId, disabled: false }
                   (Just <<< ChangeSpace)
             , HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component
-                { value: state.typeOptions.format, filter: maybe FormatMenu.None FormatMenu.SpaceBy state.selectedSpaceId, disabled: state.disabled }
+                { value: map _.formatId state.typeOptions.format, filter: maybe FormatMenu.None FormatMenu.SpaceBy state.selectedSpaceId, disabled: state.disabled }
                 (Just <<< ChangeFormat)
             ]
         Just TypeNameEntity ->
@@ -170,7 +187,7 @@ render state =
                   { value: state.selectedSpaceId, disabled: false }
                   (Just <<< ChangeSpace)
             , HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component
-                { value: state.typeOptions.format, filter: maybe FormatMenu.None FormatMenu.SpaceByAndHasSemanticId state.selectedSpaceId, disabled: state.disabled }
+                { value: map _.formatId state.typeOptions.format, filter: maybe FormatMenu.None FormatMenu.SpaceByAndHasSemanticId state.selectedSpaceId, disabled: state.disabled }
                 (Just <<< ChangeFormat)
             ]
         Just TypeNameCode ->
@@ -207,17 +224,16 @@ raiseOrModify state = case buildReturnType state of
     when (isNothing value) $ H.put state
   Nothing -> H.put state
 
+foreign import toRelatedFormat :: FormatId -> FocusedFormat
+
 handleAction :: forall m. MonadEffect m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
   Initialize -> pure unit
   HandleInput input -> do
     when (isJust input.value) $ H.put $ initialState input
-    state <- H.get
-    liftEffect $ consoleLog $ "TypeMenu.HandleInput:" <> maybe "Nothing" unwrap state.typeOptions.format
   ChangeFormat formatId -> do    
-    liftEffect $ consoleLog $ "TypeMenu.ChangeFormat:" <> maybe "Nothing" unwrap formatId
     state <- H.get
-    raiseOrModify $ state { typeOptions = state.typeOptions { format = formatId } }
+    raiseOrModify $ state { typeOptions = state.typeOptions { format = map toRelatedFormat formatId } }
   ChangeTypeName typeName -> do
     state <- H.get
     raiseOrModify $ state { typeName = typeName }

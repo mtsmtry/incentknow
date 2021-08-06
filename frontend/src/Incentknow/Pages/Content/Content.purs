@@ -15,15 +15,17 @@ import Halogen.HTML as HH
 import Incentknow.API (getContent)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forItem, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute, pushState)
+import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (button)
 import Incentknow.Data.Content (getContentSemanticData)
-import Incentknow.Data.Entities (FocusedContent)
+import Incentknow.Data.Entities (FocusedContent, Relation)
 import Incentknow.HTML.Utils (css, link_, maybeElem)
 import Incentknow.Organisms.Content.Viewer as Content
 import Incentknow.Organisms.RelatedContents as RelatedContents
 import Incentknow.Organisms.UserCard as UserCard
 import Incentknow.Route (ContentSpec(..), EditContentTarget(..), EditTarget(..), Route(..))
 import Incentknow.Route as R
+import Incentknow.Templates.Main (centerLayout)
 import Incentknow.Templates.Page (section, tabPage)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
@@ -79,58 +81,24 @@ initialState input =
   , contentSubId: Nothing
   }
 
-renderContent :: forall m. Behaviour m => MonadAff m => FocusedContent -> H.ComponentHTML Action ChildSlots m
-renderContent content =
-  section "page-content"
-    [ HH.div [ css "header" ]
-        [ HH.slot (SProxy :: SProxy "userCard") unit UserCard.component { user: content.creatorUser, timestamp: content.createdAt } absurd
-        , HH.div [ css "space" ] []
-        , HH.div [ css "buttons" ]
-            [ HH.div [ css "container" ]
-                [ HH.div [ css "rivision" ] [ link_ Navigate (RivisionList content.contentId) [ HH.text "リビジョン" ] ]
-                , HH.div [ css "edit" ] [ button "編集" $ NavigateRoute $ EditDraft $ ContentTarget $ TargetContent content.contentId ]
-                ]
-            ]
-        ]
-    , HH.slot (SProxy :: SProxy "content") unit Content.component { format: content.format, value: content.data } absurd
-    ]
-
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  maybeElem (toMaybe state.content) \content ->
-    --if length content.format.contentPage.relations == 0 then
-    --  renderContent content
-    --else
-      tabPage
-        { tabs: [ "main" ] <> map (\x-> x.property.displayName) content.format.relations -- <> (map show $ range 0 $ length content.format.contentPage.relations - 1)
-        , currentTab: state.tab
-        , onChangeTab: ChangeTab
-        , showTab:
-            \x ->
-              if x == "main" then
-                "Main"
-              else
-                x -- maybe "Error" (\r -> r.displayName) $ index content.format.contentPage.relations (fromMaybe 0 (fromString x))
-        }
-        []
-        [ HH.text (getContentSemanticData content.data content.format).title
+  remoteWith state.content \content->
+    centerLayout { leftSide: [], rightSide: [] }
+      [ HH.div [ css "page-content" ]
+        [ HH.slot (SProxy :: SProxy "content") unit Content.component { content } absurd
+        , HH.div [] (map (renderRelation content) content.format.relations)
         ]
-        [ if state.tab == "main" then
-            renderContent content
-          else
-            case (head $ filter (\x-> x.property.displayName == state.tab) content.format.relations) of
-              Just relation->
-                HH.slot (SProxy :: SProxy "relatedContents") unit RelatedContents.component 
-                  { spaceId: content.format.space.spaceId
-                  , value: unwrap content.contentId
-                  , relation
-                  }
-                  absurd
-              Nothing -> HH.text "Error"
-            --maybeElem (M.lookup state.tab state.relationalContents) \remote ->
-            --  remoteWith remote \contents ->
-            --    HH.slot (SProxy :: SProxy "contentList") state.tab ContentList.component { value: contents } absurd
-        ]
+      ]
+  where
+  renderRelation :: FocusedContent -> Relation -> H.ComponentHTML Action ChildSlots m
+  renderRelation content relation = 
+    HH.slot (SProxy :: SProxy "relatedContents") unit RelatedContents.component 
+      { spaceId: content.format.space.spaceId
+      , value: unwrap content.contentId
+      , relation
+      }
+      absurd
 
 handleAction :: forall o m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of

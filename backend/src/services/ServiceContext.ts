@@ -17,6 +17,8 @@ export class ServiceContext {
         const session = headers["session"];
         if (isString(session)) {
             this.userId = SessionSecurity.verfyToken(session);
+        } else {
+            this.userId = null;
         }
     }
 

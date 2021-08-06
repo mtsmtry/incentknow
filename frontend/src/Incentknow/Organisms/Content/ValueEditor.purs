@@ -20,13 +20,14 @@ import Halogen.HTML as HH
 import Incentknow.API (getFocusedFormat, getFormat)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.API.Execution as R
-import Incentknow.AppM (class Behaviour)
-import Incentknow.Atoms.Icon (remoteWith)
+import Incentknow.AppM (class Behaviour, navigateRoute)
+import Incentknow.Atoms.Icon (icon, iconSolid, remoteWith, typeIcon)
 import Incentknow.Atoms.Inputs (button, checkbox, numberarea, textarea)
 import Incentknow.Data.Entities (FocusedFormat, FormatUsage(..), Type(..))
+import Incentknow.Data.EntityUtils (getTypeName)
 import Incentknow.Data.Ids (FormatId(..), PropertyId)
 import Incentknow.Data.Property (Enumerator, Property, encodeProperties, mkProperties)
-import Incentknow.HTML.Utils (maybeElem)
+import Incentknow.HTML.Utils (link, maybeElem)
 import Incentknow.Molecules.AceEditor as AceEditor
 import Incentknow.Molecules.ContentMenu as ContentMenu
 import Incentknow.Molecules.EntityMenu as EntityMenu
@@ -37,7 +38,9 @@ import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Organisms.Content.Common (EditEnvironment)
 import Incentknow.Organisms.Document.Section (ContentComponent)
 import Incentknow.Organisms.Material.SlotEditor as Material
+import Incentknow.Route (FormatTab(..), Route(..), SpaceTab(..))
 import Test.Unit.Console (consoleLog)
+import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
   = { value :: Json, type :: Type, env :: EditEnvironment, contentComponent :: ContentComponent }
@@ -47,7 +50,6 @@ type State
     , type :: Type
     , env :: EditEnvironment
     , contentComponent :: ContentComponent
-    , format :: Remote FocusedFormat
     }
 
 data Action
@@ -57,7 +59,7 @@ data Action
   | ChangeAttribute PropertyId Json
   | ChangeItem Int Json
   | DeleteItem Int
-  | FetchedFormat (Fetch FocusedFormat)
+  | Navigate MouseEvent Route
 
 type Output
   = Json
@@ -105,7 +107,6 @@ initialState input =
   , type: input.type
   , env: input.env
   , contentComponent: input.contentComponent
-  , format: Loading
   }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
@@ -150,16 +151,15 @@ render state = case state.type of
   SpaceType ->
     HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component { value: map wrap $ toString state.value, disabled: false }
       (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  ContentType formatId ->
-    remoteWith state.format \format->
-      HH.slot (SProxy :: SProxy "contentMenu") unit ContentMenu.component 
-        { spaceId: if format.usage == Internal then Just format.space.spaceId else state.env.spaceId
-        , value: map wrap $ toString state.value
-        , formatId
-        , disabled: false }
-        (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  EntityType formatId ->
-    HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: map wrap $ toString state.value, formatId, disabled: false }
+  ContentType format ->
+    HH.slot (SProxy :: SProxy "contentMenu") unit ContentMenu.component 
+      { spaceId: if format.usage == Internal then Just format.space.spaceId else state.env.spaceId
+      , value: map wrap $ toString state.value
+      , formatId: format.formatId
+      , disabled: false }
+      (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
+  EntityType format ->
+    HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: map wrap $ toString state.value, formatId: format.formatId, disabled: false }
       (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
   DocumentType ->
     HH.slot (SProxy :: SProxy "material") unit Material.component { value: map wrap $ toString state.value }
@@ -193,7 +193,18 @@ render state = case state.type of
       HH.dl
         []
         [ HH.dt []
-            [ HH.label_ [ HH.text prop.info.displayName ] ]
+            ( case prop.info.type of
+                ContentType format -> 
+                  [ case format.fontawesome of
+                        Just i -> iconSolid i
+                        Nothing -> icon "fas fa-file"
+                  , HH.text prop.info.displayName
+                  ]
+                ty ->
+                  [ typeIcon $ getTypeName ty
+                  , HH.text prop.info.displayName
+                  ]
+            )
         , HH.dd []
             [ HH.slot (SProxy :: SProxy "property") prop.info.id component { value: prop.value, type: prop.info.type, env: state.env, contentComponent: state.contentComponent }
                 (Just <<< ChangeAttribute prop.info.id)
@@ -210,13 +221,7 @@ render state = case state.type of
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
-  Initialize -> do
-    state <- H.get
-    case state.format of
-      Loading -> case state.type of
-        ContentType formatId -> callbackQuery FetchedFormat $ getFocusedFormat formatId
-        _ -> pure unit
-      _ -> pure unit
+  Initialize -> pure unit
   ChangeValue value -> do
     logShow $ stringify value
     H.raise value
@@ -257,11 +262,8 @@ handleAction = case _ of
   HandleInput input -> do
     state <- H.get
     if state.type == input.type then
-      H.put $ (initialState input) { format = state.format }
+      H.put $ initialState input
     else do
       H.put $ initialState input
       handleAction Initialize
-  FetchedFormat fetch ->
-    forRemote fetch \format -> do
-      state <- H.modify _ { format = format }
-      H.liftEffect $ consoleLog $ show $ map unwrap $ maybe Nothing (\x -> if x.usage == Internal then Nothing else state.env.spaceId) $ R.toMaybe state.format
+  Navigate e route -> navigateRoute e route

@@ -13,6 +13,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.HTML.RawHTML as RawHtml
 import Incentknow.HTML.Utils (maybeElem)
+import Incentknow.Templates.Main (centerLayout)
 
 type Input
   = {}
@@ -43,8 +44,10 @@ initialState input = { html: Nothing }
 
 render :: forall m. MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  maybeElem state.html \html ->
-    HH.slot (SProxy :: SProxy "rawHtml") unit RawHtml.component { html } absurd
+  centerLayout { leftSide: [], rightSide: [] }
+    [ maybeElem state.html \html ->
+        HH.slot (SProxy :: SProxy "rawHtml") unit RawHtml.component { html } absurd
+    ]
 
 handleAction :: forall o m. MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of

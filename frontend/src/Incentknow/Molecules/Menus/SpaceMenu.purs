@@ -11,7 +11,7 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getMySpaces, getPublishedSpaces, getRelatedSpace, getSpace)
+import Incentknow.API (getCandidateSpaces, getPublishedSpaces, getRelatedSpace, getSpace)
 import Incentknow.API.Execution (Fetch, executeAPI, forItem, toQueryCallback)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (RelatedSpace)
@@ -72,7 +72,7 @@ render state =
     , disabled: false
     , fetchMultiple: case _ of
         Just word -> Nothing
-        Nothing -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) getMySpaces
+        Nothing -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) getCandidateSpaces
     , fetchSingle: Just $ \x-> toQueryCallback $ map toSelectMenuItem $ getRelatedSpace x
     , fetchId: ""
     , initial: emptyCandidateSet

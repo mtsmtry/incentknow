@@ -7,14 +7,19 @@ import { mapQuery } from "../MappedQuery";
 import { SelectFromSingleTableQuery, SelectQueryFromEntity } from "../SelectQuery";
 
 export function joinPropertyArguments<T>(alias: string, query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
-    return query
+    const qb = query
         .leftJoinAndSelect(alias + ".metaProperties", "metaProperties")
         .leftJoinAndSelect(alias + ".argFormat", "argFormat")
         .leftJoinAndSelect(alias + ".argProperties", "argProperties")
         .leftJoinAndSelect("argProperties.argFormat", "argFormat2")
         .leftJoinAndSelect("argProperties.argProperties", "argProperties2")
-        .leftJoinAndSelect("argProperties2.argFormat", "argFormat3")
-        .leftJoinAndSelect("argProperties2.argProperties", "argProperties3");
+        //.leftJoinAndSelect("argProperties2.argFormat", "argFormat3")
+        //.leftJoinAndSelect("argProperties2.argProperties", "argProperties3")
+        .leftJoinAndSelect("argFormat.space", "argFormatSpace")
+        .leftJoinAndSelect("argFormat.currentStructure", "argFormatCurrentStructure")
+        .leftJoinAndSelect("argFormat2.space", "argFormatSpace2")
+        .leftJoinAndSelect("argFormat2.currentStructure", "argFormatCurrentStructure2");
+    return joinProperties("argFormatCurrentStructure", qb);
 }
 
 export function joinProperties<T>(alias: string, query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
@@ -37,7 +42,9 @@ export class StructureQuery extends SelectFromSingleTableQuery<Structure, Struct
 
     selectRelated() {
         const query = this.qb
-            .leftJoinAndSelect("x.format", "format");
+            .leftJoinAndSelect("x.format", "format")
+            .leftJoinAndSelect("format.space", "space")
+            .leftJoinAndSelect("format.currentStructure", "currentStructure");
         return mapQuery(query, toRelatedStructure);
     }
 
@@ -46,7 +53,8 @@ export class StructureQuery extends SelectFromSingleTableQuery<Structure, Struct
             .leftJoinAndSelect("x.format", "format")
             .leftJoinAndSelect("format.space", "space")
             .leftJoinAndSelect("format.creatorUser", "creatorUser")
-            .leftJoinAndSelect("format.updaterUser", "updaterUser");
+            .leftJoinAndSelect("format.updaterUser", "updaterUser")
+            .leftJoinAndSelect("format.currentStructure", "currentStructure");
         query = joinProperties("x", query);
         return mapQuery(query, x => (relations: Relation[]) => toFocusedFormatFromStructure(x, relations));
     }

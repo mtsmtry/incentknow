@@ -18,6 +18,7 @@ import Incentknow.Data.Entities (RelatedSpace, FocusedSpace)
 import Incentknow.HTML.Utils (css, whenElem)
 import Incentknow.Organisms.SpaceCardView as SpaceCardView
 import Incentknow.Route (Route(..), SpaceTab(..))
+import Incentknow.Templates.Main (centerLayout)
 
 type Input
   = {}
@@ -59,28 +60,30 @@ initialState input = { publishedSpaces: Loading, followedSpaces: Loading, logine
 
 render :: forall m. MonadEffect m => Behaviour m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  HH.div [ css "page-spaces" ]
-    [ whenElem state.logined \_ ->
-        HH.div [ css "part" ]
-          [ HH.div [ css "caption" ]
-              [ HH.text "My spaces"
-              , HH.span [ css "count" ] [ HH.text $ maybe "" (\x-> "(" <> show (length x) <> ")") $ toMaybe state.followedSpaces ]
-              , HH.span [ css "creation" ] [
-                  -- submitButton { isDisabled: false, isLoading: false, loadingText: "", onClick: Navigate NewSpace, text: "スペースを作成" }
-                  menuPositiveButton "スペースを作成" $ Navigate NewSpace
+  centerLayout { leftSide: [], rightSide: [] }
+    [ HH.div [ css "page-spaces" ]
+      [ whenElem state.logined \_ ->
+          HH.div [ css "part" ]
+            [ HH.div [ css "caption" ]
+                [ HH.text "My spaces"
+                , HH.span [ css "count" ] [ HH.text $ maybe "" (\x-> "(" <> show (length x) <> ")") $ toMaybe state.followedSpaces ]
+                , HH.span [ css "creation" ] [
+                    -- submitButton { isDisabled: false, isLoading: false, loadingText: "", onClick: Navigate NewSpace, text: "スペースを作成" }
+                    menuPositiveButton "スペースを作成" $ Navigate NewSpace
+                  ]
                 ]
-              ]
-          , remoteWith state.followedSpaces \spaces ->
-              HH.slot (SProxy :: SProxy "cardview") unit SpaceCardView.component { value: spaces } absurd
-          ]
-    , HH.div [ css "part" ]
-        [ HH.div [ css "caption" ]
-            [ HH.text $ "Public spaces"
-            , HH.span [ css "count" ] [ HH.text $ maybe "" (\x-> "(" <> show (length x) <> ")") $ toMaybe state.publishedSpaces ]
+            , remoteWith state.followedSpaces \spaces ->
+                HH.slot (SProxy :: SProxy "cardview") unit SpaceCardView.component { value: spaces } absurd
             ]
-        , remoteWith state.publishedSpaces \spaces ->
-            HH.slot (SProxy :: SProxy "cardview2") unit SpaceCardView.component { value: spaces } absurd
-        ]
+      , HH.div [ css "part" ]
+          [ HH.div [ css "caption" ]
+              [ HH.text $ "Public spaces"
+              , HH.span [ css "count" ] [ HH.text $ maybe "" (\x-> "(" <> show (length x) <> ")") $ toMaybe state.publishedSpaces ]
+              ]
+          , remoteWith state.publishedSpaces \spaces ->
+              HH.slot (SProxy :: SProxy "cardview2") unit SpaceCardView.component { value: spaces } absurd
+          ]
+      ]
     ]
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit

@@ -1,777 +1,156 @@
-Warning 1 of 47:
+Warning found:
+in module Incentknow.Organisms.BoxView
+at src/Incentknow/Organisms/BoxView.purs:64:1 - 64:116 (line 64, column 1 - line 64, column 116)
 
-  in module Incentknow.Organisms.SpaceCardView
-  at src/Incentknow/Organisms/SpaceCardView.purs:71:1 - 71:116 (line 71, column 1 - line 71, column 116)
+  Type variable s is ambiguous, since it is unused in the polymorphic type which introduces it.
 
-    Type variable s is ambiguous, since it is unused in the polymorphic type which introduces it.
+in type declaration for handleAction
 
-  in type declaration for handleAction
+See https://github.com/purescript/documentation/blob/master/errors/UnusedTypeVar.md for more information,
+or to contribute content related to this warning.
 
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedTypeVar.md for more information,
-  or to contribute content related to this warning.
 
-Warning 2 of 47:
+Error found:
+in module Incentknow.Organisms.BoxView
+at src/Incentknow/Organisms/BoxView.purs:61:11 - 61:52 (line 61, column 11 - line 61, column 52)
 
-  in module Incentknow.Organisms.SpaceCardView
-  at src/Incentknow/Organisms/SpaceCardView.purs:11:1 - 11:98 (line 11, column 1 - line 11, column 98)
+  Could not match type
 
-    The import of module Incentknow.Data.Entities contains the following unused references:
+    ()
 
-      RelatedSpace
+  with type
 
-    It could be replaced with:
-
-      import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..), SpaceAuth(..))
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 3 of 47:
-
-  in module Incentknow.Pages.DraftList
-  at src/Incentknow/Pages/DraftList.purs:82:10 - 82:15 (line 82, column 10 - line 82, column 15)
-
-    Name draft was shadowed.
-
-  in value declaration toListViewItem
-
-  See https://github.com/purescript/documentation/blob/master/errors/ShadowedName.md for more information,
-  or to contribute content related to this warning.
-
-Warning 4 of 47:
-
-  in module Incentknow.Pages.SpaceList
-  at src/Incentknow/Pages/Space/SpaceList.purs:16:1 - 16:66 (line 16, column 1 - line 16, column 66)
-
-    The import of module Incentknow.Atoms.Inputs contains the following unused references:
-
-      submitButton
-
-    It could be replaced with:
-
-      import Incentknow.Atoms.Inputs (menuPositiveButton)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 5 of 47:
-
-  in module Incentknow.Pages.SpaceList
-  at src/Incentknow/Pages/Space/SpaceList.purs:17:1 - 17:61 (line 17, column 1 - line 17, column 61)
-
-    The import of module Incentknow.Data.Entities contains the following unused references:
-
-      RelatedSpace
-
-    It could be replaced with:
-
-      import Incentknow.Data.Entities (FocusedSpace)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 6 of 47:
-
-  in module Incentknow.Pages.SpaceList
-  at src/Incentknow/Pages/Space/SpaceList.purs:20:1 - 20:50 (line 20, column 1 - line 20, column 50)
-
-    The import of module Incentknow.Route contains the following unused references:
-
-      SpaceTab
-
-    It could be replaced with:
-
-      import Incentknow.Route (Route(..))
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 7 of 47:
-
-  in module Incentknow.Organisms.Enumeration
-  at src/Incentknow/Organisms/Enumeration.purs:42:1 - 42:80 (line 42, column 1 - line 42, column 80)
-
-    Type variable q is ambiguous, since it is unused in the polymorphic type which introduces it.
-
-  in type declaration for component
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedTypeVar.md for more information,
-  or to contribute content related to this warning.
-
-Warning 8 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:5:1 - 5:75 (line 5, column 1 - line 5, column 75)
-
-    The import of module Data.Array contains the following unused references:
-
-      concat
-      filter
-      length
-      range
-
-    It could be replaced with:
-
-      import Data.Array (catMaybes, mapWithIndex)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 9 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:7:1 - 7:43 (line 7, column 1 - line 7, column 43)
-
-    The import of module Data.Maybe.Utils contains the following unused references:
-
-      flatten
-
-    It could be replaced with:
-
-      import Data.Maybe.Utils (allJust)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 10 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:8:1 - 8:35 (line 8, column 1 - line 8, column 35)
-
-    The import of Data.Newtype is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 11 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:9:1 - 9:43 (line 9, column 1 - line 9, column 43)
-
-    The import of Data.Nullable is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 12 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:10:1 - 10:29 (line 10, column 1 - line 10, column 29)
-
-    The qualified import of Data.String as String is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 13 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:11:1 - 11:53 (line 11, column 1 - line 11, column 53)
-
-    The import of Data.String.CodeUnits is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 14 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:13:1 - 13:36 (line 13, column 1 - line 13, column 36)
-
-    The import of Data.Traversable is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 15 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:16:1 - 16:33 (line 16, column 1 - line 16, column 33)
-
-    The import of Effect.Random is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 16 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:17:1 - 17:28 (line 17, column 1 - line 17, column 28)
-
-    The import of Halogen is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 17 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:20:1 - 20:33 (line 20, column 1 - line 20, column 33)
-
-    The qualified import of Halogen.HTML.Events as HE is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 18 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:21:1 - 21:37 (line 21, column 1 - line 21, column 37)
-
-    The qualified import of Halogen.HTML.Properties as HP is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 19 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:23:1 - 23:70 (line 23, column 1 - line 23, column 70)
-
-    The import of module Incentknow.Atoms.Inputs contains the following unused references:
-
-      checkbox
-      pulldown
-
-    It could be replaced with:
-
-      import Incentknow.Atoms.Inputs (button, textarea)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 20 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:25:1 - 25:49 (line 25, column 1 - line 25, column 49)
-
-    The import of Incentknow.Data.EntityUtils is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 21 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:26:1 - 26:55 (line 26, column 1 - line 26, column 55)
-
-    The import of type FormatId from module Incentknow.Data.Ids includes data constructors but only the type is used
-    It could be replaced with:
-
-      import Incentknow.Data.Ids (FormatId, SpaceId)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedDctorImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 22 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:26:1 - 26:55 (line 26, column 1 - line 26, column 55)
-
-    The import of type SpaceId from module Incentknow.Data.Ids includes data constructors but only the type is used
-    It could be replaced with:
-
-      import Incentknow.Data.Ids (FormatId, SpaceId)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedDctorImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 23 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:28:1 - 28:55 (line 28, column 1 - line 28, column 55)
-
-    The import of Incentknow.Data.Property is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 24 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:29:1 - 29:42 (line 29, column 1 - line 29, column 42)
-
-    The import of Incentknow.Data.Utils is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 25 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:34:1 - 34:49 (line 34, column 1 - line 34, column 49)
-
-    The qualified import of Incentknow.Molecules.TypeMenu as TypeMenu is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 26 of 47:
-
-  in module Incentknow.Organisms.ContentPage
-  at src/Incentknow/Organisms/ContentPage.purs:35:1 - 35:55 (line 35, column 1 - line 35, column 55)
-
-    The qualified import of Incentknow.Organisms.Enumeration as Enumeration is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 27 of 47:
-
-  in module Incentknow.Organisms.Structure
-  at src/Incentknow/Organisms/Structure.purs:265:1 - 265:116 (line 265, column 1 - line 265, column 116)
-
-    Type variable a is ambiguous, since it is unused in the polymorphic type which introduces it.
-
-  in type declaration for getTypeArguments
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedTypeVar.md for more information,
-  or to contribute content related to this warning.
-
-Warning 28 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:80:1 - 80:110 (line 80, column 1 - line 80, column 110)
-
-    Type variable o is ambiguous, since it is unused in the polymorphic type which introduces it.
-
-  in type declaration for component
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedTypeVar.md for more information,
-  or to contribute content related to this warning.
-
-Warning 29 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:211:1 - 211:133 (line 211, column 1 - line 211, column 133)
-
-    Type variable o is ambiguous, since it is unused in the polymorphic type which introduces it.
-
-  in type declaration for handleAction
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedTypeVar.md for more information,
-  or to contribute content related to this warning.
-
-Warning 30 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:227:20 - 227:25 (line 227, column 20 - line 227, column 25)
-
-    Name props was shadowed.
-
-  in value declaration handleAction
-
-  See https://github.com/purescript/documentation/blob/master/errors/ShadowedName.md for more information,
-  or to contribute content related to this warning.
-
-Warning 31 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:232:18 - 232:23 (line 232, column 18 - line 232, column 23)
-
-    Name props was shadowed.
-
-  in value declaration handleAction
-
-  See https://github.com/purescript/documentation/blob/master/errors/ShadowedName.md for more information,
-  or to contribute content related to this warning.
-
-Warning 32 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:232:24 - 232:26 (line 232, column 24 - line 232, column 26)
-
-    Name id was shadowed.
-
-  in value declaration handleAction
-
-  See https://github.com/purescript/documentation/blob/master/errors/ShadowedName.md for more information,
-  or to contribute content related to this warning.
-
-Warning 33 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:232:27 - 232:32 (line 232, column 27 - line 232, column 32)
-
-    Name value was shadowed.
-
-  in value declaration handleAction
-
-  See https://github.com/purescript/documentation/blob/master/errors/ShadowedName.md for more information,
-  or to contribute content related to this warning.
-
-Warning 34 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:5:1 - 5:107 (line 5, column 1 - line 5, column 107)
-
-    The import of module Data.Argonaut.Core contains the following unused references:
-
-      fromArray
-
-    It could be replaced with:
-
-      import Data.Argonaut.Core (Json, fromString, jsonNull, stringify, toArray, toBoolean, toString)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 35 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:10:1 - 10:33 (line 10, column 1 - line 10, column 33)
-
-    The import of Data.Foldable is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 36 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:11:1 - 11:45 (line 11, column 1 - line 11, column 45)
-
-    The import of Data.Map is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 37 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:17:1 - 17:43 (line 17, column 1 - line 17, column 43)
-
-    The import of module Effect.Class.Console contains the following unused references:
-
-      log
-
-    It could be replaced with:
-
-      import Effect.Class.Console (logShow)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 38 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:20:1 - 20:52 (line 20, column 1 - line 20, column 52)
-
-    The import of module Incentknow.API contains the following unused references:
-
-      getFormat
-
-    It could be replaced with:
-
-      import Incentknow.API (getFocusedFormat)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 39 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:27:1 - 27:54 (line 27, column 1 - line 27, column 54)
-
-    The import of module Incentknow.Data.Ids contains the following unused references:
-
-      FormatId
-
-    It could be replaced with:
-
-      import Incentknow.Data.Ids (PropertyId)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 40 of 47:
-
-  in module Incentknow.Organisms.Content.ValueEditor
-  at src/Incentknow/Organisms/Content/ValueEditor.purs:29:1 - 29:41 (line 29, column 1 - line 29, column 41)
-
-    The import of Incentknow.HTML.Utils is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 41 of 47:
-
-  in module Incentknow.Pages.Format.Versions
-  at src/Incentknow/Pages/Format/Versions.purs:11:1 - 11:90 (line 11, column 1 - line 11, column 90)
-
-    The import of module Incentknow.API.Execution contains the following unused references:
-
-      executeAPI
-
-    It could be replaced with:
-
-      import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 42 of 47:
-
-  in module Incentknow.Pages.Format.Versions
-  at src/Incentknow/Pages/Format/Versions.purs:15:1 - 15:42 (line 15, column 1 - line 15, column 42)
-
-    The import of type FormatId from module Incentknow.Data.Ids includes data constructors but only the type is used
-    It could be replaced with:
-
-      import Incentknow.Data.Ids (FormatId)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedDctorImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 43 of 47:
-
-  in module Incentknow.Pages.Format.Main
-  at src/Incentknow/Pages/Format/Main.purs:4:1 - 4:24 (line 4, column 1 - line 4, column 24)
-
-    The import of CSS is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 44 of 47:
-
-  in module Incentknow.Pages.Format.Main
-  at src/Incentknow/Pages/Format/Main.purs:5:1 - 5:32 (line 5, column 1 - line 5, column 32)
-
-    The import of Data.Either is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 45 of 47:
-
-  in module Incentknow.Pages.Format.Main
-  at src/Incentknow/Pages/Format/Main.purs:6:1 - 6:39 (line 6, column 1 - line 6, column 39)
-
-    The import of module Data.Foldable contains the following unused references:
-
-      for_
-
-    It could be replaced with:
-
-      import Data.Foldable (traverse_)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 46 of 47:
-
-  in module Incentknow.Pages.Format.Main
-  at src/Incentknow/Pages/Format/Main.purs:14:1 - 14:61 (line 14, column 1 - line 14, column 61)
-
-    The import of module Incentknow.API.Execution contains the following unused references:
-
-      executeAPI
-
-    It could be replaced with:
-
-      import Incentknow.API.Execution (executeCommand)
-
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedExplicitImport.md for more information,
-  or to contribute content related to this warning.
-
-Warning 47 of 47:
-
-  in module Incentknow.Pages.Format.Main
-  at src/Incentknow/Pages/Format/Main.purs:18:1 - 18:41 (line 18, column 1 - line 18, column 41)
-
-    The import of Incentknow.Data.Ids is redundant
-
-
-  See https://github.com/purescript/documentation/blob/master/errors/UnusedImport.md for more information,
-  or to contribute content related to this warning.
-
-
-Error 1 of 2:
-
-  in module Incentknow.Pages.DraftList
-  at src/Incentknow/Pages/DraftList.purs:128:83 - 128:97 (line 128, column 83 - line 128, column 97)
-
-    Could not match type
-
-      ( createdAt :: Number
-      , displayName :: String
-      , draftId :: MaterialDraftId
-      , updatedAt :: Number
-      ...
-      )
-
-    with type
-
-      ( isEditing :: Boolean
-      ...
-      | t0
-      )
-
-
-  while trying to match type
-                               ( createdAt :: Number
-                               , displayName :: String
-                               , draftId :: MaterialDraftId
-                               , updatedAt :: Number
-                               ...
-                               )
-
-    with type
-                ( isEditing :: Boolean
-                ...
-                | t0
-                )
-
-  while checking that expression materialDrafts
-    has type Array
-               { isEditing :: Boolean
-               | t0
-               }
-  in value declaration render
-
-  where t0 is an unknown type
-
-  See https://github.com/purescript/documentation/blob/master/errors/TypesDoNotUnify.md for more information,
-  or to contribute content related to this error.
-
-Error 2 of 2:
-
-  in module Incentknow.Pages.SpaceList
-  at src/Incentknow/Pages/Space/SpaceList.purs:90:41 - 90:52 (line 90, column 41 - line 90, column 52)
-
-    Could not match type
-
-      ( ... )
-
-    with type
-
-      ( contentCount :: Number
-      , creatorUser :: { createdAt :: Number
-                       , displayId :: UserDisplayId
-                       , displayName :: String
-                       , iconUrl :: Maybe String
-                       , userId :: UserId
-                       }
-      , formatCount :: Number
-      , memberCount :: Number
-      ...
-      )
-
-
-  while trying to match type
-                               ( ... )
-
-    with type
-                ( contentCount :: Number
+    ( format :: { createdAt :: Number
                 , creatorUser :: { createdAt :: Number
                                  , displayId :: UserDisplayId
                                  , displayName :: String
                                  , iconUrl :: Maybe String
                                  , userId :: UserId
                                  }
-                , formatCount :: Number
-                , memberCount :: Number
-                ...
-                )
+                , currentStructure :: { createdAt :: Number
+                                      , properties :: Array ...
+                                      , structureId :: StructureId
+                                      , title :: Maybe String
+                                      , version :: Number
+                                      }
+                , description :: String
+                , displayId :: FormatDisplayId
+                , displayName :: String
+                , fontawesome :: Maybe String
+                , formatId :: FormatId
+                , relations :: Array
+                                 { contentCount :: Number
+                                 , formatId :: FormatId
+                                 , property :: ...
+                                 }
+                , semanticId :: Maybe String
+                , space :: { createdAt :: Number
+                           , defaultAuthority :: SpaceAuth
+                           , description :: String
+                           , displayId :: SpaceDisplayId
+                           , displayName :: String
+                           , homeUrl :: Maybe String
+                           , membershipMethod :: MembershipMethod
+                           , published :: Boolean
+                           , spaceId :: SpaceId
+                           }
+                , updatedAt :: Number
+                , updaterUser :: { createdAt :: Number
+                                 , displayId :: UserDisplayId
+                                 , displayName :: String
+                                 , iconUrl :: Maybe String
+                                 , userId :: UserId
+                                 }
+                , usage :: FormatUsage
+                }
+    | t1
+    )
 
-  while checking that expression getMySpaces
-    has type QueryAPI
-               (Array
-                  { contentCount :: Number
-                  , createdAt :: Number
-                  , creatorUser :: { createdAt :: Number
-                                   , displayId :: UserDisplayId
-                                   , displayName :: String
-                                   , iconUrl :: ...
-                                   , userId :: UserId
-                                   }
-                  , defaultAuthority :: SpaceAuth
-                  , description :: String
-                  , displayId :: SpaceDisplayId
-                  , displayName :: String
-                  , formatCount :: Number
-                  , homeUrl :: Maybe String
-                  , memberCount :: Number
-                  , membershipMethod :: MembershipMethod
-                  , published :: Boolean
-                  , spaceId :: SpaceId
-                  }
-               )
-  in binding group handleAction
 
-  See https://github.com/purescript/documentation/blob/master/errors/TypesDoNotUnify.md for more information,
-  or to contribute content related to this error.
+while trying to match type ()
+  with type ( format :: t0
+            | t1
+            )
+while checking that expression { format: item.format
+                               , value: item.data
+                               }
+  has type { content :: { contentId :: ContentId
+                        , createdAt :: Number
+                        , creatorUser :: { createdAt :: Number
+                                         , displayId :: UserDisplayId
+                                         , displayName :: String
+                                         , iconUrl :: Maybe String
+                                         , userId :: UserId
+                                         }
+                        , data :: Json
+                        , draft :: Maybe
+                                     { basedCommitId :: ...
+                                     , changeType :: ContentChangeType
+                                     , contentId :: ...
+                                     , createdAt :: Number
+                                     , data :: Json
+                                     , draftId :: ContentDraftId
+                                     , format :: ...
+                                     , isEditing :: Boolean
+                                     , updatedAt :: Number
+                                     }
+                        , format :: { createdAt :: Number
+                                    , creatorUser :: { createdAt :: Number
+                                                     , displayId :: UserDisplayId
+                                                     , displayName :: String
+                                                     , iconUrl :: ...
+                                                     , userId :: UserId
+                                                     }
+                                    , currentStructure :: { createdAt :: Number
+                                                          , properties :: ...
+                                                          , structureId :: StructureId
+                                                          , title :: ...
+                                                          , version :: Number
+                                                          }
+                                    , description :: String
+                                    , displayId :: FormatDisplayId
+                                    , displayName :: String
+                                    , fontawesome :: Maybe String
+                                    , formatId :: FormatId
+                                    , relations :: Array ...
+                                    , semanticId :: Maybe String
+                                    , space :: { createdAt :: Number
+                                               , defaultAuthority :: SpaceAuth
+                                               , description :: String
+                                               , displayId :: SpaceDisplayId
+                                               , displayName :: String
+                                               , homeUrl :: ...
+                                               , membershipMethod :: MembershipMethod
+                                               , published :: Boolean
+                                               , spaceId :: SpaceId
+                                               }
+                                    , updatedAt :: Number
+                                    , updaterUser :: { createdAt :: Number
+                                                     , displayId :: UserDisplayId
+                                                     , displayName :: String
+                                                     , iconUrl :: ...
+                                                     , userId :: UserId
+                                                     }
+                                    , usage :: FormatUsage
+                                    }
+                        , updateCount :: Number
+                        , updatedAt :: Number
+                        , updaterUser :: { createdAt :: Number
+                                         , displayId :: UserDisplayId
+                                         , displayName :: String
+                                         , iconUrl :: Maybe String
+                                         , userId :: UserId
+                                         }
+                        , viewCount :: Number
+                        }
+           }
+in value declaration render
+
+where t0 is an unknown type
+      t1 is an unknown type
+
+See https://github.com/purescript/documentation/blob/master/errors/TypesDoNotUnify.md for more information,
+or to contribute content related to this error.
 
 
-Compiling Incentknow.Organisms.SpaceCardView
-Compiling Incentknow.Pages.Format.Setting
-Compiling Incentknow.Pages.Space
-Compiling Incentknow.Organisms.CollectionPage
-Compiling Incentknow.Molecules.EntityMenu
-Compiling Incentknow.Organisms.Enumeration
-Compiling Incentknow.Pages.DraftList
-Compiling Incentknow.Pages.SpaceList
-Compiling Incentknow.Organisms.Content.ValueEditor
-Compiling Incentknow.Organisms.ContentPage
-Compiling Incentknow.Organisms.Structure
-Compiling Incentknow.Pages.Format.Main
-Compiling Incentknow.Pages.NewFormat
-Compiling Incentknow.Organisms.Content.Editor
-Compiling Incentknow.Pages.Format.Versions
-Compiling Incentknow.Organisms.EditContent
-Compiling Incentknow.Pages.Format
-Compiling Incentknow.Pages.EditDraft
+Compiling Incentknow.Organisms.BoxView

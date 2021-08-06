@@ -1,5 +1,54 @@
-.tmp-section{
+.tmp-section {
     .section;
+}
+
+.tmp-section-with-header {
+    .section;
+
+    >.header {
+        font-size: 15px;
+        color: rgb(83, 83, 83);
+        padding: 6px;
+        padding-left: 15px;
+        margin-bottom: 15px;
+        border-bottom: 0.7px solid rgba(0, 0, 0, .22);
+    }
+
+    >.body {
+
+    }
+}
+
+.tmp-center-layout {
+    display: flex;
+    margin : 0px auto;
+
+    >.side {
+        flex: 2;
+
+        >div {
+            margin: 0px 15px;
+            width: 200px;
+        }
+    }
+
+    >.leftside {
+        >div {
+            float: right;
+        }
+    }
+
+    >.rightside {
+        >div {
+            float: left;
+        }
+    }
+
+    >.main {
+        flex     : 5;
+        min-width: 700px;
+        max-width: 900px;
+    }
 }
 
 .tmp-main {
@@ -12,24 +61,6 @@
         background: #F6F9FA;
         padding   : 30px 0px;
         min-height: 80vh;
-
-        >div {
-            display  : flex;
-            margin   : 0px auto;
-        
-            >.side {
-                flex: 2;
-                >div {
-                    padding: 0px 20px;
-                }
-            }
-        
-            >.main {
-                flex     : 5;
-                min-width: 700px;
-                max-width: 900px;
-            }
-        }
     }
 
     >.footer {
@@ -42,8 +73,8 @@
     .tmp-main_section {}
 
     .tmp-main_centerize {
-        display  : flex;
-        margin   : 0px auto;
+        display: flex;
+        margin : 0px auto;
 
         >.side {
             flex: 2;
@@ -98,26 +129,24 @@
         .section;
         padding: 0px;
 
-        >.top {
-            padding: 25px;
-        }
+        >.top {}
 
         >.menu {
-            font-family: play;
+            font-family : play;
             padding-left: 15px;
             display     : flex;
 
             >.tab-item {
                 .unselectable;
-                color       : #000;
-                cursor      : pointer;
-                text-align  : center;
-                padding     : 8px 10px;
-                margin-left : 5px;
-                margin-right: 5px;
-                margin-top  : auto;
+                color        : #000;
+                cursor       : pointer;
+                text-align   : center;
+                padding      : 8px 10px;
+                margin-left  : 5px;
+                margin-right : 5px;
+                margin-top   : auto;
                 border-bottom: 3px solid transparent;
-                font-size: 15px;
+                font-size    : 15px;
 
                 &:hover:not(.selected) {
                     border-bottom: 3px solid #d1d5da;
@@ -145,6 +174,52 @@
     }
 }
 
+.tmp-vertical-tab-page {
+    >.body {
+        display     : flex;
+
+        >.sidemenu {
+            font-family   : play;
+            margin-right  : 20px;
+            display       : flex;
+            flex-direction: column;
+            border-right  : 0.7px solid rgba(0, 0, 0, .22);
+
+            >.tab-item {
+                .unselectable;
+                color        : #000;
+                cursor       : pointer;
+                text-align   : center;
+                padding      : 8px 10px;
+                border-bottom: 3px solid transparent;
+                font-size    : 15px;
+
+                &:hover:not(.selected) {
+                    border-bottom: 3px solid #d1d5da;
+                    transition   : .2s ease;
+                }
+            }
+
+            >.selected {
+                border-bottom: 3px solid #008abc;
+                color        : #008abc;
+            }
+
+            >.space {
+                flex-grow: 1;
+            }
+
+            >.ext-menu {
+                padding: 5px;
+            }
+        }
+
+        >.main {
+            margin-top: 20px;
+        }
+    }
+}
+
 .tmp-tab-grouping {
     >.tabs {
         display: flex;
@@ -164,7 +239,7 @@
             padding         : 8px 24px;
 
             border-top-right-radius: 5px;
-            border-top-left-radius: 5px;
+            border-top-left-radius : 5px;
         }
 
         >.tab_active {
@@ -190,7 +265,7 @@
         padding: 0px 1px;
 
         >div {
-            border-top-left-radius: 0px;
+            border-top-left-radius : 0px;
             border-top-right-radius: 0px;
         }
     }
@@ -198,17 +273,15 @@
 
 .tmp-creation-page {
     .section;
-    
+
     >.title {
         font-size: 24px;
     }
 
     >.desc {
         font-size: 14px;
-        color: rgb(88, 96, 105);
+        color    : rgb(88, 96, 105);
     }
 
-    >.body {
-        
-    }
+    >.body {}
 }

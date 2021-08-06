@@ -3,34 +3,26 @@ module Incentknow.Data.Content where
 import Prelude
 
 import Data.Argonaut.Core (Json, isArray, isBoolean, isNumber, isObject, isString, toArray, toString)
-import Data.Argonaut.Decode (decodeJson)
-import Data.Array (catMaybes, concat, cons, elem, filter, foldr, fromFoldable, head, length, mapWithIndex, range, singleton, sortBy, tail)
-import Data.Either (Either)
-import Data.List (List(..))
-import Data.List as L
+import Data.Array (catMaybes, concat, elem, filter, head, mapWithIndex, singleton)
 import Data.Map (Map, toUnfoldable)
-import Data.Map as M
 import Data.Map.Utils (decodeToMap, mergeFromArray)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Maybe.Utils (flatten, fromEither)
+import Data.Maybe.Utils (flatten)
 import Data.Newtype (unwrap, wrap)
-import Data.Nullable (null, toMaybe, toNullable)
-import Data.String (joinWith)
 import Data.Tuple (Tuple(..), fst, snd)
-import Effect.Aff.Class (class MonadAff)
-import Foreign.Object as F
-import Incentknow.Data.Entities (Type(..), PropertyInfo, FocusedFormat)
-import Incentknow.Data.Ids (SemanticId(..))
-import Incentknow.Data.Property (mkProperties)
+import Incentknow.Data.Entities (FocusedFormat, PropertyInfo, Type(..))
+import Incentknow.Data.Ids (SemanticId)
+import Incentknow.Data.Property (Property, mkProperties)
 
 type ContentSemanticData
   = { title :: String
+    , titleProperty :: Maybe { text :: String, info :: PropertyInfo }
     , semanticId :: Maybe SemanticId
     , image :: Maybe String
     }
 
 getContentSemanticData :: Json -> FocusedFormat -> ContentSemanticData
-getContentSemanticData contentData format = { title, semanticId: map wrap semanticId, image }
+getContentSemanticData contentData format = { title, semanticId: map wrap semanticId, titleProperty, image }
   where
   props = mkProperties contentData format.currentStructure.properties
 
@@ -43,6 +35,13 @@ getContentSemanticData contentData format = { title, semanticId: map wrap semant
   title = fromMaybe "" $ head $ catMaybes $ map (\x -> toString x.value) props
 
   image = head $ catMaybes $ map (\x -> if x.info.type == ImageType then toString x.value else Nothing) props
+
+  titleProperty = map (\x-> { text: fromMaybe "" $ toString x.value, info: x.info }) $ head $ filter isString props
+    where
+    isString :: Property -> Boolean
+    isString prop = case prop.info.type of
+      StringType -> true
+      _ -> false
 
 data ValidationError
   = WrongType String Type -- プロパティ名, 本来の型

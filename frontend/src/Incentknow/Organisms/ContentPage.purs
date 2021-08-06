@@ -31,6 +31,7 @@ import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.PropertyMenu as PropertyMenu
+import Incentknow.Molecules.TypeMenu (toRelatedFormat)
 import Incentknow.Molecules.TypeMenu as TypeMenu
 import Incentknow.Organisms.Enumeration as Enumeration
 
@@ -149,7 +150,7 @@ render state =
       , HH.td []
           [ maybeElem rel.formatId \formatId ->
               HH.slot (SProxy :: SProxy "propMenu") index PropertyMenu.component
-                { value: rel.property, formatId, type: Just $ ContentType state.formatId, disabled: state.readonly }
+                { value: rel.property, formatId, type: Just $ ContentType $ toRelatedFormat state.formatId, disabled: state.readonly }
                 (Just <<< ChangeProperty index)
           ]
       ]

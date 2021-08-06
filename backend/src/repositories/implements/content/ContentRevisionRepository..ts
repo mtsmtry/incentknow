@@ -2,6 +2,7 @@ import { ContentCommit } from "../../../entities/content/ContentCommit";
 import { ContentDraft } from "../../../entities/content/ContentDraft";
 import { ContentEditing } from "../../../entities/content/ContentEditing";
 import { ContentSnapshot } from "../../../entities/content/ContentSnapshot";
+import { ContentNodeQuery } from "../../queries/content/ContentNodeQuery";
 import { ContentRivisionQuery } from "../../queries/content/ContentRevisionQuery";
 import { BaseReadonlyRepository, Repository } from "../../Repository";
 import { Transaction } from "../../Transaction";
@@ -12,6 +13,10 @@ export class ContentRevisionRepository implements BaseReadonlyRepository {
         private editings: Repository<ContentEditing>,
         private snapshots: Repository<ContentSnapshot>,
         private commits: Repository<ContentCommit>) {
+    }
+
+    fromNodes(trx?: Transaction) {
+        return new ContentNodeQuery(this.commits.createQuery(trx), this.editings.createQuery(trx));
     }
 
     fromRevisions(trx?: Transaction) {

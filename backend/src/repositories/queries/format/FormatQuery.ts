@@ -22,8 +22,6 @@ export class FormatQuery extends SelectFromSingleTableQuery<Format, FormatQuery,
     selectRelated() {
         const query = this.qb
             .leftJoinAndSelect("x.space", "space")
-            .leftJoinAndSelect("x.creatorUser", "creatorUser")
-            .leftJoinAndSelect("x.updaterUser", "updaterUser")
             .leftJoinAndSelect("x.currentStructure", "currentStructure");
 
         return mapQuery(query, toRelatedFormat);

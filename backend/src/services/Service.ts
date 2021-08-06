@@ -67,7 +67,7 @@ export class Service {
         const matCom = new MaterialCommitRepository(createRepository(conn, MaterialCommit));
         const matEdit = new MaterialEditingRepository(createRepository(conn, MaterialDraft), createRepository(conn, MaterialEditing), createRepository(conn, MaterialSnapshot));
         const matRev = new MaterialRevisionRepository(createRepository(conn, MaterialDraft), createRepository(conn, MaterialEditing), createRepository(conn, MaterialSnapshot), createRepository(conn, MaterialCommit));
-        const auth = new AuthorityRepository(createRepository(conn, Space), createRepository(conn, SpaceMember), createRepository(conn, Content), createRepository(conn, Material));
+        const auth = new AuthorityRepository(createRepository(conn, Space), createRepository(conn, SpaceMember), createRepository(conn, Format), createRepository(conn, Content), createRepository(conn, Material));
         const space = new SpaceRepository(createRepository(conn, Space), createRepository(conn, SpaceMember), createRepository(conn, SpaceMembershipApplication), createRepository(conn, SpaceFollow));
         const user = new UserRepository(createRepository(conn, User));
         this.containerService = new ContainerService(ctx, container, auth);

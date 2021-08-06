@@ -260,6 +260,35 @@
     }
 }
 
+.org-format-list {
+    .section;
+
+    td {
+        color: gray;
+    }
+
+    .item {
+        .name {
+        }
+
+        .info {
+            font-size: 14px;
+            color: gray;
+            padding-left: 25px;
+        }
+
+        .timestamp {
+            font-size: 14px;
+            color: gray;
+            padding-left: 25px;
+        }
+
+        .setting {
+            width: 50px;
+        }
+    }
+}
+
 .org-space-cardview {
     display       : flex;
     flex-direction: row;
@@ -325,37 +354,13 @@
                 font-size: 17px;
             }
 
+            >.scope {
+                float: right;
+            }
+
             >.info {
                 font-size: 13px;
                 color    : #666;
-            }
-            
-            >.private {
-                font-size: 13px;
-                color: white;
-                background: rgb(255, 208, 0);
-                border-radius: 5px;
-                float: right;
-                padding: 2px;
-                font-weight: bold;
-            }
-            >.group {
-                font-size: 13px;
-                color: white;
-                background:rgb(1, 136, 247);
-                border-radius: 5px;
-                float: right;
-                padding: 2px;
-                font-weight: bold;
-            }
-            >.public {
-                font-size: 13px;
-                color: white;
-                background:rgba(255, 255, 255, 0);
-                border-radius: 5px;
-                float: right;
-                padding: 2px;
-                font-weight: bold;
             }
         }
     }
@@ -446,6 +451,124 @@
         >.slash {
             font-size: 17px;
             padding: 0px 2px;
+        }
+    }
+}
+
+.org-latest-contentlist {
+    .section;
+
+    .item {
+        .user {
+
+        }
+
+        .format {
+
+        }
+
+        .title {
+            font-size: 17px;
+        }
+
+        .timestamp {
+            font-size: 15px;
+            color: gray;
+        }
+    }
+}
+
+.org-latest-contentlist-byformat {
+    .section;
+
+    .creation {
+        float: right;
+    }
+
+    .item {
+        .user {
+
+        }
+
+        .title {
+            font-size: 17px;
+        }
+
+        .timestamp {
+            font-size: 15px;
+            color: gray;
+        }
+    }
+}
+
+.org-draft-explorer {
+    .section;
+}
+
+.org-draft-history {
+    .section;
+
+    >.box {
+        >.node {
+            
+        }
+    }
+}
+
+.org-content-viewer {
+    // ValueViewer
+    .property-type {
+        text-align: left;
+        color: rgb(99, 99, 99);
+        width: 100px;
+    }
+
+    .property-value {
+
+    }
+
+    >.top {
+        >.header {
+            display: flex;
+
+            >.title {
+                flex: 1;
+                padding: 10px 25px;
+
+                >.title-property {
+                    color: rgb(99, 99, 99);
+                    font-size: 15px;
+                }
+
+                >.title-text {
+                    font-size: 25px;
+                }
+            }
+
+            >.side {
+                padding: 10px 25px;
+                
+                >.side-format {
+
+                }
+
+                >.side-user {
+
+                }
+            }
+        }
+
+        >.info {
+            padding: 10px 25px;
+            border-top: 0.7px solid rgba(0, 0, 0, .22);
+        }
+    }
+
+    >.section {
+        margin-top: 25px;
+
+        .section-value {
+            padding: 25px;
         }
     }
 }

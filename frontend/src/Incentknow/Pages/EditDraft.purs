@@ -10,9 +10,12 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Inputs (button)
+import Incentknow.Organisms.DraftExplorer as DraftExplorer
+import Incentknow.Organisms.DraftHistory as DraftHistory
 import Incentknow.Organisms.EditContent as EditContent
 import Incentknow.Organisms.EditMaterial as EditMaterial
 import Incentknow.Route (EditContentTarget(..), EditMaterialTarget(..), EditTarget(..), Route(..))
+import Incentknow.Templates.Main (centerLayout)
 import Incentknow.Templates.Page (section)
 
 type State
@@ -29,6 +32,8 @@ type Slot p
 type ChildSlots
   = ( editContent :: EditContent.Slot Unit
     , editMaterial :: EditMaterial.Slot Unit
+    , draftExplorer :: DraftExplorer.Slot Unit
+    , draftHistory :: DraftHistory.Slot Unit
     )
 
 component :: forall q o m. Behaviour m => MonadAff m => MonadEffect m => H.Component HH.HTML q EditTarget o m
@@ -50,7 +55,19 @@ initialState target = { target }
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  HH.div [] 
+  centerLayout 
+    { leftSide: 
+        [ HH.slot (SProxy :: SProxy "draftExplorer") unit DraftExplorer.component { } absurd
+        ]
+    , rightSide:
+        [ HH.slot (SProxy :: SProxy "draftHistory") unit DraftHistory.component 
+            { draftId: 
+                case state.target of
+                  ContentTarget (TargetDraft draftId) -> Just draftId
+                  _ -> Nothing
+            } absurd
+        ]
+    }
     [ HH.div []
       [ button "Content" (Navigate $ EditDraft $ ContentTarget $ TargetBlank Nothing Nothing)
       , button "Material" (Navigate $ EditDraft $ MaterialTarget $ MaterialTargetBlank Nothing)

@@ -2,31 +2,18 @@ module Incentknow.Data.Property where
 
 import Prelude
 
-import Control.Monad.Except (except, runExcept)
-import Data.Argonaut.Core (Json, fromArray, fromObject, jsonNull, stringify, toArray, toNumber, toString)
-import Data.Argonaut.Decode (decodeJson)
-import Data.Argonaut.Encode (class EncodeJson, encodeJson)
-import Data.Argonaut.Parser (jsonParser)
-import Data.Array (concat, cons, filter, foldl, fromFoldable, length, singleton, uncons)
-import Data.Either (Either(..), either)
-import Data.Int as Int
-import Data.List (List)
-import Data.List.NonEmpty as NEL
-import Data.Map (Map, values)
+import Data.Argonaut.Core (Json, fromArray, fromObject, jsonNull)
+import Data.Argonaut.Encode (encodeJson)
+import Data.Array (concat, cons, filter, fromFoldable, length, singleton, uncons)
+import Data.Map (values)
 import Data.Map as M
 import Data.Map.Utils (decodeToMap, mergeFromArray)
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Maybe.Utils (flatten)
-import Data.Newtype (class Newtype, unwrap, wrap)
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Newtype (unwrap)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Tuple (Tuple(..), uncurry)
-import Foreign (F, Foreign, ForeignError(..), readString)
-import Foreign.Object as F
 import Foreign.Object as Object
 import Incentknow.Data.Entities (Type(..), PropertyInfo)
-import Incentknow.Data.Ids (SpaceId(..), ContentId(..), FormatId(..))
-import Incentknow.Route (Route)
-import Simple.JSON (class ReadForeign, class WriteForeign, readImpl, writeImpl)
 
 type Enumerator
   = { id :: String
@@ -180,3 +167,19 @@ difference before after = { diffs: diffs, changeType: getChangeType diffs }
     Just (Tuple bfIndex before), Nothing -> singleton { item: DeletionItem, id: unwrap before.id, name: before.displayName, changeType: MajorChange, before: Nothing, after: Nothing }
     Nothing, Just (Tuple afIndex after) -> singleton { item: CreationItem, id: unwrap after.id, name: after.displayName, changeType: MajorChange, before: Nothing, after: Nothing }
     Nothing, Nothing -> singleton { item: DeletionItem, id: "", name: "", changeType: MinorChange, before: Nothing, after: Nothing }
+
+type PropertyComposition
+  = { info :: Array Property
+    , sections :: Array Property
+    }
+
+toPropertyComposition :: Array Property -> PropertyComposition
+toPropertyComposition props = 
+  { info: filter (not <<< isSection) props
+  , sections: filter isSection props
+  }
+  where
+  isSection :: Property -> Boolean
+  isSection prop = case prop.info.type of
+    DocumentType -> true
+    _ -> false

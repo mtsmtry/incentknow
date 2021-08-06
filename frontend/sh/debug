@@ -8,7 +8,7 @@ spago -q bundle-app --main Incentknow.Main --to public/index.js >sh/spago.log 2>
 # sh sh/buildf
 
 # コピー
-cp -f index.html public/index.html
+# cp -f index.html public/index.html
 
 open http://localhost:5432
 serve public -p 5432

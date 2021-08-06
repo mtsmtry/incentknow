@@ -306,56 +306,50 @@ export class ContentService extends BaseService {
 
     async getContent(contentId: ContentId): Promise<FocusedContent> {
         const userId = this.ctx.getAuthorized();
-        const [buildContent, rawContent] = await this.con.fromContents().byEntityId(contentId).selectFocused().getNeededOneWithRaw();
-        const buildDraft = await this.edit.fromDrafts().byUser(userId).byContent(rawContent.id).selectRelated().getNeededOne();
-        const [buildFormat, struct] = await this.formats.fromStructures().byId(rawContent.structureId).selectFocusedFormat().getNeededOneWithRaw();
-        const relations = await this.formats.getRelations(struct.formatId);
-        const format = buildFormat(relations);
-        const draft = buildDraft ? buildDraft(format) : null;
-        return buildContent(format, draft);
+        const contents = await this.con.fromContents().byEntityId(contentId).getFocusedMany(userId, this.con, this.formats, this.edit);
+        if (contents.length == 0) {
+            throw new NotFoundEntity();
+        }
+        return contents[0];
     }
 
     async getRelatedContent(contentId: ContentId): Promise<RelatedContent> {
         const userId = this.ctx.getAuthorized();
-        const [buildContent, rawContent] = await this.con.fromContents().byEntityId(contentId).selectRelated().getNeededOneWithRaw();
-        const [buildFormat, struct] = await this.formats.fromStructures().byId(rawContent.structureId).selectFocusedFormat().getNeededOneWithRaw();
-        const relations = await this.formats.getRelations(struct.formatId);
-        const format = buildFormat(relations);
-        return buildContent(format);
+        const contents = await this.con.fromContents().byEntityId(contentId).getRelatedMany(this.con, this.formats);
+        if (contents.length == 0) {
+            throw new NotFoundEntity();
+        }
+        return contents[0];
     }
 
     async getContents(spaceId: SpaceId, formatId: FormatId): Promise<RelatedContent[]> {
         const userId = this.ctx.getAuthorized();
-        const spaceSk = await this.spaces.fromSpaces().byEntityId(spaceId).selectId().getNeededOne();
-        const [buildFormat, rawFormat] = await this.formats.fromFormats().byEntityId(formatId).selectFocused().getNeededOneWithRaw();
-        const relations = await this.formats.getRelations(rawFormat.id);
-        const format = buildFormat(relations);
-        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, rawFormat.id).selectId().getNeededOne();
-        const getContents = await this.con.fromContents().byContainer(containerSk).selectRelated().getMany();
-        return getContents.map(x => x(format));
+        const [spaceSk, formatSk] = await Promise.all([
+            await this.spaces.fromSpaces().byEntityId(spaceId).selectId().getNeededOne(),
+            await this.formats.fromFormats().byEntityId(formatId).selectId().getNeededOne()
+        ]);
+        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, formatSk).selectId().getNeededOne();
+        return await this.con.fromContents().byContainer(containerSk).getRelatedMany(this.con, this.formats);
     }
 
     async getContentsByProperty(spaceId: SpaceId, formatId: FormatId, propertyId: PropertyId, value: string): Promise<RelatedContent[]> {
         const userId = this.ctx.getAuthorized();
-        const spaceSk = await this.spaces.fromSpaces().byEntityId(spaceId).selectId().getNeededOne();
-        const [buildFormat, rawFormat] = await this.formats.fromFormats().byEntityId(formatId).selectFocused().getNeededOneWithRaw();
-        const relations = await this.formats.getRelations(rawFormat.id);
-        const format = buildFormat(relations);
-        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, rawFormat.id).selectId().getNeededOne();
-        const getContents = await this.con.fromContents().byProperty(containerSk, propertyId, value).selectRelated().getMany();
-        return getContents.map(x => x(format));
+        const [spaceSk, formatSk] = await Promise.all([
+            await this.spaces.fromSpaces().byEntityId(spaceId).selectId().getNeededOne(),
+            await this.formats.fromFormats().byEntityId(formatId).selectId().getNeededOne()
+        ]);
+        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, formatSk).selectId().getNeededOne();
+        return await this.con.fromContents().byProperty(containerSk, propertyId, value).getRelatedMany(this.con, this.formats);
     }
 
     async getContentsByDisplayId(spaceId: SpaceDisplayId, formatId: FormatDisplayId): Promise<RelatedContent[]> {
         const userId = this.ctx.getAuthorized();
-        const spaceSk = await this.spaces.fromSpaces().byDisplayId(spaceId).selectId().getNeededOne();
-        const [buildFormat, rawFormat] = await this.formats.fromFormats().byDisplayId(formatId).selectFocused().getNeededOneWithRaw();
-        const relations = await this.formats.getRelations(rawFormat.id);
-        console.log(relations);
-        const format = buildFormat(relations);
-        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, rawFormat.id).selectId().getNeededOne();
-        const getContents = await this.con.fromContents().byContainer(containerSk).selectRelated().getMany();
-        return getContents.map(x => x(format));
+        const [spaceSk, formatSk] = await Promise.all([
+            await this.spaces.fromSpaces().byDisplayId(spaceId).selectId().getNeededOne(),
+            await this.formats.fromFormats().byDisplayId(formatId).selectId().getNeededOne()
+        ]);
+        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, formatSk).selectId().getNeededOne();
+        return await this.con.fromContents().byContainer(containerSk).getRelatedMany(this.con, this.formats);
     }
 
     async getMyContentDrafts(): Promise<RelatedContentDraft[]> {
@@ -406,7 +400,7 @@ export class ContentService extends BaseService {
         if (draft.userId != userId) {
             throw new LackOfAuthority();
         }
-        return [];//return await this.rev.fromNodes().getManyByDraft(draft.id);
+        return await this.rev.fromNodes().getManyByDraft(draft.id, draft.contentId);
     }
 
     async getContentRevision(revisionId: ContentWholeRevisionId): Promise<FocusedContentRevision> {
@@ -419,5 +413,14 @@ export class ContentService extends BaseService {
 
     async getContentCommit(commitId: ContentCommitId): Promise<FocusedContentCommit> {
         return await this.com.fromCommits().byEntityId(commitId).selectFocused().getNeededOne();
+    }
+
+    async getSpaceLatestContents(spaceId: SpaceId): Promise<RelatedContent[]> {
+        const userId = this.ctx.getAuthorized();
+        const [auth, space] = await this.auth.fromAuths().getSpaceAuth(SpaceAuth.READABLE, userId, spaceId);
+        if (!auth) {
+            throw new LackOfAuthority();
+        }
+        return await this.con.fromContents().bySpace(space.id).latest().limit(10).getRelatedMany(this.con, this.formats);
     }
 }
