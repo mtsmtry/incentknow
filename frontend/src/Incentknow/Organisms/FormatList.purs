@@ -112,7 +112,8 @@ render state =
           ]
       , HH.th []
           [ maybeElem maybeContainer \container->
-              HH.span [ css "timestamp" ] [ dateTime container.latestUpdatedAt ]
+              maybeElem container.latestUpdatedAt \timestamp->
+                HH.span [ css "timestamp" ] [ dateTime timestamp ]
           ]
       , HH.th []
           [ maybeElem internalFormat \format->

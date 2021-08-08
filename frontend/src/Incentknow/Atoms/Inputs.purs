@@ -4,7 +4,7 @@ import Prelude
 
 import Data.Int (fromString)
 import Data.Maybe (Maybe(..), maybe)
-import Data.String (Pattern(..), Replacement(..), replace)
+import Data.String (Pattern(..), Replacement(..), replace, replaceAll)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -102,7 +102,7 @@ textarea input =
     , HE.onValueInput $ Just <<< input.onChange <<< removeReturn -- onValueChangeは正しくイベントが発火しないので使用しない
     ]
   where
-  removeReturn = replace (Pattern "\n") (Replacement "") <<< replace (Pattern "\r") (Replacement "")
+  removeReturn = replaceAll (Pattern "\n") (Replacement "") <<< replaceAll (Pattern "\r") (Replacement "")
 
 numberarea ::
   forall a s m.

@@ -266,11 +266,11 @@ setFormatDisplayId x0 x1 = __commandAPI "setFormatDisplayId" $ __setFormatDispla
 
 
 
-foreign import __setFormatFontawesome :: 
+foreign import __setFormatIcon :: 
   E.FormatId -> Maybe String -> Promise {}
 
-setFormatFontawesome :: E.FormatId -> Maybe String -> CommandAPI {}
-setFormatFontawesome x0 x1 = __commandAPI "setFormatFontawesome" $ __setFormatFontawesome x0 x1
+setFormatIcon :: E.FormatId -> Maybe String -> CommandAPI {}
+setFormatIcon x0 x1 = __commandAPI "setFormatIcon" $ __setFormatIcon x0 x1
 
 
 
@@ -297,25 +297,25 @@ startMaterialEditing x0 x1 = __commandAPI "startMaterialEditing" $ __startMateri
 
 
 foreign import __createNewMaterialDraft :: 
-  Maybe E.SpaceId -> E.MaterialType -> Maybe String -> Promise E.RelatedMaterialDraft
+  Maybe E.SpaceId -> E.MaterialType -> Maybe E.MaterialData -> Promise E.RelatedMaterialDraft
 
-createNewMaterialDraft :: Maybe E.SpaceId -> E.MaterialType -> Maybe String -> CommandAPI E.RelatedMaterialDraft
+createNewMaterialDraft :: Maybe E.SpaceId -> E.MaterialType -> Maybe E.MaterialData -> CommandAPI E.RelatedMaterialDraft
 createNewMaterialDraft x0 x1 x2 = __commandAPI "createNewMaterialDraft" $ __createNewMaterialDraft x0 x1 x2
 
 
 
 foreign import __editMaterialDraft :: 
-  E.MaterialDraftId -> String -> Promise (Maybe E.RelatedMaterialRevision)
+  E.MaterialDraftId -> E.MaterialData -> Promise (Maybe E.RelatedMaterialRevision)
 
-editMaterialDraft :: E.MaterialDraftId -> String -> CommandAPI (Maybe E.RelatedMaterialRevision)
+editMaterialDraft :: E.MaterialDraftId -> E.MaterialData -> CommandAPI (Maybe E.RelatedMaterialRevision)
 editMaterialDraft x0 x1 = __commandAPI "editMaterialDraft" $ __editMaterialDraft x0 x1
 
 
 
 foreign import __commitMaterial :: 
-  E.MaterialDraftId -> String -> Promise E.RelatedMaterialRevision
+  E.MaterialDraftId -> E.MaterialData -> Promise E.RelatedMaterialRevision
 
-commitMaterial :: E.MaterialDraftId -> String -> CommandAPI E.RelatedMaterialRevision
+commitMaterial :: E.MaterialDraftId -> E.MaterialData -> CommandAPI E.RelatedMaterialRevision
 commitMaterial x0 x1 = __commandAPI "commitMaterial" $ __commitMaterial x0 x1
 
 

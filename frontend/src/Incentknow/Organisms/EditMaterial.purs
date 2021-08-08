@@ -5,6 +5,7 @@ import Prelude
 import Control.Monad.Rec.Class (forever)
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
+import Data.Newtype (wrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
@@ -17,16 +18,15 @@ import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
 import Halogen.Query.HalogenM (SubscriptionId)
 import Incentknow.API (commitMaterial, createNewMaterialDraft, editMaterialDraft, getMaterialDraft, startMaterialEditing)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeCommand, forRemote)
-import Incentknow.API.Execution as R
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeCommand, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate, pushState)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Atoms.Message (SaveState(..), saveState)
-import Incentknow.Data.Entities (FocusedMaterialDraft, MaterialType(..))
+import Incentknow.Data.Entities (BlockData(..), FocusedMaterialDraft, MaterialData(..), MaterialType(..))
 import Incentknow.Data.Ids (SpaceId)
 import Incentknow.HTML.Utils (css)
-import Incentknow.Organisms.DocumentEditor as DocumentEditor
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
+import Incentknow.Organisms.Document.Editor as DocumentEditor
 import Incentknow.Route (EditMaterialTarget(..), EditTarget(..), Route(..))
 
 -- A type which defines the draft by three kind sources
@@ -39,7 +39,7 @@ type State
     -- the subscription id of a interval save timer
     , timerSubId :: Maybe SubscriptionId
     , target :: EditMaterialTarget
-    , text :: String
+    , data :: MaterialData
     , draft :: Remote FocusedMaterialDraft
     }
 
@@ -48,7 +48,7 @@ data Action
   | Load
   | HandleInput EditMaterialTarget
   | ChangeSpace (Maybe SpaceId)
-  | ChangeText String
+  | ChangeData MaterialData
   | CheckChage
   | FetchedDraft (Fetch FocusedMaterialDraft)
   | Commit
@@ -81,7 +81,7 @@ initialState input =
   , saveState: HasNotChange
   , loading: false
   , timerSubId: Nothing
-  , text: ""
+  , data: DocumentMaterialData { blocks: [] }
   , draft: Loading
   }
 
@@ -97,8 +97,11 @@ render state =
         _ -> HH.text ""
     --, HH.slot (SProxy :: SProxy "plainTextEditor") unit PlainTextEditor.component { value: state.text, variableHeight: true, readonly: false }
     --    (Just <<< ChangeText)
-    , HH.slot (SProxy :: SProxy "documentEditor") unit DocumentEditor.component { value: state.text, readonly: false }
-        (Just <<< ChangeText)
+    , case state.data of
+        DocumentMaterialData doc ->
+          HH.slot (SProxy :: SProxy "documentEditor") unit DocumentEditor.component { value: doc }
+            (Just <<< ChangeData <<< DocumentMaterialData)
+        _ -> HH.text "" 
     , case state.target, state.draft of
         MaterialTargetBlank _, _ -> HH.text ""
         MaterialTargetDraft _, Holding draft ->
@@ -185,7 +188,7 @@ handleAction = case _ of
   -- Fetch
   FetchedDraft fetch -> do
     forRemote fetch \draft ->
-      H.modify_ _ { text = fromMaybe "" $ map _.data $ R.toMaybe draft, draft = draft }
+      H.modify_ _ { data = fromMaybe (DocumentMaterialData { blocks: [{id:wrap "frew", data:ParagraphBlockData "うんこ"}] }) $ map _.data $ toMaybe draft, draft = draft }
   -- Change
   ChangeSpace spaceId -> do
     state <- H.get
@@ -196,12 +199,12 @@ handleAction = case _ of
         when (spaceId /= oldSpaceId) do
           navigate $ EditDraft $ MaterialTarget $ MaterialTargetBlank spaceId
       _ -> pure unit
-  ChangeText text -> do
+  ChangeData data2 -> do
     state <- H.get
     -- Set the value and change the save state
     case state.saveState of
-      Saving -> H.modify_ _ { text = text, saveState = SavingButChanged }
-      _ -> H.modify_ _ { text = text, saveState = NotSaved }
+      Saving -> H.modify_ _ { data = data2, saveState = SavingButChanged }
+      _ -> H.modify_ _ { data = data2, saveState = NotSaved }
   -- Save changes if they happened
   CheckChage -> do
     state <- H.get
@@ -211,7 +214,7 @@ handleAction = case _ of
       H.modify_ _ { saveState = Saving }
       case state.target of
         MaterialTargetBlank spaceId -> do
-          result <- executeCommand $ createNewMaterialDraft spaceId MaterialTypeDocument (Just state.text)
+          result <- executeCommand $ createNewMaterialDraft spaceId MaterialTypeDocument (Just state.data)
           case result of
             Just draft -> do
               pushState $ EditDraft $ MaterialTarget $ MaterialTargetDraft draft.draftId
@@ -219,7 +222,7 @@ handleAction = case _ of
               makeSaveStateSaved
             Nothing -> H.modify_ _ { saveState = NotSaved }
         MaterialTargetDraft draftId -> do
-          result <- executeCommand $ editMaterialDraft draftId state.text
+          result <- executeCommand $ editMaterialDraft draftId state.data
           case result of
             Just _ -> makeSaveStateSaved
             Nothing -> H.modify_ _ { saveState = NotSaved }
@@ -229,7 +232,7 @@ handleAction = case _ of
     case state.target of
       MaterialTargetDraft draftId -> do
         H.modify_ _ { loading = true }
-        result <- executeCommand $ commitMaterial draftId state.text
+        result <- executeCommand $ commitMaterial draftId state.data
         --for_ (flatten result) \commit -> do
         --  navigate $ EditContent $  commit.contentId
         H.modify_ _ { loading = false }

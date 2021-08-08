@@ -8,7 +8,8 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.API.Execution (Remote(..))
-import Incentknow.Data.Entities (FocusedFormat, FocusedSpace, MembershipMethod(..), RelatedFormat, RelatedUser, SpaceAuth(..), Type, TypeName(..))
+import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..), PropertyInfo, RelatedUser, SpaceAuth(..), Type(..), TypeName(..))
+import Incentknow.Data.EntityUtils (getTypeName)
 import Incentknow.HTML.Utils (css, maybeElem)
 
 loadingWith :: forall w i. String -> HH.HTML w i
@@ -60,10 +61,10 @@ userIcon user =
     , HH.span [ css "username" ] [ HH.text user.displayName ]
     ]
 
-formatWithIcon :: forall w i a. { displayName :: String, fontawesome :: Maybe String | a } -> HH.HTML w i
+formatWithIcon :: forall w i a. { displayName :: String, icon :: Maybe String | a } -> HH.HTML w i
 formatWithIcon format =
   HH.span [ css "atom-format-with-icon" ] 
-    [ maybeElem format.fontawesome \label->
+    [ maybeElem format.icon \label->
         iconSolid label
     , HH.text format.displayName 
     ]
@@ -75,15 +76,27 @@ typeIcon typeName = if label == "" then HH.text "" else icon label
     TypeNameInt -> "fas fa-hashtag"
     TypeNameBool -> "fas fa-check-square"
     TypeNameString -> "fas fa-text"
-    TypeNameFormat -> "fad fa-align-justify"
-    TypeNameSpace -> ""
-    TypeNameContent -> ""
+    TypeNameContent -> "fas fa-file"
     TypeNameUrl -> "fas fa-link"
     TypeNameObject -> "fas fa-brackets-curly"
     TypeNameText -> "fas fa-align-left"
     TypeNameArray -> "fas fa-brackets"
-    TypeNameCode -> "fas fa-code"
     TypeNameEnum -> "fas fa-tags"
     TypeNameDocument -> "fas fa-file-alt"
     TypeNameImage -> "fas fa-images"
     TypeNameEntity -> ""
+
+propertyIcon :: forall w i. PropertyInfo -> HH.HTML w i
+propertyIcon prop =
+  case prop.type of
+    ContentType format -> 
+      case format.icon of
+          Just i -> iconSolid i
+          Nothing -> 
+            case prop.icon of
+              Just i -> iconSolid i
+              Nothing -> typeIcon $ getTypeName prop.type
+    ty -> 
+      case prop.icon of
+        Just i -> iconSolid i
+        Nothing -> typeIcon $ getTypeName ty

@@ -267,14 +267,6 @@ function jsTypeName(obj) {
                     return "string";
                 }
             
-                if(E.TypeNameFormat && obj instanceof E.TypeNameFormat) {
-                    return "format";
-                }
-            
-                if(E.TypeNameSpace && obj instanceof E.TypeNameSpace) {
-                    return "space";
-                }
-            
                 if(E.TypeNameContent && obj instanceof E.TypeNameContent) {
                     return "content";
                 }
@@ -293,10 +285,6 @@ function jsTypeName(obj) {
             
                 if(E.TypeNameArray && obj instanceof E.TypeNameArray) {
                     return "array";
-                }
-            
-                if(E.TypeNameCode && obj instanceof E.TypeNameCode) {
-                    return "code";
                 }
             
                 if(E.TypeNameEnum && obj instanceof E.TypeNameEnum) {
@@ -323,10 +311,6 @@ case "boolean":
 return (E.TypeNameBool || { value: null }).value;
 case "string":
 return (E.TypeNameString || { value: null }).value;
-case "format":
-return (E.TypeNameFormat || { value: null }).value;
-case "space":
-return (E.TypeNameSpace || { value: null }).value;
 case "content":
 return (E.TypeNameContent || { value: null }).value;
 case "url":
@@ -337,8 +321,6 @@ case "text":
 return (E.TypeNameText || { value: null }).value;
 case "array":
 return (E.TypeNameArray || { value: null }).value;
-case "code":
-return (E.TypeNameCode || { value: null }).value;
 case "enumerator":
 return (E.TypeNameEnum || { value: null }).value;
 case "document":
@@ -660,7 +642,8 @@ obj.format = jsRelatedFormat(obj.format);
 
 
                         if (obj.generator instanceof Data_Maybe.Just) {
-                            obj.generator = obj.generator.value0; 
+                            obj.generator = obj.generator.value0;
+                            obj.generator = jsContentGenerator(obj.generator);
                         } else {
                             obj.generator = null;
                         }
@@ -673,17 +656,32 @@ obj.format = psRelatedFormat(obj.format);
 
 
                     if (obj.generator) {
-                        obj.generator = new Data_Maybe.Just(obj.generator);
+                        obj.generator = psContentGenerator(obj.generator);
+                        obj.generator = new Data_Maybe.Just(obj.generatorPs);
                     } else {
                         obj.generator = Data_Maybe.Nothing.value;
                     }
                 return obj;}
 
 function jsAdditionalContainerInfo(obj){obj.contentCount = jsInt(obj.contentCount);
-obj.latestUpdatedAt = jsDate(obj.latestUpdatedAt);return obj;}
+
+                        if (obj.latestUpdatedAt instanceof Data_Maybe.Just) {
+                            obj.latestUpdatedAt = obj.latestUpdatedAt.value0;
+                            obj.latestUpdatedAt = jsDate(obj.latestUpdatedAt);
+                        } else {
+                            obj.latestUpdatedAt = null;
+                        }
+                    return obj;}
 
 function psAdditionalContainerInfo(obj){obj.contentCount = psInt(obj.contentCount);
-obj.latestUpdatedAt = psDate(obj.latestUpdatedAt);return obj;}
+
+                    if (obj.latestUpdatedAt) {
+                        obj.latestUpdatedAt = psDate(obj.latestUpdatedAt);
+                        obj.latestUpdatedAt = new Data_Maybe.Just(obj.latestUpdatedAtPs);
+                    } else {
+                        obj.latestUpdatedAt = Data_Maybe.Nothing.value;
+                    }
+                return obj;}
 
 function jsFocusedContainer(obj){obj.containerId = jsContainerId(obj.containerId);
 obj.space = jsRelatedSpace(obj.space);
@@ -692,20 +690,29 @@ obj.format = jsRelatedFormat(obj.format);
 
 
                         if (obj.generator instanceof Data_Maybe.Just) {
-                            obj.generator = obj.generator.value0; 
+                            obj.generator = obj.generator.value0;
+                            obj.generator = jsContentGenerator(obj.generator);
                         } else {
                             obj.generator = null;
                         }
                     
 
                         if (obj.reactor instanceof Data_Maybe.Just) {
-                            obj.reactor = obj.reactor.value0; 
+                            obj.reactor = obj.reactor.value0;
+                            obj.reactor = jsIntactReactor(obj.reactor);
                         } else {
                             obj.reactor = null;
                         }
                     
 obj.contentCount = jsInt(obj.contentCount);
-return obj;}
+
+                        if (obj.latestUpdatedAt instanceof Data_Maybe.Just) {
+                            obj.latestUpdatedAt = obj.latestUpdatedAt.value0;
+                            
+                        } else {
+                            obj.latestUpdatedAt = null;
+                        }
+                    return obj;}
 
 function psFocusedContainer(obj){obj.containerId = psContainerId(obj.containerId);
 obj.space = psRelatedSpace(obj.space);
@@ -714,20 +721,29 @@ obj.format = psRelatedFormat(obj.format);
 
 
                     if (obj.generator) {
-                        obj.generator = new Data_Maybe.Just(obj.generator);
+                        obj.generator = psContentGenerator(obj.generator);
+                        obj.generator = new Data_Maybe.Just(obj.generatorPs);
                     } else {
                         obj.generator = Data_Maybe.Nothing.value;
                     }
                 
 
                     if (obj.reactor) {
-                        obj.reactor = new Data_Maybe.Just(obj.reactor);
+                        obj.reactor = psIntactReactor(obj.reactor);
+                        obj.reactor = new Data_Maybe.Just(obj.reactorPs);
                     } else {
                         obj.reactor = Data_Maybe.Nothing.value;
                     }
                 
 obj.contentCount = psInt(obj.contentCount);
-return obj;}
+
+                    if (obj.latestUpdatedAt) {
+                        
+                        obj.latestUpdatedAt = new Data_Maybe.Just(obj.latestUpdatedAtPs);
+                    } else {
+                        obj.latestUpdatedAt = Data_Maybe.Nothing.value;
+                    }
+                return obj;}
 
 function jsRelatedContent(obj){obj.contentId = jsContentId(obj.contentId);
 
@@ -759,7 +775,8 @@ obj.updaterUser = jsRelatedUser(obj.updaterUser);
 obj.format = jsFocusedFormat(obj.format);
 
                         if (obj.draft instanceof Data_Maybe.Just) {
-                            obj.draft = obj.draft.value0; 
+                            obj.draft = obj.draft.value0;
+                            obj.draft = jsRelatedContentDraft(obj.draft);
                         } else {
                             obj.draft = null;
                         }
@@ -776,7 +793,8 @@ obj.updaterUser = psRelatedUser(obj.updaterUser);
 obj.format = psFocusedFormat(obj.format);
 
                     if (obj.draft) {
-                        obj.draft = new Data_Maybe.Just(obj.draft);
+                        obj.draft = psRelatedContentDraft(obj.draft);
+                        obj.draft = new Data_Maybe.Just(obj.draftPs);
                     } else {
                         obj.draft = Data_Maybe.Nothing.value;
                     }
@@ -787,7 +805,8 @@ function jsRelatedContentCommit(obj){obj.commitId = jsContentCommitId(obj.commit
 
 
                         if (obj.basedCommitId instanceof Data_Maybe.Just) {
-                            obj.basedCommitId = obj.basedCommitId.value0; 
+                            obj.basedCommitId = obj.basedCommitId.value0;
+                            obj.basedCommitId = jsContentCommitId(obj.basedCommitId);
                         } else {
                             obj.basedCommitId = null;
                         }
@@ -799,7 +818,8 @@ function psRelatedContentCommit(obj){obj.commitId = psContentCommitId(obj.commit
 
 
                     if (obj.basedCommitId) {
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
+                        obj.basedCommitId = psContentCommitId(obj.basedCommitId);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
@@ -811,7 +831,8 @@ function jsFocusedContentCommit(obj){obj.commitId = jsContentCommitId(obj.commit
 
 
                         if (obj.basedCommitId instanceof Data_Maybe.Just) {
-                            obj.basedCommitId = obj.basedCommitId.value0; 
+                            obj.basedCommitId = obj.basedCommitId.value0;
+                            obj.basedCommitId = jsContentCommitId(obj.basedCommitId);
                         } else {
                             obj.basedCommitId = null;
                         }
@@ -823,7 +844,8 @@ function psFocusedContentCommit(obj){obj.commitId = psContentCommitId(obj.commit
 
 
                     if (obj.basedCommitId) {
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
+                        obj.basedCommitId = psContentCommitId(obj.basedCommitId);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
@@ -836,7 +858,8 @@ function jsRelatedContentDraft(obj){obj.draftId = jsContentDraftId(obj.draftId);
 
 
                         if (obj.basedCommitId instanceof Data_Maybe.Just) {
-                            obj.basedCommitId = obj.basedCommitId.value0; 
+                            obj.basedCommitId = obj.basedCommitId.value0;
+                            obj.basedCommitId = jsContentCommitId(obj.basedCommitId);
                         } else {
                             obj.basedCommitId = null;
                         }
@@ -844,7 +867,8 @@ function jsRelatedContentDraft(obj){obj.draftId = jsContentDraftId(obj.draftId);
 
 
                         if (obj.contentId instanceof Data_Maybe.Just) {
-                            obj.contentId = obj.contentId.value0; 
+                            obj.contentId = obj.contentId.value0;
+                            obj.contentId = jsContentId(obj.contentId);
                         } else {
                             obj.contentId = null;
                         }
@@ -858,7 +882,8 @@ function psRelatedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
 
 
                     if (obj.basedCommitId) {
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
+                        obj.basedCommitId = psContentCommitId(obj.basedCommitId);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
@@ -866,7 +891,8 @@ function psRelatedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
 
 
                     if (obj.contentId) {
-                        obj.contentId = new Data_Maybe.Just(obj.contentId);
+                        obj.contentId = psContentId(obj.contentId);
+                        obj.contentId = new Data_Maybe.Just(obj.contentIdPs);
                     } else {
                         obj.contentId = Data_Maybe.Nothing.value;
                     }
@@ -880,7 +906,8 @@ function jsFocusedContentDraft(obj){obj.draftId = jsContentDraftId(obj.draftId);
 
 
                         if (obj.basedCommitId instanceof Data_Maybe.Just) {
-                            obj.basedCommitId = obj.basedCommitId.value0; 
+                            obj.basedCommitId = obj.basedCommitId.value0;
+                            obj.basedCommitId = jsContentCommitId(obj.basedCommitId);
                         } else {
                             obj.basedCommitId = null;
                         }
@@ -888,7 +915,8 @@ function jsFocusedContentDraft(obj){obj.draftId = jsContentDraftId(obj.draftId);
 obj.data = jsObjectLiteral(obj.data);
 
                         if (obj.contentId instanceof Data_Maybe.Just) {
-                            obj.contentId = obj.contentId.value0; 
+                            obj.contentId = obj.contentId.value0;
+                            obj.contentId = jsContentId(obj.contentId);
                         } else {
                             obj.contentId = null;
                         }
@@ -908,7 +936,8 @@ function psFocusedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
 
 
                     if (obj.basedCommitId) {
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
+                        obj.basedCommitId = psContentCommitId(obj.basedCommitId);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
@@ -916,7 +945,8 @@ function psFocusedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
 obj.data = psObjectLiteral(obj.data);
 
                     if (obj.contentId) {
-                        obj.contentId = new Data_Maybe.Just(obj.contentId);
+                        obj.contentId = psContentId(obj.contentId);
+                        obj.contentId = new Data_Maybe.Just(obj.contentIdPs);
                     } else {
                         obj.contentId = Data_Maybe.Nothing.value;
                     }
@@ -982,7 +1012,8 @@ obj.target = jsContentNodeTarget(obj.target);
 obj.user = jsRelatedUser(obj.user);
 
                         if (obj.editingId instanceof Data_Maybe.Just) {
-                            obj.editingId = obj.editingId.value0; 
+                            obj.editingId = obj.editingId.value0;
+                            
                         } else {
                             obj.editingId = null;
                         }
@@ -994,7 +1025,8 @@ obj.target = psContentNodeTarget(obj.target);
 obj.user = psRelatedUser(obj.user);
 
                     if (obj.editingId) {
-                        obj.editingId = new Data_Maybe.Just(obj.editingId);
+                        
+                        obj.editingId = new Data_Maybe.Just(obj.editingIdPs);
                     } else {
                         obj.editingId = Data_Maybe.Nothing.value;
                     }
@@ -1093,17 +1125,19 @@ obj.displayId = jsFormatDisplayId(obj.displayId);
 
 
 
-                        if (obj.fontawesome instanceof Data_Maybe.Just) {
-                            obj.fontawesome = obj.fontawesome.value0; 
+                        if (obj.icon instanceof Data_Maybe.Just) {
+                            obj.icon = obj.icon.value0;
+                            
                         } else {
-                            obj.fontawesome = null;
+                            obj.icon = null;
                         }
                     
 obj.space = jsRelatedSpace(obj.space);
 obj.usage = jsFormatUsage(obj.usage);
 
                         if (obj.semanticId instanceof Data_Maybe.Just) {
-                            obj.semanticId = obj.semanticId.value0; 
+                            obj.semanticId = obj.semanticId.value0;
+                            
                         } else {
                             obj.semanticId = null;
                         }
@@ -1115,17 +1149,19 @@ obj.displayId = psFormatDisplayId(obj.displayId);
 
 
 
-                    if (obj.fontawesome) {
-                        obj.fontawesome = new Data_Maybe.Just(obj.fontawesome);
+                    if (obj.icon) {
+                        
+                        obj.icon = new Data_Maybe.Just(obj.iconPs);
                     } else {
-                        obj.fontawesome = Data_Maybe.Nothing.value;
+                        obj.icon = Data_Maybe.Nothing.value;
                     }
                 
 obj.space = psRelatedSpace(obj.space);
 obj.usage = psFormatUsage(obj.usage);
 
                     if (obj.semanticId) {
-                        obj.semanticId = new Data_Maybe.Just(obj.semanticId);
+                        
+                        obj.semanticId = new Data_Maybe.Just(obj.semanticIdPs);
                     } else {
                         obj.semanticId = Data_Maybe.Nothing.value;
                     }
@@ -1145,10 +1181,11 @@ obj.displayId = jsFormatDisplayId(obj.displayId);
 
 
 
-                        if (obj.fontawesome instanceof Data_Maybe.Just) {
-                            obj.fontawesome = obj.fontawesome.value0; 
+                        if (obj.icon instanceof Data_Maybe.Just) {
+                            obj.icon = obj.icon.value0;
+                            
                         } else {
-                            obj.fontawesome = null;
+                            obj.icon = null;
                         }
                     
 obj.space = jsRelatedSpace(obj.space);
@@ -1160,7 +1197,8 @@ obj.updaterUser = jsRelatedUser(obj.updaterUser);
 obj.currentStructure = jsFocusedStructure(obj.currentStructure);
 
                         if (obj.semanticId instanceof Data_Maybe.Just) {
-                            obj.semanticId = obj.semanticId.value0; 
+                            obj.semanticId = obj.semanticId.value0;
+                            
                         } else {
                             obj.semanticId = null;
                         }
@@ -1177,10 +1215,11 @@ obj.displayId = psFormatDisplayId(obj.displayId);
 
 
 
-                    if (obj.fontawesome) {
-                        obj.fontawesome = new Data_Maybe.Just(obj.fontawesome);
+                    if (obj.icon) {
+                        
+                        obj.icon = new Data_Maybe.Just(obj.iconPs);
                     } else {
-                        obj.fontawesome = Data_Maybe.Nothing.value;
+                        obj.icon = Data_Maybe.Nothing.value;
                     }
                 
 obj.space = psRelatedSpace(obj.space);
@@ -1192,7 +1231,8 @@ obj.updaterUser = psRelatedUser(obj.updaterUser);
 obj.currentStructure = psFocusedStructure(obj.currentStructure);
 
                     if (obj.semanticId) {
-                        obj.semanticId = new Data_Maybe.Just(obj.semanticId);
+                        
+                        obj.semanticId = new Data_Maybe.Just(obj.semanticIdPs);
                     } else {
                         obj.semanticId = Data_Maybe.Nothing.value;
                     }
@@ -1213,7 +1253,8 @@ obj.type = psMetaPropertyType(obj.type);return obj;}
 function jsPropertyInfo(obj){
 
                         if (obj.fieldName instanceof Data_Maybe.Just) {
-                            obj.fieldName = obj.fieldName.value0; 
+                            obj.fieldName = obj.fieldName.value0;
+                            
                         } else {
                             obj.fieldName = null;
                         }
@@ -1222,9 +1263,18 @@ obj.id = jsPropertyId(obj.id);
 
 
                         if (obj.semantic instanceof Data_Maybe.Just) {
-                            obj.semantic = obj.semantic.value0; 
+                            obj.semantic = obj.semantic.value0;
+                            
                         } else {
                             obj.semantic = null;
+                        }
+                    
+
+                        if (obj.icon instanceof Data_Maybe.Just) {
+                            obj.icon = obj.icon.value0;
+                            
+                        } else {
+                            obj.icon = null;
                         }
                     
 obj.type = jsType(obj.type);
@@ -1238,7 +1288,8 @@ obj.type = jsType(obj.type);
 function psPropertyInfo(obj){
 
                     if (obj.fieldName) {
-                        obj.fieldName = new Data_Maybe.Just(obj.fieldName);
+                        
+                        obj.fieldName = new Data_Maybe.Just(obj.fieldNamePs);
                     } else {
                         obj.fieldName = Data_Maybe.Nothing.value;
                     }
@@ -1247,9 +1298,18 @@ obj.id = psPropertyId(obj.id);
 
 
                     if (obj.semantic) {
-                        obj.semantic = new Data_Maybe.Just(obj.semantic);
+                        
+                        obj.semantic = new Data_Maybe.Just(obj.semanticPs);
                     } else {
                         obj.semantic = Data_Maybe.Nothing.value;
+                    }
+                
+
+                    if (obj.icon) {
+                        
+                        obj.icon = new Data_Maybe.Just(obj.iconPs);
+                    } else {
+                        obj.icon = Data_Maybe.Nothing.value;
                     }
                 
 obj.type = psType(obj.type);
@@ -1264,7 +1324,8 @@ function jsEnumerator(obj){
 
 
                         if (obj.fieldName instanceof Data_Maybe.Just) {
-                            obj.fieldName = obj.fieldName.value0; 
+                            obj.fieldName = obj.fieldName.value0;
+                            
                         } else {
                             obj.fieldName = null;
                         }
@@ -1274,7 +1335,8 @@ function psEnumerator(obj){
 
 
                     if (obj.fieldName) {
-                        obj.fieldName = new Data_Maybe.Just(obj.fieldName);
+                        
+                        obj.fieldName = new Data_Maybe.Just(obj.fieldNamePs);
                     } else {
                         obj.fieldName = Data_Maybe.Nothing.value;
                     }
@@ -1301,22 +1363,6 @@ function jsType(obj) {
                     
                     return {
                         name: "string",
-                        
-                    };
-                }
-            
-                if(E.FormatType && obj instanceof E.FormatType) {
-                    
-                    return {
-                        name: "format",
-                        
-                    };
-                }
-            
-                if(E.SpaceType && obj instanceof E.SpaceType) {
-                    
-                    return {
-                        name: "space",
                         
                     };
                 }
@@ -1366,14 +1412,6 @@ function jsType(obj) {
                     };
                 }
             
-                if(E.CodeType && obj instanceof E.CodeType) {
-                    obj.value0 = jsLanguage(obj.value0);
-                    return {
-                        name: "code",
-                        language: obj.value0
-                    };
-                }
-            
                 if(E.EnumType && obj instanceof E.EnumType) {
                     
                             obj.value0 = obj.value0.map(x => {
@@ -1418,10 +1456,6 @@ case "boolean":
 return new E.BoolType();
 case "string":
 return new E.StringType();
-case "format":
-return new E.FormatType();
-case "space":
-return new E.SpaceType();
 case "content":
 obj.format = psFocusedFormat(obj.format);return new E.ContentType(obj.format);
 case "url":
@@ -1437,8 +1471,6 @@ case "text":
 return new E.TextType();
 case "array":
 obj.subType = psType(obj.subType);return new E.ArrayType(obj.subType);
-case "code":
-obj.language = psLanguage(obj.language);return new E.CodeType(obj.language);
 case "enumerator":
 
                         obj.enumerators = obj.enumerators.map(x => {
@@ -1459,7 +1491,8 @@ obj.structureId = jsStructureId(obj.structureId);
 
 
                         if (obj.title instanceof Data_Maybe.Just) {
-                            obj.title = obj.title.value0; 
+                            obj.title = obj.title.value0;
+                            
                         } else {
                             obj.title = null;
                         }
@@ -1471,7 +1504,8 @@ obj.structureId = psStructureId(obj.structureId);
 
 
                     if (obj.title) {
-                        obj.title = new Data_Maybe.Just(obj.title);
+                        
+                        obj.title = new Data_Maybe.Just(obj.titlePs);
                     } else {
                         obj.title = Data_Maybe.Nothing.value;
                     }
@@ -1482,7 +1516,8 @@ function jsFocusedStructure(obj){obj.structureId = jsStructureId(obj.structureId
 
 
                         if (obj.title instanceof Data_Maybe.Just) {
-                            obj.title = obj.title.value0; 
+                            obj.title = obj.title.value0;
+                            
                         } else {
                             obj.title = null;
                         }
@@ -1499,7 +1534,8 @@ function psFocusedStructure(obj){obj.structureId = psStructureId(obj.structureId
 
 
                     if (obj.title) {
-                        obj.title = new Data_Maybe.Just(obj.title);
+                        
+                        obj.title = new Data_Maybe.Just(obj.titlePs);
                     } else {
                         obj.title = Data_Maybe.Nothing.value;
                     }
@@ -1512,10 +1548,78 @@ function psFocusedStructure(obj){obj.structureId = psStructureId(obj.structureId
                     
 return obj;}
 
+const jsDocumentBlockId = x => x;
+
+
+const psDocumentBlockId = x => x;
+
+
+function jsBlockType(obj) {
+                if(E.Paragraph && obj instanceof E.Paragraph) {
+                    return "paragraph";
+                }
+            
+                if(E.Header && obj instanceof E.Header) {
+                    return "header";
+                }
+            }
+
+function psBlockType(str) {switch(str){
+case "paragraph":
+return (E.Paragraph || { value: null }).value;
+case "header":
+return (E.Header || { value: null }).value;
+}}
+
+function jsDocumentBlock(obj){obj.id = jsDocumentBlockId(obj.id);
+obj.data = jsBlockData(obj.data);return obj;}
+
+function psDocumentBlock(obj){obj.id = psDocumentBlockId(obj.id);
+obj.data = psBlockData(obj.data);return obj;}
+
+function jsBlockData(obj) {
+                if(E.ParagraphBlockData && obj instanceof E.ParagraphBlockData) {
+                    
+                    return {
+                        type: "paragraph",
+                        text: obj.value0
+                    };
+                }
+            
+                if(E.HeaderBlockData && obj instanceof E.HeaderBlockData) {
+                    ;
+                    return {
+                        type: "header",
+                        level: obj.value0,text: obj.value1
+                    };
+                }
+            }
+
+function psBlockData(obj) {switch(obj.type){case "paragraph":
+return new E.ParagraphBlockData(obj.text);
+case "header":
+;return new E.HeaderBlockData(obj.level,obj.text);
+}}
+
+function jsDocument(obj){
+                            obj.blocks = obj.blocks.map(x => {
+                                x = jsDocumentBlock(x);
+                                return x;
+                            });
+                        return obj;}
+
+function psDocument(obj){
+                        obj.blocks = obj.blocks.map(x => {
+                            x = psDocumentBlock(x);
+                            return x;
+                        });
+                    return obj;}
+
 function jsRelatedMaterial(obj){obj.materialId = jsMaterialId(obj.materialId);
 
                         if (obj.contentId instanceof Data_Maybe.Just) {
-                            obj.contentId = obj.contentId.value0; 
+                            obj.contentId = obj.contentId.value0;
+                            obj.contentId = jsContentId(obj.contentId);
                         } else {
                             obj.contentId = null;
                         }
@@ -1530,7 +1634,8 @@ obj.updaterUser = jsRelatedUser(obj.updaterUser);return obj;}
 function psRelatedMaterial(obj){obj.materialId = psMaterialId(obj.materialId);
 
                     if (obj.contentId) {
-                        obj.contentId = new Data_Maybe.Just(obj.contentId);
+                        obj.contentId = psContentId(obj.contentId);
+                        obj.contentId = new Data_Maybe.Just(obj.contentIdPs);
                     } else {
                         obj.contentId = Data_Maybe.Nothing.value;
                     }
@@ -1542,10 +1647,35 @@ obj.creatorUser = psRelatedUser(obj.creatorUser);
 
 obj.updaterUser = psRelatedUser(obj.updaterUser);return obj;}
 
+function jsMaterialData(obj) {
+                if(E.FolderMaterialData && obj instanceof E.FolderMaterialData) {
+                    
+                    return {
+                        type: "folder",
+                        
+                    };
+                }
+            
+                if(E.DocumentMaterialData && obj instanceof E.DocumentMaterialData) {
+                    obj.value0 = jsDocument(obj.value0);
+                    return {
+                        type: "document",
+                        document: obj.value0
+                    };
+                }
+            }
+
+function psMaterialData(obj) {switch(obj.type){case "folder":
+return new E.FolderMaterialData();
+case "document":
+obj.document = psDocument(obj.document);return new E.DocumentMaterialData(obj.document);
+}}
+
 function jsFocusedMaterial(obj){obj.materialId = jsMaterialId(obj.materialId);
 
                         if (obj.contentId instanceof Data_Maybe.Just) {
-                            obj.contentId = obj.contentId.value0; 
+                            obj.contentId = obj.contentId.value0;
+                            obj.contentId = jsContentId(obj.contentId);
                         } else {
                             obj.contentId = null;
                         }
@@ -1556,10 +1686,11 @@ obj.materialType = jsMaterialType(obj.materialType);
 obj.creatorUser = jsRelatedUser(obj.creatorUser);
 
 obj.updaterUser = jsRelatedUser(obj.updaterUser);
-
+obj.data = jsMaterialData(obj.data);
 
                         if (obj.draft instanceof Data_Maybe.Just) {
-                            obj.draft = obj.draft.value0; 
+                            obj.draft = obj.draft.value0;
+                            obj.draft = jsRelatedMaterialDraft(obj.draft);
                         } else {
                             obj.draft = null;
                         }
@@ -1568,7 +1699,8 @@ obj.updaterUser = jsRelatedUser(obj.updaterUser);
 function psFocusedMaterial(obj){obj.materialId = psMaterialId(obj.materialId);
 
                     if (obj.contentId) {
-                        obj.contentId = new Data_Maybe.Just(obj.contentId);
+                        obj.contentId = psContentId(obj.contentId);
+                        obj.contentId = new Data_Maybe.Just(obj.contentIdPs);
                     } else {
                         obj.contentId = Data_Maybe.Nothing.value;
                     }
@@ -1579,10 +1711,11 @@ obj.materialType = psMaterialType(obj.materialType);
 obj.creatorUser = psRelatedUser(obj.creatorUser);
 
 obj.updaterUser = psRelatedUser(obj.updaterUser);
-
+obj.data = psMaterialData(obj.data);
 
                     if (obj.draft) {
-                        obj.draft = new Data_Maybe.Just(obj.draft);
+                        obj.draft = psRelatedMaterialDraft(obj.draft);
+                        obj.draft = new Data_Maybe.Just(obj.draftPs);
                     } else {
                         obj.draft = Data_Maybe.Nothing.value;
                     }
@@ -1593,7 +1726,8 @@ function jsRelatedMaterialCommit(obj){obj.commitId = jsMaterialCommitId(obj.comm
 
 
                         if (obj.basedCommitId instanceof Data_Maybe.Just) {
-                            obj.basedCommitId = obj.basedCommitId.value0; 
+                            obj.basedCommitId = obj.basedCommitId.value0;
+                            obj.basedCommitId = jsMaterialCommitId(obj.basedCommitId);
                         } else {
                             obj.basedCommitId = null;
                         }
@@ -1605,7 +1739,8 @@ function psRelatedMaterialCommit(obj){obj.commitId = psMaterialCommitId(obj.comm
 
 
                     if (obj.basedCommitId) {
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
+                        obj.basedCommitId = psMaterialCommitId(obj.basedCommitId);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
@@ -1640,26 +1775,29 @@ function jsFocusedMaterialDraft(obj){obj.draftId = jsMaterialDraftId(obj.draftId
 
 
                         if (obj.contentDraftId instanceof Data_Maybe.Just) {
-                            obj.contentDraftId = obj.contentDraftId.value0; 
+                            obj.contentDraftId = obj.contentDraftId.value0;
+                            obj.contentDraftId = jsContentDraftId(obj.contentDraftId);
                         } else {
                             obj.contentDraftId = null;
                         }
                     
 
                         if (obj.material instanceof Data_Maybe.Just) {
-                            obj.material = obj.material.value0; 
+                            obj.material = obj.material.value0;
+                            obj.material = jsRelatedMaterial(obj.material);
                         } else {
                             obj.material = null;
                         }
                     
 
                         if (obj.basedCommitId instanceof Data_Maybe.Just) {
-                            obj.basedCommitId = obj.basedCommitId.value0; 
+                            obj.basedCommitId = obj.basedCommitId.value0;
+                            obj.basedCommitId = jsMaterialCommitId(obj.basedCommitId);
                         } else {
                             obj.basedCommitId = null;
                         }
                     
-
+obj.data = jsMaterialData(obj.data);
 return obj;}
 
 function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId);
@@ -1668,26 +1806,29 @@ function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId
 
 
                     if (obj.contentDraftId) {
-                        obj.contentDraftId = new Data_Maybe.Just(obj.contentDraftId);
+                        obj.contentDraftId = psContentDraftId(obj.contentDraftId);
+                        obj.contentDraftId = new Data_Maybe.Just(obj.contentDraftIdPs);
                     } else {
                         obj.contentDraftId = Data_Maybe.Nothing.value;
                     }
                 
 
                     if (obj.material) {
-                        obj.material = new Data_Maybe.Just(obj.material);
+                        obj.material = psRelatedMaterial(obj.material);
+                        obj.material = new Data_Maybe.Just(obj.materialPs);
                     } else {
                         obj.material = Data_Maybe.Nothing.value;
                     }
                 
 
                     if (obj.basedCommitId) {
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
+                        obj.basedCommitId = psMaterialCommitId(obj.basedCommitId);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
                 
-
+obj.data = psMaterialData(obj.data);
 return obj;}
 
 function jsMaterialNodeType(obj) {
@@ -1717,7 +1858,8 @@ function jsMaterialNode(obj){obj.type = jsMaterialNodeType(obj.type);
 obj.user = jsRelatedUser(obj.user);
 
                         if (obj.editingId instanceof Data_Maybe.Just) {
-                            obj.editingId = obj.editingId.value0; 
+                            obj.editingId = obj.editingId.value0;
+                            
                         } else {
                             obj.editingId = null;
                         }
@@ -1728,7 +1870,8 @@ function psMaterialNode(obj){obj.type = psMaterialNodeType(obj.type);
 obj.user = psRelatedUser(obj.user);
 
                     if (obj.editingId) {
-                        obj.editingId = new Data_Maybe.Just(obj.editingId);
+                        
+                        obj.editingId = new Data_Maybe.Just(obj.editingIdPs);
                     } else {
                         obj.editingId = Data_Maybe.Nothing.value;
                     }
@@ -1795,7 +1938,8 @@ obj.container = jsRelatedContainer(obj.container);
 obj.state = jsReactorState(obj.state);
 
                         if (obj.definitionId instanceof Data_Maybe.Just) {
-                            obj.definitionId = obj.definitionId.value0; 
+                            obj.definitionId = obj.definitionId.value0;
+                            obj.definitionId = jsContentId(obj.definitionId);
                         } else {
                             obj.definitionId = null;
                         }
@@ -1808,7 +1952,8 @@ obj.container = psRelatedContainer(obj.container);
 obj.state = psReactorState(obj.state);
 
                     if (obj.definitionId) {
-                        obj.definitionId = new Data_Maybe.Just(obj.definitionId);
+                        obj.definitionId = psContentId(obj.definitionId);
+                        obj.definitionId = new Data_Maybe.Just(obj.definitionIdPs);
                     } else {
                         obj.definitionId = Data_Maybe.Nothing.value;
                     }
@@ -1833,7 +1978,8 @@ obj.displayId = jsSpaceDisplayId(obj.displayId);
 
 
                         if (obj.homeUrl instanceof Data_Maybe.Just) {
-                            obj.homeUrl = obj.homeUrl.value0; 
+                            obj.homeUrl = obj.homeUrl.value0;
+                            
                         } else {
                             obj.homeUrl = null;
                         }
@@ -1849,7 +1995,8 @@ obj.displayId = psSpaceDisplayId(obj.displayId);
 
 
                     if (obj.homeUrl) {
-                        obj.homeUrl = new Data_Maybe.Just(obj.homeUrl);
+                        
+                        obj.homeUrl = new Data_Maybe.Just(obj.homeUrlPs);
                     } else {
                         obj.homeUrl = Data_Maybe.Nothing.value;
                     }
@@ -1866,7 +2013,8 @@ obj.creatorUser = jsRelatedUser(obj.creatorUser);
 
 
                         if (obj.homeUrl instanceof Data_Maybe.Just) {
-                            obj.homeUrl = obj.homeUrl.value0; 
+                            obj.homeUrl = obj.homeUrl.value0;
+                            
                         } else {
                             obj.homeUrl = null;
                         }
@@ -1887,7 +2035,8 @@ obj.creatorUser = psRelatedUser(obj.creatorUser);
 
 
                     if (obj.homeUrl) {
-                        obj.homeUrl = new Data_Maybe.Just(obj.homeUrl);
+                        
+                        obj.homeUrl = new Data_Maybe.Just(obj.homeUrlPs);
                     } else {
                         obj.homeUrl = Data_Maybe.Nothing.value;
                     }
@@ -1919,7 +2068,8 @@ obj.displayId = jsUserDisplayId(obj.displayId);
 
 
                         if (obj.iconUrl instanceof Data_Maybe.Just) {
-                            obj.iconUrl = obj.iconUrl.value0; 
+                            obj.iconUrl = obj.iconUrl.value0;
+                            
                         } else {
                             obj.iconUrl = null;
                         }
@@ -1932,7 +2082,8 @@ obj.displayId = psUserDisplayId(obj.displayId);
 
 
                     if (obj.iconUrl) {
-                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrl);
+                        
+                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrlPs);
                     } else {
                         obj.iconUrl = Data_Maybe.Nothing.value;
                     }
@@ -1945,7 +2096,8 @@ obj.displayId = jsUserDisplayId(obj.displayId);
 
 
                         if (obj.iconUrl instanceof Data_Maybe.Just) {
-                            obj.iconUrl = obj.iconUrl.value0; 
+                            obj.iconUrl = obj.iconUrl.value0;
+                            
                         } else {
                             obj.iconUrl = null;
                         }
@@ -1957,7 +2109,8 @@ obj.displayId = psUserDisplayId(obj.displayId);
 
 
                     if (obj.iconUrl) {
-                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrl);
+                        
+                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrlPs);
                     } else {
                         obj.iconUrl = Data_Maybe.Nothing.value;
                     }
@@ -1969,7 +2122,8 @@ obj.displayId = jsUserDisplayId(obj.displayId);
 
 
                         if (obj.iconUrl instanceof Data_Maybe.Just) {
-                            obj.iconUrl = obj.iconUrl.value0; 
+                            obj.iconUrl = obj.iconUrl.value0;
+                            
                         } else {
                             obj.iconUrl = null;
                         }
@@ -1981,7 +2135,8 @@ obj.displayId = psUserDisplayId(obj.displayId);
 
 
                     if (obj.iconUrl) {
-                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrl);
+                        
+                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrlPs);
                     } else {
                         obj.iconUrl = Data_Maybe.Nothing.value;
                     }
@@ -1996,6 +2151,7 @@ obj.userId = psUserId(obj.userId);return obj;}
 
 exports.__getContainers = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
                 argObject = [ argObject.spaceId ];
                 let result = await requestApi("getContainers", argObject);
@@ -2050,9 +2206,11 @@ obj.materialId = psMaterialId(obj.materialId);return new E.MoveMaterialCompositi
 
 exports.__startContentEditing = (() => {return (contentId) => {return async function (basedCommitId) {
                 let argObject = { contentId,basedCommitId };
+                argObject = _.cloneDeep(argObject);
                 argObject.contentId = jsContentId(argObject.contentId);
                         if (argObject.basedCommitId instanceof Data_Maybe.Just) {
-                            argObject.basedCommitId = argObject.basedCommitId.value0; 
+                            argObject.basedCommitId = argObject.basedCommitId.value0;
+                            argObject.basedCommitId = jsContentCommitId(argObject.basedCommitId);
                         } else {
                             argObject.basedCommitId = null;
                         }
@@ -2064,15 +2222,18 @@ exports.__startContentEditing = (() => {return (contentId) => {return async func
 
 exports.__createNewContentDraft = (() => {return (structureId) => {return (spaceId) => {return async function (data) {
                 let argObject = { structureId,spaceId,data };
+                argObject = _.cloneDeep(argObject);
                 argObject.structureId = jsStructureId(argObject.structureId);
                         if (argObject.spaceId instanceof Data_Maybe.Just) {
-                            argObject.spaceId = argObject.spaceId.value0; 
+                            argObject.spaceId = argObject.spaceId.value0;
+                            argObject.spaceId = jsSpaceId(argObject.spaceId);
                         } else {
                             argObject.spaceId = null;
                         }
                     
                         if (argObject.data instanceof Data_Maybe.Just) {
-                            argObject.data = argObject.data.value0; 
+                            argObject.data = argObject.data.value0;
+                            argObject.data = jsObjectLiteral(argObject.data);
                         } else {
                             argObject.data = null;
                         }
@@ -2084,12 +2245,14 @@ exports.__createNewContentDraft = (() => {return (structureId) => {return (space
 
 exports.__editContentDraft = (() => {return (contentDraftId) => {return async function (data) {
                 let argObject = { contentDraftId,data };
+                argObject = _.cloneDeep(argObject);
                 argObject.contentDraftId = jsContentDraftId(argObject.contentDraftId);
                 argObject = [ argObject.contentDraftId,argObject.data ];
                 let result = await requestApi("editContentDraft", argObject);
                 
                     if (result) {
-                        result = new Data_Maybe.Just(result);
+                        result = psRelatedContentRevision(result);
+                        result = new Data_Maybe.Just(resultPs);
                     } else {
                         result = Data_Maybe.Nothing.value;
                     }
@@ -2098,6 +2261,7 @@ exports.__editContentDraft = (() => {return (contentDraftId) => {return async fu
 
 exports.__commitContent = (() => {return (contentDraftId) => {return async function (data) {
                 let argObject = { contentDraftId,data };
+                argObject = _.cloneDeep(argObject);
                 argObject.contentDraftId = jsContentDraftId(argObject.contentDraftId);
                 argObject = [ argObject.contentDraftId,argObject.data ];
                 let result = await requestApi("commitContent", argObject);
@@ -2106,6 +2270,7 @@ exports.__commitContent = (() => {return (contentDraftId) => {return async funct
 
 exports.__getContent = (() => {return async function (contentId) {
                 let argObject = { contentId };
+                argObject = _.cloneDeep(argObject);
                 argObject.contentId = jsContentId(argObject.contentId);
                 argObject = [ argObject.contentId ];
                 let result = await requestApi("getContent", argObject);
@@ -2114,6 +2279,7 @@ exports.__getContent = (() => {return async function (contentId) {
 
 exports.__getRelatedContent = (() => {return async function (contentId) {
                 let argObject = { contentId };
+                argObject = _.cloneDeep(argObject);
                 argObject.contentId = jsContentId(argObject.contentId);
                 argObject = [ argObject.contentId ];
                 let result = await requestApi("getRelatedContent", argObject);
@@ -2122,6 +2288,7 @@ exports.__getRelatedContent = (() => {return async function (contentId) {
 
 exports.__getContents = (() => {return (spaceId) => {return async function (formatId) {
                 let argObject = { spaceId,formatId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.formatId = jsFormatId(argObject.formatId);
                 argObject = [ argObject.spaceId,argObject.formatId ];
                 let result = await requestApi("getContents", argObject);
@@ -2135,6 +2302,7 @@ exports.__getContents = (() => {return (spaceId) => {return async function (form
 
 exports.__getContentsByProperty = (() => {return (spaceId) => {return (formatId) => {return (propertyId) => {return async function (value) {
                 let argObject = { spaceId,formatId,propertyId,value };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.formatId = jsFormatId(argObject.formatId);argObject.propertyId = jsPropertyId(argObject.propertyId);
                 argObject = [ argObject.spaceId,argObject.formatId,argObject.propertyId,argObject.value ];
                 let result = await requestApi("getContentsByProperty", argObject);
@@ -2148,6 +2316,7 @@ exports.__getContentsByProperty = (() => {return (spaceId) => {return (formatId)
 
 exports.__getContentsByDisplayId = (() => {return (spaceId) => {return async function (formatId) {
                 let argObject = { spaceId,formatId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceDisplayId(argObject.spaceId);argObject.formatId = jsFormatDisplayId(argObject.formatId);
                 argObject = [ argObject.spaceId,argObject.formatId ];
                 let result = await requestApi("getContentsByDisplayId", argObject);
@@ -2174,6 +2343,7 @@ exports.__getContentsByDisplayId = (() => {return (spaceId) => {return async fun
 
 exports.__getContentDraft = (() => {return async function (draftId) {
                 let argObject = { draftId };
+                argObject = _.cloneDeep(argObject);
                 argObject.draftId = jsContentDraftId(argObject.draftId);
                 argObject = [ argObject.draftId ];
                 let result = await requestApi("getContentDraft", argObject);
@@ -2182,6 +2352,7 @@ exports.__getContentDraft = (() => {return async function (draftId) {
 
 exports.__getContentCommits = (() => {return async function (contentId) {
                 let argObject = { contentId };
+                argObject = _.cloneDeep(argObject);
                 argObject.contentId = jsContentId(argObject.contentId);
                 argObject = [ argObject.contentId ];
                 let result = await requestApi("getContentCommits", argObject);
@@ -2195,6 +2366,7 @@ exports.__getContentCommits = (() => {return async function (contentId) {
 
 exports.__getContentEditingNodes = (() => {return async function (draftId) {
                 let argObject = { draftId };
+                argObject = _.cloneDeep(argObject);
                 argObject.draftId = jsContentDraftId(argObject.draftId);
                 argObject = [ argObject.draftId ];
                 let result = await requestApi("getContentEditingNodes", argObject);
@@ -2208,6 +2380,7 @@ exports.__getContentEditingNodes = (() => {return async function (draftId) {
 
 exports.__getContentRevision = (() => {return async function (revisionId) {
                 let argObject = { revisionId };
+                argObject = _.cloneDeep(argObject);
                 argObject.revisionId = jsContentWholeRevisionId(argObject.revisionId);
                 argObject = [ argObject.revisionId ];
                 let result = await requestApi("getContentRevision", argObject);
@@ -2216,6 +2389,7 @@ exports.__getContentRevision = (() => {return async function (revisionId) {
 
 exports.__getContentCommit = (() => {return async function (commitId) {
                 let argObject = { commitId };
+                argObject = _.cloneDeep(argObject);
                 argObject.commitId = jsContentCommitId(argObject.commitId);
                 argObject = [ argObject.commitId ];
                 let result = await requestApi("getContentCommit", argObject);
@@ -2224,6 +2398,7 @@ exports.__getContentCommit = (() => {return async function (commitId) {
 
 exports.__getSpaceLatestContents = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
                 argObject = [ argObject.spaceId ];
                 let result = await requestApi("getSpaceLatestContents", argObject);
@@ -2237,6 +2412,7 @@ exports.__getSpaceLatestContents = (() => {return async function (spaceId) {
 
 
                 exports.__createFormat = (() => {return async function (argObject) {
+                    argObject = _.cloneDeep(argObject);
                     argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.usage = jsFormatUsage(argObject.usage);
                             argObject.properties = argObject.properties.map(x => {
                                 x = jsPropertyInfo(x);
@@ -2252,6 +2428,7 @@ exports.__getSpaceLatestContents = (() => {return async function (spaceId) {
 
 exports.__getFormat = (() => {return async function (formatDisplayId) {
                 let argObject = { formatDisplayId };
+                argObject = _.cloneDeep(argObject);
                 argObject.formatDisplayId = jsFormatDisplayId(argObject.formatDisplayId);
                 argObject = [ argObject.formatDisplayId ];
                 let result = await requestApi("getFormat", argObject);
@@ -2260,6 +2437,7 @@ exports.__getFormat = (() => {return async function (formatDisplayId) {
 
 exports.__getFocusedFormat = (() => {return async function (formatId) {
                 let argObject = { formatId };
+                argObject = _.cloneDeep(argObject);
                 argObject.formatId = jsFormatId(argObject.formatId);
                 argObject = [ argObject.formatId ];
                 let result = await requestApi("getFocusedFormat", argObject);
@@ -2268,6 +2446,7 @@ exports.__getFocusedFormat = (() => {return async function (formatId) {
 
 exports.__getRelatedFormat = (() => {return async function (formatId) {
                 let argObject = { formatId };
+                argObject = _.cloneDeep(argObject);
                 argObject.formatId = jsFormatId(argObject.formatId);
                 argObject = [ argObject.formatId ];
                 let result = await requestApi("getRelatedFormat", argObject);
@@ -2276,6 +2455,7 @@ exports.__getRelatedFormat = (() => {return async function (formatId) {
 
 exports.__getFocusedFormatByStructure = (() => {return async function (structureId) {
                 let argObject = { structureId };
+                argObject = _.cloneDeep(argObject);
                 argObject.structureId = jsStructureId(argObject.structureId);
                 argObject = [ argObject.structureId ];
                 let result = await requestApi("getFocusedFormatByStructure", argObject);
@@ -2284,6 +2464,7 @@ exports.__getFocusedFormatByStructure = (() => {return async function (structure
 
 exports.__getRelatedStructure = (() => {return async function (structureId) {
                 let argObject = { structureId };
+                argObject = _.cloneDeep(argObject);
                 argObject.structureId = jsStructureId(argObject.structureId);
                 argObject = [ argObject.structureId ];
                 let result = await requestApi("getRelatedStructure", argObject);
@@ -2292,6 +2473,7 @@ exports.__getRelatedStructure = (() => {return async function (structureId) {
 
 exports.__getFormats = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
                 argObject = [ argObject.spaceId ];
                 let result = await requestApi("getFormats", argObject);
@@ -2305,6 +2487,7 @@ exports.__getFormats = (() => {return async function (spaceId) {
 
 exports.__getStructures = (() => {return async function (formatId) {
                 let argObject = { formatId };
+                argObject = _.cloneDeep(argObject);
                 argObject.formatId = jsFormatId(argObject.formatId);
                 argObject = [ argObject.formatId ];
                 let result = await requestApi("getStructures", argObject);
@@ -2318,6 +2501,7 @@ exports.__getStructures = (() => {return async function (formatId) {
 
 exports.__updateFormatStructure = (() => {return (formatId) => {return async function (properties) {
                 let argObject = { formatId,properties };
+                argObject = _.cloneDeep(argObject);
                 argObject.formatId = jsFormatId(argObject.formatId);
                             argObject.properties = argObject.properties.map(x => {
                                 x = jsPropertyInfo(x);
@@ -2331,6 +2515,7 @@ exports.__updateFormatStructure = (() => {return (formatId) => {return async fun
 
 exports.__setFormatDisplayName = (() => {return (formatId) => {return async function (displayName) {
                 let argObject = { formatId,displayName };
+                argObject = _.cloneDeep(argObject);
                 argObject.formatId = jsFormatId(argObject.formatId);
                 argObject = [ argObject.formatId,argObject.displayName ];
                 let result = await requestApi("setFormatDisplayName", argObject);
@@ -2339,28 +2524,32 @@ exports.__setFormatDisplayName = (() => {return (formatId) => {return async func
 
 exports.__setFormatDisplayId = (() => {return (formatId) => {return async function (displayId) {
                 let argObject = { formatId,displayId };
+                argObject = _.cloneDeep(argObject);
                 argObject.formatId = jsFormatId(argObject.formatId);argObject.displayId = jsFormatDisplayId(argObject.displayId);
                 argObject = [ argObject.formatId,argObject.displayId ];
                 let result = await requestApi("setFormatDisplayId", argObject);
                 
                 return result;}};})();
 
-exports.__setFormatFontawesome = (() => {return (formatId) => {return async function (fontawesome) {
-                let argObject = { formatId,fontawesome };
+exports.__setFormatIcon = (() => {return (formatId) => {return async function (icon) {
+                let argObject = { formatId,icon };
+                argObject = _.cloneDeep(argObject);
                 argObject.formatId = jsFormatId(argObject.formatId);
-                        if (argObject.fontawesome instanceof Data_Maybe.Just) {
-                            argObject.fontawesome = argObject.fontawesome.value0; 
+                        if (argObject.icon instanceof Data_Maybe.Just) {
+                            argObject.icon = argObject.icon.value0;
+                            
                         } else {
-                            argObject.fontawesome = null;
+                            argObject.icon = null;
                         }
                     
-                argObject = [ argObject.formatId,argObject.fontawesome ];
-                let result = await requestApi("setFormatFontawesome", argObject);
+                argObject = [ argObject.formatId,argObject.icon ];
+                let result = await requestApi("setFormatIcon", argObject);
                 
                 return result;}};})();
 
 exports.__getAvailableFormatDisplayId = (() => {return async function (formatDisplayId) {
                 let argObject = { formatDisplayId };
+                argObject = _.cloneDeep(argObject);
                 argObject.formatDisplayId = jsFormatDisplayId(argObject.formatDisplayId);
                 argObject = [ argObject.formatDisplayId ];
                 let result = await requestApi("getAvailableFormatDisplayId", argObject);
@@ -2369,9 +2558,11 @@ exports.__getAvailableFormatDisplayId = (() => {return async function (formatDis
 
 exports.__startMaterialEditing = (() => {return (materialId) => {return async function (basedCommitId) {
                 let argObject = { materialId,basedCommitId };
+                argObject = _.cloneDeep(argObject);
                 argObject.materialId = jsMaterialId(argObject.materialId);
                         if (argObject.basedCommitId instanceof Data_Maybe.Just) {
-                            argObject.basedCommitId = argObject.basedCommitId.value0; 
+                            argObject.basedCommitId = argObject.basedCommitId.value0;
+                            argObject.basedCommitId = jsMaterialCommitId(argObject.basedCommitId);
                         } else {
                             argObject.basedCommitId = null;
                         }
@@ -2381,50 +2572,57 @@ exports.__startMaterialEditing = (() => {return (materialId) => {return async fu
                 result = psRelatedMaterialDraft(result);
                 return result;}};})();
 
-exports.__createNewMaterialDraft = (() => {return (spaceId) => {return (type) => {return async function (data) {
-                let argObject = { spaceId,type,data };
+exports.__createNewMaterialDraft = (() => {return (spaceId) => {return (type) => {return async function (materialData) {
+                let argObject = { spaceId,type,materialData };
+                argObject = _.cloneDeep(argObject);
                 
                         if (argObject.spaceId instanceof Data_Maybe.Just) {
-                            argObject.spaceId = argObject.spaceId.value0; 
+                            argObject.spaceId = argObject.spaceId.value0;
+                            argObject.spaceId = jsSpaceId(argObject.spaceId);
                         } else {
                             argObject.spaceId = null;
                         }
                     argObject.type = jsMaterialType(argObject.type);
-                        if (argObject.data instanceof Data_Maybe.Just) {
-                            argObject.data = argObject.data.value0; 
+                        if (argObject.materialData instanceof Data_Maybe.Just) {
+                            argObject.materialData = argObject.materialData.value0;
+                            argObject.materialData = jsMaterialData(argObject.materialData);
                         } else {
-                            argObject.data = null;
+                            argObject.materialData = null;
                         }
                     
-                argObject = [ argObject.spaceId,argObject.type,argObject.data ];
+                argObject = [ argObject.spaceId,argObject.type,argObject.materialData ];
                 let result = await requestApi("createNewMaterialDraft", argObject);
                 result = psRelatedMaterialDraft(result);
                 return result;}}};})();
 
-exports.__editMaterialDraft = (() => {return (materialDraftId) => {return async function (data) {
-                let argObject = { materialDraftId,data };
-                argObject.materialDraftId = jsMaterialDraftId(argObject.materialDraftId);
-                argObject = [ argObject.materialDraftId,argObject.data ];
+exports.__editMaterialDraft = (() => {return (materialDraftId) => {return async function (materialData) {
+                let argObject = { materialDraftId,materialData };
+                argObject = _.cloneDeep(argObject);
+                argObject.materialDraftId = jsMaterialDraftId(argObject.materialDraftId);argObject.materialData = jsMaterialData(argObject.materialData);
+                argObject = [ argObject.materialDraftId,argObject.materialData ];
                 let result = await requestApi("editMaterialDraft", argObject);
                 
                     if (result) {
-                        result = new Data_Maybe.Just(result);
+                        result = psRelatedMaterialRevision(result);
+                        result = new Data_Maybe.Just(resultPs);
                     } else {
                         result = Data_Maybe.Nothing.value;
                     }
                 
                 return result;}};})();
 
-exports.__commitMaterial = (() => {return (materialDraftId) => {return async function (data) {
-                let argObject = { materialDraftId,data };
-                argObject.materialDraftId = jsMaterialDraftId(argObject.materialDraftId);
-                argObject = [ argObject.materialDraftId,argObject.data ];
+exports.__commitMaterial = (() => {return (materialDraftId) => {return async function (materialData) {
+                let argObject = { materialDraftId,materialData };
+                argObject = _.cloneDeep(argObject);
+                argObject.materialDraftId = jsMaterialDraftId(argObject.materialDraftId);argObject.materialData = jsMaterialData(argObject.materialData);
+                argObject = [ argObject.materialDraftId,argObject.materialData ];
                 let result = await requestApi("commitMaterial", argObject);
                 result = psRelatedMaterialRevision(result);
                 return result;}};})();
 
 exports.__getMaterial = (() => {return async function (materialId) {
                 let argObject = { materialId };
+                argObject = _.cloneDeep(argObject);
                 argObject.materialId = jsMaterialId(argObject.materialId);
                 argObject = [ argObject.materialId ];
                 let result = await requestApi("getMaterial", argObject);
@@ -2446,6 +2644,7 @@ exports.__getMaterial = (() => {return async function (materialId) {
 
 exports.__getMaterialDraft = (() => {return async function (draftId) {
                 let argObject = { draftId };
+                argObject = _.cloneDeep(argObject);
                 argObject.draftId = jsMaterialDraftId(argObject.draftId);
                 argObject = [ argObject.draftId ];
                 let result = await requestApi("getMaterialDraft", argObject);
@@ -2454,6 +2653,7 @@ exports.__getMaterialDraft = (() => {return async function (draftId) {
 
 exports.__getMaterialCommits = (() => {return async function (materialId) {
                 let argObject = { materialId };
+                argObject = _.cloneDeep(argObject);
                 argObject.materialId = jsMaterialId(argObject.materialId);
                 argObject = [ argObject.materialId ];
                 let result = await requestApi("getMaterialCommits", argObject);
@@ -2467,6 +2667,7 @@ exports.__getMaterialCommits = (() => {return async function (materialId) {
 
 exports.__getMaterialEditingNodes = (() => {return async function (draftId) {
                 let argObject = { draftId };
+                argObject = _.cloneDeep(argObject);
                 argObject.draftId = jsMaterialDraftId(argObject.draftId);
                 argObject = [ argObject.draftId ];
                 let result = await requestApi("getMaterialEditingNodes", argObject);
@@ -2480,6 +2681,7 @@ exports.__getMaterialEditingNodes = (() => {return async function (draftId) {
 
 exports.__getMaterialRevision = (() => {return async function (revisionId) {
                 let argObject = { revisionId };
+                argObject = _.cloneDeep(argObject);
                 argObject.revisionId = jsMaterialRevisionId(argObject.revisionId);
                 argObject = [ argObject.revisionId ];
                 let result = await requestApi("getMaterialRevision", argObject);
@@ -2488,6 +2690,7 @@ exports.__getMaterialRevision = (() => {return async function (revisionId) {
 
 exports.__getMaterialCommit = (() => {return async function (commitId) {
                 let argObject = { commitId };
+                argObject = _.cloneDeep(argObject);
                 argObject.commitId = jsMaterialCommitId(argObject.commitId);
                 argObject = [ argObject.commitId ];
                 let result = await requestApi("getMaterialCommit", argObject);
@@ -2496,6 +2699,7 @@ exports.__getMaterialCommit = (() => {return async function (commitId) {
 
 
                 exports.__createSpace = (() => {return async function (argObject) {
+                    argObject = _.cloneDeep(argObject);
                     
                     let args = [ argObject.displayId,argObject.displayName,argObject.description ];
                     let result = await requestApi("createSpace", args);
@@ -2506,6 +2710,7 @@ exports.__getMaterialCommit = (() => {return async function (commitId) {
 
 exports.__getSpace = (() => {return async function (spaceDisplayId) {
                 let argObject = { spaceDisplayId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceDisplayId = jsSpaceDisplayId(argObject.spaceDisplayId);
                 argObject = [ argObject.spaceDisplayId ];
                 let result = await requestApi("getSpace", argObject);
@@ -2514,6 +2719,7 @@ exports.__getSpace = (() => {return async function (spaceDisplayId) {
 
 exports.__getRelatedSpace = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
                 argObject = [ argObject.spaceId ];
                 let result = await requestApi("getRelatedSpace", argObject);
@@ -2522,6 +2728,7 @@ exports.__getRelatedSpace = (() => {return async function (spaceId) {
 
 exports.__getSpaceMembers = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
                 argObject = [ argObject.spaceId ];
                 let result = await requestApi("getSpaceMembers", argObject);
@@ -2535,6 +2742,7 @@ exports.__getSpaceMembers = (() => {return async function (spaceId) {
 
 exports.__getSpaceMembershipApplications = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
                 argObject = [ argObject.spaceId ];
                 let result = await requestApi("getSpaceMembershipApplications", argObject);
@@ -2548,6 +2756,7 @@ exports.__getSpaceMembershipApplications = (() => {return async function (spaceI
 
 exports.__getAvailableSpaceDisplayId = (() => {return async function (spaceDisplayId) {
                 let argObject = { spaceDisplayId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceDisplayId = jsSpaceDisplayId(argObject.spaceDisplayId);
                 argObject = [ argObject.spaceDisplayId ];
                 let result = await requestApi("getAvailableSpaceDisplayId", argObject);
@@ -2608,6 +2817,7 @@ exports.__getAvailableSpaceDisplayId = (() => {return async function (spaceDispl
 
 exports.__applySpaceMembership = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
                 argObject = [ argObject.spaceId ];
                 let result = await requestApi("applySpaceMembership", argObject);
@@ -2616,6 +2826,7 @@ exports.__applySpaceMembership = (() => {return async function (spaceId) {
 
 exports.__acceptSpaceMembership = (() => {return (spaceId) => {return async function (targetUserId) {
                 let argObject = { spaceId,targetUserId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.targetUserId = jsUserId(argObject.targetUserId);
                 argObject = [ argObject.spaceId,argObject.targetUserId ];
                 let result = await requestApi("acceptSpaceMembership", argObject);
@@ -2624,6 +2835,7 @@ exports.__acceptSpaceMembership = (() => {return (spaceId) => {return async func
 
 exports.__rejectSpaceMembership = (() => {return (spaceId) => {return async function (targetUserId) {
                 let argObject = { spaceId,targetUserId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.targetUserId = jsUserId(argObject.targetUserId);
                 argObject = [ argObject.spaceId,argObject.targetUserId ];
                 let result = await requestApi("rejectSpaceMembership", argObject);
@@ -2632,6 +2844,7 @@ exports.__rejectSpaceMembership = (() => {return (spaceId) => {return async func
 
 exports.__cancelSpaceMembershipApplication = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
                 argObject = [ argObject.spaceId ];
                 let result = await requestApi("cancelSpaceMembershipApplication", argObject);
@@ -2640,6 +2853,7 @@ exports.__cancelSpaceMembershipApplication = (() => {return async function (spac
 
 exports.__setSpaceMembershipMethod = (() => {return (spaceId) => {return async function (membershipMethod) {
                 let argObject = { spaceId,membershipMethod };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.membershipMethod = jsMembershipMethod(argObject.membershipMethod);
                 argObject = [ argObject.spaceId,argObject.membershipMethod ];
                 let result = await requestApi("setSpaceMembershipMethod", argObject);
@@ -2648,6 +2862,7 @@ exports.__setSpaceMembershipMethod = (() => {return (spaceId) => {return async f
 
 exports.__setSpaceDisplayName = (() => {return (spaceId) => {return async function (displayName) {
                 let argObject = { spaceId,displayName };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
                 argObject = [ argObject.spaceId,argObject.displayName ];
                 let result = await requestApi("setSpaceDisplayName", argObject);
@@ -2656,6 +2871,7 @@ exports.__setSpaceDisplayName = (() => {return (spaceId) => {return async functi
 
 exports.__setSpaceDisplayId = (() => {return (spaceId) => {return async function (displayId) {
                 let argObject = { spaceId,displayId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.displayId = jsSpaceDisplayId(argObject.displayId);
                 argObject = [ argObject.spaceId,argObject.displayId ];
                 let result = await requestApi("setSpaceDisplayId", argObject);
@@ -2664,6 +2880,7 @@ exports.__setSpaceDisplayId = (() => {return (spaceId) => {return async function
 
 exports.__setSpacePublished = (() => {return (spaceId) => {return async function (published) {
                 let argObject = { spaceId,published };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
                 argObject = [ argObject.spaceId,argObject.published ];
                 let result = await requestApi("setSpacePublished", argObject);
@@ -2672,6 +2889,7 @@ exports.__setSpacePublished = (() => {return (spaceId) => {return async function
 
 exports.__setSpaceDefaultAuthority = (() => {return (spaceId) => {return async function (defaultAuthority) {
                 let argObject = { spaceId,defaultAuthority };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);argObject.defaultAuthority = jsSpaceAuth(argObject.defaultAuthority);
                 argObject = [ argObject.spaceId,argObject.defaultAuthority ];
                 let result = await requestApi("setSpaceDefaultAuthority", argObject);
@@ -2680,6 +2898,7 @@ exports.__setSpaceDefaultAuthority = (() => {return (spaceId) => {return async f
 
 exports.__getSpaceContainers = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
                 argObject.spaceId = jsSpaceId(argObject.spaceId);
                 argObject = [ argObject.spaceId ];
                 let result = await requestApi("getSpaceContainers", argObject);
@@ -2693,6 +2912,7 @@ exports.__getSpaceContainers = (() => {return async function (spaceId) {
 
 
                 exports.__createUser = (() => {return async function (argObject) {
+                    argObject = _.cloneDeep(argObject);
                     
                     let args = [ argObject.email,argObject.displayName,argObject.password ];
                     let result = await requestApi("createUser", args);
@@ -2719,6 +2939,7 @@ exports.__getSpaceContainers = (() => {return async function (spaceId) {
 
 exports.__getUser = (() => {return async function (displayId) {
                 let argObject = { displayId };
+                argObject = _.cloneDeep(argObject);
                 argObject.displayId = jsUserDisplayId(argObject.displayId);
                 argObject = [ argObject.displayId ];
                 let result = await requestApi("getUser", argObject);
@@ -2727,6 +2948,7 @@ exports.__getUser = (() => {return async function (displayId) {
 
 
                 exports.__authenticate = (() => {return async function (argObject) {
+                    argObject = _.cloneDeep(argObject);
                     
                     let args = [ argObject.email,argObject.password ];
                     let result = await requestApi("authenticate", args);
@@ -2737,6 +2959,7 @@ exports.__getUser = (() => {return async function (displayId) {
 
 exports.__getFocusedUser = (() => {return async function (userId) {
                 let argObject = { userId };
+                argObject = _.cloneDeep(argObject);
                 argObject.userId = jsUserId(argObject.userId);
                 argObject = [ argObject.userId ];
                 let result = await requestApi("getFocusedUser", argObject);
@@ -2745,6 +2968,7 @@ exports.__getFocusedUser = (() => {return async function (userId) {
 
 exports.__getRelatedUser = (() => {return async function (userId) {
                 let argObject = { userId };
+                argObject = _.cloneDeep(argObject);
                 argObject.userId = jsUserId(argObject.userId);
                 argObject = [ argObject.userId ];
                 let result = await requestApi("getRelatedUser", argObject);
@@ -2753,6 +2977,7 @@ exports.__getRelatedUser = (() => {return async function (userId) {
 
 
                 exports.__setMyPassword = (() => {return async function (argObject) {
+                    argObject = _.cloneDeep(argObject);
                     
                     let args = [ argObject.oldPassword,argObject.newPassword ];
                     let result = await requestApi("setMyPassword", args);
@@ -2763,6 +2988,7 @@ exports.__getRelatedUser = (() => {return async function (userId) {
 
 exports.__setMyDisplayName = (() => {return async function (displayName) {
                 let argObject = { displayName };
+                argObject = _.cloneDeep(argObject);
                 
                 argObject = [ argObject.displayName ];
                 let result = await requestApi("setMyDisplayName", argObject);
@@ -2771,6 +2997,7 @@ exports.__setMyDisplayName = (() => {return async function (displayName) {
 
 exports.__setMyDisplayId = (() => {return async function (displayId) {
                 let argObject = { displayId };
+                argObject = _.cloneDeep(argObject);
                 argObject.displayId = jsUserDisplayId(argObject.displayId);
                 argObject = [ argObject.displayId ];
                 let result = await requestApi("setMyDisplayId", argObject);
@@ -2779,6 +3006,7 @@ exports.__setMyDisplayId = (() => {return async function (displayId) {
 
 exports.__setMyEmail = (() => {return async function (email) {
                 let argObject = { email };
+                argObject = _.cloneDeep(argObject);
                 
                 argObject = [ argObject.email ];
                 let result = await requestApi("setMyEmail", argObject);
@@ -2787,6 +3015,7 @@ exports.__setMyEmail = (() => {return async function (email) {
 
 exports.__setMyIcon = (() => {return async function (icon) {
                 let argObject = { icon };
+                argObject = _.cloneDeep(argObject);
                 
                 argObject = [ argObject.icon ];
                 let result = await requestApi("setMyIcon", argObject);

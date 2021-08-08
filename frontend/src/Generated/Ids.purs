@@ -335,6 +335,13 @@ derive instance newtypeContentWholeRevisionId :: Newtype ContentWholeRevisionId 
 
 
 
+newtype DocumentBlockId = DocumentBlockId String
+derive instance eqDocumentBlockId :: Eq DocumentBlockId
+derive instance ordDocumentBlockId :: Ord DocumentBlockId
+derive instance newtypeDocumentBlockId :: Newtype DocumentBlockId _
+
+
+
 newtype MaterialRevisionId = MaterialRevisionId String
 derive instance eqMaterialRevisionId :: Eq MaterialRevisionId
 derive instance ordMaterialRevisionId :: Ord MaterialRevisionId

@@ -2,28 +2,23 @@ module Incentknow.Molecules.TypeMenu where
 
 import Prelude
 
-import CSS.Common (initial)
-import Data.Array (elem, filter, notElem)
-import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
-import Data.Maybe.Utils (flatten)
-import Data.Newtype (unwrap, wrap)
+import Data.Array (filter, notElem)
+import Data.Maybe (Maybe(..), isJust, isNothing, maybe)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (typeIcon)
-import Incentknow.Data.Entities (Language(..), RelatedFormat, Type(..), TypeName(..), FocusedFormat)
+import Incentknow.Data.Entities (FocusedFormat, Language(..), Type, TypeName(..))
 import Incentknow.Data.EntityUtils (TypeOptions, buildType, defaultTypeOptions, getTypeName, getTypeOptions)
-import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
-import Incentknow.Data.Property (Enumerator)
+import Incentknow.Data.Ids (FormatId, SpaceId)
 import Incentknow.HTML.Utils (css, whenElem)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
-import Test.Unit.Console (consoleLog)
 
 type Input
   = { value :: Maybe Type
@@ -94,10 +89,7 @@ typeItems =
  -- , { id: TypeNameDecimal, name: "Decimal", desc: "少数" }
   , { id: TypeNameBool, name: "Boolean", desc: "ブール値" }
   , { id: TypeNameEnum, name: "Enum", desc: "列挙体" }
-  , { id: TypeNameFormat, name: "Format", desc: "フォーマット" }
-  , { id: TypeNameSpace, name: "Space", desc: "スペース" }
   , { id: TypeNameContent, name: "Content", desc: "コンテンツ" }
-  , { id: TypeNameCode, name: "SourceCode", desc: "ソースコード" }
   , { id: TypeNameUrl, name: "URL", desc: "URL" }
   , { id: TypeNameArray, name: "Array", desc: "配列" }
   , { id: TypeNameObject, name: "Object", desc: "オブジェクト" }
@@ -190,16 +182,6 @@ render state =
                 { value: map _.formatId state.typeOptions.format, filter: maybe FormatMenu.None FormatMenu.SpaceByAndHasSemanticId state.selectedSpaceId, disabled: state.disabled }
                 (Just <<< ChangeFormat)
             ]
-        Just TypeNameCode ->
-          HH.slot (SProxy :: SProxy "langMenu") unit SelectMenu.component
-            { initial: { items: state.langNameItems, completed: false }
-            , value: state.typeOptions.language
-            , disabled: state.disabled
-            , fetchMultiple: \_-> Nothing
-            , fetchSingle: Nothing
-            , fetchId: ""
-            }
-            (Just <<< ChangeLangName)
         Just TypeNameArray ->
           HH.slot (SProxy :: SProxy "typeMenu") unit component
             { value: state.typeOptions.subType, exceptions: [ TypeNameArray ], spaceId: state.spaceId, disabled: state.disabled }

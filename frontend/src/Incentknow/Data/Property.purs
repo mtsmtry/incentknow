@@ -2,18 +2,21 @@ module Incentknow.Data.Property where
 
 import Prelude
 
-import Data.Argonaut.Core (Json, fromArray, fromObject, jsonNull)
+import Data.Argonaut.Core (Json, fromArray, fromBoolean, fromObject, isNull, jsonNull, toArray, toBoolean, toNumber, toString)
 import Data.Argonaut.Encode (encodeJson)
-import Data.Array (concat, cons, filter, fromFoldable, length, singleton, uncons)
+import Data.Array (catMaybes, concat, cons, filter, fromFoldable, length, singleton, uncons)
+import Data.Int (fromNumber)
 import Data.Map (values)
 import Data.Map as M
 import Data.Map.Utils (decodeToMap, mergeFromArray)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Newtype (unwrap)
+import Data.Maybe.Utils (flatten)
+import Data.Newtype (unwrap, wrap)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Tuple (Tuple(..), uncurry)
 import Foreign.Object as Object
-import Incentknow.Data.Entities (Type(..), PropertyInfo)
+import Incentknow.Data.Entities (FocusedContent, FocusedMaterial, Language, PropertyInfo, RelatedContent, Type(..), FocusedFormat)
+import Incentknow.Data.Ids (FormatId, SpaceId(..))
 
 type Enumerator
   = { id :: String
@@ -42,10 +45,7 @@ getDefaultValue props = fromObject $ Object.fromFoldable $ map (\x-> Tuple (unwr
     StringType -> jsonNull
     BoolType -> jsonNull
     TextType -> jsonNull
-    FormatType -> jsonNull
-    SpaceType -> jsonNull
     ContentType _ -> jsonNull
-    CodeType _ -> jsonNull
     ArrayType _ -> fromArray []
     UrlType -> jsonNull
     ObjectType props -> getDefaultValue props
@@ -142,7 +142,6 @@ difference before after = { diffs: diffs, changeType: getChangeType diffs }
                 EntityType _, StringType -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
                 EntityType _, EntityType _ -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
                 StringType, TextType -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
-                CodeType _, TextType -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
                 UrlType, StringType -> Just $ mkDiff TypeItem MinorChange (Just "") (Just "")
                 bfType, afType ->
                   if bfType /= afType then
@@ -181,5 +180,52 @@ toPropertyComposition props =
   where
   isSection :: Property -> Boolean
   isSection prop = case prop.info.type of
-    DocumentType -> true
+    DocumentType -> if isNull prop.value then false else true
     _ -> false
+
+type TypedProperty = { value :: TypedValue, info :: PropertyInfo }
+
+data TypedValue
+  = IntTypedValue (Maybe Int)
+  | BoolTypedValue (Maybe Boolean)
+  | StringTypedValue (Maybe String)
+  | ContentTypedValue FocusedFormat (ReferenceValue RelatedContent)
+  | UrlTypedValue (Maybe String)
+  | ObjectTypedValue (Array TypedProperty)
+  | TextTypedValue (Maybe String)
+  | ArrayTypedValue (Array TypedValue)
+  | EnumTypedValue (Array Enumerator) (Maybe String)
+  | DocumentTypedValue (ReferenceValue FocusedMaterial)
+  | ImageTypedValue (Maybe String)
+  | EntityTypedValue FocusedFormat (ReferenceValue RelatedContent)
+
+foreign import forceConvert :: forall a. Json -> a
+
+toReferenceValue :: forall a. Json -> ReferenceValue a 
+toReferenceValue value = 
+  if toString value == Just "deleted" then 
+    DeletedReference 
+  else if isNull value then
+    NullReference
+  else 
+    JustReference $ forceConvert value
+
+data ReferenceValue a
+  = DeletedReference
+  | NullReference
+  | JustReference a
+
+toTypedValue :: Json -> Type -> TypedValue
+toTypedValue value ty = case ty of
+  IntType -> IntTypedValue $ flatten $ map fromNumber $ toNumber value
+  BoolType -> BoolTypedValue $ toBoolean value
+  StringType -> StringTypedValue $ toString value
+  ContentType format -> ContentTypedValue format $ toReferenceValue value
+  UrlType -> UrlTypedValue $ toString value
+  ObjectType props -> ObjectTypedValue $ map (\x-> { value: toTypedValue x.value x.info.type, info: x.info }) $ mkProperties value props
+  TextType -> TextTypedValue $ toString value
+  ArrayType ty -> ArrayTypedValue $ map (\x-> toTypedValue x ty) $ fromMaybe [] $ toArray value
+  EnumType enums -> EnumTypedValue enums $ toString value
+  DocumentType -> DocumentTypedValue $ toReferenceValue value
+  ImageType -> ImageTypedValue $ toString value
+  EntityType format -> EntityTypedValue format $ toReferenceValue value

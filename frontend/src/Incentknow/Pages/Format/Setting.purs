@@ -9,7 +9,7 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getAvailableFormatDisplayId, setFormatDisplayId, setFormatDisplayName, setFormatFontawesome, setSpaceDisplayId)
+import Incentknow.API (getAvailableFormatDisplayId, setFormatDisplayId, setFormatDisplayName, setFormatIcon, setSpaceDisplayId)
 import Incentknow.API.Execution (callCommand, callQuery)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (FocusedFormat)
@@ -86,8 +86,8 @@ render state =
         }
         (Just <<< Edit)
     , HH.slot (SProxy :: SProxy "icon") unit SettingIconMenu.component
-        { submit: callCommand <<< \x -> setFormatFontawesome state.format.formatId x
-        , value: state.format.fontawesome
+        { submit: callCommand <<< \x -> setFormatIcon state.format.formatId x
+        , value: state.format.icon
         , title: "アイコン"
         , desc: ""
         , disabled: state.disabled

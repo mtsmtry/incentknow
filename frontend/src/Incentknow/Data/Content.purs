@@ -2,7 +2,7 @@ module Incentknow.Data.Content where
 
 import Prelude
 
-import Data.Argonaut.Core (Json, isArray, isBoolean, isNumber, isObject, isString, toArray, toString)
+import Data.Argonaut.Core (Json, isArray, isBoolean, isNull, isNumber, isObject, isString, toArray, toString)
 import Data.Array (catMaybes, concat, elem, filter, head, mapWithIndex, singleton)
 import Data.Map (Map, toUnfoldable)
 import Data.Map.Utils (decodeToMap, mergeFromArray)
@@ -40,7 +40,7 @@ getContentSemanticData contentData format = { title, semanticId: map wrap semant
     where
     isString :: Property -> Boolean
     isString prop = case prop.info.type of
-      StringType -> true
+      StringType -> if isNull prop.value then false else true
       _ -> false
 
 data ValidationError
@@ -61,11 +61,8 @@ validateProperty getKey name optional maybeType maybeValue = case maybeType, may
     BoolType -> fromBool $ isBoolean value
     StringType -> fromBool $ isString value
     TextType -> fromBool $ isString value
-    FormatType -> fromBool $ isString value
-    SpaceType -> fromBool $ isString value
     ContentType _ -> fromBool $ isString value
     EntityType _ -> fromBool $ isString value
-    CodeType _ -> fromBool $ isString value
     ArrayType subType -> case fromBool $ isArray value of
       [] -> concat $ mapWithIndex validate array
         where

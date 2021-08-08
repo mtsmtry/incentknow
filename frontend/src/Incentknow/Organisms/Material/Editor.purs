@@ -16,16 +16,16 @@ import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
 import Halogen.Query.HalogenM (SubscriptionId)
 import Incentknow.API (createNewMaterialDraft, editMaterialDraft, getMaterialDraft)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeCommand, forRemote)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeCommand, forRemote, toMaybe)
 import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Message (SaveState(..), saveState)
-import Incentknow.Data.Entities (FocusedMaterialDraft, MaterialType(..))
+import Incentknow.Data.Entities (FocusedMaterialDraft, MaterialData(..), MaterialType(..))
 import Incentknow.Data.Ids (MaterialDraftId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.PlainTextEditor as PlainTextEditor
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
-import Incentknow.Organisms.DocumentEditor as DocumentEditor
+import Incentknow.Organisms.Document.Editor as DocumentEditor
 import Incentknow.Route (Route)
 
 type Input 
@@ -42,7 +42,7 @@ type State
     -- the subscription id of a interval save timer
     , timerSubId :: Maybe SubscriptionId
     , materialDraftId :: Maybe MaterialDraftId
-    , text :: String
+    , data :: MaterialData
     , draft :: Remote FocusedMaterialDraft
     }
 
@@ -50,7 +50,7 @@ data Action
   = Initialize
   | Load
   | HandleInput Input
-  | ChangeText String
+  | ChangeData MaterialData
   | CheckChage
   | FetchedDraft (Fetch FocusedMaterialDraft)
 
@@ -83,7 +83,7 @@ initialState input =
   , saveState: HasNotChange
   , loading: false
   , timerSubId: Nothing
-  , text: ""
+  , data: DocumentMaterialData { blocks: [] }
   , draft: Loading
   }
 
@@ -93,10 +93,11 @@ render :: forall m. Behaviour m => MonadEffect m => MonadAff m => State -> H.Com
 render state =
   HH.div [ css "page-new-content" ]
     [ saveState state.saveState
-    --, HH.slot (SProxy :: SProxy "plainTextEditor") unit PlainTextEditor.component { value: state.text, variableHeight: true, readonly: false }
-    --   (Just <<< ChangeText)
-    , HH.slot (SProxy :: SProxy "documentEditor") unit DocumentEditor.component { value: state.text, readonly: false }
-        (Just <<< ChangeText)
+    , case state.data of
+        DocumentMaterialData doc ->
+          HH.slot (SProxy :: SProxy "documentEditor") unit DocumentEditor.component { value: doc }
+            (Just <<< ChangeData <<< DocumentMaterialData)
+        _ -> HH.text ""
     ]
 
 timer :: forall m. MonadAff m => EventSource m Action
@@ -139,14 +140,14 @@ handleAction = case _ of
   -- Fetch
   FetchedDraft fetch -> do
     forRemote fetch \draft ->
-      H.modify_ _ { text = fromMaybe "" $ map _.data $ R.toMaybe draft, draft = draft }
+      H.modify_ _ { data = fromMaybe (DocumentMaterialData { blocks: [] }) $ map _.data $ toMaybe draft, draft = draft }
   -- Change
-  ChangeText text -> do
+  ChangeData data2 -> do
     state <- H.get
     -- Set the value and change the save state
     case state.saveState of
-      Saving -> H.modify_ _ { text = text, saveState = SavingButChanged }
-      _ -> H.modify_ _ { text = text, saveState = NotSaved }
+      Saving -> H.modify_ _ { data = data2, saveState = SavingButChanged }
+      _ -> H.modify_ _ { data = data2, saveState = NotSaved }
   -- Save changes if they happened
   CheckChage -> do
     state <- H.get
@@ -156,12 +157,12 @@ handleAction = case _ of
       H.modify_ _ { saveState = Saving }
       case state.materialDraftId of
         Just draftId -> do
-          result <- executeCommand $ editMaterialDraft draftId state.text
+          result <- executeCommand $ editMaterialDraft draftId state.data
           case result of
               Just _ -> makeSaveStateSaved
               Nothing -> H.modify_ _ { saveState = NotSaved }
         Nothing -> do
-          result <- executeCommand $ createNewMaterialDraft Nothing MaterialTypeDocument (Just state.text)
+          result <- executeCommand $ createNewMaterialDraft Nothing MaterialTypeDocument (Just state.data)
           case result of
               Just draft -> do
                 makeSaveStateSaved

@@ -6,7 +6,7 @@ import Prelude
 import Data.Maybe (Maybe)
 import Data.Argonaut.Core (Json)
 
-import Incentknow.Data.Ids (ContainerSk, ContainerId, ContentSk, ContentId, ContentCommitSk, ContentCommitId, ContentDraftSk, ContentDraftId, ContentEditingSk, ContentEditingId, ContentSnapshotSk, ContentSnapshotId, ContentTransitionSk, ContentTransitionId, FormatSk, FormatId, FormatDisplayId, SemanticId, MetaPropertySk, MetaPropertyId, PropertySk, PropertyId, StructureSk, StructureId, MaterialSk, MaterialId, MaterialCommitSk, MaterialCommitId, MaterialDraftSk, MaterialDraftId, MaterialEditingSk, MaterialEditingId, MaterialSnapshotSk, MaterialSnapshotId, ReactorSk, ReactorId, SpaceSk, SpaceId, SpaceDisplayId, SpaceFollowSk, SpaceMemberSk, SpaceMembershipApplicationSk, UserSk, UserId, UserDisplayId, ContentRevisionId, ContentWholeRevisionId, MaterialRevisionId)
+import Incentknow.Data.Ids (ContainerSk, ContainerId, ContentSk, ContentId, ContentCommitSk, ContentCommitId, ContentDraftSk, ContentDraftId, ContentEditingSk, ContentEditingId, ContentSnapshotSk, ContentSnapshotId, ContentTransitionSk, ContentTransitionId, FormatSk, FormatId, FormatDisplayId, SemanticId, MetaPropertySk, MetaPropertyId, PropertySk, PropertyId, StructureSk, StructureId, MaterialSk, MaterialId, MaterialCommitSk, MaterialCommitId, MaterialDraftSk, MaterialDraftId, MaterialEditingSk, MaterialEditingId, MaterialSnapshotSk, MaterialSnapshotId, ReactorSk, ReactorId, SpaceSk, SpaceId, SpaceDisplayId, SpaceFollowSk, SpaceMemberSk, SpaceMembershipApplicationSk, UserSk, UserId, UserDisplayId, ContentRevisionId, ContentWholeRevisionId, DocumentBlockId, MaterialRevisionId)
 
 
 type Date = String
@@ -66,14 +66,11 @@ data TypeName
   = TypeNameInt
   | TypeNameBool
   | TypeNameString
-  | TypeNameFormat
-  | TypeNameSpace
   | TypeNameContent
   | TypeNameUrl
   | TypeNameObject
   | TypeNameText
   | TypeNameArray
-  | TypeNameCode
   | TypeNameEnum
   | TypeNameDocument
   | TypeNameImage
@@ -172,7 +169,7 @@ type RelatedContainer
 
 type AdditionalContainerInfo
   = { contentCount :: Int
-    , latestUpdatedAt :: Date
+    , latestUpdatedAt :: Maybe Date
     }
 
 
@@ -186,7 +183,7 @@ type FocusedContainer
     , generator :: Maybe ContentGenerator
     , reactor :: Maybe IntactReactor
     , contentCount :: Int
-    , latestUpdatedAt :: Number
+    , latestUpdatedAt :: Maybe Number
     }
 
 
@@ -344,7 +341,7 @@ type RelatedFormat
     , displayId :: FormatDisplayId
     , displayName :: String
     , description :: String
-    , fontawesome :: Maybe String
+    , icon :: Maybe String
     , space :: RelatedSpace
     , usage :: FormatUsage
     , semanticId :: Maybe String
@@ -366,7 +363,7 @@ type FocusedFormat
     , displayId :: FormatDisplayId
     , displayName :: String
     , description :: String
-    , fontawesome :: Maybe String
+    , icon :: Maybe String
     , space :: RelatedSpace
     , usage :: FormatUsage
     , createdAt :: Number
@@ -393,6 +390,7 @@ type PropertyInfo
     , id :: PropertyId
     , optional :: Boolean
     , semantic :: Maybe String
+    , icon :: Maybe String
     , type :: Type
     , metaProperties :: Array IntactMetaProperty
     }
@@ -411,14 +409,11 @@ data Type
   = IntType 
   | BoolType 
   | StringType 
-  | FormatType 
-  | SpaceType 
   | ContentType FocusedFormat
   | UrlType 
   | ObjectType (Array PropertyInfo)
   | TextType 
   | ArrayType Type
-  | CodeType Language
   | EnumType (Array Enumerator)
   | DocumentType 
   | ImageType 
@@ -448,6 +443,36 @@ type FocusedStructure
 
 
 
+data BlockType
+  = Paragraph
+  | Header
+
+derive instance eqBlockType :: Eq BlockType
+derive instance ordBlockType :: Ord BlockType
+
+
+
+type DocumentBlock
+  = { id :: DocumentBlockId
+    , data :: BlockData
+    }
+
+
+
+data BlockData
+  = ParagraphBlockData String
+  | HeaderBlockData Number String
+
+derive instance eqBlockData :: Eq BlockData
+
+
+
+type Document
+  = { blocks :: Array DocumentBlock
+    }
+
+
+
 type RelatedMaterial
   = { materialId :: MaterialId
     , contentId :: Maybe ContentId
@@ -461,6 +486,14 @@ type RelatedMaterial
 
 
 
+data MaterialData
+  = FolderMaterialData 
+  | DocumentMaterialData Document
+
+derive instance eqMaterialData :: Eq MaterialData
+
+
+
 type FocusedMaterial
   = { materialId :: MaterialId
     , contentId :: Maybe ContentId
@@ -470,7 +503,7 @@ type FocusedMaterial
     , creatorUser :: RelatedUser
     , updatedAt :: Number
     , updaterUser :: RelatedUser
-    , data :: String
+    , data :: MaterialData
     , draft :: Maybe RelatedMaterialDraft
     }
 
@@ -513,7 +546,7 @@ type FocusedMaterialDraft
     , contentDraftId :: Maybe ContentDraftId
     , material :: Maybe RelatedMaterial
     , basedCommitId :: Maybe MaterialCommitId
-    , data :: String
+    , data :: MaterialData
     , isEditing :: Boolean
     }
 

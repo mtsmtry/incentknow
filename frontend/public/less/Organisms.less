@@ -524,7 +524,10 @@
     }
 
     .property-value {
-
+        >.null {
+            color:rgb(88, 96, 105);
+            font-size: 12px;
+        }
     }
 
     >.top {
@@ -570,5 +573,48 @@
         .section-value {
             padding: 25px;
         }
+    }
+}
+
+.org-content-editor {
+    // ValueEditor
+    .property-type {
+        text-align: left;
+        color: rgb(99, 99, 99);
+        width: 100px;
+    }
+
+    .property-value {
+        >.null {
+            color:rgb(88, 96, 105);
+            font-size: 12px;
+        }
+    }
+
+    >.top {
+    }
+
+    >.section {
+        margin-top: 25px;
+
+        .section-value {
+            padding: 25px;
+        }
+    }
+}
+
+.org-document {
+    >.blocks {
+        &:focus {
+            outline: none;
+        }
+    }
+}
+
+.org-document-block {
+    >.textline {
+        min-height: 32px;
+        font-size: 16px;
+        padding: 4px 6px;
     }
 }

@@ -2,26 +2,20 @@ module Incentknow.Molecules.ContentMenu where
 
 import Prelude
 
-import Data.Argonaut.Core (jsonNull)
-import Data.Array (filter, fromFoldable)
-import Data.Foldable (for_)
-import Data.Map as M
-import Data.Map as Map
-import Data.Maybe (Maybe(..), maybe)
-import Data.Newtype (unwrap, wrap)
+import Data.Maybe (Maybe(..))
+import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
-import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.API (getContent, getContents, getRelatedContent)
-import Incentknow.API.Execution (Fetch, executeAPI, forItem, toQueryCallback)
+import Incentknow.API (getContents, getRelatedContent)
+import Incentknow.API.Execution (toQueryCallback)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Content (ContentSemanticData, getContentSemanticData)
 import Incentknow.Data.Entities (RelatedContent)
-import Incentknow.Data.Ids (ContentId(..), FormatId(..), SpaceId(..))
+import Incentknow.Data.Ids (ContentId, FormatId, SpaceId)
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu

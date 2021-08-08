@@ -2,11 +2,9 @@ module Incentknow.Molecules.SelectMenuImpl where
 
 import Prelude
 
-import Data.Array (filter, length)
-import Data.Foldable (for_, traverse_)
-import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
-import Data.String (Pattern(..), Replacement(..), contains, replace)
-import Effect (Effect)
+import Data.Foldable (traverse_)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing)
+import Data.String (Pattern(..), Replacement(..), replace, replaceAll)
 import Effect.Aff.Class (class MonadAff)
 import Halogen (RefLabel(..), getHTMLElementRef, liftEffect)
 import Halogen as H
@@ -15,13 +13,9 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (loadingWith)
-import Incentknow.HTML.Utils (css, maybeElem, whenElem)
+import Incentknow.HTML.Utils (css, whenElem)
 import Web.DOM (Element)
-import Web.DOM.NonElementParentNode (getElementById)
-import Web.HTML (window)
 import Web.HTML.HTMLElement (focus)
-import Web.HTML.HTMLElement (fromElement)
-import Web.HTML.Window (document)
 
 data Action a
   = Initialize
@@ -108,6 +102,7 @@ setInput state input =
     , disabled = input.disabled
     }
 
+textbox_ :: RefLabel
 textbox_ = RefLabel "textbox"
 
 render :: forall m a. State a -> H.ComponentHTML (Action a) () m
@@ -117,7 +112,7 @@ render state =
         -- A textbox for search words or filter words
         HH.textarea
           [ css "filter"
-          , HP.value $ replace (Pattern "\n") (Replacement "") $ fromMaybe "" state.searchWord
+          , HP.value $ replaceAll (Pattern "\n") (Replacement "") $ fromMaybe "" state.searchWord
           , HE.onValueInput $ Just <<< ChangeFilter
           , HP.spellcheck false
           , HE.onFocus $ \_ -> Just FocusTextArea

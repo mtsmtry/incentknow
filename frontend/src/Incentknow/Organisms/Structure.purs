@@ -23,6 +23,7 @@ import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.TypeMenu as TypeMenu
+import Incentknow.Molecules.IconMenu as IconMenu
 import Incentknow.Organisms.Enumeration as Enumeration
 
 type Input
@@ -32,6 +33,7 @@ type Input
 
 type PendingPropertyInfo
   = { id :: PropertyId
+    , icon :: Maybe String
     , displayName :: Maybe String
     , fieldName :: Maybe String
     , type :: Maybe Type
@@ -63,7 +65,8 @@ type Slot
   = H.Slot Query Void
 
 type ChildSlots
-  = ( typeMenu :: TypeMenu.Slot PropertyId
+  = ( icon :: IconMenu.Slot PropertyId
+    , typeMenu :: TypeMenu.Slot PropertyId
     , formatMenu :: FormatMenu.Slot PropertyId
     , structure :: Slot PropertyId
     , enumeration :: Enumeration.Slot PropertyId
@@ -111,6 +114,7 @@ render state =
                 [ whenElem (not state.readonly) \_ ->
                     HH.th [] [ HH.text "" ]
                 , HH.th [] [ HH.text "ID" ]
+                , HH.th [] [ HH.text "アイコン" ]
                 , HH.th [] [ HH.text "フィールド名" ]
                 , HH.th [] [ HH.text "表示名" ]
                 , HH.th [] [ HH.text "型" ]
@@ -139,6 +143,13 @@ render state =
               ]
         , HH.td []
             [ HH.text $ unwrap prop.id ]
+        , HH.td []
+            [ HH.slot (SProxy :: SProxy "icon") prop.id IconMenu.component
+                { value: prop.icon
+                , disabled: not state.readonly
+                }
+                (\_ -> Just $ DeleteProperty prop.id)
+            ]
         , HH.td []
             [ if state.readonly then
                 HH.text $ fromMaybe "" prop.fieldName
@@ -240,7 +251,7 @@ handleAction = case _ of
     H.modify_ (\x -> x { props = modifyProp id (_ { optional = optional }) x.props })
   AddProperty -> do
     newId <- generateId 4
-    H.modify_ (\x -> x { props = x.props <> [ { displayName: Nothing, fieldName: Nothing, semantic: Nothing, id: wrap newId, type: Nothing, optional: false } ] })
+    H.modify_ (\x -> x { props = x.props <> [ { icon: Nothing, displayName: Nothing, fieldName: Nothing, semantic: Nothing, id: wrap newId, type: Nothing, optional: false } ] })
   DeleteProperty id -> do
     H.modify_ \x -> x { props = filter (\y -> y.id /= id) x.props }
   HandleInput input -> H.modify_ $ setInput input
@@ -254,6 +265,7 @@ toPropertyInfo prop = do
   ty <- prop.type
   pure
     { id: prop.id
+    , icon: prop.icon
     , displayName: name
     , fieldName: prop.fieldName
     , type: ty
@@ -293,6 +305,7 @@ handleQuery = case _ of
     convert prop =
       { id: prop.id
       , displayName: Just prop.displayName
+      , icon: prop.icon
       , fieldName: prop.fieldName
       , type: Just prop.type
       , semantic: prop.semantic

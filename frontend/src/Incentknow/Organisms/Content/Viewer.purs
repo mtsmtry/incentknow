@@ -15,7 +15,7 @@ import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Atoms.Icon (formatWithIcon)
 import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (FocusedContent, FocusedFormat, Type(..), PropertyInfo)
-import Incentknow.Data.Property (Property, mkProperties, toPropertyComposition)
+import Incentknow.Data.Property (Property, mkProperties, toPropertyComposition, toTypedValue)
 import Incentknow.HTML.Utils (css, link, maybeElem, whenElem)
 import Incentknow.Organisms.Content.ValueViewer as Value
 import Incentknow.Organisms.UserCard as UserCard
@@ -61,7 +61,7 @@ render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action
 render state =
   HH.div [ css "org-content-viewer" ] $
     [ section "top"
-        [HH.div [ css "header" ]
+        [ HH.div [ css "header" ]
             [ maybeElem semantic.titleProperty \title->
                 HH.div [ css "title" ]
                   [ HH.div [ css "title-property" ] [ HH.text title.info.displayName ]
@@ -84,9 +84,7 @@ render state =
         , whenElem (length infoProps > 0) \_->
             HH.div [ css "info" ] 
               [ HH.slot (SProxy :: SProxy "value") unit Value.component 
-                  { value: state.content.data
-                  , type: ObjectType $ map _.info infoProps
-                  } absurd
+                  { value: toTypedValue state.content.data $ ObjectType $ map _.info infoProps } absurd
               ]
         ]
     ] <> (map renderSection comp.sections)
@@ -103,9 +101,7 @@ render state =
       [ HH.text prop.info.displayName ]
       [ HH.div [ css "section-value" ] 
           [ HH.slot (SProxy :: SProxy "value") unit Value.component 
-              { value: prop.value
-              , type: prop.info.type
-              } absurd
+              { value: toTypedValue prop.value prop.info.type } absurd
           ]
       ]
 

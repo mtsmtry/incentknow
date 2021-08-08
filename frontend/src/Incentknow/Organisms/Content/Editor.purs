@@ -10,10 +10,12 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (FocusedFormat, Type(..))
+import Incentknow.Data.Entities (FocusedContent, FocusedContentDraft, Type(..), FocusedFormat)
+import Incentknow.Data.Property (Property, TypedValue, mkProperties, toPropertyComposition, toTypedValue)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.Content.Common (EditEnvironment, EditorInput)
 import Incentknow.Organisms.Content.ValueEditor as Value
-import Incentknow.Organisms.Document.Section (ContentComponent(..))
+import Incentknow.Templates.Page (section, sectionWithHeader)
 
 type State
   = { format :: FocusedFormat
@@ -23,7 +25,7 @@ type State
 
 data Action
   = HandleInput EditorInput
-  | ChangeValue Json
+  | ChangeValue TypedValue
 
 type Slot p
   = forall q. H.Slot q Output p
@@ -55,18 +57,30 @@ initialState input =
   , env: input.env
   }
 
-mkValueInput :: Json -> FocusedFormat -> EditEnvironment -> Value.Input
-mkValueInput value format env =
-  { value
-  , env
-  , type: ObjectType format.currentStructure.properties
-  , contentComponent: ContentComponent component
-  }
-
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
-render state = HH.slot (SProxy :: SProxy "value") unit Value.component (mkValueInput state.value state.format state.env) (Just <<< ChangeValue)
+render state = 
+  HH.div [ css "org-content-editor" ] $
+    [ section "top"
+        [ HH.slot (SProxy :: SProxy "value") unit Value.component 
+            { value: toTypedValue state.value $ ObjectType $ map _.info comp.info, env: state.env }
+            (Just <<< ChangeValue)
+        ]
+    ] <> (map renderSection comp.sections)
+  where
+  comp = toPropertyComposition $ mkProperties state.value state.format.currentStructure.properties
+
+  renderSection :: Property -> H.ComponentHTML Action ChildSlots m
+  renderSection prop =
+    sectionWithHeader "section"
+      [ HH.text prop.info.displayName ]
+      [ HH.div [ css "section-value" ] 
+          [ HH.slot (SProxy :: SProxy "value") unit Value.component 
+              { value: toTypedValue prop.value prop.info.type, env: state.env } 
+              (\_-> Nothing)
+          ]
+      ]
 
 handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
   HandleInput input -> H.put $ initialState input
-  ChangeValue value -> H.raise value
+  ChangeValue value -> pure unit -- H.raise value

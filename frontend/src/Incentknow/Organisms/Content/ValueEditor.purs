@@ -21,13 +21,14 @@ import Incentknow.API (getFocusedFormat, getFormat)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigateRoute)
-import Incentknow.Atoms.Icon (icon, iconSolid, remoteWith, typeIcon)
+import Incentknow.Atoms.Icon (icon, iconSolid, propertyIcon, remoteWith, typeIcon)
 import Incentknow.Atoms.Inputs (button, checkbox, numberarea, textarea)
-import Incentknow.Data.Entities (FocusedFormat, FormatUsage(..), Type(..))
+import Incentknow.Data.Content (getContentSemanticData)
+import Incentknow.Data.Entities (FocusedContent, FocusedFormat, FocusedMaterial, FormatUsage(..), Type(..), RelatedContent)
 import Incentknow.Data.EntityUtils (getTypeName)
-import Incentknow.Data.Ids (FormatId(..), PropertyId)
-import Incentknow.Data.Property (Enumerator, Property, encodeProperties, mkProperties)
-import Incentknow.HTML.Utils (link, maybeElem)
+import Incentknow.Data.Ids (ContentId, FormatId(..), MaterialId, PropertyId, SemanticId)
+import Incentknow.Data.Property (Enumerator, Property, ReferenceValue(..), TypedValue(..), TypedProperty, encodeProperties, forceConvert, mkProperties, toReferenceValue)
+import Incentknow.HTML.Utils (css, link, maybeElem)
 import Incentknow.Molecules.AceEditor as AceEditor
 import Incentknow.Molecules.ContentMenu as ContentMenu
 import Incentknow.Molecules.EntityMenu as EntityMenu
@@ -36,33 +37,30 @@ import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Organisms.Content.Common (EditEnvironment)
-import Incentknow.Organisms.Document.Section (ContentComponent)
 import Incentknow.Organisms.Material.SlotEditor as Material
 import Incentknow.Route (FormatTab(..), Route(..), SpaceTab(..))
 import Test.Unit.Console (consoleLog)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
-  = { value :: Json, type :: Type, env :: EditEnvironment, contentComponent :: ContentComponent }
+  = { value :: TypedValue, env :: EditEnvironment }
 
 type State
-  = { value :: Json
-    , type :: Type
+  = { value :: TypedValue
     , env :: EditEnvironment
-    , contentComponent :: ContentComponent
     }
 
 data Action
   = Initialize
   | HandleInput Input
-  | ChangeValue Json
-  | ChangeAttribute PropertyId Json
-  | ChangeItem Int Json
+  | ChangeValue TypedValue
+  | ChangeAttribute PropertyId TypedValue
+  | ChangeItem Int TypedValue
   | DeleteItem Int
   | Navigate MouseEvent Route
 
 type Output
-  = Json
+  = TypedValue
 
 type Slot p
   = forall q. H.Slot q Output p
@@ -104,166 +102,148 @@ fromEnumeratorToSelectMenuItem enum =
 initialState :: Input -> State
 initialState input =
   { value: input.value
-  , type: input.type
   , env: input.env
-  , contentComponent: input.contentComponent
   }
 
+foreign import toForceRelatedContent :: ContentId -> RelatedContent
+
+foreign import toForceRelatedContentFromSemanticId :: SemanticId -> RelatedContent
+
+foreign import toForceFocusedMaterial :: MaterialId -> FocusedMaterial
+
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
-render state = case state.type of
-  StringType ->
+render state = case state.value of
+  StringTypedValue str ->
     textarea
-      { onChange: ChangeValue <<< fromStringOrNull
+      { onChange: ChangeValue <<< StringTypedValue <<< toMaybeString
       , placeholder: ""
-      , value: toStringOrEmpty state.value
+      , value: fromMaybe "" str
       }
-  ImageType ->
+  ImageTypedValue img ->
     textarea
-      { onChange: ChangeValue <<< fromStringOrNull
+      { onChange: ChangeValue <<< ImageTypedValue <<< toMaybeString
       , placeholder: ""
-      , value: toStringOrEmpty state.value
+      , value: fromMaybe "" img
       }
-  IntType ->
+  IntTypedValue int ->
     numberarea
-      { onChange: ChangeValue <<< encodeJson
-      , value: toMaybe $ decodeJson state.value
+      { onChange: ChangeValue <<< IntTypedValue
+      , value: int
       }
-  EnumType enums ->
+  EnumTypedValue enums enum ->
     HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
       { initial: { items: map fromEnumeratorToSelectMenuItem enums, completed: true }
       , fetchMultiple: \_-> Nothing
       , fetchSingle: Nothing
       , fetchId: ""
-      , value: toString state.value
+      , value: enum
       , disabled: false
       }
-      (Just <<< ChangeValue <<< maybe jsonNull fromString)
-  BoolType -> checkbox "" (fromMaybe false $ toBoolean state.value) (ChangeValue <<< encodeJson) false
-  TextType ->
-    HH.slot (SProxy :: SProxy "aceEditor") unit AceEditor.component { value: toStringOrEmpty state.value, language: Nothing, variableHeight: true, readonly: false }
-      (Just <<< ChangeValue <<< fromStringOrNull)
-  CodeType lang ->
-    HH.slot (SProxy :: SProxy "aceEditor") unit AceEditor.component { value: toStringOrEmpty state.value, language: Just lang, variableHeight: true, readonly: false }
-      (Just <<< ChangeValue <<< fromStringOrNull)
-  FormatType ->
-    HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component { value: map wrap $ toString state.value, filter: maybe FormatMenu.None FormatMenu.SpaceBy state.env.spaceId, disabled: false }
-      (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  SpaceType ->
-    HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component { value: map wrap $ toString state.value, disabled: false }
-      (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  ContentType format ->
+      (Just <<< ChangeValue <<< EnumTypedValue enums)
+  BoolTypedValue bool -> checkbox "" (fromMaybe false $ bool) (ChangeValue <<< BoolTypedValue <<< Just) false
+  TextTypedValue text ->
+    HH.slot (SProxy :: SProxy "aceEditor") unit AceEditor.component { value: fromMaybe "" text, language: Nothing, variableHeight: true, readonly: false }
+      (Just <<< ChangeValue <<< TextTypedValue <<< toMaybeString)
+  ContentTypedValue format value ->
     HH.slot (SProxy :: SProxy "contentMenu") unit ContentMenu.component 
       { spaceId: if format.usage == Internal then Just format.space.spaceId else state.env.spaceId
-      , value: map wrap $ toString state.value
+      , value: map _.contentId $ toMaybeReferenceValue value
       , formatId: format.formatId
       , disabled: false }
-      (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  EntityType format ->
-    HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: map wrap $ toString state.value, formatId: format.formatId, disabled: false }
-      (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  DocumentType ->
-    HH.slot (SProxy :: SProxy "material") unit Material.component { value: map wrap $ toString state.value }
-      (Just <<< ChangeValue <<< maybe jsonNull (fromString <<< unwrap))
-  UrlType ->
+      (Just <<< ChangeValue <<< ContentTypedValue format <<< toReferenceValueFromMaybe <<< map toForceRelatedContent)
+  EntityTypedValue format content ->
+    HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: Just $ wrap "", formatId: format.formatId, disabled: false }
+      (Just <<< ChangeValue <<< EntityTypedValue format <<< toReferenceValueFromMaybe <<< map toForceRelatedContentFromSemanticId)
+  DocumentTypedValue doc -> HH.text ""
+    -- HH.slot (SProxy :: SProxy "material") unit Material.component { value: map _.materialId $ toMaybeReferenceValue doc }
+    --  (Just <<< ChangeValue <<< DocumentTypedValue <<< toReferenceValueFromMaybe <<< map toForceFocusedMaterial)
+  UrlTypedValue url ->
     textarea
-      { onChange: ChangeValue <<< fromStringOrNull
+      { onChange: ChangeValue <<< UrlTypedValue <<< toMaybeString
       , placeholder: ""
-      , value: toStringOrEmpty state.value
+      , value: fromMaybe "" url
       }
-  ArrayType subType ->
+  ArrayTypedValue array ->
     HH.div_
-      [ button "追加" $ ChangeValue $ encodeJson $ cons jsonNull $ fromMaybe [] $ toArray state.value
-      , HH.div_ $ mapWithIndex renderItem array
+      [ --button "追加" $ ChangeValue $ encodeJson $ cons jsonNull $ fromMaybe [] $ toArray state.value
+       HH.div_ $ mapWithIndex renderItem array
       ]
     where
     renderItem num item =
       HH.div []
-        [ HH.slot (SProxy :: SProxy "value") num component { value: fromMaybe jsonNull $ index array num, type: subType, env: state.env, contentComponent: state.contentComponent }
+        [ HH.slot (SProxy :: SProxy "value") num component 
+            { value: item, env: state.env }
             (Just <<< ChangeItem num)
         , button "削除" $ DeleteItem num
         ]
 
-    array = fromMaybe [] $ toArray state.value
-  ObjectType propInfos -> HH.div_ $ map renderProperty props
+  ObjectTypedValue props -> HH.div_ $ map renderProperty props
     where
-    props = mkProperties state.value propInfos
-
-    renderProperty :: Property -> H.ComponentHTML Action ChildSlots m
+    renderProperty :: TypedProperty -> H.ComponentHTML Action ChildSlots m
     renderProperty prop =
-      HH.dl
+      HH.tr
         []
-        [ HH.dt []
-            ( case prop.info.type of
-                ContentType format -> 
-                  [ case format.fontawesome of
-                        Just i -> iconSolid i
-                        Nothing -> icon "fas fa-file"
-                  , HH.text prop.info.displayName
-                  ]
-                ty ->
-                  [ typeIcon $ getTypeName ty
-                  , HH.text prop.info.displayName
-                  ]
-            )
-        , HH.dd []
-            [ HH.slot (SProxy :: SProxy "property") prop.info.id component { value: prop.value, type: prop.info.type, env: state.env, contentComponent: state.contentComponent }
+        [ HH.td [ css "property-type" ]
+            [ propertyIcon prop.info
+            , HH.text prop.info.displayName
+            ]
+        , HH.td [ css "property-value" ]
+            [ HH.slot (SProxy :: SProxy "property") prop.info.id component { value: prop.value, env: state.env }
                 (Just <<< ChangeAttribute prop.info.id)
             ]
         ]
-  where
+  where  
   toStringOrEmpty = fromMaybe "" <<< toString
 
-  fromStringOrNull x = if x == "" then jsonNull else fromString x
+  toMaybeString x = if x == "" then Nothing else Just x
 
   toMaybe = case _ of
     Left _ -> Nothing
     Right x -> Just x
 
+  toReferenceValueFromMaybe :: forall a. Maybe a -> ReferenceValue a
+  toReferenceValueFromMaybe = case _ of
+    Just x -> JustReference x
+    Nothing -> NullReference
+
+  toMaybeReferenceValue :: forall a. ReferenceValue a -> Maybe a 
+  toMaybeReferenceValue = case _ of
+    JustReference x -> Just x
+    _ -> Nothing
+
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
   Initialize -> pure unit
   ChangeValue value -> do
-    logShow $ stringify value
     H.raise value
   ChangeAttribute id value -> do
     state <- H.get
-    let
-      properties = case state.type of
-        ObjectType props -> props
-        _ -> []
-
-      props = mkProperties state.value properties
-
-      changeProp props id value = map (\prop -> if prop.info.id == id then prop { value = value } else prop) props
-
-      newValue = encodeProperties $ changeProp props id value
+    let 
+      newValue = case state.value of
+        ObjectTypedValue props -> ObjectTypedValue $ map (\x-> if x.info.id == id then { value, info: x.info } else x) props
+        x -> x
     H.modify_ _ { value = newValue } -- 同時に複数のプロパティが編集されたときのため
     H.raise newValue
   ChangeItem index value -> do
     state <- H.get
     let
-      array = fromMaybe [] $ toArray state.value
+      array = case state.value of
+        ArrayTypedValue array -> array
+        _ -> []
 
-      newArray = mapWithIndex (\i -> \x -> if i == index then value else x) array
-
-      newValue = encodeJson newArray
+      newValue = ArrayTypedValue $ mapWithIndex (\i -> \x -> if i == index then value else x) array
     H.modify_ _ { value = newValue }
     H.raise newValue
   DeleteItem index -> do
     state <- H.get
     let
-      array = fromMaybe [] $ toArray state.value
+      array = case state.value of
+        ArrayTypedValue array -> array
+        _ -> []
 
-      newArray = fromMaybe array $ deleteAt index array
-
-      newValue = encodeJson newArray
+      newValue = ArrayTypedValue $ fromMaybe array $ deleteAt index array
     H.modify_ _ { value = newValue }
     H.raise newValue
   HandleInput input -> do
-    state <- H.get
-    if state.type == input.type then
-      H.put $ initialState input
-    else do
-      H.put $ initialState input
-      handleAction Initialize
+    H.put $ initialState input
   Navigate e route -> navigateRoute e route

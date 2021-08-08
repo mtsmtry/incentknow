@@ -9,6 +9,7 @@ import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing)
 import Data.Maybe.Utils (flatten)
 import Data.Newtype (unwrap, wrap)
+import Data.String (joinWith)
 import Data.String.Utils (includes)
 import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
@@ -37,7 +38,7 @@ toSelectMenuItem :: FontawesomeIcon -> SelectMenuItem String
 toSelectMenuItem i =
   { id: i.name
   , name: i.label
-  , searchWord: foldl (\x-> \y-> x <> " " <> y) "" i.searchwords
+  , searchWord: i.name <> " " <> joinWith " " i.searchwords
   , html: HH.span [] [ iconSolid i.name, HH.text i.label ]
   }
 

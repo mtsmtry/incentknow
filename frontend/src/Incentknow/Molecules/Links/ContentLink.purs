@@ -2,33 +2,31 @@ module Incentknow.Molecules.ContentLink where
 
 import Prelude
 
-import Data.Foldable (for_)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
-import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.AppM (class Behaviour, navigate)
+import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Data.Content (getContentSemanticData)
-import Incentknow.Data.Entities (FocusedContent, FocusedFormat)
-import Incentknow.Data.Ids (ContentId(..), FormatId(..))
-import Incentknow.HTML.Utils (maybeElem)
-import Incentknow.Molecules.SelectMenu as SelectMenu
+import Incentknow.Data.Entities (FocusedContent, RelatedContent)
+import Incentknow.Data.Ids (ContentId)
+import Incentknow.HTML.Utils (link)
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
-import Incentknow.Route (ContentSpec, Route)
+import Incentknow.Route (Route(..))
+import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
-  = { value :: ContentSpec }
+  = { value :: RelatedContent }
 
 type State
-  = { contentSpec :: ContentSpec, content :: Maybe FocusedContent, format :: Maybe FocusedFormat }
+  = { content :: RelatedContent }
 
 data Action
   = Initialize
   | HandleInput Input
-  | Navigate Route
+  | Navigate MouseEvent Route
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -52,22 +50,16 @@ component =
 
 initialState :: Input -> State
 initialState input =
-  { contentSpec: input.value
-  , content: Nothing
-  , format: Nothing
+  { content: input.value
   }
 
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state =
-  maybeElem state.content \content->
-    maybeElem state.format \format->
-      renderLink content format
+  link Navigate (Content state.content.contentId)
+    []
+    [ HH.text common.title ]
   where
-  renderLink :: FocusedContent -> FocusedFormat -> H.ComponentHTML Action ChildSlots m
-  renderLink content format =
-    HH.text common.title
-    where
-    common = getContentSemanticData content.data format
+  common = getContentSemanticData state.content.data state.content.format
 
 toSelectMenuItem :: FocusedContent -> SelectMenuItem ContentId
 toSelectMenuItem content =
@@ -85,16 +77,6 @@ toSelectMenuItem content =
 
 handleAction :: forall m o. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
-  Initialize -> do
-    state <- H.get
-    pure unit
-   -- client <- getClient
-   -- response <- handleError $ client.contents.byId.get { params: { id: state.contentId } }
-  --  for_ response \res->
-  --    H.modify_ _ { content = Just res.content, format = Just res.format }
-  HandleInput input -> do
-    state <- H.get
-    when (input.value /= state.contentSpec) do
-      H.modify_ _ { contentSpec = input.value }
-      handleAction Initialize
-  Navigate route -> navigate route
+  Initialize -> pure unit
+  HandleInput input -> H.put $ initialState input
+  Navigate e route -> navigateRoute e route

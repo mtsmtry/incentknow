@@ -2,24 +2,16 @@ module Incentknow.Organisms.Material.SlotEditor where
 
 import Prelude
 
-import Data.Argonaut.Core (Json, jsonNull, stringify)
-import Data.Foldable (for_, traverse_)
-import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (commitContent, commitMaterial, createNewContentDraft, createNewMaterialDraft, editContentDraft, editMaterialDraft, getContentDraft, getFocusedFormat, getFocusedFormatByStructure, getFormat, getMaterialDraft, startContentEditing, startMaterialEditing)
-import Incentknow.API.Execution (Fetch, Remote(..), callCommand, callbackQuery, executeAPI, executeCommand, forItem, forRemote, toMaybe)
-import Incentknow.AppM (class Behaviour, navigate, pushState)
-import Incentknow.Atoms.Message (SaveState(..), saveState)
-import Incentknow.Data.Entities (FocusedContentDraft, FocusedFormat, FocusedMaterialDraft, MaterialType(..))
-import Incentknow.Data.Ids (ContentDraftId, ContentId, FormatId(..), MaterialDraftId, SpaceId(..), StructureId)
-import Incentknow.HTML.Utils (css, maybeElem, whenElem)
+import Incentknow.AppM (class Behaviour, navigate)
+import Incentknow.Data.Ids (MaterialDraftId)
 import Incentknow.Organisms.Material.Editor as Editor
-import Incentknow.Route (EditContentTarget(..), EditMaterialTarget(..), Route(..))
-import Incentknow.Templates.Page (section)
+import Incentknow.Route (Route)
 
 type Input 
   = { value :: Maybe MaterialDraftId }
