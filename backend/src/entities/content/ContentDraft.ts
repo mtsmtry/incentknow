@@ -1,6 +1,7 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, ObjectLiteral, OneToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, ObjectLiteral, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { NewTypeInt, NewTypeString } from "../../Implication";
 import { Structure, StructureSk } from "../format/Structure";
+import { MaterialDraft } from "../material/MaterialDraft";
 import { Space, SpaceSk } from "../space/Space";
 import { User, UserSk } from "../user/User";
 import { CreatedAt, createEntityId, DateColumn, EntityId, UpdatedAt } from '../Utils';
@@ -102,6 +103,9 @@ export class ContentDraft {
 
     @UpdatedAt()
     updatedAt: Date;
+
+    @OneToMany(type => MaterialDraft, mat => mat.intendedContentDraft, { onDelete: "RESTRICT" })
+    materialDrafts: MaterialDraft[];
 
     @BeforeInsert()
     onInsert() {

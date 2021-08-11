@@ -1,4 +1,5 @@
 import { SelectQueryBuilder } from "typeorm";
+import { InternalError } from "../../services/Errors";
 
 /*
     Typeormは対象となるEntityに対してentitiesを1つにまとめるが、rawに対してはそれが機能しないため、
@@ -34,7 +35,7 @@ class MappedQuery<Entity, Result> {
     async getNeededOne() {
         const result = await this.qb.getRawAndEntities();
         if (result.entities.length == 0) {
-            throw "getNeededOne: Null";
+            throw new InternalError("getNeededOne: Null");
         }
         return this.convert(result.entities[0], result.raw[0]);
     }

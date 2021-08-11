@@ -3,7 +3,7 @@ import { MaterialCommitId } from '../../entities/material/MaterialCommit';
 import { MaterialDraftId } from '../../entities/material/MaterialDraft';
 import { MaterialEditingState } from '../../entities/material/MaterialEditing';
 import { SpaceAuth, SpaceId } from '../../entities/space/Space';
-import { FocusedMaterial } from '../../interfaces/material/Material';
+import { FocusedMaterial, MaterialData } from '../../interfaces/material/Material';
 import { FocusedMaterialCommit, RelatedMaterialCommit } from '../../interfaces/material/MaterialCommit';
 import { FocusedMaterialDraft, RelatedMaterialDraft } from '../../interfaces/material/MaterialDraft';
 import { MaterialNode } from '../../interfaces/material/MaterialNode';
@@ -43,16 +43,20 @@ export class MaterialService extends BaseService {
         });
     }
 
-    async createNewMaterialDraft(spaceId: SpaceId | null, type: MaterialType, data: string | null): Promise<RelatedMaterialDraft> {
+    async createNewMaterialDraft(spaceId: SpaceId | null, type: MaterialType, materialData: MaterialData | null): Promise<RelatedMaterialDraft> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const data = materialData ? JSON.stringify(materialData.document) : null;
+
             const spaceSk = spaceId ? await this.spaces.fromSpaces(trx).byEntityId(spaceId).selectId().getNeededOne() : null;
             const draft = await this.edit.createCommand(trx).createActiveBlankDraft(userId, spaceSk, type, data);
             return await draft.getRelated();
         });
     }
 
-    async editMaterialDraft(materialDraftId: MaterialDraftId, data: string): Promise<RelatedMaterialRevision | null> {
+    async editMaterialDraft(materialDraftId: MaterialDraftId, materialData: MaterialData): Promise<RelatedMaterialRevision | null> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const data = JSON.stringify(materialData.document);
+
             // get draft
             const draft = await this.edit.fromDrafts().byEntityId(materialDraftId).selectRaw().getNeededOne();
             if (!draft.currentEditingId) {
@@ -70,8 +74,10 @@ export class MaterialService extends BaseService {
         })
     }
 
-    async commitMaterial(materialDraftId: MaterialDraftId, data: string): Promise<RelatedMaterialRevision> {
+    async commitMaterial(materialDraftId: MaterialDraftId, materialData: MaterialData): Promise<RelatedMaterialRevision> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const data = JSON.stringify(materialData.document);
+
             const draft = await this.edit.fromDrafts().byEntityId(materialDraftId).getNeededOne();
             if (!draft.currentEditingId || !draft.data) {
                 throw new WrongTargetState();

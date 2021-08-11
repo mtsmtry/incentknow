@@ -86,7 +86,7 @@ export class Format {
     latestVersion: number;
 
     @Column("varchar", { nullable: true })
-    fontawesome: string | null;
+    icon: string | null;
 
     @BeforeInsert()
     onInsert() {

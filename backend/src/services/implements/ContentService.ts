@@ -4,7 +4,7 @@ import { ContentCommitId } from "../../entities/content/ContentCommit";
 import { ContentDraft, ContentDraftId } from "../../entities/content/ContentDraft";
 import { FormatDisplayId, FormatId } from "../../entities/format/Format";
 import { PropertyId, TypeName } from "../../entities/format/Property";
-import { Structure, StructureId, StructureSk } from "../../entities/format/Structure";
+import { Structure, StructureId } from "../../entities/format/Structure";
 import { MaterialId, MaterialType } from "../../entities/material/Material";
 import { MaterialDraftId } from "../../entities/material/MaterialDraft";
 import { MaterialEditingState } from "../../entities/material/MaterialEditing";
@@ -29,7 +29,7 @@ import { MaterialRevisionRepository } from "../../repositories/implements/materi
 import { AuthorityRepository } from "../../repositories/implements/space/AuthorityRepository";
 import { SpaceRepository } from "../../repositories/implements/space/SpaceRepository";
 import { Transaction } from "../../repositories/Transaction";
-import { mapBy, notNull } from "../../utils";
+import { notNull } from "../../utils";
 import { BaseService } from "../BaseService";
 import { InternalError, LackOfAuthority, NotFoundEntity, WrongTargetState } from "../Errors";
 import { ServiceContext } from "../ServiceContext";
@@ -103,7 +103,9 @@ export class ContentService extends BaseService {
         }
         for (const prop of struct.properties) {
             const matId = data[prop.entityId] as MaterialDraftId | null;
+
             if (prop.typeName == TypeName.DOCUMENT && matId) {
+
                 const matDraft = await this.matEdit.fromDrafts(trx).byEntityId(matId).selectRaw().getNeededOne();
                 if (matDraft.userId != userId) {
                     throw new LackOfAuthority();
@@ -148,12 +150,39 @@ export class ContentService extends BaseService {
         return data;
     }
 
-    private async _fromMaterialToMaterialDraft(trx: Transaction, userId: UserSk, data: any | null, struct: Structure) {
+    private _normalizeData(data: any, struct: Structure, isDraft: boolean) {
         if (!data) {
-            return;
+            return null;
         }
         for (const prop of struct.properties) {
-            const matId = data[prop.entityId] as MaterialDraftId | null;
+            const value = data[prop.entityId];
+            if (prop.typeName == TypeName.DOCUMENT) {
+                if (isDraft) {
+                    if (value?.draftId) {
+                        data[prop.entityId] = value.draftId;
+                    } else {
+                        data[prop.entityId] = null;
+                    }
+                } else {
+                    if (value?.materialId) {
+                        data[prop.entityId] = value.materialId;
+                    } else {
+                        data[prop.entityId] = null;
+                    }
+                }
+            } else if (prop.typeName == TypeName.CONTENT) {
+                data[prop.entityId] = value?.contentId || null;
+            }
+        }
+        return data;
+    }
+
+    private async _fromMaterialToMaterialDraft(trx: Transaction, userId: UserSk, data: any | null, struct: Structure) {
+        if (!data) {
+            return null;
+        }
+        for (const prop of struct.properties) {
+            const matId = data[prop.entityId] as MaterialId | null;
             if (prop.typeName == TypeName.DOCUMENT && matId) {
                 const mat = await this.mat.fromMaterials(trx).byEntityId(matId).selectAll().getNeededOne();
                 const matDraft = await this.matEdit.createCommand(trx).getOrCreateActiveDraft(userId, mat.id, mat.data, null);
@@ -161,21 +190,6 @@ export class ContentService extends BaseService {
             }
         }
         return data;
-    }
-
-    private async _startEditingMaterialDraft(trx: Transaction, userId: UserSk, data: any | null, struct: Structure) {
-        if (!data) {
-            return;
-        }
-        console.log(data);
-        for (const prop of struct.properties) {
-            const matDraftId = data[prop.entityId] as MaterialDraftId | null;
-            if (prop.typeName == TypeName.DOCUMENT && matDraftId) {
-                const matDraftSk = await this.matEdit.fromDrafts(trx).byEntityId(matDraftId).selectId().getNeededOne();
-                const commit = await this.matCom.fromCommits(trx).latest().selectAll().getNeededOne();
-                await this.matEdit.createCommand(trx).activateDraft(matDraftSk, commit);
-            }
-        }
     }
     /*
         private async _getFocusedContentDraftWhole(qb: ContentDraftQuery) {
@@ -223,6 +237,16 @@ export class ContentService extends BaseService {
             const struct = await this.formats.fromStructures(trx).byId(content.structureId).selectPropertiesJoined().getNeededOne();
             const data = await this._fromMaterialToMaterialDraft(trx, userId, content.data, struct);
             const draft = await this.edit.createCommand(trx).getOrCreateActiveDraft(userId, content.id, data, basedCommit);
+            /*
+                        for (const prop of struct.properties) {
+                            const matDraftId = data[prop.entityId] as MaterialDraftId | null;
+                            if (prop.typeName == TypeName.DOCUMENT && matDraftId) {
+                                const matDraftSk = await this.matEdit.fromDrafts(trx).byEntityId(matDraftId).selectId().getNeededOne();
+                                const commit = await this.matCom.fromCommits(trx).latest().selectAll().getNeededOne();
+                                await this.matEdit.createCommand(trx).activateDraft(matDraftSk, commit);
+                            }
+                        }
+            */
             return draft.raw.entityId;
         });
     }
@@ -231,6 +255,7 @@ export class ContentService extends BaseService {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
             const spaceSk = spaceId ? await this.spaces.fromSpaces(trx).byEntityId(spaceId).selectId().getNeededOne() : null;
             const structure = await this.formats.fromStructures(trx).byEntityId(structureId).selectPropertiesJoined().getNeededOne();
+            data = this._normalizeData(data, structure, true);
             const draft = await this.edit.createCommand(trx).createActiveBlankDraft(userId, structure.id, spaceSk, data);
             await this._transferMaterialDrafts(trx, userId, draft.raw, data, structure);
             return draft.raw.entityId;
@@ -245,13 +270,19 @@ export class ContentService extends BaseService {
                 throw new WrongTargetState("The state of this material draft is not editing");
             }
             const structure = await this.formats.fromStructures(trx).byId(draft.structureId).selectPropertiesJoined().getNeededOne();
+            console.log("editContentDraft");
+            console.log(data);
+            data = this._normalizeData(data, structure, true);
+            console.log("_normalizeData");
+            console.log(data);
             await this.edit.createCommand(trx).updateDraft(draft, data);
             await this._transferMaterialDrafts(trx, userId, draft, data, structure);
+
             return null;
         });
     }
 
-    async commitContent(contentDraftId: ContentDraftId, data: any): Promise<{}> {
+    async commitContent(contentDraftId: ContentDraftId, data: any): Promise<ContentId> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
             const draft = await this.edit.fromDrafts(trx).byEntityId(contentDraftId).selectRaw().getNeededOne();
             if (!draft.currentEditingId || !draft.data) {
@@ -260,6 +291,7 @@ export class ContentService extends BaseService {
             const editing = await this.edit.fromEditings(trx).byId(draft.currentEditingId).getNeededOne();
 
             const [format, structure] = await this.formats.fromStructures(trx).byId(draft.structureId).selectFocusedFormat().getNeededOneWithRaw();
+            data = this._normalizeData(data, structure, true);
 
             let contentId: ContentSk | null = null;
             if (draft.contentId) {
@@ -275,7 +307,8 @@ export class ContentService extends BaseService {
                     this.con.createCommand(trx).updateContent(userId, draft.contentId, data)
                 ]);
 
-                contentId = draft.contentId;
+                const content = await this.con.fromContents(trx).byId(draft.contentId).getNeededOne();
+                return content.entityId;
             } else if (draft.intendedSpaceId) {
                 if (!draft.data) {
                     throw new WrongTargetState();
@@ -296,11 +329,10 @@ export class ContentService extends BaseService {
                 ]);
 
                 contentId = content.raw.id;
+                return content.raw.entityId;
             } else {
                 throw new InternalError();
             }
-
-            return {};
         });
     }
 
@@ -354,36 +386,24 @@ export class ContentService extends BaseService {
 
     async getMyContentDrafts(): Promise<RelatedContentDraft[]> {
         const userId = this.ctx.getAuthorized();
-        const drafts = await this.edit.fromDrafts().byUser(userId).selectRelated().getManyWithRaw();
-        const structIds = Array.from(new Set(drafts.map(x => x.raw.structureId)));
-        const getFormat = (structId: StructureSk) => this.formats.fromStructures().byId(structId).selectFocusedFormat().getNeededOneWithRaw();
-        const structs = await Promise.all(structIds.map(async x => {
-            const [buildFormat, struct] = await getFormat(x);
-            const relations = await this.formats.getRelations(struct.formatId);
-            const format = buildFormat(relations);
-            return { format, id: x };
-        }));
-        const structMap = mapBy(structs, x => x.id);
-        return drafts.map(x => x.result(structMap[x.raw.structureId].format));
+        const drafts = await this.edit.fromDrafts().byUser(userId).getRelatedMany(this.con, this.formats);
+        return drafts;
     }
 
     async getContentDraft(draftId: ContentDraftId): Promise<FocusedContentDraft> {
         // const userId = this.ctx.getAuthorized();
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
-            const [buildDraft, draft] = await this.edit.fromDrafts().byEntityId(draftId).selectFocused().getNeededOneWithRaw();
-            if (!draft.currentEditingId) {
-                throw new InternalError("This draft is not editing");
+            const drafts = await this.edit.fromDrafts().byEntityId(draftId).getFocusedMany(userId, this.con, this.formats);
+            if (drafts.length == 0) {
+                throw new NotFoundEntity("Draft is not found");
             }
-            const [buildFormat, struct] = await this.formats.fromStructures(trx).byId(draft.structureId).selectFocusedFormat().getNeededOneWithRaw();
-            const relations = await this.formats.getRelations(struct.formatId);
-            const format = buildFormat(relations);
-            await this._startEditingMaterialDraft(trx, userId, draft.data, struct);
+            const draft = drafts[0];
 
             //const draft = await this._getFocusedContentDraftWhole(query);
             if (!draft) {
                 throw new NotFoundEntity();
             }
-            return buildDraft(format, []);
+            return draft;
         });
     }
 

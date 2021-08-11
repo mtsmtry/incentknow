@@ -1,8 +1,9 @@
 import { ContentDraftId } from "../../entities/content/ContentDraft";
+import { MaterialType } from "../../entities/material/Material";
 import { MaterialCommitId } from "../../entities/material/MaterialCommit";
 import { MaterialDraft, MaterialDraftId } from "../../entities/material/MaterialDraft";
 import { toTimestamp } from "../Utils";
-import { RelatedMaterial } from "./Material";
+import { MaterialData, RelatedMaterial, toMaterialData } from "./Material";
 
 export interface RelatedMaterialDraft {
     draftId: MaterialDraftId;
@@ -30,7 +31,7 @@ export interface FocusedMaterialDraft {
     contentDraftId: ContentDraftId | null;
     material: RelatedMaterial | null;
     basedCommitId: MaterialCommitId | null;
-    data: string;
+    data: MaterialData;
     isEditing: boolean;
 }
 
@@ -43,7 +44,7 @@ export function toFocusedMaterialDraft(draft: MaterialDraft, data: string, mater
         contentDraftId: draft.intendedContentDraft?.entityId || null,
         material: material,
         basedCommitId: draft.currentEditing?.basedCommit?.entityId || null,
-        data: data,
+        data: toMaterialData({ data: data, materialType: MaterialType.DOCUMENT }),
         isEditing: draft.currentEditingId != null
     };
 }

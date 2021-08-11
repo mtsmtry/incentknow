@@ -44,12 +44,15 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         return new ContentQuery(this.qb.limit(count));
     }
 
-    private async locateRelatedContents(rep: ContentRepository, data: any, format: FocusedFormat) {
+    static async locateRelatedEntity(rep: ContentRepository, data: any, format: FocusedFormat) {
         const promises = format.currentStructure.properties.map(async prop => {
             const value = data[prop.id];
+            if (value == null) {
+                return;
+            }
             if (prop.type.name == TypeName.CONTENT && prop.type.format) {
-                const [buildContent, raw] = await rep.fromContents().byEntityId(value).selectRelated().getNeededOneWithRaw();
-                data[prop.id] = buildContent(prop.type.format);
+                const [buildContent, raw] = await rep.fromContents().byEntityId(value).selectRelated().getOneWithRaw();
+                data[prop.id] = buildContent ? buildContent(prop.type.format) : "deleted";
             }
         });
         await Promise.all(promises);
@@ -59,7 +62,8 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         const query = this.qb
             .leftJoinAndSelect("x.creatorUser", "creatorUser")
             .leftJoinAndSelect("x.updaterUser", "updaterUser")
-            .addSelect("x.data");;
+            .leftJoinAndSelect("x.materials", "materials")
+            .addSelect("x.data");
 
         return mapQuery(query, x => (f: FocusedFormat) => toRelatedContent(x, f));
     }
@@ -69,6 +73,7 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
             .leftJoinAndSelect("x.creatorUser", "creatorUser")
             .leftJoinAndSelect("x.updaterUser", "updaterUser")
             .leftJoinAndSelect("x.materials", "materials")
+            .addSelect("materials.data")
             .addSelect("x.data");
 
         return mapQuery(query, x => (f: FocusedFormat, d: RelatedContentDraft | null) => toFocusedContent(x, d, f));
@@ -92,7 +97,7 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         const focusedContents = contents.map(x => x.result(structMap[x.raw.structureId].format));
 
         // Related contents
-        await Promise.all(focusedContents.map(x => this.locateRelatedContents(rep, x.data, x.format)));
+        await Promise.all(focusedContents.map(x => ContentQuery.locateRelatedEntity(rep, x.data, x.format)));
 
         return focusedContents;
     }
@@ -115,15 +120,15 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         const focusedContents = await Promise.all(contents.map(async x => {
             const format = structMap[x.raw.structureId].format;
             if (userId) {
-                const buildDraft = await editRep.fromDrafts().byUser(userId).byContent(x.raw.id).selectRelated().getNeededOne();
-                const draft = buildDraft(format);
+                const buildDraft = await editRep.fromDrafts().byUser(userId).byContent(x.raw.id).selectRelated().getOne();
+                const draft = buildDraft ? buildDraft(format) : null;
                 return x.result(format, draft);
             }
             return x.result(format, null);
         }));
 
         // Related contents
-        await Promise.all(focusedContents.map(x => this.locateRelatedContents(rep, x.data, x.format)));
+        await Promise.all(focusedContents.map(x => ContentQuery.locateRelatedEntity(rep, x.data, x.format)));
 
         return focusedContents;
     }

@@ -10,7 +10,7 @@ export interface RelatedFormat {
     displayId: FormatDisplayId;
     displayName: string;
     description: string;
-    fontawesome: string | null;
+    icon: string | null;
     space: RelatedSpace;
     usage: FormatUsage;
     semanticId: string | null;
@@ -24,7 +24,7 @@ export function toRelatedFormat(format: Format): RelatedFormat {
         displayId: format.displayId,
         displayName: format.displayName,
         description: format.description,
-        fontawesome: format.fontawesome,
+        icon: format.icon,
         space: toRelatedSpace(format.space),
         usage: format.usage,
         semanticId: format.semanticId,
@@ -43,7 +43,7 @@ export interface FocusedFormat {
     displayId: FormatDisplayId;
     displayName: string;
     description: string;
-    fontawesome: string | null,
+    icon: string | null,
     space: RelatedSpace;
     usage: FormatUsage;
     createdAt: number;
@@ -61,7 +61,7 @@ export function toFocusedFormat(format: Format, relations: Relation[]): FocusedF
         displayId: format.displayId,
         displayName: format.displayName,
         description: format.description,
-        fontawesome: format.fontawesome,
+        icon: format.icon,
         space: toRelatedSpace(format.space),
         usage: format.usage,
         createdAt: toTimestamp(format.createdAt),
@@ -80,7 +80,7 @@ export function toFocusedFormatFromStructure(structure: Structure, relations: Re
         displayId: structure.format.displayId,
         displayName: structure.format.displayName,
         description: structure.format.description,
-        fontawesome: structure.format.fontawesome,
+        icon: structure.format.icon,
         space: toRelatedSpace(structure.format.space),
         usage: structure.format.usage,
         createdAt: toTimestamp(structure.format.createdAt),

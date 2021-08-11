@@ -209,7 +209,7 @@ export class FormatCommand implements BaseCommand {
         await this.formats.update(formatId, { displayName });
     }
 
-    async setFormatFontawesome(formatId: FormatSk, fontawesome: string | null) {
-        await this.formats.update(formatId, { fontawesome });
+    async setFormatIcon(formatId: FormatSk, icon: string | null) {
+        await this.formats.update(formatId, { icon });
     }
 }

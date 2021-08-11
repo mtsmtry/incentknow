@@ -24,27 +24,33 @@ init().then(conn => {
     const service = new Service(ctx);
 
     router.post('/:method', async (req, res) => {
-        res.header('Access-Control-Allow-Origin', req.headers.origin);
-
-        // リクエストヘッダーに含まれる全てのヘッダーがないとCORSによりリジェクトされる
-        res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Session');
-        res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
-
-        const methodName = req.params.method;
-        ctx.setHeaders(req.headers);
-        const start = Date.now();
-        let response;
         try {
-            response = await service.execute(methodName, req.body);
+            res.header('Access-Control-Allow-Origin', req.headers.origin);
+
+            // リクエストヘッダーに含まれる全てのヘッダーがないとCORSによりリジェクトされる
+            res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Session');
+            res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+
+            const methodName = req.params.method;
+            ctx.setHeaders(req.headers);
+            const start = Date.now();
+            let response;
+            try {
+                response = await service.execute(methodName, req.body);
+            } catch (x) {
+                console.log(x);
+                console.log(x.stack);
+                throw x;
+            }
+            const time = Date.now() - start;
+
+            res.header("Time", time.toString());
+            res.status(200).json(response);
         } catch (x) {
             console.log(x);
             console.log(x.stack);
             throw x;
         }
-        const time = Date.now() - start;
-
-        res.header("Time", time.toString());
-        res.status(200).json(response);
     });
 
     router.options('/:any', async (req, res) => {

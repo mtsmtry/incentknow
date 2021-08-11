@@ -2,7 +2,7 @@ import { FormatId } from "../../entities/format/Format";
 import { MetaProperty, MetaPropertyId, MetaPropertyType } from "../../entities/format/MetaProperty";
 import { Language, Property, PropertyId, TypeName } from "../../entities/format/Property";
 import { Structure } from "../../entities/format/Structure";
-import { Data, DataKind, DataMember } from "../../Implication";
+import { Data, DataKind, DataMember, Int } from "../../Implication";
 import { toTimestamp } from "../Utils";
 import { FocusedFormat, toFocusedFormat } from "./Format";
 
@@ -24,6 +24,7 @@ export interface PropertyInfo {
     id: PropertyId,
     optional: boolean,
     semantic: string | null,
+    icon: string | null,
     type: Type,
     metaProperties: IntactMetaProperty[]
 }
@@ -45,7 +46,7 @@ export class Type {
     @DataMember([TypeName.ARRAY])
     subType?: Type;
 
-    @DataMember([TypeName.CODE])
+    @DataMember([])
     language?: Language;
 
     @DataMember([TypeName.OBJECT])
@@ -67,6 +68,7 @@ export function toPropertyInfo(prop: Property): PropertyInfo {
         fieldName: prop.fieldName,
         optional: prop.optional,
         semantic: prop.semantic,
+        icon: prop.icon,
         metaProperties: metaProps.map(toIntactMetaProperty),
         type: new Type({
             name: prop.typeName
@@ -78,13 +80,13 @@ export function toPropertyInfo(prop: Property): PropertyInfo {
             name: prop.argType,
             format: prop.argFormat ? toFocusedFormat(prop.argFormat, []) : null,
             language: prop.argLanguage,
-            properties: prop.argProperties.map(toPropertyInfo)
+            properties: (prop.argProperties || []).map(toPropertyInfo)
         });
     } else {
         Object.assign(res.type, {
             format: prop.argFormat ? toFocusedFormat(prop.argFormat, []) : null,
             language: prop.argLanguage,
-            properties: prop.argProperties.map(toPropertyInfo),
+            properties: (prop.argProperties || []).map(toPropertyInfo),
         });
     }
 
@@ -96,7 +98,7 @@ export type StructureId = string;
 export interface RelatedStructure {
     formatId: FormatId;
     structureId: StructureId;
-    version: number;
+    version: Int;
     title: string | null;
     createdAt: number;
 }
@@ -113,7 +115,7 @@ export function toRelatedStructure(structure: Structure): RelatedStructure {
 
 export interface FocusedStructure {
     structureId: StructureId;
-    version: number;
+    version: Int;
     title: string | null;
     properties: PropertyInfo[];
     createdAt: number;

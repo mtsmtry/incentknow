@@ -11,15 +11,21 @@ export function joinPropertyArguments<T>(alias: string, query: SelectQueryBuilde
         .leftJoinAndSelect(alias + ".metaProperties", "metaProperties")
         .leftJoinAndSelect(alias + ".argFormat", "argFormat")
         .leftJoinAndSelect(alias + ".argProperties", "argProperties")
-        .leftJoinAndSelect("argProperties.argFormat", "argFormat2")
-        .leftJoinAndSelect("argProperties.argProperties", "argProperties2")
+        //.leftJoinAndSelect("argProperties.argFormat", "argFormat2")
+        //.leftJoinAndSelect("argProperties.argProperties", "argProperties2")
         //.leftJoinAndSelect("argProperties2.argFormat", "argFormat3")
         //.leftJoinAndSelect("argProperties2.argProperties", "argProperties3")
+
         .leftJoinAndSelect("argFormat.space", "argFormatSpace")
-        .leftJoinAndSelect("argFormat.currentStructure", "argFormatCurrentStructure")
-        .leftJoinAndSelect("argFormat2.space", "argFormatSpace2")
-        .leftJoinAndSelect("argFormat2.currentStructure", "argFormatCurrentStructure2");
-    return joinProperties("argFormatCurrentStructure", qb);
+        .leftJoinAndSelect("argFormat.creatorUser", "creatorUser2")
+        .leftJoinAndSelect("argFormat.updaterUser", "updaterUser2")
+        .leftJoinAndSelect("argFormat.currentStructure", "currentStructure2")
+        .leftJoinAndSelect("currentStructure2.properties", "properties2")
+        .leftJoinAndSelect("properties2.metaProperties", "metaProperties2")
+        // .leftJoinAndSelect("properties2.argFormat", "argFormat")
+        //.leftJoinAndSelect("properties2.argProperties", "argProperties2");
+        ;
+    return qb;
 }
 
 export function joinProperties<T>(alias: string, query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {

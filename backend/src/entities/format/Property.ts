@@ -8,14 +8,11 @@ export enum TypeName {
     INT = "integer",
     BOOL = "boolean",
     STRING = "string",
-    FORMAT = "format",
-    SPACE = "space",
     CONTENT = "content",
     URL = "url",
     OBJECT = "object",
     TEXT = "text",
     ARRAY = "array",
-    CODE = "code",
     ENUM = "enumerator",
     DOCUMENT = "document",
     IMAGE = "image",
@@ -78,7 +75,10 @@ export class Property {
     typeName: TypeName;
 
     @ManyToOne(type => Format, { onDelete: "RESTRICT" })
+    @JoinColumn({ name: "argFormatId" })
     argFormat: Format | null;
+    @Column("int", { nullable: true })
+    argFormatId: FormatSk | null;
 
     @Column({
         type: "enum",
@@ -106,6 +106,9 @@ export class Property {
 
     @OneToMany(type => MetaProperty, meta => meta.property, { onDelete: "CASCADE", cascade: ["insert"] })
     metaProperties: MetaProperty[];
+
+    @Column("varchar", { nullable: true })
+    icon: string | null;
 
     @BeforeInsert()
     onInsert() {

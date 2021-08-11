@@ -148,13 +148,13 @@ export class FormatService extends BaseService {
         });
     }
 
-    async setFormatFontawesome(formatId: FormatId, fontawesome: string | null): Promise<{}> {
+    async setFormatIcon(formatId: FormatId, icon: string | null): Promise<{}> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
             const [auth, format] = await this.auth.fromAuths(trx).getFormatAuth(SpaceAuth.WRITABLE, userId, formatId);
             if (!auth) {
                 throw new LackOfAuthority();
             }
-            await this.formats.createCommand(trx).setFormatFontawesome(format.id, fontawesome);
+            await this.formats.createCommand(trx).setFormatIcon(format.id, icon);
             return {};
         });
     }

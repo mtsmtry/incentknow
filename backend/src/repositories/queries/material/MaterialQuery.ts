@@ -1,7 +1,7 @@
 import { SelectQueryBuilder } from "typeorm";
 import { ContentSk } from "../../../entities/content/Content";
-import { Material, MaterialSk } from "../../../entities/material/Material";
-import { MaterialId, toFocusedMaterial, toRelatedMaterial } from "../../../interfaces/material/Material";
+import { Material, MaterialId, MaterialSk } from "../../../entities/material/Material";
+import { toFocusedMaterial, toRelatedMaterial } from "../../../interfaces/material/Material";
 import { RelatedMaterialDraft } from "../../../interfaces/material/MaterialDraft";
 import { mapQuery } from "../MappedQuery";
 import { SelectFromSingleTableQuery, SelectQueryFromEntity } from "../SelectQuery";
@@ -35,7 +35,7 @@ export class MaterialQuery extends SelectFromSingleTableQuery<Material, Material
             .leftJoinAndSelect("x.content", "content")
             .addSelect("x.data");
 
-        return mapQuery(query, x => (d: RelatedMaterialDraft) => toFocusedMaterial(x, d));
+        return mapQuery(query, x => (d: RelatedMaterialDraft | null) => toFocusedMaterial(x, d));
     }
 }
 

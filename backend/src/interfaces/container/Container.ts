@@ -30,7 +30,7 @@ export function toRelatedContainer(container: Container): RelatedContainer {
 
 export interface AdditionalContainerInfo {
     contentCount: Int;
-    latestUpdatedAt: Date;
+    latestUpdatedAt: Date | null;
 }
 
 export interface FocusedContainer {
@@ -42,7 +42,7 @@ export interface FocusedContainer {
     generator: ContentGenerator | null;
     reactor: IntactReactor | null;
     contentCount: Int;
-    latestUpdatedAt: number;
+    latestUpdatedAt: number | null;
 }
 
 export function toFocusedContainer(container: Container, reactor: IntactReactor | null, additional: AdditionalContainerInfo): FocusedContainer {
@@ -56,6 +56,6 @@ export function toFocusedContainer(container: Container, reactor: IntactReactor 
         generator: container.generator,
         reactor: reactor,
         contentCount: additional.contentCount,
-        latestUpdatedAt: toTimestamp(additional.latestUpdatedAt)
+        latestUpdatedAt: additional.latestUpdatedAt ? toTimestamp(additional.latestUpdatedAt) : null
     }
 }

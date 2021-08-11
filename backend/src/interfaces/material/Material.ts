@@ -2,12 +2,39 @@
 // Material ------------------------------
 
 import { ContentId } from "../../entities/content/Content";
-import { Material, MaterialType } from "../../entities/material/Material";
+import { Material, MaterialId, MaterialType } from "../../entities/material/Material";
+import { Data, DataKind, DataMember, Int, NewTypeString } from "../../Implication";
 import { RelatedUser, toRelatedUser } from "../user/User";
 import { toTimestamp } from "../Utils";
 import { RelatedMaterialDraft } from "./MaterialDraft";
 
-export type MaterialId = string;
+export type DocumentBlockId = NewTypeString<"DocumentBlockId">;
+
+export enum BlockType {
+    PARAGRAPH = "paragraph",
+    HEADER = "header"
+}
+
+export interface DocumentBlock {
+    id: DocumentBlockId;
+    data: BlockData;
+}
+
+@Data()
+export class BlockData {
+    @DataKind()
+    type: BlockType;
+
+    @DataMember([BlockType.HEADER])
+    level?: Int;
+
+    @DataMember([BlockType.PARAGRAPH, BlockType.HEADER])
+    text?: string;
+}
+
+export interface Document {
+    blocks: DocumentBlock[];
+}
 
 export interface RelatedMaterial {
     materialId: MaterialId;
@@ -20,6 +47,15 @@ export interface RelatedMaterial {
     updaterUser: RelatedUser;
 }
 
+@Data()
+export class MaterialData {
+    @DataKind()
+    type: MaterialType;
+
+    @DataMember([MaterialType.DOCUMENT])
+    document?: Document;
+}
+
 export function toRelatedMaterial(material: Material): RelatedMaterial {
     return {
         materialId: material.entityId,
@@ -27,9 +63,9 @@ export function toRelatedMaterial(material: Material): RelatedMaterial {
         displayName: material.beginning,
         materialType: material.materialType,
         createdAt: toTimestamp(material.createdAt),
-        creatorUser: toRelatedUser(material.creatorUser),
+        creatorUser: material.creatorUser ? toRelatedUser(material.creatorUser) : null as any,
         updatedAt: toTimestamp(material.updatedAt),
-        updaterUser: toRelatedUser(material.updaterUser)
+        updaterUser: material.updaterUser ? toRelatedUser(material.updaterUser) : null as any
     };
 }
 
@@ -42,8 +78,18 @@ export interface FocusedMaterial {
     creatorUser: RelatedUser;
     updatedAt: number;
     updaterUser: RelatedUser;
-    data: string;
+    data: MaterialData;
     draft: RelatedMaterialDraft | null;
+}
+
+export function toMaterialData(material: { materialType: MaterialType, data: string }) {
+    const data: MaterialData = { type: material.materialType };
+    switch (material.materialType) {
+        case MaterialType.DOCUMENT:
+            data.document = JSON.parse(material.data);
+            break;
+    }
+    return data;
 }
 
 export function toFocusedMaterial(material: Material, draft: RelatedMaterialDraft | null): FocusedMaterial {
@@ -53,10 +99,10 @@ export function toFocusedMaterial(material: Material, draft: RelatedMaterialDraf
         displayName: material.beginning,
         materialType: material.materialType,
         createdAt: toTimestamp(material.createdAt),
-        creatorUser: toRelatedUser(material.creatorUser),
+        creatorUser: material.creatorUser ? toRelatedUser(material.creatorUser) : null as any,
         updatedAt: toTimestamp(material.updatedAt),
-        updaterUser: toRelatedUser(material.updaterUser),
-        data: material.data,
+        updaterUser: material.updaterUser ? toRelatedUser(material.updaterUser) : null as any,
+        data: toMaterialData(material),
         draft: draft
     };
 }
