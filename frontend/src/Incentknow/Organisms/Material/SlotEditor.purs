@@ -10,17 +10,18 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Data.Ids (MaterialDraftId)
+import Incentknow.Data.Property (MaterialObject(..), toMaterialObjectFromDraftId)
 import Incentknow.Organisms.Material.Editor as Editor
 import Incentknow.Route (Route)
 
 type Input 
-  = { value :: Maybe MaterialDraftId }
+  = { value :: Maybe MaterialObject }
 
 type Output
-    = Maybe MaterialDraftId
+    = Maybe MaterialObject
 
 type State
-  = { materialDraftId :: Maybe MaterialDraftId
+  = { materialObject :: Maybe MaterialObject
     }
 
 data Action
@@ -51,14 +52,18 @@ component =
 
 initialState :: Input -> State
 initialState input =
-  { materialDraftId: input.value
+  { materialObject: input.value
   }
 
 editor_ = SProxy :: SProxy "editor"
 
 render :: forall m. Behaviour m => MonadEffect m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  HH.slot (SProxy :: SProxy "editor") unit Editor.component { value: state.materialDraftId } (Just <<< ChangeDraftId)
+  HH.slot (SProxy :: SProxy "editor") unit Editor.component 
+    { value: case state.materialObject of 
+        Just (MaterialObjectDraft draft) -> Just draft
+        _ -> Nothing
+    } (Just <<< ChangeDraftId)
 
 changeRoute :: forall o m. Behaviour m => Route -> H.HalogenM State Action ChildSlots o m Unit
 changeRoute route = do
@@ -68,10 +73,9 @@ handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -
 handleAction = case _ of
   HandleInput input -> do
     state <- H.get
-    when (state.materialDraftId /= input.value) do
-      H.put $ initialState input
+    H.put $ initialState input
   Initialize -> pure unit
   ChangeDraftId draftId -> do
-    H.modify_ _ { materialDraftId = Just draftId }
-    H.raise $ Just draftId
+    -- H.modify_ _ { materialObject = Just draftId }
+    H.raise $ Just $ toMaterialObjectFromDraftId draftId
   

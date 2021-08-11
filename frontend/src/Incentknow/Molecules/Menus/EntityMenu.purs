@@ -75,6 +75,7 @@ render state =
     , fetchSingle: Nothing--Just $ \x-> toQueryCallback $ map toSelectMenuItem $ getRelatedContent x
     , fetchId: ""
     , initial: { items: [], completed: false }
+    , visibleCrossmark: false
     }
     (Just <<< ChangeValue)
   where

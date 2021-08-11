@@ -10,6 +10,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Inputs (button)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.DraftExplorer as DraftExplorer
 import Incentknow.Organisms.DraftHistory as DraftHistory
 import Incentknow.Organisms.EditContent as EditContent
@@ -68,18 +69,23 @@ render state =
             } absurd
         ]
     }
-    [ HH.div []
-      [ button "Content" (Navigate $ EditDraft $ ContentTarget $ TargetBlank Nothing Nothing)
-      , button "Material" (Navigate $ EditDraft $ MaterialTarget $ MaterialTargetBlank Nothing)
+    [ HH.div [ css "page-new-content" ]
+      [ section ("selector" <> if isContent then " selector-content" else " selector-material")
+          [ button "Content" (Navigate $ EditDraft $ ContentTarget $ TargetBlank Nothing Nothing)
+          , button "Material" (Navigate $ EditDraft $ MaterialTarget $ MaterialTargetBlank Nothing)
+          ]
+      , case state.target of
+          ContentTarget target ->
+            HH.slot (SProxy :: SProxy "editContent") unit EditContent.component target absurd
+          MaterialTarget target ->
+            HH.slot (SProxy :: SProxy "editMaterial") unit EditMaterial.component target absurd
       ]
-    , section "page-new-content"
-        [ case state.target of
-            ContentTarget target -> 
-              HH.slot (SProxy :: SProxy "editContent") unit EditContent.component target absurd
-            MaterialTarget target ->
-              HH.slot (SProxy :: SProxy "editMaterial") unit EditMaterial.component target absurd
-        ]
     ]
+  where
+  isContent = 
+    case state.target of
+      ContentTarget _ -> true
+      MaterialTarget _ -> false
 
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of

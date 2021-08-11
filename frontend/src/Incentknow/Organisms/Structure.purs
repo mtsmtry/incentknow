@@ -146,7 +146,7 @@ render state =
         , HH.td []
             [ HH.slot (SProxy :: SProxy "icon") prop.id IconMenu.component
                 { value: prop.icon
-                , disabled: not state.readonly
+                , disabled: state.readonly
                 }
                 (\_ -> Just $ DeleteProperty prop.id)
             ]

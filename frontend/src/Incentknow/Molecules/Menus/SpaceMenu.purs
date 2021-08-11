@@ -76,6 +76,7 @@ render state =
     , fetchSingle: Just $ \x-> toQueryCallback $ map toSelectMenuItem $ getRelatedSpace x
     , fetchId: ""
     , initial: emptyCandidateSet
+    , visibleCrossmark: false
     }
     (Just <<< ChangeValue)
 
@@ -89,8 +90,9 @@ toSelectMenuItem space =
   where
   html :: forall a s m. H.ComponentHTML a s m
   html =
-    HH.div [ css "name" ]
-      [ HH.text space.displayName
+    HH.div [ css "mol-space-menu-item" ]
+      [ HH.span [ css "displayName" ] [ HH.text space.displayName ]
+      , HH.span [ css "displayId" ] [ HH.text $ "@" <> unwrap space.displayId ]
       ]
 
 handleAction :: forall m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots Output m Unit

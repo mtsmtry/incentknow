@@ -2,10 +2,11 @@ module Incentknow.Data.Property where
 
 import Prelude
 
-import Data.Argonaut.Core (Json, fromArray, fromBoolean, fromObject, isNull, jsonNull, toArray, toBoolean, toNumber, toString)
+import Data.Argonaut.Core (Json, fromArray, fromBoolean, fromObject, isNull, jsonNull, toArray, toBoolean, toString)
+import Data.Argonaut.Core as J
 import Data.Argonaut.Encode (encodeJson)
 import Data.Array (catMaybes, concat, cons, filter, fromFoldable, length, singleton, uncons)
-import Data.Int (fromNumber)
+import Data.Int (fromNumber, toNumber)
 import Data.Map (values)
 import Data.Map as M
 import Data.Map.Utils (decodeToMap, mergeFromArray)
@@ -15,8 +16,8 @@ import Data.Newtype (unwrap, wrap)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Tuple (Tuple(..), uncurry)
 import Foreign.Object as Object
-import Incentknow.Data.Entities (FocusedContent, FocusedMaterial, Language, PropertyInfo, RelatedContent, Type(..), FocusedFormat)
-import Incentknow.Data.Ids (FormatId, SpaceId(..))
+import Incentknow.Data.Entities (FocusedContent, FocusedFormat, FocusedMaterial, FocusedMaterialDraft, Language, PropertyInfo, RelatedContent, Type(..), RelatedMaterial)
+import Incentknow.Data.Ids (ContentId, FormatId, MaterialDraftId, MaterialId, PropertyId(..), SpaceId(..))
 
 type Enumerator
   = { id :: String
@@ -172,15 +173,15 @@ type PropertyComposition
     , sections :: Array Property
     }
 
-toPropertyComposition :: Array Property -> PropertyComposition
-toPropertyComposition props = 
+toPropertyComposition :: Boolean -> Array Property -> PropertyComposition
+toPropertyComposition isEditor props = 
   { info: filter (not <<< isSection) props
   , sections: filter isSection props
   }
   where
   isSection :: Property -> Boolean
   isSection prop = case prop.info.type of
-    DocumentType -> if isNull prop.value then false else true
+    DocumentType -> if isNull prop.value && not isEditor then false else true
     _ -> false
 
 type TypedProperty = { value :: TypedValue, info :: PropertyInfo }
@@ -189,17 +190,43 @@ data TypedValue
   = IntTypedValue (Maybe Int)
   | BoolTypedValue (Maybe Boolean)
   | StringTypedValue (Maybe String)
-  | ContentTypedValue FocusedFormat (ReferenceValue RelatedContent)
   | UrlTypedValue (Maybe String)
   | ObjectTypedValue (Array TypedProperty)
   | TextTypedValue (Maybe String)
   | ArrayTypedValue (Array TypedValue)
   | EnumTypedValue (Array Enumerator) (Maybe String)
-  | DocumentTypedValue (ReferenceValue FocusedMaterial)
+  | ContentTypedValue FocusedFormat (ReferenceValue RelatedContent)
+  | DocumentTypedValue (ReferenceValue MaterialObject)
   | ImageTypedValue (Maybe String)
   | EntityTypedValue FocusedFormat (ReferenceValue RelatedContent)
 
-foreign import forceConvert :: forall a. Json -> a
+foreign import forceConvert :: forall a b. a -> b
+
+foreign import getMaterialObjectType :: Json -> String
+
+foreign import assignJson :: Json -> Json -> Json
+ 
+foreign import insertJson :: String -> Json -> Json -> Json
+
+data MaterialObject
+  = MaterialObjectDraft FocusedMaterialDraft
+  | MaterialObjectFocused FocusedMaterial
+  | MaterialObjectRelated RelatedMaterial
+
+toMaterialObjectFromDraftId :: MaterialDraftId -> MaterialObject
+toMaterialObjectFromDraftId draftId = MaterialObjectDraft $ forceConvert { draftId }
+
+toMaterialObjectFromMaterialId :: MaterialId -> MaterialObject
+toMaterialObjectFromMaterialId materialId = MaterialObjectFocused $ forceConvert { materialId }
+
+toRelatedContentFromContentId :: ContentId -> RelatedContent
+toRelatedContentFromContentId contentId = forceConvert { contentId }
+
+toMaterialObject :: Json -> MaterialObject
+toMaterialObject json = case getMaterialObjectType json of
+  "draft" -> MaterialObjectDraft $ forceConvert json
+  "focused" -> MaterialObjectFocused $ forceConvert json
+  _ -> MaterialObjectRelated $ forceConvert json
 
 toReferenceValue :: forall a. Json -> ReferenceValue a 
 toReferenceValue value = 
@@ -215,9 +242,21 @@ data ReferenceValue a
   | NullReference
   | JustReference a
 
+toMaybeFromReferenceValue :: forall a. ReferenceValue a -> Maybe a
+toMaybeFromReferenceValue = case _ of
+    DeletedReference -> Nothing
+    NullReference -> Nothing
+    JustReference x -> Just x 
+
+instance functorReferenceValue :: Functor ReferenceValue where
+  map f = case _ of
+    DeletedReference -> DeletedReference
+    NullReference -> NullReference
+    JustReference x -> JustReference $ f x
+
 toTypedValue :: Json -> Type -> TypedValue
 toTypedValue value ty = case ty of
-  IntType -> IntTypedValue $ flatten $ map fromNumber $ toNumber value
+  IntType -> IntTypedValue $ flatten $ map fromNumber $ J.toNumber value
   BoolType -> BoolTypedValue $ toBoolean value
   StringType -> StringTypedValue $ toString value
   ContentType format -> ContentTypedValue format $ toReferenceValue value
@@ -226,6 +265,27 @@ toTypedValue value ty = case ty of
   TextType -> TextTypedValue $ toString value
   ArrayType ty -> ArrayTypedValue $ map (\x-> toTypedValue x ty) $ fromMaybe [] $ toArray value
   EnumType enums -> EnumTypedValue enums $ toString value
-  DocumentType -> DocumentTypedValue $ toReferenceValue value
+  DocumentType -> DocumentTypedValue $ map toMaterialObject $ toReferenceValue value
   ImageType -> ImageTypedValue $ toString value
   EntityType format -> EntityTypedValue format $ toReferenceValue value
+
+toJsonFromTypedValue :: TypedValue -> Json
+toJsonFromTypedValue = case _ of
+  IntTypedValue (Just vl) -> J.fromNumber $ toNumber vl
+  BoolTypedValue (Just vl) -> J.fromBoolean vl
+  StringTypedValue (Just vl) -> J.fromString vl
+  ContentTypedValue _ (JustReference vl) -> forceConvert { contentId: vl.contentId }
+  UrlTypedValue (Just vl) -> J.fromString vl
+  ObjectTypedValue props -> encodeJson $ Object.fromFoldable $ map toTuple props
+    where
+    toTuple prop = Tuple (unwrap prop.info.id) $ toJsonFromTypedValue prop.value
+  TextTypedValue (Just vl) -> J.fromString vl
+  ArrayTypedValue vls -> forceConvert $ map toJsonFromTypedValue vls
+  EnumTypedValue _ (Just vl) -> J.fromString vl
+  DocumentTypedValue (JustReference vl) -> case vl of
+    MaterialObjectDraft draft -> forceConvert { draftId: draft.draftId }
+    MaterialObjectFocused material -> forceConvert { materialId: material.materialId }
+    MaterialObjectRelated material -> forceConvert { materialId: material.materialId }
+  ImageTypedValue (Just vl) -> J.fromString vl
+  EntityTypedValue _ (JustReference vl) -> jsonNull
+  _ -> jsonNull

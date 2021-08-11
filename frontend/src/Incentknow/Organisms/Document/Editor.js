@@ -113,7 +113,16 @@ exports.getBlockText = blocksElement => blockId => () => {
             return;
         }
         
-        let innerText = editable.innerText.replace(/&nbsp;/g, " ")
+        let innerText = editable.innerText.replace(/&nbsp;/g, " ").replace(/ /g, " ");
+        console.log(innerText);
         return innerText;
     }
+}
+
+exports.targetValue = e => {
+    const clipboardData = e.clipboardData || window.clipboardData;
+    const pastedData = clipboardData.getData('Text');
+    console.log("targetValue");
+    console.log(pastedData);
+    return pastedData;
 }

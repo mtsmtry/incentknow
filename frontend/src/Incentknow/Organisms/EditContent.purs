@@ -5,7 +5,7 @@ import Prelude
 import Control.Monad.Rec.Class (forever)
 import Data.Argonaut.Core (Json, jsonNull)
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), fromMaybe, isNothing, maybe)
+import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
 import Data.Symbol (SProxy(..))
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
@@ -14,6 +14,7 @@ import Effect.Class (class MonadEffect)
 import Effect.Exception (error)
 import Halogen as H
 import Halogen.HTML as HH
+import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
 import Halogen.Query.HalogenM (SubscriptionId)
@@ -21,10 +22,11 @@ import Incentknow.API (commitContent, createNewContentDraft, editContentDraft, g
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeCommand, forRemote)
 import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigate, pushState)
+import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Atoms.Message (SaveState(..), saveState)
 import Incentknow.Data.Entities (FocusedFormat, FocusedContentDraft)
-import Incentknow.Data.Ids (SpaceId, StructureId)
+import Incentknow.Data.Ids (FormatId, SpaceId, StructureId)
 import Incentknow.Data.Property (getDefaultValue)
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.FormatMenu as FormatMenu
@@ -32,6 +34,7 @@ import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Molecules.StructureMenu as StructureMenu
 import Incentknow.Organisms.Content.Editor as Editor
 import Incentknow.Route (EditContentTarget(..), EditTarget(..), Route(..))
+import Incentknow.Templates.Page (section)
 
 -- A type which defines the draft by three kind sources
 type State
@@ -98,20 +101,44 @@ editor_ = SProxy :: SProxy "editor"
 
 render :: forall m. Behaviour m => MonadEffect m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  HH.div [ css "page-new-content" ]
-      [ saveState state.saveState
-      , case state.target of
-          TargetBlank spaceId structureId ->
-            HH.div
-              [ css "menu" ]
-              [ HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
-                  { value: spaceId, disabled: false }
-                  (Just <<< ChangeSpace)
-              , HH.slot (SProxy :: SProxy "structureMenu") unit StructureMenu.component
-                  { value: structureId, filter: maybe FormatMenu.None FormatMenu.SpaceBy spaceId, disabled: false }
-                  (Just <<< ChangeStructure)
-              ]
-          _ -> HH.text ""
+  HH.div [ css "page-edit-content" ]
+      [ HH.div [ css "save-state" ] [ saveState state.saveState ]
+      , section ("top" <> if isJust state.format then " top-with-info" else "")
+          [ HH.div [ css "header" ]
+            [ case state.target of
+                TargetBlank spaceId structureId ->
+                    HH.div [ css "createto createto-blank" ]
+                      [ HH.tr [ ]
+                          [ HH.td [ css "type" ] [ HH.text "スペース" ]
+                          , HH.td [ css "value" ]
+                              [ HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
+                                  { value: spaceId, disabled: false }
+                                  (Just <<< ChangeSpace)
+                              ]
+                          ]
+                      , HH.tr [ ]
+                          [ HH.td [ css "type" ] [ HH.text "フォーマット" ]
+                          , HH.td [ css "value" ]
+                              [ HH.slot (SProxy :: SProxy "structureMenu") unit StructureMenu.component
+                                  { value: structureId, filter: maybe FormatMenu.None FormatMenu.SpaceBy spaceId, disabled: false }
+                                  (Just <<< ChangeStructure)
+                              ]
+                          ]
+                      ]
+                _ ->
+                  remoteWith state.draft \draft->
+                    HH.div [ css "createto createto-draft" ]
+                      [ HH.tr [ ] 
+                          [ HH.td [ css "type" ] [ HH.text "フォーマット" ]
+                          , HH.td [ css "value" ] [ HH.text draft.format.space.displayName ]
+                          ]
+                      , HH.tr [ ] 
+                          [ HH.td [ css "type" ] [ HH.text "スペース" ]
+                          , HH.td [ css "value" ] [ HH.text draft.format.displayName ]
+                          ]
+                      ]
+            ]
+          ]
       , maybeElem state.format \format ->
           HH.slot editor_ unit Editor.component
             { format: format
@@ -276,10 +303,10 @@ handleAction = case _ of
     case state.target of
       TargetDraft draftId -> do
         H.modify_ _ { loading = true }
-        result <- executeCommand $ commitContent draftId state.value
-        --for_ (flatten result) \commit -> do
-        --  navigate $ EditContent $  commit.contentId
-        H.modify_ _ { loading = false }
+        maybeContentId <- executeCommand $ commitContent draftId state.value
+        for_ maybeContentId \contentId->
+          navigate $ Content contentId
+        --H.modify_ _ { loading = false }
       _ -> pure unit
   where
   makeSaveStateSaved :: H.HalogenM State Action ChildSlots o m Unit

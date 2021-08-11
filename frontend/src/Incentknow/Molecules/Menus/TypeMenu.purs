@@ -131,10 +131,8 @@ toSelectMenuItemFromType format =
   where
   html :: forall a s m. H.ComponentHTML a s m
   html =
-    HH.div []
-      [ typeIcon format.id
-      , HH.div [ css "name" ] [ HH.text format.name ]
-      , HH.div [ css "desc" ] [ HH.text format.desc ]
+    HH.div [ css "mol-type-menu-item" ]
+      [ HH.span [ css "name" ] [ typeIcon format.id, HH.text format.desc ]
       ]
 
 initialState :: Input -> State
@@ -159,6 +157,7 @@ render state =
         , fetchSingle: Nothing
         , fetchId: ""
         , initial: { items: state.typeNameItems, completed: true }
+        , visibleCrossmark: false
         }
         (Just <<< ChangeTypeName)
     , case state.typeName of

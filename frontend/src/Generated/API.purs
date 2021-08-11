@@ -56,9 +56,9 @@ editContentDraft x0 x1 = __commandAPI "editContentDraft" $ __editContentDraft x0
 
 
 foreign import __commitContent :: 
-  E.ContentDraftId -> Json -> Promise {}
+  E.ContentDraftId -> Json -> Promise E.ContentId
 
-commitContent :: E.ContentDraftId -> Json -> CommandAPI {}
+commitContent :: E.ContentDraftId -> Json -> CommandAPI E.ContentId
 commitContent x0 x1 = __commandAPI "commitContent" $ __commitContent x0 x1
 
 

@@ -84,6 +84,7 @@ render state =
     , fetchSingle: Just $ \x-> toQueryCallback $ map toSelectMenuItem $ getRelatedContent x
     , fetchId: unwrap state.formatId
     , initial: emptyCandidateSet
+    , visibleCrossmark: true
     }
     (Just <<< ChangeValue)
 

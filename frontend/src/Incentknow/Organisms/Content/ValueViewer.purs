@@ -19,7 +19,7 @@ import Incentknow.Atoms.Icon (icon, propertyIcon, typeIcon)
 import Incentknow.Data.Entities (Type(..))
 import Incentknow.Data.EntityUtils (getTypeName)
 import Incentknow.Data.Ids (PropertyId)
-import Incentknow.Data.Property (ReferenceValue(..), TypedProperty, TypedValue(..))
+import Incentknow.Data.Property (ReferenceValue(..), TypedProperty, TypedValue(..), toMaybeFromReferenceValue)
 import Incentknow.HTML.Utils (css, link, maybeElem)
 import Incentknow.Molecules.AceEditor as AceEditor
 import Incentknow.Molecules.ContentLink as ContentLink
@@ -81,8 +81,8 @@ render state = case state.value of
   EntityTypedValue _ maybeContent -> 
     referenceValueWith maybeContent \value->
       HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value } absurd
-  DocumentTypedValue maybeMaterial ->
-    referenceValueWith maybeMaterial \value->
+  DocumentTypedValue refMaterial ->
+    referenceValueWith refMaterial \value->
       HH.slot (SProxy :: SProxy "material") unit Material.component { value } absurd
   UrlTypedValue url -> maybeNullWith url \x-> HH.a [ HP.href x ] [ HH.text x ]
   ArrayTypedValue array -> HH.div [] [] -- HH.div_ $ mapWithIndex renderItem array

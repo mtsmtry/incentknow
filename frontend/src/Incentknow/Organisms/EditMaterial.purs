@@ -28,6 +28,7 @@ import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Organisms.Document.Editor as DocumentEditor
 import Incentknow.Route (EditMaterialTarget(..), EditTarget(..), Route(..))
+import Incentknow.Templates.Page (section)
 
 -- A type which defines the draft by three kind sources
 type State
@@ -89,31 +90,40 @@ editor_ = SProxy :: SProxy "editor"
 
 render :: forall m. Behaviour m => MonadEffect m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  HH.div [ css "page-new-content" ]
-    [ saveState state.saveState
-    , case state.target of
-        MaterialTargetBlank spaceId ->
-          HH.text ""
-        _ -> HH.text ""
-    --, HH.slot (SProxy :: SProxy "plainTextEditor") unit PlainTextEditor.component { value: state.text, variableHeight: true, readonly: false }
-    --    (Just <<< ChangeText)
-    , case state.data of
-        DocumentMaterialData doc ->
-          HH.slot (SProxy :: SProxy "documentEditor") unit DocumentEditor.component { value: doc }
-            (Just <<< ChangeData <<< DocumentMaterialData)
-        _ -> HH.text "" 
-    , case state.target, state.draft of
-        MaterialTargetBlank _, _ -> HH.text ""
-        MaterialTargetDraft _, Holding draft ->
-          if draft.material == Nothing then
-            submitButton
-              { isDisabled: state.loading
-              , isLoading: state.loading
-              , text: "作成"
-              , loadingText: "作成中"
-              , onClick: Commit
-              }
-          else
+  HH.div [ css "page-edit-material" ]
+    [ HH.div [ css "save-state" ] [ saveState state.saveState ]
+    , section "top"
+      [ case state.target of
+          MaterialTargetBlank spaceId ->
+            HH.text ""
+          _ -> HH.text ""
+      --, HH.slot (SProxy :: SProxy "plainTextEditor") unit PlainTextEditor.component { value: state.text, variableHeight: true, readonly: false }
+      --    (Just <<< ChangeText)
+      , case state.data of
+          DocumentMaterialData doc ->
+            HH.slot (SProxy :: SProxy "documentEditor") unit DocumentEditor.component { value: doc }
+              (Just <<< ChangeData <<< DocumentMaterialData)
+          _ -> HH.text "" 
+      , case state.target, state.draft of
+          MaterialTargetBlank _, _ -> HH.text ""
+          MaterialTargetDraft _, Holding draft ->
+            if draft.material == Nothing then
+              submitButton
+                { isDisabled: state.loading
+                , isLoading: state.loading
+                , text: "作成"
+                , loadingText: "作成中"
+                , onClick: Commit
+                }
+            else
+              submitButton
+                { isDisabled: state.loading
+                , isLoading: state.loading
+                , text: "変更"
+                , loadingText: "変更中"
+                , onClick: Commit
+                }
+          MaterialTargetDraft _, _ ->
             submitButton
               { isDisabled: state.loading
               , isLoading: state.loading
@@ -121,23 +131,16 @@ render state =
               , loadingText: "変更中"
               , onClick: Commit
               }
-        MaterialTargetDraft _, _ ->
-          submitButton
-            { isDisabled: state.loading
-            , isLoading: state.loading
-            , text: "変更"
-            , loadingText: "変更中"
-            , onClick: Commit
-            }
-        MaterialTargetMaterial _, _ ->
-          submitButton
-            { isDisabled: state.loading
-            , isLoading: state.loading
-            , text: "変更"
-            , loadingText: "変更中"
-            , onClick: Commit
-            }
-      ]
+          MaterialTargetMaterial _, _ ->
+            submitButton
+              { isDisabled: state.loading
+              , isLoading: state.loading
+              , text: "変更"
+              , loadingText: "変更中"
+              , onClick: Commit
+              }
+        ]
+    ]
 
 timer :: forall m. MonadAff m => EventSource m Action
 timer =

@@ -102,7 +102,9 @@ render state =
         , fetchMultiple: \_-> Nothing
         , fetchSingle: Nothing
         , fetchId: ""
-        , initial: { items: map toSelectMenuItem authItems, completed: true } }
+        , initial: { items: map toSelectMenuItem authItems, completed: true } 
+        , visibleCrossmark: false
+        }
         (Just <<< Change)
     ]
 

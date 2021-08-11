@@ -2,11 +2,11 @@ module Incentknow.Organisms.Document.Editor where
 
 import Prelude
 
-import Data.Array (catMaybes, concat, findIndex, index, length, mapWithIndex, replicate)
+import Data.Array (catMaybes, concat, findIndex, head, index, last, length, mapWithIndex, replicate, tail)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Maybe.Utils (flatten)
 import Data.Newtype (unwrap, wrap)
-import Data.Nullable (Nullable, toMaybe)
+import Data.String (Pattern(..), split)
 import Data.String as S
 import Data.String.CodeUnits (charAt, drop, fromCharArray, splitAt, take)
 import Data.Symbol (SProxy(..))
@@ -23,15 +23,15 @@ import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (BlockData(..), BlockType(..), Document, DocumentBlock)
 import Incentknow.Data.EntityUtils (buildBlockData, defaultBlockDataOptions, getBlockDataOptions, getBlockType)
-import Incentknow.Data.Ids (DocumentBlockId(..))
-import Incentknow.HTML.Utils (css, whenElem)
+import Incentknow.Data.Ids (DocumentBlockId)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.Document.BlockEditor as Block
 import Test.Unit.Console (consoleLog)
-import Web.DOM (Element)
-import Web.Event.Event (preventDefault, stopPropagation)
+import Web.Clipboard.ClipboardEvent (ClipboardEvent)
+import Web.Clipboard.ClipboardEvent as C
+import Web.Event.Event (preventDefault)
 import Web.HTML (HTMLElement)
-import Web.UIEvent.CompositionEvent.EventTypes (compositionend, compositionstart)
-import Web.UIEvent.KeyboardEvent (KeyboardEvent, code, toEvent)
+import Web.UIEvent.KeyboardEvent (KeyboardEvent, code, isComposing, toEvent)
 
 type Input
   = { value :: Document }
@@ -44,8 +44,7 @@ data Action
   | HandleInput Input
   | OnKeyDown KeyboardEvent
   | OnKeyUp KeyboardEvent
-  | CompositionStart
-  | CompositionEnd
+  | OnPase ClipboardEvent
 
 type Slot p
   = forall q. H.Slot q Output p
@@ -68,6 +67,8 @@ foreign import getSelection :: Effect Selection
 foreign import _setCaret :: HTMLElement -> String -> Int -> Effect Unit
 
 foreign import getBlockText :: HTMLElement -> String -> Effect String
+
+foreign import targetValue :: ClipboardEvent -> String
 
 setCaret :: HTMLElement -> DocumentBlockId -> Int -> Effect Unit
 setCaret blocksElement blockId offset = _setCaret blocksElement (unwrap blockId) offset
@@ -105,9 +106,9 @@ render state =
         , HH.attr (HH.AttrName "contenteditable") "true"
         , HE.onKeyDown $ Just <<< OnKeyDown
         , HE.onKeyUp $ Just <<< OnKeyUp
+        , HE.onPaste $ Just <<< OnPase
         , HP.ref $ RefLabel "blocks"
-        , HE.handler compositionstart $ \_-> Just CompositionStart
-        , HE.handler compositionend $ \_-> Just CompositionEnd
+        , HP.spellcheck false
         ]
         (map renderBlock state.document.blocks)
     ]
@@ -126,19 +127,58 @@ handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -
 handleAction = case _ of
   Initialize -> pure unit
   HandleInput input -> H.put $ initialState input
-  CompositionStart -> do
-    H.liftEffect $ consoleLog "CompositionStart"
-    H.modify_ _ { composition = true }
-  CompositionEnd -> do
-    H.liftEffect $ consoleLog "CompositionEnd"
-    H.modify_ _ { composition = false }
+  OnPase event -> do
+    H.liftEffect $ preventDefault $ C.toEvent event
+    selection <- H.liftEffect getSelection
+    removeSelection selection false
+    let lines = split (Pattern "\n") $ targetValue event
+    if length lines == 1 then do
+      -- insert text
+      state <- H.get
+      let
+        text = fromMaybe "" $ head lines
+        index = getBlockIndex (wrap selection.startBlockId) state.document.blocks
+        change = changeByIndex (editText (\x-> let y = splitAt selection.startOffset x in y.before <> text <> y.after)) index
+        blocks = change state.document.blocks
+      H.modify_ _ { document = { blocks } }
+      -- set caret
+      maybeElement <- getHTMLElementRef $ RefLabel "blocks"
+      for_ maybeElement \element-> do
+        H.liftEffect $ setCaret element (wrap selection.startBlockId) (selection.startOffset + S.length text)
+    else do
+      -- insert lines
+      state <- H.get
+      let
+        text = fromMaybe "" $ head lines
+        newLines = fromMaybe [] $ tail lines
+      newLineDatas <- H.liftEffect $ sequence $ map (\text-> map (\id-> { id, text }) genId) newLines
+      let
+        index = getBlockIndex (wrap selection.startBlockId) state.document.blocks
+        endText = getBlockTextFromBlocks index state.document.blocks
+        endTextAfter = (splitAt selection.startOffset endText).after
+        change1 = changeByIndex (editText (\x-> let y = splitAt selection.startOffset x in y.before <> text)) index
+        toBlockData i line = 
+          if i == length newLineDatas - 1 then 
+            { id: line.id, data: ParagraphBlockData $ line.text <> endTextAfter } 
+          else 
+            { id: line.id, data: ParagraphBlockData line.text }
+        newBlocks = mapWithIndex toBlockData newLineDatas
+        change2 = concat <<< map (\x-> if x.id == wrap selection.startBlockId then [x] <> newBlocks else [x])
+        blocks = change2 $ change1 state.document.blocks
+      H.modify_ _ { document = { blocks } }
+      -- set caret
+      maybeElement <- getHTMLElementRef $ RefLabel "blocks"
+      for_ maybeElement \element-> do
+        for_ (last newLineDatas) \lastLine->
+          H.liftEffect $ setCaret element lastLine.id (S.length lastLine.text)
+    -- raise
+    state2 <- H.get
+    H.raise state2.document
   OnKeyDown event -> do
     state <- H.get
-    case code event of
-      "Enter"-> do
-        H.liftEffect $ consoleLog "Enter"
-        H.liftEffect $ consoleLog $ show state.composition
-        when (not state.composition) do
+    when (not $ isComposing event) do
+      case code event of
+        "Enter"-> do
           H.liftEffect $ consoleLog "EnterProcess"
           -- cancel event
           H.liftEffect $ preventDefault $ toEvent event
@@ -171,73 +211,73 @@ handleAction = case _ of
           -- raise
           state3 <- H.get
           H.raise state3.document
-      "Space" -> do
-        -- cancel event
-        H.liftEffect $ preventDefault $ toEvent event
-        -- remove selection
-        selection <- H.liftEffect getSelection
-        removeSelection selection false
-        -- insert space
-        state2 <- H.get
-        let
-          index = getBlockIndex (wrap selection.startBlockId) state.document.blocks
-          change = changeByIndex (editText (\x-> let y = splitAt selection.startOffset x in y.before <> " " <> y.after)) index
-          blocks = change state2.document.blocks
-        H.modify_ _ { document = { blocks } }
-        -- set caret
-        maybeElement <- getHTMLElementRef $ RefLabel "blocks"
-        for_ maybeElement \element-> do
-          H.liftEffect $ setCaret element (wrap selection.startBlockId) (selection.startOffset + 1)
-        -- raise
-        state3 <- H.get
-        H.raise state3.document
-        
-      "Backspace" -> do
-        -- cancel event
-        H.liftEffect $ preventDefault $ toEvent event
-        -- remove selection
-        selection <- H.liftEffect getSelection
-        if selection.startBlockId == selection.endBlockId && selection.startOffset == selection.endOffset then
-          if selection.startOffset == 0 then do
-            -- remove block
-            let
-              i = getBlockIndex (wrap selection.startBlockId) state.document.blocks
-              cusorBlockText = getBlockTextFromBlocks (i - 1) state.document.blocks
-              deleteBlockText = getBlockTextFromBlocks i state.document.blocks
-              change1 = changeByIndex (editText (\x-> x <> deleteBlockText)) (i - 1)
-              change2 = removeBetween i i
-              blocks = change2 $ change1 state.document.blocks
-              maybeCursorBlock = index blocks (i - 1)
-            when (i > 0) do
-              -- change
-              H.modify_ _ { document = { blocks } }
-              -- set caret
-              for_ maybeCursorBlock \cursorBlock-> do
-                maybeElement <- getHTMLElementRef $ RefLabel "blocks"
-                for_ maybeElement \element-> do
-                  H.liftEffect $ setCaret element cursorBlock.id (S.length cusorBlockText)
-          else do
-            -- remove char
-            let
-              index = getBlockIndex (wrap selection.startBlockId) state.document.blocks
-              change = changeByIndex (editText (\x-> take (selection.startOffset -1 ) x <> drop selection.startOffset x)) index
-              blocks = change state.document.blocks
-            H.modify_ _ { document = { blocks } }
-            -- set caret
-            maybeElement <- getHTMLElementRef $ RefLabel "blocks"
-            for_ maybeElement \element-> do
-              H.liftEffect $ setCaret element (wrap selection.startBlockId) (selection.startOffset - 1)
-        else do
+        "Space" -> do
+          -- cancel event 
+          H.liftEffect $ preventDefault $ toEvent event
           -- remove selection
+          selection <- H.liftEffect getSelection
           removeSelection selection false
-          -- caret
+          -- insert space
+          state2 <- H.get
+          let
+            index = getBlockIndex (wrap selection.startBlockId) state.document.blocks
+            change = changeByIndex (editText (\x-> let y = splitAt selection.startOffset x in y.before <> " " <> y.after)) index
+            blocks = change state2.document.blocks
+          H.modify_ _ { document = { blocks } }
+          -- set caret
           maybeElement <- getHTMLElementRef $ RefLabel "blocks"
           for_ maybeElement \element-> do
-            H.liftEffect $ setCaret element (wrap selection.startBlockId) selection.startOffset
-        -- raise
-        state2 <- H.get
-        H.raise state2.document
-      _ -> pure unit
+            H.liftEffect $ setCaret element (wrap selection.startBlockId) (selection.startOffset + 1)
+          -- raise
+          state3 <- H.get
+          H.raise state3.document
+          
+        "Backspace" -> do
+          -- cancel event
+          H.liftEffect $ preventDefault $ toEvent event
+          -- remove selection
+          selection <- H.liftEffect getSelection
+          if selection.startBlockId == selection.endBlockId && selection.startOffset == selection.endOffset then
+            if selection.startOffset == 0 then do
+              -- remove block
+              let
+                i = getBlockIndex (wrap selection.startBlockId) state.document.blocks
+                cusorBlockText = getBlockTextFromBlocks (i - 1) state.document.blocks
+                deleteBlockText = getBlockTextFromBlocks i state.document.blocks
+                change1 = changeByIndex (editText (\x-> x <> deleteBlockText)) (i - 1)
+                change2 = removeBetween i i
+                blocks = change2 $ change1 state.document.blocks
+                maybeCursorBlock = index blocks (i - 1)
+              when (i > 0) do
+                -- change
+                H.modify_ _ { document = { blocks } }
+                -- set caret
+                for_ maybeCursorBlock \cursorBlock-> do
+                  maybeElement <- getHTMLElementRef $ RefLabel "blocks"
+                  for_ maybeElement \element-> do
+                    H.liftEffect $ setCaret element cursorBlock.id (S.length cusorBlockText)
+            else do
+              -- remove char
+              let
+                index = getBlockIndex (wrap selection.startBlockId) state.document.blocks
+                change = changeByIndex (editText (\x-> take (selection.startOffset -1 ) x <> drop selection.startOffset x)) index
+                blocks = change state.document.blocks
+              H.modify_ _ { document = { blocks } }
+              -- set caret
+              maybeElement <- getHTMLElementRef $ RefLabel "blocks"
+              for_ maybeElement \element-> do
+                H.liftEffect $ setCaret element (wrap selection.startBlockId) (selection.startOffset - 1)
+          else do
+            -- remove selection
+            removeSelection selection false
+            -- caret
+            maybeElement <- getHTMLElementRef $ RefLabel "blocks"
+            for_ maybeElement \element-> do
+              H.liftEffect $ setCaret element (wrap selection.startBlockId) selection.startOffset
+          -- raise
+          state2 <- H.get
+          H.raise state2.document
+        _ -> pure unit
   OnKeyUp event -> do
     state <- H.get
     case code event of
@@ -246,9 +286,12 @@ handleAction = case _ of
         maybeElement <- getHTMLElementRef $ RefLabel "blocks"
         for_ maybeElement \element-> do
           text <- H.liftEffect $ getBlockText element selection.startBlockId
-          let 
+          let
             index = getBlockIndex (wrap selection.startBlockId) state.document.blocks
-            change = changeByIndex (editText (\_-> text)) index
+
+            change :: Array DocumentBlock -> Array DocumentBlock
+            change = changeByIndex (editData normalizeBlockData <<< editText (\_-> text)) index
+
             blocks = change state.document.blocks
             document = { blocks }
           H.modify_ _ { document = document }
@@ -294,6 +337,9 @@ handleAction = case _ of
   changeByIndex :: forall a. (a -> a) -> Int -> Array a -> Array a
   changeByIndex change index = mapWithIndex (\i-> \x-> if i == index then change x else x)
 
+  editData :: (BlockData -> BlockData) -> DocumentBlock -> DocumentBlock
+  editData changeData block = { id: block.id, data: changeData block.data }
+
   editText :: (String -> String) -> DocumentBlock -> DocumentBlock
   editText changeText block = { id: block.id, data: editDataText changeText block.data }
 
@@ -305,3 +351,20 @@ handleAction = case _ of
     ty = getBlockType block
   removeBetween :: forall a. Int -> Int -> Array a -> Array a
   removeBetween start end array = catMaybes $ mapWithIndex (\i-> \x-> if start <= i && i <= end then Nothing else Just x) array
+
+  normalizeBlockData :: BlockData -> BlockData
+  normalizeBlockData block = case block of
+    ParagraphBlockData str -> 
+      if str == "# " then
+        mkHeader 1 ""
+      else if str == "## " then
+        mkHeader 2 ""
+      else if str == "### " then
+        mkHeader 3 ""
+      else if str == "#### " then
+        mkHeader 4 ""
+      else
+        block
+    x -> x 
+    where
+    mkHeader level text = fromMaybe (ParagraphBlockData "") $ buildBlockData Header $ defaultBlockDataOptions { text = Just text, level = Just level }

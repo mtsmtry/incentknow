@@ -17,6 +17,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (BlockData(..), DocumentBlock)
+import Incentknow.Data.EntityUtils (getBlockDataOptions)
 import Incentknow.Data.Ids (DocumentBlockId)
 import Incentknow.HTML.Utils (css, whenElem)
 import Web.Event.Event (cancelable, preventDefault, stopPropagation)
@@ -80,15 +81,22 @@ render state =
     [ case state.data of
         ParagraphBlockData text ->
           HH.div
-            [ css "textline"
-            , HP.ref $ RefLabel $ unwrap state.id -- ref $ Just <<< GetTextArea
-            , HP.spellcheck false
-            , HH.attr (HH.AttrName "contenteditable") "true"
+            [ css "paragraph"
+            , HP.ref $ RefLabel $ unwrap state.id
+            , HH.attr (HH.AttrName "data-editable") "true"
             ] 
             [ whenElem state.initial \_->
                 HH.text $ toHtmlText text 
+            ]
+        HeaderBlockData level text ->
+          HH.div
+            [ css $ "header header-level" <> show level
+            , HP.ref $ RefLabel $ unwrap state.id
+            , HH.attr (HH.AttrName "data-editable") "true" 
+            ]
+            [ whenElem state.initial \_->
+                HH.text $ toHtmlText text 
             ] 
-        a -> HH.text "error"
     ]
 
 toHtmlText :: String -> String
@@ -103,11 +111,8 @@ handleAction = case _ of
     state <- H.get
     maybeElement <- getHTMLElementRef $ RefLabel $ unwrap state.id
     for_ maybeElement \element-> do
-      case state.data of
-        ParagraphBlockData text ->
-          H.liftEffect $ setInnerText (toHtmlText text) element
-        _ ->
-          pure unit
+      for_ ((getBlockDataOptions state.data).text) \text->
+        H.liftEffect $ setInnerText (toHtmlText text) element
   HandleInput input -> do
     state <- H.get
     when (state.data /= input.value.data) do

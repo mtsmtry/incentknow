@@ -104,6 +104,7 @@ render state =
         , message: Nothing
         , searchWord: state.searchWord
         , disabled: state.disabled
+        , visibleCrossmark: true
         }
         (Just <<< ImplAction)
     ]

@@ -2,26 +2,23 @@ module Incentknow.Molecules.FormatMenu where
 
 import Prelude
 
-import Data.Array (filter, fromFoldable)
-import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), isJust, maybe)
+import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
-import Data.Nullable (notNull, null)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getFormats, getRelatedFormat)
-import Incentknow.API.Execution (Fetch(..), Remote(..), executeAPI, forItem, forRemote, mapCallback, promptCallback, toQueryCallback)
+import Incentknow.API.Execution (toQueryCallback)
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (FormatUsage, RelatedFormat)
-import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
+import Incentknow.Atoms.Icon (formatWithIcon)
+import Incentknow.Data.Entities (RelatedFormat)
+import Incentknow.Data.Ids (FormatId, SpaceId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
-import Test.Unit.Console (consoleLog)
 
 {- 
   A component for selecting a format on the specified constraint
@@ -102,6 +99,7 @@ render state =
         SpaceByAndHasSemanticId spaceId -> "Semantic" <> unwrap spaceId
         _ -> ""
     , initial: emptyCandidateSet
+    , visibleCrossmark: false
     }
     (Just <<< ChangeValue)
 
@@ -115,8 +113,9 @@ toSelectMenuItem format =
   where
   html :: forall a s m. H.ComponentHTML a s m
   html =
-    HH.div [ css "name" ]
-      [ HH.text format.displayName
+    HH.div [ css "mol-format-menu-item" ]
+      [ HH.span [ css "displayName" ] [ formatWithIcon format ]
+      , HH.span [ css "displayId" ] [ HH.text $ "@" <> unwrap format.displayId ]
       ]
 
 handleAction :: forall m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots Output m Unit
@@ -130,5 +129,4 @@ handleAction = case _ of
     else
       H.modify_ _ { formatId = input.value, disabled = input.disabled }
   ChangeValue value -> do
-    liftEffect $ consoleLog $ "FormatMenu.ChangeValue:" <> maybe "Nothing" unwrap value
     H.raise value

@@ -79,10 +79,6 @@
             padding         : 5px 8px;
             cursor          : pointer;
 
-            .name {
-                font-size: 14px;
-            }
-
             &:hover {
                 background-color: #f6f8fa;
             }
@@ -153,4 +149,78 @@
     .checking {}
 
     .used {}
+}
+
+.mol-format-menu-item {
+    >.displayName {
+
+    }
+
+    >.displayId {
+        float: right;
+        font-size: 12px;
+        color:rgba(225, 228, 232, .2);
+    }
+}
+
+.mol-space-menu-item {
+    >.displayName {
+
+    }
+
+    >.displayId {
+        float: right;
+        font-size: 12px;
+        color:rgba(225, 228, 232, .2);
+    }
+}
+
+.mol-type-menu-item {
+    >.name {
+        font-size: 15px;
+    }
+}
+
+.mol-structure-menu {
+    display: flex;
+
+    .mol-structure-menu-item {
+        font-size: 15px;
+    }
+
+    >.format-menu {
+        width: 85%;
+
+        >.mol-select-menu {
+            >.value {
+                border-top-right-radius: 0px;
+                border-bottom-right-radius: 0px;
+                border-right: 0px;
+            }
+            textarea {
+                border-top-right-radius: 0px;
+                border-bottom-right-radius: 0px;
+                border-right: 0px;
+            }
+        }
+        
+        border-right: 1px solid rgba(27, 31, 35, 0.15);
+    }
+
+    >.structure-menu {
+        width: 15%;;
+
+        >.mol-select-menu {
+            >.value {
+                border-top-left-radius: 0px;
+                border-bottom-left-radius: 0px;
+                border-left: 0px;
+            }
+            textarea {
+                border-top-left-radius: 0px;
+                border-bottom-left-radius: 0px;
+                border-left: 0px;
+            }
+        }
+    }
 }

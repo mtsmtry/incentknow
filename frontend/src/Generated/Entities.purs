@@ -258,7 +258,6 @@ type FocusedContentDraft
     , basedCommitId :: Maybe ContentCommitId
     , data :: Json
     , contentId :: Maybe ContentId
-    , materialDrafts :: Array FocusedMaterialDraft
     , format :: FocusedFormat
     , changeType :: ContentChangeType
     , isEditing :: Boolean
@@ -426,7 +425,7 @@ derive instance eqType :: Eq Type
 type RelatedStructure
   = { formatId :: FormatId
     , structureId :: StructureId
-    , version :: Number
+    , version :: Int
     , title :: Maybe String
     , createdAt :: Number
     }
@@ -435,7 +434,7 @@ type RelatedStructure
 
 type FocusedStructure
   = { structureId :: StructureId
-    , version :: Number
+    , version :: Int
     , title :: Maybe String
     , properties :: Array PropertyInfo
     , createdAt :: Number
@@ -461,7 +460,7 @@ type DocumentBlock
 
 data BlockData
   = ParagraphBlockData String
-  | HeaderBlockData Number String
+  | HeaderBlockData Int String
 
 derive instance eqBlockData :: Eq BlockData
 

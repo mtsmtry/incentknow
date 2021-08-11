@@ -657,13 +657,13 @@ obj.format = psRelatedFormat(obj.format);
 
                     if (obj.generator) {
                         obj.generator = psContentGenerator(obj.generator);
-                        obj.generator = new Data_Maybe.Just(obj.generatorPs);
+                        obj.generator = new Data_Maybe.Just(obj.generator);
                     } else {
                         obj.generator = Data_Maybe.Nothing.value;
                     }
                 return obj;}
 
-function jsAdditionalContainerInfo(obj){obj.contentCount = jsInt(obj.contentCount);
+function jsAdditionalContainerInfo(obj){
 
                         if (obj.latestUpdatedAt instanceof Data_Maybe.Just) {
                             obj.latestUpdatedAt = obj.latestUpdatedAt.value0;
@@ -673,11 +673,11 @@ function jsAdditionalContainerInfo(obj){obj.contentCount = jsInt(obj.contentCoun
                         }
                     return obj;}
 
-function psAdditionalContainerInfo(obj){obj.contentCount = psInt(obj.contentCount);
+function psAdditionalContainerInfo(obj){
 
                     if (obj.latestUpdatedAt) {
                         obj.latestUpdatedAt = psDate(obj.latestUpdatedAt);
-                        obj.latestUpdatedAt = new Data_Maybe.Just(obj.latestUpdatedAtPs);
+                        obj.latestUpdatedAt = new Data_Maybe.Just(obj.latestUpdatedAt);
                     } else {
                         obj.latestUpdatedAt = Data_Maybe.Nothing.value;
                     }
@@ -704,7 +704,7 @@ obj.format = jsRelatedFormat(obj.format);
                             obj.reactor = null;
                         }
                     
-obj.contentCount = jsInt(obj.contentCount);
+
 
                         if (obj.latestUpdatedAt instanceof Data_Maybe.Just) {
                             obj.latestUpdatedAt = obj.latestUpdatedAt.value0;
@@ -722,7 +722,7 @@ obj.format = psRelatedFormat(obj.format);
 
                     if (obj.generator) {
                         obj.generator = psContentGenerator(obj.generator);
-                        obj.generator = new Data_Maybe.Just(obj.generatorPs);
+                        obj.generator = new Data_Maybe.Just(obj.generator);
                     } else {
                         obj.generator = Data_Maybe.Nothing.value;
                     }
@@ -730,16 +730,16 @@ obj.format = psRelatedFormat(obj.format);
 
                     if (obj.reactor) {
                         obj.reactor = psIntactReactor(obj.reactor);
-                        obj.reactor = new Data_Maybe.Just(obj.reactorPs);
+                        obj.reactor = new Data_Maybe.Just(obj.reactor);
                     } else {
                         obj.reactor = Data_Maybe.Nothing.value;
                     }
                 
-obj.contentCount = psInt(obj.contentCount);
+
 
                     if (obj.latestUpdatedAt) {
                         
-                        obj.latestUpdatedAt = new Data_Maybe.Just(obj.latestUpdatedAtPs);
+                        obj.latestUpdatedAt = new Data_Maybe.Just(obj.latestUpdatedAt);
                     } else {
                         obj.latestUpdatedAt = Data_Maybe.Nothing.value;
                     }
@@ -750,8 +750,8 @@ function jsRelatedContent(obj){obj.contentId = jsContentId(obj.contentId);
 
 obj.creatorUser = jsRelatedUser(obj.creatorUser);
 obj.updaterUser = jsRelatedUser(obj.updaterUser);
-obj.updateCount = jsInt(obj.updateCount);
-obj.viewCount = jsInt(obj.viewCount);
+
+
 obj.format = jsFocusedFormat(obj.format);
 return obj;}
 
@@ -760,8 +760,8 @@ function psRelatedContent(obj){obj.contentId = psContentId(obj.contentId);
 
 obj.creatorUser = psRelatedUser(obj.creatorUser);
 obj.updaterUser = psRelatedUser(obj.updaterUser);
-obj.updateCount = psInt(obj.updateCount);
-obj.viewCount = psInt(obj.viewCount);
+
+
 obj.format = psFocusedFormat(obj.format);
 return obj;}
 
@@ -794,7 +794,7 @@ obj.format = psFocusedFormat(obj.format);
 
                     if (obj.draft) {
                         obj.draft = psRelatedContentDraft(obj.draft);
-                        obj.draft = new Data_Maybe.Just(obj.draftPs);
+                        obj.draft = new Data_Maybe.Just(obj.draft);
                     } else {
                         obj.draft = Data_Maybe.Nothing.value;
                     }
@@ -819,7 +819,7 @@ function psRelatedContentCommit(obj){obj.commitId = psContentCommitId(obj.commit
 
                     if (obj.basedCommitId) {
                         obj.basedCommitId = psContentCommitId(obj.basedCommitId);
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
@@ -845,7 +845,7 @@ function psFocusedContentCommit(obj){obj.commitId = psContentCommitId(obj.commit
 
                     if (obj.basedCommitId) {
                         obj.basedCommitId = psContentCommitId(obj.basedCommitId);
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
@@ -883,7 +883,7 @@ function psRelatedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
 
                     if (obj.basedCommitId) {
                         obj.basedCommitId = psContentCommitId(obj.basedCommitId);
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
@@ -892,7 +892,7 @@ function psRelatedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
 
                     if (obj.contentId) {
                         obj.contentId = psContentId(obj.contentId);
-                        obj.contentId = new Data_Maybe.Just(obj.contentIdPs);
+                        obj.contentId = new Data_Maybe.Just(obj.contentId);
                     } else {
                         obj.contentId = Data_Maybe.Nothing.value;
                     }
@@ -912,7 +912,7 @@ function jsFocusedContentDraft(obj){obj.draftId = jsContentDraftId(obj.draftId);
                             obj.basedCommitId = null;
                         }
                     
-obj.data = jsObjectLiteral(obj.data);
+
 
                         if (obj.contentId instanceof Data_Maybe.Just) {
                             obj.contentId = obj.contentId.value0;
@@ -921,12 +921,6 @@ obj.data = jsObjectLiteral(obj.data);
                             obj.contentId = null;
                         }
                     
-
-                            obj.materialDrafts = obj.materialDrafts.map(x => {
-                                x = jsFocusedMaterialDraft(x);
-                                return x;
-                            });
-                        
 obj.format = jsFocusedFormat(obj.format);
 obj.changeType = jsContentChangeType(obj.changeType);
 return obj;}
@@ -937,26 +931,20 @@ function psFocusedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
 
                     if (obj.basedCommitId) {
                         obj.basedCommitId = psContentCommitId(obj.basedCommitId);
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
                 
-obj.data = psObjectLiteral(obj.data);
+
 
                     if (obj.contentId) {
                         obj.contentId = psContentId(obj.contentId);
-                        obj.contentId = new Data_Maybe.Just(obj.contentIdPs);
+                        obj.contentId = new Data_Maybe.Just(obj.contentId);
                     } else {
                         obj.contentId = Data_Maybe.Nothing.value;
                     }
                 
-
-                        obj.materialDrafts = obj.materialDrafts.map(x => {
-                            x = psFocusedMaterialDraft(x);
-                            return x;
-                        });
-                    
 obj.format = psFocusedFormat(obj.format);
 obj.changeType = psContentChangeType(obj.changeType);
 return obj;}
@@ -1026,7 +1014,7 @@ obj.user = psRelatedUser(obj.user);
 
                     if (obj.editingId) {
                         
-                        obj.editingId = new Data_Maybe.Just(obj.editingIdPs);
+                        obj.editingId = new Data_Maybe.Just(obj.editingId);
                     } else {
                         obj.editingId = Data_Maybe.Nothing.value;
                     }
@@ -1103,7 +1091,7 @@ function psRelatedContentRevision(obj){obj.snapshotId = psContentWholeRevisionId
 return obj;}
 
 function jsFocusedContentRevision(obj){
-obj.data = jsObjectLiteral(obj.data);
+
 
                             obj.materials = obj.materials.map(x => {
                                 x = jsFocusedMaterialRevision(x);
@@ -1112,7 +1100,7 @@ obj.data = jsObjectLiteral(obj.data);
                         return obj;}
 
 function psFocusedContentRevision(obj){
-obj.data = psObjectLiteral(obj.data);
+
 
                         obj.materials = obj.materials.map(x => {
                             x = psFocusedMaterialRevision(x);
@@ -1151,7 +1139,7 @@ obj.displayId = psFormatDisplayId(obj.displayId);
 
                     if (obj.icon) {
                         
-                        obj.icon = new Data_Maybe.Just(obj.iconPs);
+                        obj.icon = new Data_Maybe.Just(obj.icon);
                     } else {
                         obj.icon = Data_Maybe.Nothing.value;
                     }
@@ -1161,7 +1149,7 @@ obj.usage = psFormatUsage(obj.usage);
 
                     if (obj.semanticId) {
                         
-                        obj.semanticId = new Data_Maybe.Just(obj.semanticIdPs);
+                        obj.semanticId = new Data_Maybe.Just(obj.semanticId);
                     } else {
                         obj.semanticId = Data_Maybe.Nothing.value;
                     }
@@ -1217,7 +1205,7 @@ obj.displayId = psFormatDisplayId(obj.displayId);
 
                     if (obj.icon) {
                         
-                        obj.icon = new Data_Maybe.Just(obj.iconPs);
+                        obj.icon = new Data_Maybe.Just(obj.icon);
                     } else {
                         obj.icon = Data_Maybe.Nothing.value;
                     }
@@ -1232,7 +1220,7 @@ obj.currentStructure = psFocusedStructure(obj.currentStructure);
 
                     if (obj.semanticId) {
                         
-                        obj.semanticId = new Data_Maybe.Just(obj.semanticIdPs);
+                        obj.semanticId = new Data_Maybe.Just(obj.semanticId);
                     } else {
                         obj.semanticId = Data_Maybe.Nothing.value;
                     }
@@ -1289,7 +1277,7 @@ function psPropertyInfo(obj){
 
                     if (obj.fieldName) {
                         
-                        obj.fieldName = new Data_Maybe.Just(obj.fieldNamePs);
+                        obj.fieldName = new Data_Maybe.Just(obj.fieldName);
                     } else {
                         obj.fieldName = Data_Maybe.Nothing.value;
                     }
@@ -1299,7 +1287,7 @@ obj.id = psPropertyId(obj.id);
 
                     if (obj.semantic) {
                         
-                        obj.semantic = new Data_Maybe.Just(obj.semanticPs);
+                        obj.semantic = new Data_Maybe.Just(obj.semantic);
                     } else {
                         obj.semantic = Data_Maybe.Nothing.value;
                     }
@@ -1307,7 +1295,7 @@ obj.id = psPropertyId(obj.id);
 
                     if (obj.icon) {
                         
-                        obj.icon = new Data_Maybe.Just(obj.iconPs);
+                        obj.icon = new Data_Maybe.Just(obj.icon);
                     } else {
                         obj.icon = Data_Maybe.Nothing.value;
                     }
@@ -1336,7 +1324,7 @@ function psEnumerator(obj){
 
                     if (obj.fieldName) {
                         
-                        obj.fieldName = new Data_Maybe.Just(obj.fieldNamePs);
+                        obj.fieldName = new Data_Maybe.Just(obj.fieldName);
                     } else {
                         obj.fieldName = Data_Maybe.Nothing.value;
                     }
@@ -1505,7 +1493,7 @@ obj.structureId = psStructureId(obj.structureId);
 
                     if (obj.title) {
                         
-                        obj.title = new Data_Maybe.Just(obj.titlePs);
+                        obj.title = new Data_Maybe.Just(obj.title);
                     } else {
                         obj.title = Data_Maybe.Nothing.value;
                     }
@@ -1535,7 +1523,7 @@ function psFocusedStructure(obj){obj.structureId = psStructureId(obj.structureId
 
                     if (obj.title) {
                         
-                        obj.title = new Data_Maybe.Just(obj.titlePs);
+                        obj.title = new Data_Maybe.Just(obj.title);
                     } else {
                         obj.title = Data_Maybe.Nothing.value;
                     }
@@ -1635,7 +1623,7 @@ function psRelatedMaterial(obj){obj.materialId = psMaterialId(obj.materialId);
 
                     if (obj.contentId) {
                         obj.contentId = psContentId(obj.contentId);
-                        obj.contentId = new Data_Maybe.Just(obj.contentIdPs);
+                        obj.contentId = new Data_Maybe.Just(obj.contentId);
                     } else {
                         obj.contentId = Data_Maybe.Nothing.value;
                     }
@@ -1700,7 +1688,7 @@ function psFocusedMaterial(obj){obj.materialId = psMaterialId(obj.materialId);
 
                     if (obj.contentId) {
                         obj.contentId = psContentId(obj.contentId);
-                        obj.contentId = new Data_Maybe.Just(obj.contentIdPs);
+                        obj.contentId = new Data_Maybe.Just(obj.contentId);
                     } else {
                         obj.contentId = Data_Maybe.Nothing.value;
                     }
@@ -1715,7 +1703,7 @@ obj.data = psMaterialData(obj.data);
 
                     if (obj.draft) {
                         obj.draft = psRelatedMaterialDraft(obj.draft);
-                        obj.draft = new Data_Maybe.Just(obj.draftPs);
+                        obj.draft = new Data_Maybe.Just(obj.draft);
                     } else {
                         obj.draft = Data_Maybe.Nothing.value;
                     }
@@ -1740,7 +1728,7 @@ function psRelatedMaterialCommit(obj){obj.commitId = psMaterialCommitId(obj.comm
 
                     if (obj.basedCommitId) {
                         obj.basedCommitId = psMaterialCommitId(obj.basedCommitId);
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
@@ -1807,7 +1795,7 @@ function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId
 
                     if (obj.contentDraftId) {
                         obj.contentDraftId = psContentDraftId(obj.contentDraftId);
-                        obj.contentDraftId = new Data_Maybe.Just(obj.contentDraftIdPs);
+                        obj.contentDraftId = new Data_Maybe.Just(obj.contentDraftId);
                     } else {
                         obj.contentDraftId = Data_Maybe.Nothing.value;
                     }
@@ -1815,7 +1803,7 @@ function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId
 
                     if (obj.material) {
                         obj.material = psRelatedMaterial(obj.material);
-                        obj.material = new Data_Maybe.Just(obj.materialPs);
+                        obj.material = new Data_Maybe.Just(obj.material);
                     } else {
                         obj.material = Data_Maybe.Nothing.value;
                     }
@@ -1823,7 +1811,7 @@ function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId
 
                     if (obj.basedCommitId) {
                         obj.basedCommitId = psMaterialCommitId(obj.basedCommitId);
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitIdPs);
+                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
                     } else {
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
@@ -1871,7 +1859,7 @@ obj.user = psRelatedUser(obj.user);
 
                     if (obj.editingId) {
                         
-                        obj.editingId = new Data_Maybe.Just(obj.editingIdPs);
+                        obj.editingId = new Data_Maybe.Just(obj.editingId);
                     } else {
                         obj.editingId = Data_Maybe.Nothing.value;
                     }
@@ -1953,7 +1941,7 @@ obj.state = psReactorState(obj.state);
 
                     if (obj.definitionId) {
                         obj.definitionId = psContentId(obj.definitionId);
-                        obj.definitionId = new Data_Maybe.Just(obj.definitionIdPs);
+                        obj.definitionId = new Data_Maybe.Just(obj.definitionId);
                     } else {
                         obj.definitionId = Data_Maybe.Nothing.value;
                     }
@@ -1961,12 +1949,12 @@ obj.state = psReactorState(obj.state);
 
 obj.creatorUser = psRelatedUser(obj.creatorUser);return obj;}
 
-function jsAdditionalSpaceInfo(obj){obj.containerCount = jsInt(obj.containerCount);
+function jsAdditionalSpaceInfo(obj){
 
 
 return obj;}
 
-function psAdditionalSpaceInfo(obj){obj.containerCount = psInt(obj.containerCount);
+function psAdditionalSpaceInfo(obj){
 
 
 return obj;}
@@ -1996,7 +1984,7 @@ obj.displayId = psSpaceDisplayId(obj.displayId);
 
                     if (obj.homeUrl) {
                         
-                        obj.homeUrl = new Data_Maybe.Just(obj.homeUrlPs);
+                        obj.homeUrl = new Data_Maybe.Just(obj.homeUrl);
                     } else {
                         obj.homeUrl = Data_Maybe.Nothing.value;
                     }
@@ -2022,10 +2010,10 @@ obj.creatorUser = jsRelatedUser(obj.creatorUser);
 
 obj.membershipMethod = jsMembershipMethod(obj.membershipMethod);
 obj.defaultAuthority = jsSpaceAuth(obj.defaultAuthority);
-obj.containerCount = jsInt(obj.containerCount);
-obj.memberCount = jsInt(obj.memberCount);
-obj.contentCount = jsInt(obj.contentCount);
-obj.formatCount = jsInt(obj.formatCount);return obj;}
+
+
+
+return obj;}
 
 function psFocusedSpace(obj){obj.spaceId = psSpaceId(obj.spaceId);
 obj.displayId = psSpaceDisplayId(obj.displayId);
@@ -2036,7 +2024,7 @@ obj.creatorUser = psRelatedUser(obj.creatorUser);
 
                     if (obj.homeUrl) {
                         
-                        obj.homeUrl = new Data_Maybe.Just(obj.homeUrlPs);
+                        obj.homeUrl = new Data_Maybe.Just(obj.homeUrl);
                     } else {
                         obj.homeUrl = Data_Maybe.Nothing.value;
                     }
@@ -2044,10 +2032,10 @@ obj.creatorUser = psRelatedUser(obj.creatorUser);
 
 obj.membershipMethod = psMembershipMethod(obj.membershipMethod);
 obj.defaultAuthority = psSpaceAuth(obj.defaultAuthority);
-obj.containerCount = psInt(obj.containerCount);
-obj.memberCount = psInt(obj.memberCount);
-obj.contentCount = psInt(obj.contentCount);
-obj.formatCount = psInt(obj.formatCount);return obj;}
+
+
+
+return obj;}
 
 function jsIntactSpaceMember(obj){obj.user = jsRelatedUser(obj.user);
 
@@ -2083,7 +2071,7 @@ obj.displayId = psUserDisplayId(obj.displayId);
 
                     if (obj.iconUrl) {
                         
-                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrlPs);
+                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrl);
                     } else {
                         obj.iconUrl = Data_Maybe.Nothing.value;
                     }
@@ -2110,7 +2098,7 @@ obj.displayId = psUserDisplayId(obj.displayId);
 
                     if (obj.iconUrl) {
                         
-                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrlPs);
+                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrl);
                     } else {
                         obj.iconUrl = Data_Maybe.Nothing.value;
                     }
@@ -2136,7 +2124,7 @@ obj.displayId = psUserDisplayId(obj.displayId);
 
                     if (obj.iconUrl) {
                         
-                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrlPs);
+                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrl);
                     } else {
                         obj.iconUrl = Data_Maybe.Nothing.value;
                     }
@@ -2233,7 +2221,7 @@ exports.__createNewContentDraft = (() => {return (structureId) => {return (space
                     
                         if (argObject.data instanceof Data_Maybe.Just) {
                             argObject.data = argObject.data.value0;
-                            argObject.data = jsObjectLiteral(argObject.data);
+                            
                         } else {
                             argObject.data = null;
                         }
@@ -2252,7 +2240,7 @@ exports.__editContentDraft = (() => {return (contentDraftId) => {return async fu
                 
                     if (result) {
                         result = psRelatedContentRevision(result);
-                        result = new Data_Maybe.Just(resultPs);
+                        result = new Data_Maybe.Just(result);
                     } else {
                         result = Data_Maybe.Nothing.value;
                     }
@@ -2265,7 +2253,7 @@ exports.__commitContent = (() => {return (contentDraftId) => {return async funct
                 argObject.contentDraftId = jsContentDraftId(argObject.contentDraftId);
                 argObject = [ argObject.contentDraftId,argObject.data ];
                 let result = await requestApi("commitContent", argObject);
-                
+                result = psContentId(result);
                 return result;}};})();
 
 exports.__getContent = (() => {return async function (contentId) {
@@ -2604,7 +2592,7 @@ exports.__editMaterialDraft = (() => {return (materialDraftId) => {return async 
                 
                     if (result) {
                         result = psRelatedMaterialRevision(result);
-                        result = new Data_Maybe.Just(resultPs);
+                        result = new Data_Maybe.Just(result);
                     } else {
                         result = Data_Maybe.Nothing.value;
                     }

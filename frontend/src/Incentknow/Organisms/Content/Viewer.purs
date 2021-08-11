@@ -89,7 +89,7 @@ render state =
         ]
     ] <> (map renderSection comp.sections)
   where
-  comp = toPropertyComposition $ mkProperties state.content.data state.content.format.currentStructure.properties
+  comp = toPropertyComposition false $ mkProperties state.content.data state.content.format.currentStructure.properties
   infoProps = case semantic.titleProperty of
     Just title -> filter (\x-> x.info.id /= title.info.id) comp.info
     Nothing -> comp.info

@@ -20,7 +20,7 @@ import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeComman
 import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Message (SaveState(..), saveState)
-import Incentknow.Data.Entities (FocusedMaterialDraft, MaterialData(..), MaterialType(..))
+import Incentknow.Data.Entities (MaterialData(..), MaterialType(..), FocusedMaterialDraft)
 import Incentknow.Data.Ids (MaterialDraftId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.PlainTextEditor as PlainTextEditor
@@ -29,7 +29,7 @@ import Incentknow.Organisms.Document.Editor as DocumentEditor
 import Incentknow.Route (Route)
 
 type Input 
-  = { value :: Maybe MaterialDraftId }
+  = { value :: Maybe FocusedMaterialDraft }
 
 type Output
     = MaterialDraftId
@@ -41,18 +41,15 @@ type State
     , loading :: Boolean
     -- the subscription id of a interval save timer
     , timerSubId :: Maybe SubscriptionId
-    , materialDraftId :: Maybe MaterialDraftId
     , data :: MaterialData
-    , draft :: Remote FocusedMaterialDraft
+    , draftId :: Maybe MaterialDraftId
     }
 
 data Action
   = Initialize
-  | Load
   | HandleInput Input
   | ChangeData MaterialData
   | CheckChage
-  | FetchedDraft (Fetch FocusedMaterialDraft)
 
 type Slot p
   = forall q. H.Slot q Output p
@@ -79,12 +76,11 @@ component =
 
 initialState :: Input -> State
 initialState input =
-  { materialDraftId: input.value
-  , saveState: HasNotChange
+  { saveState: HasNotChange
   , loading: false
   , timerSubId: Nothing
-  , data: DocumentMaterialData { blocks: [] }
-  , draft: Loading
+  , data: fromMaybe (DocumentMaterialData { blocks: [] }) $ map _.data input.value
+  , draftId: map _.draftId input.value
   }
 
 editor_ = SProxy :: SProxy "editor"
@@ -118,29 +114,13 @@ changeRoute route = do
 
 handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
-  HandleInput input -> do
-    state <- H.get
-    -- Load resources
-    when (state.materialDraftId /= input.value) do
-      H.put $ initialState input
-      handleAction Load
+  HandleInput input -> pure unit
   Initialize -> do
     state <- H.get
-    -- Load resources
-    handleAction Load
     -- Subscrive a interval save timer
     when (isNothing state.timerSubId) do
       timerSubId <- H.subscribe timer
       H.modify_ _ { timerSubId = Just timerSubId }
-  Load -> do
-    state <- H.get
-    case state.materialDraftId of
-      Just draftId -> callbackQuery FetchedDraft $ getMaterialDraft draftId
-      Nothing -> pure unit
-  -- Fetch
-  FetchedDraft fetch -> do
-    forRemote fetch \draft ->
-      H.modify_ _ { data = fromMaybe (DocumentMaterialData { blocks: [] }) $ map _.data $ toMaybe draft, draft = draft }
   -- Change
   ChangeData data2 -> do
     state <- H.get
@@ -155,7 +135,7 @@ handleAction = case _ of
     when (state.saveState == NotSaved && not state.loading) do
       -- Set the save state
       H.modify_ _ { saveState = Saving }
-      case state.materialDraftId of
+      case state.draftId of
         Just draftId -> do
           result <- executeCommand $ editMaterialDraft draftId state.data
           case result of
@@ -166,7 +146,7 @@ handleAction = case _ of
           case result of
               Just draft -> do
                 makeSaveStateSaved
-                H.modify_ _ { materialDraftId = Just draft.draftId }
+                H.modify_ _ { draftId = Just draft.draftId }
                 H.raise draft.draftId
               Nothing -> H.modify_ _ { saveState = NotSaved }
   where

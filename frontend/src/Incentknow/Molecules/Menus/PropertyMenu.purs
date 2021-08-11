@@ -82,6 +82,7 @@ render state =
     , fetchSingle: Nothing
     , fetchId: ""
     , initial: { items: map toSelectMenuItem filteredProps, completed: true }
+    , visibleCrossmark: true
     }
     (Just <<< ChangeValue)
   where

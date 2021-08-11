@@ -44,6 +44,7 @@ initialState =
     , selectedItem: Nothing
     , textbox: Nothing
     , disabled: false
+    , visibleCrossmark: true
     }
 
 component :: forall m a q. Ord a => Eq a => Behaviour m => MonadAff m => H.Component HH.HTML q (Input a) (Output a) m
@@ -77,6 +78,7 @@ type Input a
     , searchWord :: Maybe String
     , message :: forall w i. Maybe (HH.HTML w i)
     , disabled :: Boolean
+    , visibleCrossmark :: Boolean
     }
 
 type State a
@@ -88,6 +90,7 @@ type State a
     , textbox :: Maybe Element
     , selectedItem :: Maybe (SelectMenuItem a)
     , message :: forall w i. Maybe (HH.HTML w i)
+    , visibleCrossmark :: Boolean
     }
 
 type Slot a p
@@ -100,6 +103,7 @@ setInput state input =
     , searchWord = input.searchWord
     , selectedItem = input.selectedItem
     , disabled = input.disabled
+    , visibleCrossmark = input.visibleCrossmark
     }
 
 textbox_ :: RefLabel
@@ -133,7 +137,7 @@ render state =
                   Just value -> HH.text value.name
                   Nothing -> if state.disabled then HH.text "" else loadingWith "読み込み中"
               ]
-          , whenElem (not state.disabled) \_ ->
+          , whenElem (not state.disabled && state.visibleCrossmark) \_ ->
               HH.span
                 [ css "crossmark"
                 , HE.onClick $ \_ -> Just Unselect

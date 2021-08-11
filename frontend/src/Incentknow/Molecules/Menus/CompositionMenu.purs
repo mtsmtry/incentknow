@@ -108,6 +108,7 @@ render state =
         , fetchSingle: Nothing
         , fetchId: ""
         , initial: { items: state.typeItems, completed: true }
+        , visibleCrossmark: true
         }
         (Just <<< ChangeType)
     ]

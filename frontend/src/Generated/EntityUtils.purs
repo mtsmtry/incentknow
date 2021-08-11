@@ -41,7 +41,7 @@ foreign import getBlockDataOptions :: E.BlockData -> BlockDataOptions
 
 
 type BlockDataOptions
-  = { level :: Maybe Number
+  = { level :: Maybe Int
     , text :: Maybe String
     }
 

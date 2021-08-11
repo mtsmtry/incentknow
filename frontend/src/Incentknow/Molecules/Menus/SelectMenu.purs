@@ -54,6 +54,7 @@ type Input a
     , fetchSingle :: Maybe (a -> Callback (Fetch (SelectMenuItem a)))
     , fetchId :: String
     , initial :: CandidateSet a
+    , visibleCrossmark :: Boolean
     }
 
 type State a
@@ -65,6 +66,7 @@ type State a
     , candidateMap :: Map (Maybe String) (CandidateSet a)
     , searchWord :: Maybe String
     , allItems :: Map a (SelectMenuItem a)
+    , visibleCrossmark :: Boolean
     }
 
 data Action a
@@ -99,6 +101,7 @@ initialState input =
   , candidateMap: M.fromFoldable [ Tuple Nothing input.initial ]
   , searchWord: Nothing
   , allItems: M.fromFoldable $ map (\x -> Tuple x.id x) input.initial.items
+  , visibleCrossmark: input.visibleCrossmark
   }
 
 setInput :: forall a. Ord a => State a -> Input a -> State a
@@ -135,6 +138,7 @@ render state =
     , message: if isNothing cand then Just $ HH.text "候補はありません" else Nothing
     , searchWord: state.searchWord
     , disabled: state.disabled
+    , visibleCrossmark: state.visibleCrossmark
     }
     (Just <<< ImplAction)
   where

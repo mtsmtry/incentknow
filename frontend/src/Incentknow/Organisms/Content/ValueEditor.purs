@@ -27,7 +27,7 @@ import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (FocusedContent, FocusedFormat, FocusedMaterial, FormatUsage(..), Type(..), RelatedContent)
 import Incentknow.Data.EntityUtils (getTypeName)
 import Incentknow.Data.Ids (ContentId, FormatId(..), MaterialId, PropertyId, SemanticId)
-import Incentknow.Data.Property (Enumerator, Property, ReferenceValue(..), TypedValue(..), TypedProperty, encodeProperties, forceConvert, mkProperties, toReferenceValue)
+import Incentknow.Data.Property (Enumerator, MaterialObject(..), Property, ReferenceValue(..), TypedProperty, TypedValue(..), encodeProperties, forceConvert, mkProperties, toMaybeFromReferenceValue, toReferenceValue, toRelatedContentFromContentId)
 import Incentknow.HTML.Utils (css, link, maybeElem)
 import Incentknow.Molecules.AceEditor as AceEditor
 import Incentknow.Molecules.ContentMenu as ContentMenu
@@ -105,12 +105,6 @@ initialState input =
   , env: input.env
   }
 
-foreign import toForceRelatedContent :: ContentId -> RelatedContent
-
-foreign import toForceRelatedContentFromSemanticId :: SemanticId -> RelatedContent
-
-foreign import toForceFocusedMaterial :: MaterialId -> FocusedMaterial
-
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state = case state.value of
   StringTypedValue str ->
@@ -138,6 +132,7 @@ render state = case state.value of
       , fetchId: ""
       , value: enum
       , disabled: false
+      , visibleCrossmark: true
       }
       (Just <<< ChangeValue <<< EnumTypedValue enums)
   BoolTypedValue bool -> checkbox "" (fromMaybe false $ bool) (ChangeValue <<< BoolTypedValue <<< Just) false
@@ -147,16 +142,16 @@ render state = case state.value of
   ContentTypedValue format value ->
     HH.slot (SProxy :: SProxy "contentMenu") unit ContentMenu.component 
       { spaceId: if format.usage == Internal then Just format.space.spaceId else state.env.spaceId
-      , value: map _.contentId $ toMaybeReferenceValue value
+      , value: map _.contentId $ toMaybeFromReferenceValue value
       , formatId: format.formatId
       , disabled: false }
-      (Just <<< ChangeValue <<< ContentTypedValue format <<< toReferenceValueFromMaybe <<< map toForceRelatedContent)
-  EntityTypedValue format content ->
-    HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: Just $ wrap "", formatId: format.formatId, disabled: false }
-      (Just <<< ChangeValue <<< EntityTypedValue format <<< toReferenceValueFromMaybe <<< map toForceRelatedContentFromSemanticId)
-  DocumentTypedValue doc -> HH.text ""
-    -- HH.slot (SProxy :: SProxy "material") unit Material.component { value: map _.materialId $ toMaybeReferenceValue doc }
-    --  (Just <<< ChangeValue <<< DocumentTypedValue <<< toReferenceValueFromMaybe <<< map toForceFocusedMaterial)
+      (Just <<< ChangeValue <<< ContentTypedValue format <<< toReferenceValueFromMaybe <<< map toRelatedContentFromContentId)
+  EntityTypedValue format content -> HH.text ""
+    --HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: Just $ wrap "", formatId: format.formatId, disabled: false }
+    --  (Just <<< ChangeValue <<< EntityTypedValue format <<< toReferenceValueFromMaybe <<< map toForceRelatedContentFromSemanticId)
+  DocumentTypedValue material ->
+      HH.slot (SProxy :: SProxy "material") unit Material.component { value: toMaybeFromReferenceValue material }
+        (Just <<< ChangeValue <<< DocumentTypedValue <<< toReferenceValueFromMaybe)
   UrlTypedValue url ->
     textarea
       { onChange: ChangeValue <<< UrlTypedValue <<< toMaybeString
@@ -177,7 +172,7 @@ render state = case state.value of
         , button "削除" $ DeleteItem num
         ]
 
-  ObjectTypedValue props -> HH.div_ $ map renderProperty props
+  ObjectTypedValue props -> HH.div [ css "org-value-editor-object" ] $ map renderProperty props
     where
     renderProperty :: TypedProperty -> H.ComponentHTML Action ChildSlots m
     renderProperty prop =
@@ -205,11 +200,6 @@ render state = case state.value of
   toReferenceValueFromMaybe = case _ of
     Just x -> JustReference x
     Nothing -> NullReference
-
-  toMaybeReferenceValue :: forall a. ReferenceValue a -> Maybe a 
-  toMaybeReferenceValue = case _ of
-    JustReference x -> Just x
-    _ -> Nothing
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of

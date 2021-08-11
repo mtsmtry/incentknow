@@ -10,14 +10,15 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Data.Entities (FocusedMaterial)
+import Incentknow.Data.Property (MaterialObject)
 import Incentknow.Molecules.PlainTextViewer as PlainTextViewer
 import Incentknow.Route (Route)
 
 type Input 
-  = { value :: FocusedMaterial }
+  = { value :: MaterialObject }
 
 type State
-  = { material :: FocusedMaterial
+  = { material :: MaterialObject
     }
 
 data Action

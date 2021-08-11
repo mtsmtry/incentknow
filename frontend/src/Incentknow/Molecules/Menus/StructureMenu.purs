@@ -93,30 +93,35 @@ toSelectMenuItem strc =
   where
   html :: forall a s m. H.ComponentHTML a s m
   html =
-    HH.div [ css "name" ]
-      [ HH.text $ show strc.version
+    HH.div [ css "mol-structure-menu-item" ]
+      [ HH.text $ fromMaybe (show strc.version) strc.title
       ]
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  HH.div []
-    [ HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component 
-        { value: state.formatId
-        , filter: state.filter
-        , disabled: state.disabled 
-        } (Just <<< ChangeFormat)
-    , HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component 
-        { value: state.structureId
-        , disabled: state.disabled || isNothing state.formatId 
-        , fetchMultiple: case _ of
-            Nothing -> case state.formatId of
-              Just formatId -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) $ getStructures formatId
-              Nothing -> Nothing
-            _ -> Nothing
-        , fetchSingle: Nothing
-        , fetchId: maybe "" unwrap state.formatId
-        , initial: emptyCandidateSet
-        } (Just <<< ChangeStructure)
+  HH.div [ css "mol-structure-menu" ]
+    [ HH.div [ css "format-menu" ] 
+        [ HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component 
+            { value: state.formatId
+            , filter: state.filter
+            , disabled: state.disabled 
+            } (Just <<< ChangeFormat)
+        ]
+    , HH.div [ css "structure-menu" ] 
+        [ HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component 
+            { value: state.structureId
+            , disabled: state.disabled || isNothing state.formatId 
+            , fetchMultiple: case _ of
+                Nothing -> case state.formatId of
+                  Just formatId -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) $ getStructures formatId
+                  Nothing -> Nothing
+                _ -> Nothing
+            , fetchSingle: Nothing
+            , fetchId: maybe "" unwrap state.formatId
+            , initial: emptyCandidateSet
+            , visibleCrossmark: false
+            } (Just <<< ChangeStructure)
+        ]
     ]
 
 handleAction :: forall m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
