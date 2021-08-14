@@ -1,29 +1,16 @@
 module Incentknow.Organisms.MemberList where
 
 import Prelude
-import Control.Parallel (sequential)
-import Control.Promise (toAff)
-import Data.Array (singleton)
-import Data.DateTime (DateTime(..))
 import Data.DateTime.Utils (fromTimestampToString)
-import Data.Map (Map, fromFoldable)
-import Data.Map as M
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Traversable (for)
-import Data.Tuple (Tuple(..))
-import Effect.Aff.Class (class MonadAff, liftAff)
+import Data.Maybe (Maybe(..), fromMaybe)
+import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.API (acceptSpaceMembership, getUser, rejectSpaceMembership)
-import Incentknow.API.Execution (executeAPI)
-import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
-import Incentknow.Atoms.Inputs (menuPositiveButton, menuNegativeButton)
+import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Data.Entities (IntactSpaceMember, MemberType(..))
-import Incentknow.Data.Ids (UserId(..))
-import Incentknow.HTML.DateTime (dateTime)
-import Incentknow.HTML.Utils (css, link, link_, maybeElem, whenElem)
+import Incentknow.HTML.Utils (css, link)
 import Incentknow.Route (Route)
 import Incentknow.Route as R
 import Web.UIEvent.MouseEvent (MouseEvent)
@@ -95,7 +82,7 @@ render state =
     where
     linkUser = link Navigate (R.User member.user.displayId R.UserMain)
 
-handleAction :: forall o s m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> pure unit
   HandleInput props -> do

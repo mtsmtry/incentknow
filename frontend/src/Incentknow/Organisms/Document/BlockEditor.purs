@@ -4,27 +4,21 @@ import Prelude
 
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..))
-import Data.Maybe.Utils (flatten)
 import Data.Newtype (unwrap)
-import Data.String (Pattern(..), Replacement(..), length, replace, replaceAll)
+import Data.String (Pattern(..), Replacement(..), replaceAll)
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen (RefLabel(..), getHTMLElementRef)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (BlockData(..), DocumentBlock)
 import Incentknow.Data.EntityUtils (getBlockDataOptions)
 import Incentknow.Data.Ids (DocumentBlockId)
 import Incentknow.HTML.Utils (css, whenElem)
-import Web.Event.Event (cancelable, preventDefault, stopPropagation)
 import Web.HTML (HTMLElement, HTMLTextAreaElement)
-import Web.HTML.HTMLElement (contentEditable, setContentEditable)
-import Web.HTML.HTMLTextAreaElement (fromHTMLElement, selectionStart)
-import Web.UIEvent.KeyboardEvent (KeyboardEvent, code, toEvent)
 
 type Input
   = { value :: DocumentBlock }
@@ -75,7 +69,7 @@ foreign import isFocused :: HTMLTextAreaElement -> Effect Boolean
 render :: forall m. Behaviour m => MonadEffect m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div 
-    [ css "org-document-block"
+    [ css "org-document-block org-document-block-editor"
     , HH.attr (HH.AttrName "data-id") $ unwrap state.id
     ]
     [ case state.data of

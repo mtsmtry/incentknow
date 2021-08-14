@@ -4,10 +4,9 @@ import Prelude
 
 import Control.Monad.Reader.Trans (class MonadAsk, ReaderT, asks, runReaderT)
 import Control.Monad.Trans.Class (lift)
-import Data.Maybe (Maybe)
 import Effect.AVar (AVar)
 import Effect.Aff (Aff)
-import Effect.Aff.AVar (put, take)
+import Effect.Aff.AVar (put)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect)
 import Effect.Console as Console

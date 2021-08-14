@@ -78,8 +78,12 @@ export class Space {
 
     @BeforeInsert()
     onInsert() {
-        this.displayId = createDisplayId() as SpaceDisplayId;
-        this.entityId = createEntityId() as SpaceId;
+        if (!this.displayId) {
+            this.displayId = createDisplayId() as SpaceDisplayId;
+        }
+        if (!this.entityId) {
+            this.entityId = createEntityId() as SpaceId;
+        }
     }
 }
 

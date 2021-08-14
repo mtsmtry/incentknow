@@ -1,14 +1,15 @@
 import { SelectQueryBuilder } from "typeorm";
 import { ContentSk } from "../../../entities/content/Content";
 import { ContentDraft, ContentDraftId, ContentDraftSk } from "../../../entities/content/ContentDraft";
+import { TypeName } from "../../../entities/format/Property";
 import { StructureSk } from "../../../entities/format/Structure";
 import { UserSk } from "../../../entities/user/User";
 import { toFocusedContentDraft, toRelatedContentDraft } from "../../../interfaces/content/ContentDraft";
 import { FocusedFormat } from "../../../interfaces/format/Format";
-import { InternalError } from "../../../services/Errors";
-import { mapBy } from "../../../Utils";
+import { mapBy, notNull } from "../../../Utils";
 import { ContentRepository } from "../../implements/content/ContentRepository.";
 import { FormatRepository } from "../../implements/format/FormatRepository";
+import { MaterialEditingRepository } from "../../implements/material/MaterialEditingRepository";
 import { mapQuery } from "../MappedQuery";
 import { SelectFromSingleTableQuery, SelectQueryFromEntity } from "../SelectQuery";
 import { ContentQuery } from "./ContentQuery";
@@ -32,40 +33,49 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
 
     selectRelated() {
         const query = this.qb
-            .andWhere("x.currentEditingId IS NOT NULL")
+            .andWhere("x.state = 'editing'")
             .leftJoinAndSelect("x.content", "content")
-            .leftJoinAndSelect("x.currentEditing", "currentEditing")
             .leftJoinAndSelect("x.structure", "structure")
             .leftJoinAndSelect("structure.format", "format")
-            .leftJoinAndSelect("x.materialDrafts", "materialDrafts")
             .addSelect("x.data");;
         return mapQuery(query, x => (f: FocusedFormat) => toRelatedContentDraft(x, f));
     }
 
     private selectFocused() {
         const query = this.qb
-            .andWhere("x.currentEditingId IS NOT NULL")
+            .andWhere("x.state = 'editing'")
             .leftJoinAndSelect("x.content", "content")
-            .leftJoinAndSelect("x.currentEditing", "currentEditing")
             .leftJoinAndSelect("x.structure", "structure")
             .leftJoinAndSelect("structure.format", "format")
-            .leftJoinAndSelect("x.materialDrafts", "materialDrafts")
-            .addSelect("materialDrafts.data")
             .addSelect("x.data");
-        return mapQuery(query, x => (f: FocusedFormat) => {
-            const data = x.data;
-            if (!data) {
-                throw new InternalError("data is null");
-            }
-            return toFocusedContentDraft(x, f, data);
-        });
+        return mapQuery(query, x => (f: FocusedFormat) => toFocusedContentDraft(x, f));
     }
 
-    async getRelatedMany(rep: ContentRepository, formatRep: FormatRepository) {
+    static async locateMaterialDrafts(data: any, format: FocusedFormat, matRep: MaterialEditingRepository, isFocused: boolean) {
+        const promises = format.currentStructure.properties.map(async prop => {
+            const value = data[prop.id];
+            if (!value) {
+                return;
+            }
+            if (prop.type.name == TypeName.DOCUMENT) {
+                const matDraft = isFocused
+                    ? await matRep.fromDrafts().byEntityId(value).selectFocused().getOne()
+                    : await matRep.fromDrafts().byEntityId(value).selectRelated().getOne();
+                if (!matDraft) {
+                    data[prop.id] = "deleted";
+                } else {
+                    data[prop.id] = matDraft;
+                }
+            }
+        });
+        await Promise.all(promises);
+    }
+
+    async getRelatedMany(rep: ContentRepository, formatRep: FormatRepository, matRep: MaterialEditingRepository) {
         const drafts = await this.selectRelated().getManyWithRaw();
 
         // Structures
-        const structIds = Array.from(new Set(drafts.map(x => x.raw.structureId)));
+        const structIds = Array.from(new Set(drafts.map(x => x.raw.structureId).filter(notNull)));
         const getFormat = (structId: StructureSk) => formatRep.fromStructures().byId(structId).selectFocusedFormat().getNeededOneWithRaw();
         const structs = await Promise.all(structIds.map(async x => {
             const [buildFormat, struct] = await getFormat(x);
@@ -79,16 +89,21 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
         const relatedDrafts = drafts.map(x => x.result(structMap[x.raw.structureId].format));
 
         // Related contents
-        await Promise.all(relatedDrafts.map(x => ContentQuery.locateRelatedEntity(rep, x.data, x.format)));
+        await Promise.all(relatedDrafts.map(async x => {
+            await Promise.all([
+                ContentQuery.locateContents(rep, x.data, x.format),
+                ContentDraftQuery.locateMaterialDrafts(x.data, x.format, matRep, false)
+            ]);
+        }));
 
         return relatedDrafts;
     }
 
-    async getFocusedMany(userId: UserSk | null, rep: ContentRepository, formatRep: FormatRepository) {
+    async getFocusedMany(rep: ContentRepository, formatRep: FormatRepository, matRep: MaterialEditingRepository) {
         const drafts = await this.selectFocused().getManyWithRaw();
 
         // Structures
-        const structIds = Array.from(new Set(drafts.map(x => x.raw.structureId)));
+        const structIds = Array.from(new Set(drafts.map(x => x.raw.structureId).filter(notNull)));
         const getFormat = (structId: StructureSk) => formatRep.fromStructures().byId(structId).selectFocusedFormat().getNeededOneWithRaw();
         const structs = await Promise.all(structIds.map(async x => {
             const [buildFormat, struct] = await getFormat(x);
@@ -99,12 +114,17 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
         const structMap = mapBy(structs, x => x.id);
 
         // Build
-        const relatedDrafts = drafts.map(x => x.result(structMap[x.raw.structureId].format));
+        const focusedDrafts = drafts.map(x => x.result(structMap[x.raw.structureId].format));
 
         // Related contents
-        await Promise.all(relatedDrafts.map(x => ContentQuery.locateRelatedEntity(rep, x.data, x.format)));
+        await Promise.all(focusedDrafts.map(async x => {
+            await Promise.all([
+                ContentQuery.locateContents(rep, x.data, x.format),
+                ContentDraftQuery.locateMaterialDrafts(x.data, x.format, matRep, true)
+            ]);
+        }));
 
-        return relatedDrafts;
+        return focusedDrafts;
     }
 }
 

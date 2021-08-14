@@ -114,14 +114,14 @@ toSelectMenuItem format =
   , html
   }
   where
-  html :: forall a s m. H.ComponentHTML a s m
+  html :: forall a2 s m. H.ComponentHTML a2 s m
   html =
     HH.div []
       [ HH.div [ css "name" ] [ HH.text format.name ]
       , HH.div [ css "desc" ] [ HH.text format.desc ]
       ]
 
-toSelectMenuItemFromType :: forall a. Item TypeName -> SelectMenuItem TypeName
+toSelectMenuItemFromType :: Item TypeName -> SelectMenuItem TypeName
 toSelectMenuItemFromType format =
   { id: format.id
   , name: format.name

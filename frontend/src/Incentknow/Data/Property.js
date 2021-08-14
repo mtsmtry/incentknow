@@ -13,6 +13,14 @@ exports.getMaterialObjectType = x => {
     }
 };
 
+exports.getMaterialObjectId = x => {
+    if (x.draftId) {
+        return x.draftId;
+    } else {
+        return x.materialId;
+    };
+};
+
 exports.assignJson = a => b => {
     return Object.assign(a, b);
 }

@@ -14,7 +14,6 @@ import Effect.Class (class MonadEffect)
 import Effect.Exception (error)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
 import Halogen.Query.HalogenM (SubscriptionId)
@@ -24,9 +23,9 @@ import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigate, pushState)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
-import Incentknow.Atoms.Message (SaveState(..), saveState)
+import Incentknow.Atoms.Message (SaveState(..))
 import Incentknow.Data.Entities (FocusedFormat, FocusedContentDraft)
-import Incentknow.Data.Ids (FormatId, SpaceId, StructureId)
+import Incentknow.Data.Ids (SpaceId, StructureId)
 import Incentknow.Data.Property (getDefaultValue)
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.FormatMenu as FormatMenu
@@ -35,6 +34,7 @@ import Incentknow.Molecules.StructureMenu as StructureMenu
 import Incentknow.Organisms.Content.Editor as Editor
 import Incentknow.Route (EditContentTarget(..), EditTarget(..), Route(..))
 import Incentknow.Templates.Page (section)
+import Test.Unit.Console (consoleLog)
 
 -- A type which defines the draft by three kind sources
 type State
@@ -53,12 +53,13 @@ type State
 
 data Action
   = Initialize
+  | Finalize
   | Load
   | HandleInput EditContentTarget
   | ChangeSpace (Maybe SpaceId)
   | ChangeStructure (Maybe StructureId)
   | ChangeValue Json
-  | CheckChage
+  | CheckChange
   | FetchedFormat (Fetch FocusedFormat)
   | FetchedDraft (Fetch FocusedContentDraft)
   | Commit
@@ -81,6 +82,7 @@ component =
         H.mkEval
           H.defaultEval
             { initialize = Just Initialize
+            , finalize = Just Finalize
             , handleAction = handleAction
             , receive = Just <<< HandleInput
             }
@@ -102,8 +104,8 @@ editor_ = SProxy :: SProxy "editor"
 render :: forall m. Behaviour m => MonadEffect m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div [ css "page-edit-content" ]
-      [ HH.div [ css "save-state" ] [ saveState state.saveState ]
-      , section ("top" <> if isJust state.format then " top-with-info" else "")
+      [ -- HH.div [ css "save-state" ] [ saveState state.saveState ]
+        section ("top" <> if isJust state.format then " top-with-info" else "")
           [ HH.div [ css "header" ]
             [ case state.target of
                 TargetBlank spaceId structureId ->
@@ -195,7 +197,7 @@ timer =
       Aff.forkAff
         $ forever do
             Aff.delay $ Milliseconds 2000.0
-            EventSource.emit emitter CheckChage
+            EventSource.emit emitter CheckChange
     pure
       $ EventSource.Finalizer do
           Aff.killFiber (error "Event source finalized") fiber
@@ -212,6 +214,9 @@ handleAction = case _ of
     when (state.target /= input) do
       H.put $ initialState input
       handleAction Load
+  Finalize -> do
+    handleAction CheckChange
+    H.liftEffect $ consoleLog "EditContent.Finalize"
   Initialize -> do
     state <- H.get
     -- Load resources
@@ -274,7 +279,7 @@ handleAction = case _ of
       Saving -> H.modify_ _ { value = value, saveState = SavingButChanged }
       _ -> H.modify_ _ { value = value, saveState = NotSaved }
   -- Save changes if they happened
-  CheckChage -> do
+  CheckChange -> do
     state <- H.get
     -- when active state for save
     when (state.saveState == NotSaved && not state.loading) do
@@ -284,7 +289,7 @@ handleAction = case _ of
         case state.target of
           TargetBlank spaceId structureId -> do
             for_ structureId \structureId2 -> do
-              result <- executeCommand $ createNewContentDraft structureId2 spaceId (Just state.value)
+              result <- executeCommand $ createNewContentDraft structureId2 spaceId state.value
               case result of
                 Just draftId -> do
                   pushState $ EditDraft $ ContentTarget $ TargetDraft draftId

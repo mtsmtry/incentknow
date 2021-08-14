@@ -7,21 +7,19 @@ import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
 import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect, liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getFocusedFormat, getRelatedFormat, getRelatedStructure, getStructures)
+import Incentknow.API (getRelatedFormat, getRelatedStructure, getStructures)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forItem, forRemote, toQueryCallback)
 import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (RelatedFormat, RelatedStructure)
-import Incentknow.Data.Ids (FormatId, StructureId(..))
+import Incentknow.Data.Ids (FormatId, StructureId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
-import Test.Unit.Console (consoleLog)
 
 type Input
   = { value :: Maybe StructureId

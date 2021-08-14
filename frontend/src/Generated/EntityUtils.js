@@ -191,14 +191,14 @@ exports.getBlockType = src => {if (src instanceof E.ParagraphBlockData) {
                     }
                     };
 
-exports.getMaterialType = src => {if (src instanceof E.FolderMaterialData) {
-                    return E.MaterialTypeFolder.value;
+exports.getMaterialType = src => {if (src instanceof E.PlaintextMaterialData) {
+                    return E.MaterialTypePlaintext.value;
 
                 }if (src instanceof E.DocumentMaterialData) {
                     return E.MaterialTypeDocument.value;
 
-                }};exports.buildMaterialData = type => { return options => { if (type instanceof E.MaterialTypeFolder) {
-                    const result = new E.FolderMaterialData();
+                }};exports.buildMaterialData = type => { return options => { if (type instanceof E.MaterialTypePlaintext) {
+                    const result = new E.PlaintextMaterialData();
                     return new Data_Maybe.Just(result);
                 } if (type instanceof E.MaterialTypeDocument) {if (options.document instanceof Data_Maybe.Nothing) {
                             return Data_Maybe.Nothing.value;
@@ -206,7 +206,7 @@ exports.getMaterialType = src => {if (src instanceof E.FolderMaterialData) {
                     const result = new E.DocumentMaterialData(options.document.value0);
                     return new Data_Maybe.Just(result);
                 }}};exports.getMaterialDataOptions = src => {
-                    if (src instanceof E.FolderMaterialData) {
+                    if (src instanceof E.PlaintextMaterialData) {
                         return {
                             document: Data_Maybe.Nothing.value
                         }

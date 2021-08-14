@@ -2,28 +2,21 @@ module Incentknow.Pages.Space.MemberList where
 
 import Prelude
 
-import Data.Array (filter)
-import Data.DateTime.Utils (fromTimestampToString)
-import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), maybe)
-import Data.Maybe.Utils (flatten)
-import Data.Nullable (null, toMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
 import Incentknow.API (getSpaceMembers)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote)
-import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
+import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Data.Entities (IntactSpaceMember)
-import Incentknow.Data.Ids (SpaceId(..))
-import Incentknow.HTML.Utils (css, link, maybeElem, whenElem)
+import Incentknow.Data.Ids (SpaceId)
+import Incentknow.HTML.Utils (css, whenElem)
 import Incentknow.Organisms.MemberList as MemberList
-import Incentknow.Route (FormatTab(..), Route(..), SpaceTab(..), UserTab(..))
+import Incentknow.Route (Route)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input

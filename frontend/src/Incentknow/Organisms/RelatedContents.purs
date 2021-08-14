@@ -68,7 +68,7 @@ render state =
   remoteWith state.contents \contents->
     HH.slot (SProxy :: SProxy "contentList") unit ContentList.component { value: contents } absurd
     
-handleAction :: forall o s m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> 
     handleAction Load

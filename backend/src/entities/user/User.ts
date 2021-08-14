@@ -41,7 +41,11 @@ export class User {
 
     @BeforeInsert()
     onInsert() {
-        this.displayId = createDisplayId() as UserDisplayId;
-        this.entityId = createEntityId() as UserId;
+        if (!this.displayId) {
+            this.displayId = createDisplayId() as UserDisplayId;
+        }
+        if (!this.entityId) {
+            this.entityId = createEntityId() as UserId;
+        }
     }
 }

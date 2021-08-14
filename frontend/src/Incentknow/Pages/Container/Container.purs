@@ -24,6 +24,7 @@ type State
 
 data Action
   = Initialize
+  | HandleInput Input
   | FetchedContents (Fetch (Array RelatedContent))
 
 type Slot p
@@ -37,7 +38,11 @@ component =
   H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval H.defaultEval { initialize = Just Initialize, handleAction = handleAction }
+    , eval: H.mkEval H.defaultEval 
+        { initialize = Just Initialize
+        , handleAction = handleAction 
+        , receive = Just <<< HandleInput
+        }
     }
 
 initialState :: Input -> State
@@ -53,6 +58,11 @@ handleAction = case _ of
   Initialize -> do
     state <- H.get
     callbackQuery FetchedContents $ getContentsByDisplayId state.spaceId state.formatId
+  HandleInput input -> do
+    state <- H.get
+    when (state.spaceId /= input.spaceId || state.formatId /= input.formatId) do
+      H.put $ initialState input
+      handleAction Initialize 
   FetchedContents fetch -> do
     forRemote fetch \contents ->
       H.modify_ _ { contents = contents }

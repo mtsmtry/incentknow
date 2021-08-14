@@ -2,22 +2,23 @@ module Incentknow.Data.Property where
 
 import Prelude
 
-import Data.Argonaut.Core (Json, fromArray, fromBoolean, fromObject, isNull, jsonNull, toArray, toBoolean, toString)
+import Data.Argonaut.Core (Json, fromArray, fromObject, isNull, jsonNull, toArray, toBoolean, toString)
 import Data.Argonaut.Core as J
 import Data.Argonaut.Encode (encodeJson)
-import Data.Array (catMaybes, concat, cons, filter, fromFoldable, length, singleton, uncons)
+import Data.Array (concat, cons, filter, fromFoldable, length, singleton, uncons)
 import Data.Int (fromNumber, toNumber)
 import Data.Map (values)
 import Data.Map as M
 import Data.Map.Utils (decodeToMap, mergeFromArray)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Maybe.Utils (flatten)
-import Data.Newtype (unwrap, wrap)
+import Data.Newtype (unwrap)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Tuple (Tuple(..), uncurry)
 import Foreign.Object as Object
-import Incentknow.Data.Entities (FocusedContent, FocusedFormat, FocusedMaterial, FocusedMaterialDraft, Language, PropertyInfo, RelatedContent, Type(..), RelatedMaterial)
-import Incentknow.Data.Ids (ContentId, FormatId, MaterialDraftId, MaterialId, PropertyId(..), SpaceId(..))
+import Incentknow.API (fromJsonToFocusedMaterial, fromJsonToFocusedMaterialDraft, fromJsonToRelatedMaterial)
+import Incentknow.Data.Entities (FocusedFormat, FocusedMaterial, FocusedMaterialDraft, PropertyInfo, RelatedContent, RelatedMaterial, Type(..))
+import Incentknow.Data.Ids (ContentId, MaterialDraftId, MaterialId)
 
 type Enumerator
   = { id :: String
@@ -49,7 +50,7 @@ getDefaultValue props = fromObject $ Object.fromFoldable $ map (\x-> Tuple (unwr
     ContentType _ -> jsonNull
     ArrayType _ -> fromArray []
     UrlType -> jsonNull
-    ObjectType props -> getDefaultValue props
+    ObjectType objProps -> getDefaultValue objProps
     DocumentType -> jsonNull
     EnumType _ -> jsonNull
     EntityType _ -> jsonNull
@@ -196,7 +197,7 @@ data TypedValue
   | ArrayTypedValue (Array TypedValue)
   | EnumTypedValue (Array Enumerator) (Maybe String)
   | ContentTypedValue FocusedFormat (ReferenceValue RelatedContent)
-  | DocumentTypedValue (ReferenceValue MaterialObject)
+  | DocumentTypedValue (ReferenceValue Json)
   | ImageTypedValue (Maybe String)
   | EntityTypedValue FocusedFormat (ReferenceValue RelatedContent)
 
@@ -207,6 +208,8 @@ foreign import getMaterialObjectType :: Json -> String
 foreign import assignJson :: Json -> Json -> Json
  
 foreign import insertJson :: String -> Json -> Json -> Json
+
+foreign import getMaterialObjectId :: Json -> String
 
 data MaterialObject
   = MaterialObjectDraft FocusedMaterialDraft
@@ -222,11 +225,17 @@ toMaterialObjectFromMaterialId materialId = MaterialObjectFocused $ forceConvert
 toRelatedContentFromContentId :: ContentId -> RelatedContent
 toRelatedContentFromContentId contentId = forceConvert { contentId }
 
-toMaterialObject :: Json -> MaterialObject
-toMaterialObject json = case getMaterialObjectType json of
-  "draft" -> MaterialObjectDraft $ forceConvert json
-  "focused" -> MaterialObjectFocused $ forceConvert json
-  _ -> MaterialObjectRelated $ forceConvert json
+fromJsonToMaterialObject :: Json -> MaterialObject
+fromJsonToMaterialObject json = case getMaterialObjectType json of
+  "draft" -> MaterialObjectDraft $ fromJsonToFocusedMaterialDraft json
+  "focused" -> MaterialObjectFocused $ fromJsonToFocusedMaterial json
+  _ -> MaterialObjectRelated $ fromJsonToRelatedMaterial json
+
+fromMaterialObjectToJson :: MaterialObject -> Json
+fromMaterialObjectToJson = case _ of
+    MaterialObjectDraft draft -> forceConvert { draftId: draft.draftId }
+    MaterialObjectFocused material -> forceConvert { materialId: material.materialId }
+    MaterialObjectRelated material -> forceConvert { materialId: material.materialId }
 
 toReferenceValue :: forall a. Json -> ReferenceValue a 
 toReferenceValue value = 
@@ -263,9 +272,9 @@ toTypedValue value ty = case ty of
   UrlType -> UrlTypedValue $ toString value
   ObjectType props -> ObjectTypedValue $ map (\x-> { value: toTypedValue x.value x.info.type, info: x.info }) $ mkProperties value props
   TextType -> TextTypedValue $ toString value
-  ArrayType ty -> ArrayTypedValue $ map (\x-> toTypedValue x ty) $ fromMaybe [] $ toArray value
+  ArrayType ty2 -> ArrayTypedValue $ map (\x-> toTypedValue x ty2) $ fromMaybe [] $ toArray value
   EnumType enums -> EnumTypedValue enums $ toString value
-  DocumentType -> DocumentTypedValue $ map toMaterialObject $ toReferenceValue value
+  DocumentType -> DocumentTypedValue $ toReferenceValue value
   ImageType -> ImageTypedValue $ toString value
   EntityType format -> EntityTypedValue format $ toReferenceValue value
 
@@ -282,10 +291,7 @@ toJsonFromTypedValue = case _ of
   TextTypedValue (Just vl) -> J.fromString vl
   ArrayTypedValue vls -> forceConvert $ map toJsonFromTypedValue vls
   EnumTypedValue _ (Just vl) -> J.fromString vl
-  DocumentTypedValue (JustReference vl) -> case vl of
-    MaterialObjectDraft draft -> forceConvert { draftId: draft.draftId }
-    MaterialObjectFocused material -> forceConvert { materialId: material.materialId }
-    MaterialObjectRelated material -> forceConvert { materialId: material.materialId }
+  DocumentTypedValue (JustReference vl) -> vl
   ImageTypedValue (Just vl) -> J.fromString vl
   EntityTypedValue _ (JustReference vl) -> jsonNull
   _ -> jsonNull

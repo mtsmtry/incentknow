@@ -2,26 +2,26 @@ module Incentknow.Organisms.Material.SlotEditor where
 
 import Prelude
 
+import Data.Argonaut.Core (Json)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.AppM (class Behaviour, navigate)
+import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Ids (MaterialDraftId)
-import Incentknow.Data.Property (MaterialObject(..), toMaterialObjectFromDraftId)
-import Incentknow.Organisms.Material.Editor as Editor
-import Incentknow.Route (Route)
+import Incentknow.Data.Property (MaterialObject(..), fromJsonToMaterialObject, fromMaterialObjectToJson, getMaterialObjectId, toMaterialObjectFromDraftId)
+import Incentknow.Organisms.Material.EditorFromDraft as EditorFromDraft
 
 type Input 
-  = { value :: Maybe MaterialObject }
+  = { value :: Maybe Json }
 
 type Output
-    = Maybe MaterialObject
+    = Maybe Json
 
 type State
-  = { materialObject :: Maybe MaterialObject
+  = { materialObject :: Maybe Json
     }
 
 data Action
@@ -33,7 +33,7 @@ type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( editor :: Editor.Slot Unit
+  = ( editor :: EditorFromDraft.Slot Unit
     )
 
 component :: forall q m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q Input Output m
@@ -59,23 +59,20 @@ editor_ = SProxy :: SProxy "editor"
 
 render :: forall m. Behaviour m => MonadEffect m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  HH.slot (SProxy :: SProxy "editor") unit Editor.component 
-    { value: case state.materialObject of 
+  HH.slot (SProxy :: SProxy "editor") unit EditorFromDraft.component 
+    { value: case map fromJsonToMaterialObject state.materialObject of 
         Just (MaterialObjectDraft draft) -> Just draft
         _ -> Nothing
     } (Just <<< ChangeDraftId)
-
-changeRoute :: forall o m. Behaviour m => Route -> H.HalogenM State Action ChildSlots o m Unit
-changeRoute route = do
-  navigate route
 
 handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
   HandleInput input -> do
     state <- H.get
-    H.put $ initialState input
+    when (map getMaterialObjectId state.materialObject /= map getMaterialObjectId input.value) do
+      H.put $ initialState input
   Initialize -> pure unit
   ChangeDraftId draftId -> do
     -- H.modify_ _ { materialObject = Just draftId }
-    H.raise $ Just $ toMaterialObjectFromDraftId draftId
+    H.raise $ Just $ fromMaterialObjectToJson $ toMaterialObjectFromDraftId draftId
   

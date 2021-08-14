@@ -2,29 +2,24 @@ module Incentknow.Molecules.SelectMenu where
 
 import Prelude
 
-import Data.Array (cons, filter, foldr, length)
+import Data.Array (filter, foldr)
 import Data.Array as Array
-import Data.Foldable (for_, traverse_)
+import Data.Foldable (for_)
 import Data.Map (Map, union)
 import Data.Map as M
 import Data.Map as Map
-import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Maybe.Utils (flatten)
-import Data.Set as S
-import Data.String (Pattern(..), Replacement(..), contains, replace)
 import Data.String.Utils (includes)
 import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
-import Halogen (RefLabel(..), getHTMLElementRef, liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API.Execution (Callback, Fetch, Remote, callbackAPI, executeAPI, forItem, forRemote)
+import Incentknow.API.Execution (Callback, Fetch, callbackAPI, forItem)
 import Incentknow.AppM (class Behaviour)
-import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 import Incentknow.Molecules.SelectMenuImpl as SelectMenuImpl
-import Test.Unit.Console (consoleLog)
 
 {-
   A component for receiving a selection from a list of the certine type

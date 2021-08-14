@@ -11,6 +11,158 @@ import Incentknow.Data.Ids as E
 import Incentknow.API.Execution (__queryAPI, __commandAPI, QueryAPI, CommandAPI)
 
 
+foreign import fromJsonToRelatedContainer :: Json -> E.RelatedContainer
+foreign import fromRelatedContainerToJson :: E.RelatedContainer -> Json
+
+
+foreign import fromJsonToAdditionalContainerInfo :: Json -> E.AdditionalContainerInfo
+foreign import fromAdditionalContainerInfoToJson :: E.AdditionalContainerInfo -> Json
+
+
+foreign import fromJsonToFocusedContainer :: Json -> E.FocusedContainer
+foreign import fromFocusedContainerToJson :: E.FocusedContainer -> Json
+
+
+foreign import fromJsonToRelatedContent :: Json -> E.RelatedContent
+foreign import fromRelatedContentToJson :: E.RelatedContent -> Json
+
+
+foreign import fromJsonToFocusedContent :: Json -> E.FocusedContent
+foreign import fromFocusedContentToJson :: E.FocusedContent -> Json
+
+
+foreign import fromJsonToRelatedContentCommit :: Json -> E.RelatedContentCommit
+foreign import fromRelatedContentCommitToJson :: E.RelatedContentCommit -> Json
+
+
+foreign import fromJsonToFocusedContentCommit :: Json -> E.FocusedContentCommit
+foreign import fromFocusedContentCommitToJson :: E.FocusedContentCommit -> Json
+
+
+foreign import fromJsonToRelatedContentDraft :: Json -> E.RelatedContentDraft
+foreign import fromRelatedContentDraftToJson :: E.RelatedContentDraft -> Json
+
+
+foreign import fromJsonToFocusedContentDraft :: Json -> E.FocusedContentDraft
+foreign import fromFocusedContentDraftToJson :: E.FocusedContentDraft -> Json
+
+
+foreign import fromJsonToRelatedFormat :: Json -> E.RelatedFormat
+foreign import fromRelatedFormatToJson :: E.RelatedFormat -> Json
+
+
+foreign import fromJsonToRelation :: Json -> E.Relation
+foreign import fromRelationToJson :: E.Relation -> Json
+
+
+foreign import fromJsonToFocusedFormat :: Json -> E.FocusedFormat
+foreign import fromFocusedFormatToJson :: E.FocusedFormat -> Json
+
+
+foreign import fromJsonToIntactMetaProperty :: Json -> E.IntactMetaProperty
+foreign import fromIntactMetaPropertyToJson :: E.IntactMetaProperty -> Json
+
+
+foreign import fromJsonToPropertyInfo :: Json -> E.PropertyInfo
+foreign import fromPropertyInfoToJson :: E.PropertyInfo -> Json
+
+
+foreign import fromJsonToEnumerator :: Json -> E.Enumerator
+foreign import fromEnumeratorToJson :: E.Enumerator -> Json
+
+
+foreign import fromJsonToRelatedStructure :: Json -> E.RelatedStructure
+foreign import fromRelatedStructureToJson :: E.RelatedStructure -> Json
+
+
+foreign import fromJsonToFocusedStructure :: Json -> E.FocusedStructure
+foreign import fromFocusedStructureToJson :: E.FocusedStructure -> Json
+
+
+foreign import fromJsonToDocumentBlock :: Json -> E.DocumentBlock
+foreign import fromDocumentBlockToJson :: E.DocumentBlock -> Json
+
+
+foreign import fromJsonToDocument :: Json -> E.Document
+foreign import fromDocumentToJson :: E.Document -> Json
+
+
+foreign import fromJsonToRelatedMaterial :: Json -> E.RelatedMaterial
+foreign import fromRelatedMaterialToJson :: E.RelatedMaterial -> Json
+
+
+foreign import fromJsonToFocusedMaterial :: Json -> E.FocusedMaterial
+foreign import fromFocusedMaterialToJson :: E.FocusedMaterial -> Json
+
+
+foreign import fromJsonToRelatedMaterialCommit :: Json -> E.RelatedMaterialCommit
+foreign import fromRelatedMaterialCommitToJson :: E.RelatedMaterialCommit -> Json
+
+
+foreign import fromJsonToFocusedMaterialCommit :: Json -> E.FocusedMaterialCommit
+foreign import fromFocusedMaterialCommitToJson :: E.FocusedMaterialCommit -> Json
+
+
+foreign import fromJsonToRelatedMaterialDraft :: Json -> E.RelatedMaterialDraft
+foreign import fromRelatedMaterialDraftToJson :: E.RelatedMaterialDraft -> Json
+
+
+foreign import fromJsonToFocusedMaterialDraft :: Json -> E.FocusedMaterialDraft
+foreign import fromFocusedMaterialDraftToJson :: E.FocusedMaterialDraft -> Json
+
+
+foreign import fromJsonToIntactMaterialEditing :: Json -> E.IntactMaterialEditing
+foreign import fromIntactMaterialEditingToJson :: E.IntactMaterialEditing -> Json
+
+
+foreign import fromJsonToRelatedMaterialSnapshot :: Json -> E.RelatedMaterialSnapshot
+foreign import fromRelatedMaterialSnapshotToJson :: E.RelatedMaterialSnapshot -> Json
+
+
+foreign import fromJsonToFocusedMaterialSnapshot :: Json -> E.FocusedMaterialSnapshot
+foreign import fromFocusedMaterialSnapshotToJson :: E.FocusedMaterialSnapshot -> Json
+
+
+foreign import fromJsonToIntactReactor :: Json -> E.IntactReactor
+foreign import fromIntactReactorToJson :: E.IntactReactor -> Json
+
+
+foreign import fromJsonToAdditionalSpaceInfo :: Json -> E.AdditionalSpaceInfo
+foreign import fromAdditionalSpaceInfoToJson :: E.AdditionalSpaceInfo -> Json
+
+
+foreign import fromJsonToRelatedSpace :: Json -> E.RelatedSpace
+foreign import fromRelatedSpaceToJson :: E.RelatedSpace -> Json
+
+
+foreign import fromJsonToFocusedSpace :: Json -> E.FocusedSpace
+foreign import fromFocusedSpaceToJson :: E.FocusedSpace -> Json
+
+
+foreign import fromJsonToIntactSpaceMember :: Json -> E.IntactSpaceMember
+foreign import fromIntactSpaceMemberToJson :: E.IntactSpaceMember -> Json
+
+
+foreign import fromJsonToIntactSpaceMembershipApplication :: Json -> E.IntactSpaceMembershipApplication
+foreign import fromIntactSpaceMembershipApplicationToJson :: E.IntactSpaceMembershipApplication -> Json
+
+
+foreign import fromJsonToIntactAccount :: Json -> E.IntactAccount
+foreign import fromIntactAccountToJson :: E.IntactAccount -> Json
+
+
+foreign import fromJsonToRelatedUser :: Json -> E.RelatedUser
+foreign import fromRelatedUserToJson :: E.RelatedUser -> Json
+
+
+foreign import fromJsonToFocusedUser :: Json -> E.FocusedUser
+foreign import fromFocusedUserToJson :: E.FocusedUser -> Json
+
+
+foreign import fromJsonToAuthInfo :: Json -> E.AuthInfo
+foreign import fromAuthInfoToJson :: E.AuthInfo -> Json
+
+
 ---------------------------------------------------------
 --  ContainerService
 ---------------------------------------------------------
@@ -40,17 +192,17 @@ startContentEditing x0 x1 = __commandAPI "startContentEditing" $ __startContentE
 
 
 foreign import __createNewContentDraft :: 
-  E.StructureId -> Maybe E.SpaceId -> Maybe Json -> Promise E.ContentDraftId
+  E.StructureId -> Maybe E.SpaceId -> Json -> Promise E.ContentDraftId
 
-createNewContentDraft :: E.StructureId -> Maybe E.SpaceId -> Maybe Json -> CommandAPI E.ContentDraftId
+createNewContentDraft :: E.StructureId -> Maybe E.SpaceId -> Json -> CommandAPI E.ContentDraftId
 createNewContentDraft x0 x1 x2 = __commandAPI "createNewContentDraft" $ __createNewContentDraft x0 x1 x2
 
 
 
 foreign import __editContentDraft :: 
-  E.ContentDraftId -> Json -> Promise (Maybe E.RelatedContentRevision)
+  E.ContentDraftId -> Json -> Promise {}
 
-editContentDraft :: E.ContentDraftId -> Json -> CommandAPI (Maybe E.RelatedContentRevision)
+editContentDraft :: E.ContentDraftId -> Json -> CommandAPI {}
 editContentDraft x0 x1 = __commandAPI "editContentDraft" $ __editContentDraft x0 x1
 
 
@@ -124,22 +276,6 @@ foreign import __getContentCommits ::
 
 getContentCommits :: E.ContentId -> QueryAPI (Array E.RelatedContentCommit)
 getContentCommits x0 = __queryAPI "getContentCommits" $ __getContentCommits x0
-
-
-
-foreign import __getContentEditingNodes :: 
-  E.ContentDraftId -> Promise (Array E.ContentNode)
-
-getContentEditingNodes :: E.ContentDraftId -> QueryAPI (Array E.ContentNode)
-getContentEditingNodes x0 = __queryAPI "getContentEditingNodes" $ __getContentEditingNodes x0
-
-
-
-foreign import __getContentRevision :: 
-  E.ContentWholeRevisionId -> Promise E.FocusedContentRevision
-
-getContentRevision :: E.ContentWholeRevisionId -> QueryAPI E.FocusedContentRevision
-getContentRevision x0 = __queryAPI "getContentRevision" $ __getContentRevision x0
 
 
 
@@ -297,25 +433,25 @@ startMaterialEditing x0 x1 = __commandAPI "startMaterialEditing" $ __startMateri
 
 
 foreign import __createNewMaterialDraft :: 
-  Maybe E.SpaceId -> E.MaterialType -> Maybe E.MaterialData -> Promise E.RelatedMaterialDraft
+  Maybe E.SpaceId -> E.MaterialType -> E.MaterialData -> Promise E.RelatedMaterialDraft
 
-createNewMaterialDraft :: Maybe E.SpaceId -> E.MaterialType -> Maybe E.MaterialData -> CommandAPI E.RelatedMaterialDraft
+createNewMaterialDraft :: Maybe E.SpaceId -> E.MaterialType -> E.MaterialData -> CommandAPI E.RelatedMaterialDraft
 createNewMaterialDraft x0 x1 x2 = __commandAPI "createNewMaterialDraft" $ __createNewMaterialDraft x0 x1 x2
 
 
 
 foreign import __editMaterialDraft :: 
-  E.MaterialDraftId -> E.MaterialData -> Promise (Maybe E.RelatedMaterialRevision)
+  E.MaterialDraftId -> E.MaterialData -> Promise {}
 
-editMaterialDraft :: E.MaterialDraftId -> E.MaterialData -> CommandAPI (Maybe E.RelatedMaterialRevision)
+editMaterialDraft :: E.MaterialDraftId -> E.MaterialData -> CommandAPI {}
 editMaterialDraft x0 x1 = __commandAPI "editMaterialDraft" $ __editMaterialDraft x0 x1
 
 
 
 foreign import __commitMaterial :: 
-  E.MaterialDraftId -> E.MaterialData -> Promise E.RelatedMaterialRevision
+  E.MaterialDraftId -> E.MaterialData -> Promise {}
 
-commitMaterial :: E.MaterialDraftId -> E.MaterialData -> CommandAPI E.RelatedMaterialRevision
+commitMaterial :: E.MaterialDraftId -> E.MaterialData -> CommandAPI {}
 commitMaterial x0 x1 = __commandAPI "commitMaterial" $ __commitMaterial x0 x1
 
 
@@ -352,19 +488,19 @@ getMaterialCommits x0 = __queryAPI "getMaterialCommits" $ __getMaterialCommits x
 
 
 
-foreign import __getMaterialEditingNodes :: 
-  E.MaterialDraftId -> Promise (Array E.MaterialNode)
+foreign import __getMaterialEditings :: 
+  E.MaterialDraftId -> Promise (Array E.IntactMaterialEditing)
 
-getMaterialEditingNodes :: E.MaterialDraftId -> QueryAPI (Array E.MaterialNode)
-getMaterialEditingNodes x0 = __queryAPI "getMaterialEditingNodes" $ __getMaterialEditingNodes x0
+getMaterialEditings :: E.MaterialDraftId -> QueryAPI (Array E.IntactMaterialEditing)
+getMaterialEditings x0 = __queryAPI "getMaterialEditings" $ __getMaterialEditings x0
 
 
 
-foreign import __getMaterialRevision :: 
-  E.MaterialRevisionId -> Promise E.FocusedMaterialRevision
+foreign import __getMaterialSnapshot :: 
+  E.MaterialSnapshotId -> Promise E.FocusedMaterialSnapshot
 
-getMaterialRevision :: E.MaterialRevisionId -> QueryAPI E.FocusedMaterialRevision
-getMaterialRevision x0 = __queryAPI "getMaterialRevision" $ __getMaterialRevision x0
+getMaterialSnapshot :: E.MaterialSnapshotId -> QueryAPI E.FocusedMaterialSnapshot
+getMaterialSnapshot x0 = __queryAPI "getMaterialSnapshot" $ __getMaterialSnapshot x0
 
 
 

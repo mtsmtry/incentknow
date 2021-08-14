@@ -1,12 +1,10 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, ObjectLiteral, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { NewTypeInt, NewTypeString } from "../../Implication";
 import { Structure, StructureSk } from "../format/Structure";
-import { MaterialDraft } from "../material/MaterialDraft";
 import { Space, SpaceSk } from "../space/Space";
 import { User, UserSk } from "../user/User";
 import { CreatedAt, createEntityId, DateColumn, EntityId, UpdatedAt } from '../Utils';
 import { Content, ContentSk } from "./Content";
-import { ContentEditing, ContentEditingSk } from "./ContentEditing";
 
 /*
 write  = データ量が増加するか、同じデータ量でデータが変化すること
@@ -17,10 +15,10 @@ write some field | remove            | write
 write none       | remove            | null
 */
 
-export enum ContentChangeType {
-    INITIAL = "initial",
-    WRITE = "write",
-    REMOVE = "remove"
+export enum ContentDraftState {
+    EDITING = "editing",
+    CANCELED = "canceled",
+    COMMITTED = "committed"
 }
 
 export type ContentDraftSk = NewTypeInt<"ContentDraftSk">;
@@ -37,12 +35,14 @@ export class ContentDraft {
     @EntityId()
     entityId: ContentDraftId;
 
-    // not null when editing
-    @OneToOne(type => ContentEditing, { onDelete: "SET NULL" })
-    @JoinColumn({ name: "currentEditingId" })
-    currentEditing: ContentEditing | null;
-    @Column("int", { nullable: true })
-    currentEditingId: ContentEditingSk | null;
+    @Column("simple-json", { select: false })
+    data: any;
+
+    @ManyToOne(type => Structure, { onDelete: "RESTRICT" })
+    @JoinColumn({ name: "structureId" })
+    structure: Structure;
+    @Column()
+    structureId: StructureSk;
 
     // =========================================
     @Column({ asExpression: "coalesce(contentId, intendedSpaceId)", generatedType: "VIRTUAL" })
@@ -77,20 +77,10 @@ export class ContentDraft {
     */
     @Column({
         type: "enum",
-        enum: ContentChangeType,
-        default: ContentChangeType.INITIAL
+        enum: ContentDraftState,
+        default: ContentDraftState.EDITING
     })
-    changeType: ContentChangeType;
-
-    // null when committed
-    @Column("simple-json", { select: false, nullable: true })
-    data: ObjectLiteral | null;
-
-    @ManyToOne(type => Structure, { onDelete: "RESTRICT" })
-    @JoinColumn({ name: "structureId" })
-    structure: Structure;
-    @Column()
-    structureId: StructureSk;
+    state: ContentDraftState;
     /*
         @OneToMany(type => ContentSnapshot, x => x.draft, { onDelete: "RESTRICT" })
         snapshots: ContentSnapshot[];
@@ -104,11 +94,10 @@ export class ContentDraft {
     @UpdatedAt()
     updatedAt: Date;
 
-    @OneToMany(type => MaterialDraft, mat => mat.intendedContentDraft, { onDelete: "RESTRICT" })
-    materialDrafts: MaterialDraft[];
-
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId() as ContentDraftId;
+        if (!this.entityId) {
+            this.entityId = createEntityId() as ContentDraftId;
+        }
     }
 }

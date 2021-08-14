@@ -6,16 +6,15 @@ import Data.Array (fromFoldable, toUnfoldable)
 import Data.Either (Either(..))
 import Data.Foldable (oneOf)
 import Data.List (List(..))
-import Data.List (fromFoldable) as List
 import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap, wrap)
-import Data.String (Pattern(..), joinWith, split)
+import Data.String (joinWith)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Class (class MonadEffect)
 import Effect.Class as H
-import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..), ContentSnapshotId, FormatDisplayId(..), FormatId(..), MaterialDraftId(..), MaterialId(..), SemanticId(..), SpaceDisplayId(..), SpaceId(..), StructureId(..), UserDisplayId)
+import Incentknow.Data.Ids (ContentDraftId(..), ContentId(..), FormatDisplayId(..), FormatId(..), MaterialDraftId(..), MaterialId(..), SemanticId(..), SpaceDisplayId(..), SpaceId(..), StructureId(..), UserDisplayId)
 import Routing (match)
 import Routing.Match (Match(..), end, int, lit, root, str)
 import Routing.Types (RoutePart(..))
@@ -51,16 +50,6 @@ data UserTab
   = UserMain
   | UserSetting
 
-data SnapshotDiff
-  = InitialSnapshot ContentSnapshotId
-  | SnapshotDiff ContentSnapshotId ContentSnapshotId
-
-derive instance eqSnapshotDiff :: Eq SnapshotDiff
-
-instance showSnapshotDiff :: Show SnapshotDiff where
-  show (InitialSnapshot id) = unwrap id
-  show (SnapshotDiff id1 id2) = unwrap id1 <> "-" <> unwrap id2
-
 data EditContentTarget
   = TargetBlank (Maybe SpaceId) (Maybe StructureId)
   | TargetDraft ContentDraftId
@@ -91,6 +80,7 @@ data Route
   | EditDraft EditTarget
   | SpaceList
   | Container SpaceDisplayId FormatDisplayId
+  | ContainerList SpaceDisplayId
   -- | Composition SpaceId FormatId String
   -- | ContentList (Maybe SpaceId) (Maybe FormatId) (Array (Tuple String (Maybe String)))
   | Public
@@ -172,6 +162,7 @@ routeToPath = case _ of
   -- space
   NewSpace -> "/spaces/new"
   EditScraper id -> "/contents/" <> unwrap id <> "/edit/scraper"
+  ContainerList id -> "/spaces/" <> unwrap id <> "/containers"
   Space id SpaceHome -> "/spaces/" <> unwrap id
   Space id SpaceContainers -> "/spaces/" <> unwrap id <> "/formats"
   Space id SpaceMembers -> "/spaces/" <> unwrap id <> "/members"
@@ -214,12 +205,6 @@ matchParams =
     Cons (Query m) rs -> pure $ Tuple rs $ (M.toUnfoldable $ map Just m :: Array (Tuple String (Maybe String)))
     rs -> pure $ Tuple rs []
 
-toSnapshotDiff :: String -> SnapshotDiff
-toSnapshotDiff str = case List.fromFoldable $ split (Pattern "-") str of
-  Cons id Nil -> InitialSnapshot (wrap id)
-  Cons before (Cons after Nil) -> SnapshotDiff (wrap before) (wrap after)
-  _ -> SnapshotDiff (wrap "") (wrap "")
-
 matchRoute :: Match Route
 matchRoute =
   root
@@ -254,6 +239,7 @@ matchRoute =
         , ContentBySemanticId <$> (lit "contents" *> (map FormatId str)) <*> (map SemanticId str) <* end
         --, ContentList <$ lit "contents" <*> space <*> format <*> matchParams <* end
         -- format
+        , ContainerList <$> (map wrap $ lit "spaces" *> str) <* (lit "containers" <* end)
         , (\x-> \y-> Space x $ SpaceFormat y FormatMain) <$> (map wrap $ lit "spaces" *> str) <*> (map wrap $ lit "formats" *> str <* end)
         , (\x-> \y-> Space x $ SpaceFormat y FormatPage) <$> (map wrap $ lit "spaces" *> str) <*> (map wrap $ lit "page" *> str <* end)
         , (\x-> \y-> Space x $ SpaceFormat y FormatVersions) <$> (map wrap $ lit "spaces" *> str) <*> (map wrap $ lit "versions" *> str <* end)

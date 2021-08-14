@@ -4,7 +4,6 @@ import { Structure, StructureSk } from "../format/Structure";
 import { User, UserSk } from "../user/User";
 import { createEntityId, EntityId, UpdatedAt } from '../Utils';
 import { Content, ContentSk } from "./Content";
-import { ContentEditing, ContentEditingSk } from "./ContentEditing";
 
 export type ContentCommitSk = NewTypeInt<"ContentCommitSk">;
 
@@ -34,20 +33,8 @@ export class ContentCommit {
     @Column()
     structureId: StructureSk;
 
-    @OneToOne(type => ContentEditing, { onDelete: "SET NULL" })
-    @JoinColumn({ name: "editingId" })
-    editing: ContentEditing | null;
-    @Column("int", { nullable: true })
-    editingId: ContentEditingSk | null;
-
     @UpdatedAt()
     timestamp: Date;
-
-    @ManyToOne(type => ContentCommit, { onDelete: "SET NULL" })
-    @JoinColumn({ name: "basedCommitId" })
-    basedCommit: ContentCommit | null;
-    @Column("int", { nullable: true })
-    basedCommitId: ContentCommitSk | null;
 
     @ManyToOne(type => User, { onDelete: "RESTRICT" })
     @JoinColumn({ name: "committerUserId" })
@@ -57,6 +44,8 @@ export class ContentCommit {
 
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId() as ContentCommitId;
+        if (!this.entityId) {
+            this.entityId = createEntityId() as ContentCommitId;
+        }
     }
 }

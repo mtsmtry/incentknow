@@ -9,7 +9,7 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getAvailableFormatDisplayId, setFormatDisplayId, setFormatDisplayName, setFormatIcon, setSpaceDisplayId)
+import Incentknow.API (getAvailableFormatDisplayId, setFormatDisplayId, setFormatDisplayName, setFormatIcon)
 import Incentknow.API.Execution (callCommand, callQuery)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (FocusedFormat)

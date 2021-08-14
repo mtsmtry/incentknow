@@ -200,6 +200,7 @@
 
                     >.value {
                         width: 200px;
+                        padding: 2px 0px;
                     }
                 }
             }
@@ -591,6 +592,8 @@
         overflow: hidden;
         position: relative;
         height: 100px;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
 
         img {
             position: absolute;
@@ -618,12 +621,51 @@
         position: absolute;
         width: 100%;
         top: 0;
-        padding: 25px;
+
+        >.mode {
+            float: right;
+            display: flex;
+
+            >.item {
+                background: linear-gradient(rgba(0,0,0,0.5) 50%, rgba(0,0,0,0));
+                text-align: center;
+                width: 35px;
+                height: 30px;
+                color: rgba(255,255,255,0.5);
+                border-left: 0.7px solid rgba(0,0,0,0.2);
+
+                >i {
+                    margin-right: 0px;
+                    padding-top: 7px;
+                }
+            }
+
+            >.left {
+            }
+
+            >.right {
+                border-top-right-radius: 5px;
+            }
+
+            >.selected {
+                color: rgba(255,255,255,1);
+                background: linear-gradient(rgba(0,0,0,0.3) 50%, rgba(0,0,0,0));
+            }
+        }
 
         >.name {
             color: white;
             font-size: 20px;
             font-weight: bold;
+        }
+    }
+}
+
+.page-space-header-info {
+    >.forward {
+        >.name {
+            padding-top: 25px;
+            padding-left: 25px;
         }
 
         >.description {
@@ -632,6 +674,7 @@
 
         >.attributes {
             float: right;
+            padding-right: 25px;
 
             >.created {
                 color: white;
@@ -643,6 +686,18 @@
                 
             }
         }
+    }
+}
+
+.page-space-header-containers {
+    >.forward {
+        >.name {
+            padding-top: 15px;
+            padding-left: 25px;
+        }
+    }
+    >.backward {
+        height: 65px;
     }
 }
 

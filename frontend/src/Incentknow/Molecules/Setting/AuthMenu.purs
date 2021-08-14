@@ -1,23 +1,33 @@
 module Incentknow.Molecules.Setting.AuthMenu where
 
 import Prelude
+
 import Data.Either (Either)
 import Data.Maybe (Maybe(..), isJust)
 import Data.Symbol (SProxy(..))
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
-import Incentknow.HTML.Utils (css)
+import Incentknow.AppM (class Behaviour)
+import Incentknow.Data.Entities (SpaceAuth)
 import Incentknow.Molecules.AuthMenu as AuthMenu
+import Incentknow.Molecules.Setting (SettingOutput, SettingQuery)
 import Incentknow.Molecules.Setting as Setting
 
 type Slot
   = Setting.Slot
 
+component :: forall t3.
+  MonadAff t3 => Behaviour t3 => H.Component HH.HTML SettingQuery
+                                   { desc :: String
+                                   , disabled :: Boolean
+                                   , submit :: Maybe SpaceAuth -> Aff (Either String (Record ()))
+                                   , title :: String
+                                   , value :: Maybe SpaceAuth
+                                   }
+                                   SettingOutput
+                                   t3
 component =
   Setting.component
     { editor:

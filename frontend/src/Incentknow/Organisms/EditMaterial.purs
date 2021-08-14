@@ -21,14 +21,16 @@ import Incentknow.API (commitMaterial, createNewMaterialDraft, editMaterialDraft
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeCommand, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate, pushState)
 import Incentknow.Atoms.Inputs (submitButton)
-import Incentknow.Atoms.Message (SaveState(..), saveState)
+import Incentknow.Atoms.Message (SaveState(..))
 import Incentknow.Data.Entities (BlockData(..), FocusedMaterialDraft, MaterialData(..), MaterialType(..))
 import Incentknow.Data.Ids (SpaceId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
-import Incentknow.Organisms.Document.Editor as DocumentEditor
+import Incentknow.Organisms.Material.Editor as Editor
+import Incentknow.Organisms.Material.Utils (createNewMaterialData)
 import Incentknow.Route (EditMaterialTarget(..), EditTarget(..), Route(..))
 import Incentknow.Templates.Page (section)
+import Test.Unit.Console (consoleLog)
 
 -- A type which defines the draft by three kind sources
 type State
@@ -46,11 +48,12 @@ type State
 
 data Action
   = Initialize
+  | Finalize
   | Load
   | HandleInput EditMaterialTarget
   | ChangeSpace (Maybe SpaceId)
   | ChangeData MaterialData
-  | CheckChage
+  | CheckChange
   | FetchedDraft (Fetch FocusedMaterialDraft)
   | Commit
 
@@ -58,7 +61,7 @@ type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = ( documentEditor :: DocumentEditor.Slot Unit
+  = ( editor :: Editor.Slot Unit
     , spaceMenu :: SpaceMenu.Slot Unit
     )
 
@@ -71,6 +74,7 @@ component =
         H.mkEval
           H.defaultEval
             { initialize = Just Initialize
+            , finalize = Just Finalize
             , handleAction = handleAction
             , receive = Just <<< HandleInput
             }
@@ -91,19 +95,16 @@ editor_ = SProxy :: SProxy "editor"
 render :: forall m. Behaviour m => MonadEffect m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div [ css "page-edit-material" ]
-    [ HH.div [ css "save-state" ] [ saveState state.saveState ]
-    , section "top"
+    [ -- HH.div [ css "save-state" ] [ saveState state.saveState ]
+      section "top"
       [ case state.target of
           MaterialTargetBlank spaceId ->
             HH.text ""
           _ -> HH.text ""
       --, HH.slot (SProxy :: SProxy "plainTextEditor") unit PlainTextEditor.component { value: state.text, variableHeight: true, readonly: false }
       --    (Just <<< ChangeText)
-      , case state.data of
-          DocumentMaterialData doc ->
-            HH.slot (SProxy :: SProxy "documentEditor") unit DocumentEditor.component { value: doc }
-              (Just <<< ChangeData <<< DocumentMaterialData)
-          _ -> HH.text "" 
+      , HH.slot (SProxy :: SProxy "editor") unit Editor.component { value: state.data }
+          (Just <<< ChangeData)
       , case state.target, state.draft of
           MaterialTargetBlank _, _ -> HH.text ""
           MaterialTargetDraft _, Holding draft ->
@@ -149,7 +150,7 @@ timer =
       Aff.forkAff
         $ forever do
             Aff.delay $ Milliseconds 2000.0
-            EventSource.emit emitter CheckChage
+            EventSource.emit emitter CheckChange
     pure
       $ EventSource.Finalizer do
           Aff.killFiber (error "Event source finalized") fiber
@@ -166,6 +167,9 @@ handleAction = case _ of
     when (state.target /= input) do
       H.put $ initialState input
       handleAction Load
+  Finalize -> do
+    handleAction CheckChange
+    H.liftEffect $ consoleLog "EditMaterial.Finalize"
   Initialize -> do
     state <- H.get
     -- Load resources
@@ -179,7 +183,8 @@ handleAction = case _ of
     case state.target of
       MaterialTargetBlank spaceId -> do
         -- set the selected value
-        H.modify_ _ { target = MaterialTargetBlank spaceId }
+        newData <- createNewMaterialData MaterialTypeDocument
+        H.modify_ _ { target = MaterialTargetBlank spaceId, data = newData }
       MaterialTargetDraft draftId -> do
         -- fetch the draft
         callbackQuery FetchedDraft $ getMaterialDraft draftId
@@ -209,7 +214,7 @@ handleAction = case _ of
       Saving -> H.modify_ _ { data = data2, saveState = SavingButChanged }
       _ -> H.modify_ _ { data = data2, saveState = NotSaved }
   -- Save changes if they happened
-  CheckChage -> do
+  CheckChange -> do
     state <- H.get
     -- when active state for save
     when (state.saveState == NotSaved && not state.loading) do
@@ -217,7 +222,7 @@ handleAction = case _ of
       H.modify_ _ { saveState = Saving }
       case state.target of
         MaterialTargetBlank spaceId -> do
-          result <- executeCommand $ createNewMaterialDraft spaceId MaterialTypeDocument (Just state.data)
+          result <- executeCommand $ createNewMaterialDraft spaceId MaterialTypeDocument state.data
           case result of
             Just draft -> do
               pushState $ EditDraft $ MaterialTarget $ MaterialTargetDraft draft.draftId

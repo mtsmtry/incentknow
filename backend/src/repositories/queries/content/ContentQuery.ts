@@ -3,12 +3,14 @@ import { ContainerSk } from "../../../entities/container/Container";
 import { Content, ContentId, ContentSk } from "../../../entities/content/Content";
 import { PropertyId, TypeName } from "../../../entities/format/Property";
 import { StructureSk } from "../../../entities/format/Structure";
+import { Material } from "../../../entities/material/Material";
 import { SpaceSk } from "../../../entities/space/Space";
 import { UserSk } from "../../../entities/user/User";
 import { toFocusedContent, toRelatedContent } from "../../../interfaces/content/Content";
 import { RelatedContentDraft } from "../../../interfaces/content/ContentDraft";
 import { FocusedFormat } from "../../../interfaces/format/Format";
-import { mapBy } from "../../../Utils";
+import { toFocusedMaterial, toRelatedMaterial } from "../../../interfaces/material/Material";
+import { mapBy, mapByString } from "../../../Utils";
 import { ContentEditingRepository } from "../../implements/content/ContentEditingRepository";
 import { ContentRepository } from "../../implements/content/ContentRepository.";
 import { FormatRepository } from "../../implements/format/FormatRepository";
@@ -44,7 +46,7 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         return new ContentQuery(this.qb.limit(count));
     }
 
-    static async locateRelatedEntity(rep: ContentRepository, data: any, format: FocusedFormat) {
+    static async locateContents(rep: ContentRepository, data: any, format: FocusedFormat) {
         const promises = format.currentStructure.properties.map(async prop => {
             const value = data[prop.id];
             if (value == null) {
@@ -58,12 +60,35 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         await Promise.all(promises);
     }
 
+    static async locateMaterials(data: any, materials: Material[], format: FocusedFormat, isFocused: boolean) {
+        const materialDict = mapByString(materials, x => x.entityId);
+        const promises = format.currentStructure.properties.map(async prop => {
+            const value = data[prop.id];
+            if (!value) {
+                return;
+            }
+            if (prop.type.name == TypeName.DOCUMENT) {
+                const material = materialDict[value];
+                if (!material) {
+                    data[prop.id] = "deleted";
+                } else {
+                    data[prop.id] = isFocused ? toFocusedMaterial(material, null) : toRelatedMaterial(material);
+                }
+            }
+        });
+        await Promise.all(promises);
+    }
+
     private selectRelated() {
         const query = this.qb
             .leftJoinAndSelect("x.creatorUser", "creatorUser")
             .leftJoinAndSelect("x.updaterUser", "updaterUser")
             .leftJoinAndSelect("x.materials", "materials")
-            .addSelect("x.data");
+            .leftJoinAndSelect("materials.commit", "materialCommits")
+            .leftJoinAndSelect("materials.creatorUser", "materialCreatorUsers")
+            .leftJoinAndSelect("materials.updaterUser", "materialUpdaterUsers")
+            .leftJoinAndSelect("x.commit", "commit")
+            .addSelect("commit.data");
 
         return mapQuery(query, x => (f: FocusedFormat) => toRelatedContent(x, f));
     }
@@ -73,10 +98,17 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
             .leftJoinAndSelect("x.creatorUser", "creatorUser")
             .leftJoinAndSelect("x.updaterUser", "updaterUser")
             .leftJoinAndSelect("x.materials", "materials")
-            .addSelect("materials.data")
-            .addSelect("x.data");
+            .leftJoinAndSelect("materials.commit", "materialCommits")
+            .leftJoinAndSelect("materials.creatorUser", "materialCreatorUsers")
+            .leftJoinAndSelect("materials.updaterUser", "materialUpdaterUsers")
+            .leftJoinAndSelect("x.commit", "commit")
+            .addSelect("materialCommits.data")
+            .addSelect("commit.data");
 
-        return mapQuery(query, x => (f: FocusedFormat, d: RelatedContentDraft | null) => toFocusedContent(x, d, f));
+        return mapQuery(query, x => (f: FocusedFormat, d: RelatedContentDraft | null) => {
+            x.materials.forEach(mat => mat.content = x);
+            return toFocusedContent(x, d, f);
+        });
     }
 
     async getRelatedMany(rep: ContentRepository, formatRep: FormatRepository) {
@@ -94,10 +126,14 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         const structMap = mapBy(structs, x => x.id);
 
         // Build
-        const focusedContents = contents.map(x => x.result(structMap[x.raw.structureId].format));
-
-        // Related contents
-        await Promise.all(focusedContents.map(x => ContentQuery.locateRelatedEntity(rep, x.data, x.format)));
+        const focusedContents = await Promise.all(contents.map(async content => {
+            const format = structMap[content.raw.structureId].format;
+            await Promise.all([
+                ContentQuery.locateContents(rep, content.raw.commit.data, format),
+                ContentQuery.locateMaterials(content.raw.commit.data, content.raw.materials, format, false)
+            ]);
+            return content.result(format);
+        }));
 
         return focusedContents;
     }
@@ -116,25 +152,27 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         }));
         const structMap = mapBy(structs, x => x.id);
 
-        // Drafts
-        const focusedContents = await Promise.all(contents.map(async x => {
-            const format = structMap[x.raw.structureId].format;
+        // Build
+        const focusedContents = await Promise.all(contents.map(async content => {
+            const format = structMap[content.raw.structureId].format;
+            let draft: RelatedContentDraft | null = null;
             if (userId) {
-                const buildDraft = await editRep.fromDrafts().byUser(userId).byContent(x.raw.id).selectRelated().getOne();
-                const draft = buildDraft ? buildDraft(format) : null;
-                return x.result(format, draft);
+                const buildDraft = await editRep.fromDrafts().byUser(userId).byContent(content.raw.id).selectRelated().getOne();
+                draft = buildDraft ? buildDraft(format) : null;
             }
-            return x.result(format, null);
-        }));
 
-        // Related contents
-        await Promise.all(focusedContents.map(x => ContentQuery.locateRelatedEntity(rep, x.data, x.format)));
+            await Promise.all([
+                ContentQuery.locateContents(rep, content.raw.commit.data, format),
+                ContentQuery.locateMaterials(content.raw.commit.data, content.raw.materials, format, true)
+            ]);
+            return content.result(format, draft);
+        }));
 
         return focusedContents;
     }
 
-    selectAll() {
-        return new ContentQuery(this.qb.addSelect("x.data"));
+    joinCommitAndData() {
+        return new ContentQuery(this.qb.leftJoinAndSelect("x.commit", "commit").addSelect("commit.data"));
     }
 }
 

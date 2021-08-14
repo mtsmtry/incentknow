@@ -1,7 +1,6 @@
 module Incentknow.Molecules.DangerChange where
 
 import Prelude
-import Data.Maybe (Maybe(..))
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
@@ -25,7 +24,7 @@ type Slot p
 type ChildSlots
   = ()
 
-component :: forall q o m. MonadEffect m => H.Component HH.HTML q Input Unit m
+component :: forall q m. MonadEffect m => H.Component HH.HTML q Input Unit m
 component =
   H.mkComponent
     { initialState
@@ -57,7 +56,7 @@ render state =
               ]
     ]
 
-handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action ChildSlots Unit m Unit
+handleAction :: forall m. MonadEffect m => Action -> H.HalogenM State Action ChildSlots Unit m Unit
 handleAction = case _ of
   ClickButton -> H.modify_ _ { isFocused = true }
   Cancel -> H.modify_ _ { isFocused = false }

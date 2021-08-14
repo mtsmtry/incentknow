@@ -3,14 +3,11 @@ module Incentknow.Molecules.PlainTextViewer where
 import Prelude
 
 import Data.Array (concat)
-import Data.Newtype (wrap)
 import Data.String (Pattern(..), split)
-import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
-import Incentknow.HTML.Utils (css, link_)
-import Incentknow.Route (Route(..))
+import Incentknow.AppM (class Behaviour, navigateRoute)
+import Incentknow.Route (Route)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input

@@ -84,27 +84,27 @@ const jsContentCommitId = x => x;
 const psContentCommitId = x => x;
 
 
-function jsContentChangeType(obj) {
-                if(E.ContentChangeTypeInitial && obj instanceof E.ContentChangeTypeInitial) {
-                    return "initial";
+function jsContentDraftState(obj) {
+                if(E.ContentDraftStateEditing && obj instanceof E.ContentDraftStateEditing) {
+                    return "editing";
                 }
             
-                if(E.ContentChangeTypeWrite && obj instanceof E.ContentChangeTypeWrite) {
-                    return "write";
+                if(E.ContentDraftStateCanceled && obj instanceof E.ContentDraftStateCanceled) {
+                    return "canceled";
                 }
             
-                if(E.ContentChangeTypeRemove && obj instanceof E.ContentChangeTypeRemove) {
-                    return "remove";
+                if(E.ContentDraftStateCommitted && obj instanceof E.ContentDraftStateCommitted) {
+                    return "committed";
                 }
             }
 
-function psContentChangeType(str) {switch(str){
-case "initial":
-return (E.ContentChangeTypeInitial || { value: null }).value;
-case "write":
-return (E.ContentChangeTypeWrite || { value: null }).value;
-case "remove":
-return (E.ContentChangeTypeRemove || { value: null }).value;
+function psContentDraftState(str) {switch(str){
+case "editing":
+return (E.ContentDraftStateEditing || { value: null }).value;
+case "canceled":
+return (E.ContentDraftStateCanceled || { value: null }).value;
+case "committed":
+return (E.ContentDraftStateCommitted || { value: null }).value;
 }}
 
 const jsContentDraftSk = x => x;
@@ -117,65 +117,6 @@ const jsContentDraftId = x => x;
 
 
 const psContentDraftId = x => x;
-
-
-function jsContentEditingState(obj) {
-                if(E.ContentEditingStateEditing && obj instanceof E.ContentEditingStateEditing) {
-                    return "editing";
-                }
-            
-                if(E.ContentEditingStateCommitted && obj instanceof E.ContentEditingStateCommitted) {
-                    return "committed";
-                }
-            
-                if(E.ContentEditingStateCanceld && obj instanceof E.ContentEditingStateCanceld) {
-                    return "canceled";
-                }
-            }
-
-function psContentEditingState(str) {switch(str){
-case "editing":
-return (E.ContentEditingStateEditing || { value: null }).value;
-case "committed":
-return (E.ContentEditingStateCommitted || { value: null }).value;
-case "canceled":
-return (E.ContentEditingStateCanceld || { value: null }).value;
-}}
-
-const jsContentEditingSk = x => x;
-
-
-const psContentEditingSk = x => x;
-
-
-const jsContentEditingId = x => x;
-
-
-const psContentEditingId = x => x;
-
-
-const jsContentSnapshotSk = x => x;
-
-
-const psContentSnapshotSk = x => x;
-
-
-const jsContentSnapshotId = x => x;
-
-
-const psContentSnapshotId = x => x;
-
-
-const jsContentTransitionSk = x => x;
-
-
-const psContentTransitionSk = x => x;
-
-
-const jsContentTransitionId = x => x;
-
-
-const psContentTransitionId = x => x;
 
 
 function jsFormatUsage(obj) {
@@ -373,8 +314,8 @@ const psStructureId = x => x;
 
 
 function jsMaterialType(obj) {
-                if(E.MaterialTypeFolder && obj instanceof E.MaterialTypeFolder) {
-                    return "folder";
+                if(E.MaterialTypePlaintext && obj instanceof E.MaterialTypePlaintext) {
+                    return "plaintext";
                 }
             
                 if(E.MaterialTypeDocument && obj instanceof E.MaterialTypeDocument) {
@@ -383,8 +324,8 @@ function jsMaterialType(obj) {
             }
 
 function psMaterialType(str) {switch(str){
-case "folder":
-return (E.MaterialTypeFolder || { value: null }).value;
+case "plaintext":
+return (E.MaterialTypePlaintext || { value: null }).value;
 case "document":
 return (E.MaterialTypeDocument || { value: null }).value;
 }}
@@ -414,26 +355,43 @@ const psMaterialCommitId = x => x;
 
 
 function jsMaterialChangeType(obj) {
-                if(E.MaterialChangeTypeInitial && obj instanceof E.MaterialChangeTypeInitial) {
+                if(E.Initial && obj instanceof E.Initial) {
                     return "initial";
                 }
             
-                if(E.MaterialChangeTypeWrite && obj instanceof E.MaterialChangeTypeWrite) {
+                if(E.Write && obj instanceof E.Write) {
                     return "write";
                 }
             
-                if(E.MaterialChangeTypeRemove && obj instanceof E.MaterialChangeTypeRemove) {
+                if(E.Remove && obj instanceof E.Remove) {
                     return "remove";
                 }
             }
 
 function psMaterialChangeType(str) {switch(str){
 case "initial":
-return (E.MaterialChangeTypeInitial || { value: null }).value;
+return (E.Initial || { value: null }).value;
 case "write":
-return (E.MaterialChangeTypeWrite || { value: null }).value;
+return (E.Write || { value: null }).value;
 case "remove":
-return (E.MaterialChangeTypeRemove || { value: null }).value;
+return (E.Remove || { value: null }).value;
+}}
+
+function jsMaterialType2(obj) {
+                if(E.MaterialType2Plaintext && obj instanceof E.MaterialType2Plaintext) {
+                    return "plaintext";
+                }
+            
+                if(E.MaterialType2Document && obj instanceof E.MaterialType2Document) {
+                    return "document";
+                }
+            }
+
+function psMaterialType2(str) {switch(str){
+case "plaintext":
+return (E.MaterialType2Plaintext || { value: null }).value;
+case "document":
+return (E.MaterialType2Document || { value: null }).value;
 }}
 
 const jsMaterialDraftSk = x => x;
@@ -647,7 +605,7 @@ obj.format = jsRelatedFormat(obj.format);
                         } else {
                             obj.generator = null;
                         }
-                    return obj;}
+                    return obj;}exports.fromRelatedContainerToJson = jsRelatedContainer;
 
 function psRelatedContainer(obj){obj.containerId = psContainerId(obj.containerId);
 obj.space = psRelatedSpace(obj.space);
@@ -661,7 +619,7 @@ obj.format = psRelatedFormat(obj.format);
                     } else {
                         obj.generator = Data_Maybe.Nothing.value;
                     }
-                return obj;}
+                return obj;}exports.fromJsonToRelatedContainer = psRelatedContainer;
 
 function jsAdditionalContainerInfo(obj){
 
@@ -671,7 +629,7 @@ function jsAdditionalContainerInfo(obj){
                         } else {
                             obj.latestUpdatedAt = null;
                         }
-                    return obj;}
+                    return obj;}exports.fromAdditionalContainerInfoToJson = jsAdditionalContainerInfo;
 
 function psAdditionalContainerInfo(obj){
 
@@ -681,7 +639,7 @@ function psAdditionalContainerInfo(obj){
                     } else {
                         obj.latestUpdatedAt = Data_Maybe.Nothing.value;
                     }
-                return obj;}
+                return obj;}exports.fromJsonToAdditionalContainerInfo = psAdditionalContainerInfo;
 
 function jsFocusedContainer(obj){obj.containerId = jsContainerId(obj.containerId);
 obj.space = jsRelatedSpace(obj.space);
@@ -712,7 +670,7 @@ obj.format = jsRelatedFormat(obj.format);
                         } else {
                             obj.latestUpdatedAt = null;
                         }
-                    return obj;}
+                    return obj;}exports.fromFocusedContainerToJson = jsFocusedContainer;
 
 function psFocusedContainer(obj){obj.containerId = psContainerId(obj.containerId);
 obj.space = psRelatedSpace(obj.space);
@@ -743,7 +701,7 @@ obj.format = psRelatedFormat(obj.format);
                     } else {
                         obj.latestUpdatedAt = Data_Maybe.Nothing.value;
                     }
-                return obj;}
+                return obj;}exports.fromJsonToFocusedContainer = psFocusedContainer;
 
 function jsRelatedContent(obj){obj.contentId = jsContentId(obj.contentId);
 
@@ -753,7 +711,7 @@ obj.updaterUser = jsRelatedUser(obj.updaterUser);
 
 
 obj.format = jsFocusedFormat(obj.format);
-return obj;}
+return obj;}exports.fromRelatedContentToJson = jsRelatedContent;
 
 function psRelatedContent(obj){obj.contentId = psContentId(obj.contentId);
 
@@ -763,7 +721,7 @@ obj.updaterUser = psRelatedUser(obj.updaterUser);
 
 
 obj.format = psFocusedFormat(obj.format);
-return obj;}
+return obj;}exports.fromJsonToRelatedContent = psRelatedContent;
 
 function jsFocusedContent(obj){obj.contentId = jsContentId(obj.contentId);
 
@@ -781,7 +739,7 @@ obj.format = jsFocusedFormat(obj.format);
                             obj.draft = null;
                         }
                     
-return obj;}
+return obj;}exports.fromFocusedContentToJson = jsFocusedContent;
 
 function psFocusedContent(obj){obj.contentId = psContentId(obj.contentId);
 
@@ -799,72 +757,32 @@ obj.format = psFocusedFormat(obj.format);
                         obj.draft = Data_Maybe.Nothing.value;
                     }
                 
-return obj;}
+return obj;}exports.fromJsonToFocusedContent = psFocusedContent;
 
 function jsRelatedContentCommit(obj){obj.commitId = jsContentCommitId(obj.commitId);
 
-
-                        if (obj.basedCommitId instanceof Data_Maybe.Just) {
-                            obj.basedCommitId = obj.basedCommitId.value0;
-                            obj.basedCommitId = jsContentCommitId(obj.basedCommitId);
-                        } else {
-                            obj.basedCommitId = null;
-                        }
-                    
 obj.committerUser = jsRelatedUser(obj.committerUser);
-obj.contentId = jsContentId(obj.contentId);return obj;}
+obj.contentId = jsContentId(obj.contentId);return obj;}exports.fromRelatedContentCommitToJson = jsRelatedContentCommit;
 
 function psRelatedContentCommit(obj){obj.commitId = psContentCommitId(obj.commitId);
 
-
-                    if (obj.basedCommitId) {
-                        obj.basedCommitId = psContentCommitId(obj.basedCommitId);
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
-                    } else {
-                        obj.basedCommitId = Data_Maybe.Nothing.value;
-                    }
-                
 obj.committerUser = psRelatedUser(obj.committerUser);
-obj.contentId = psContentId(obj.contentId);return obj;}
+obj.contentId = psContentId(obj.contentId);return obj;}exports.fromJsonToRelatedContentCommit = psRelatedContentCommit;
 
 function jsFocusedContentCommit(obj){obj.commitId = jsContentCommitId(obj.commitId);
 
-
-                        if (obj.basedCommitId instanceof Data_Maybe.Just) {
-                            obj.basedCommitId = obj.basedCommitId.value0;
-                            obj.basedCommitId = jsContentCommitId(obj.basedCommitId);
-                        } else {
-                            obj.basedCommitId = null;
-                        }
-                    
 obj.committerUser = jsRelatedUser(obj.committerUser);
-obj.contentId = jsContentId(obj.contentId);return obj;}
+obj.contentId = jsContentId(obj.contentId);return obj;}exports.fromFocusedContentCommitToJson = jsFocusedContentCommit;
 
 function psFocusedContentCommit(obj){obj.commitId = psContentCommitId(obj.commitId);
 
-
-                    if (obj.basedCommitId) {
-                        obj.basedCommitId = psContentCommitId(obj.basedCommitId);
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
-                    } else {
-                        obj.basedCommitId = Data_Maybe.Nothing.value;
-                    }
-                
 obj.committerUser = psRelatedUser(obj.committerUser);
-obj.contentId = psContentId(obj.contentId);return obj;}
+obj.contentId = psContentId(obj.contentId);return obj;}exports.fromJsonToFocusedContentCommit = psFocusedContentCommit;
 
 function jsRelatedContentDraft(obj){obj.draftId = jsContentDraftId(obj.draftId);
 
 
 
-                        if (obj.basedCommitId instanceof Data_Maybe.Just) {
-                            obj.basedCommitId = obj.basedCommitId.value0;
-                            obj.basedCommitId = jsContentCommitId(obj.basedCommitId);
-                        } else {
-                            obj.basedCommitId = null;
-                        }
-                    
-
 
                         if (obj.contentId instanceof Data_Maybe.Just) {
                             obj.contentId = obj.contentId.value0;
@@ -873,22 +791,12 @@ function jsRelatedContentDraft(obj){obj.draftId = jsContentDraftId(obj.draftId);
                             obj.contentId = null;
                         }
                     
-obj.format = jsFocusedFormat(obj.format);
-obj.changeType = jsContentChangeType(obj.changeType);
-return obj;}
+obj.format = jsFocusedFormat(obj.format);return obj;}exports.fromRelatedContentDraftToJson = jsRelatedContentDraft;
 
 function psRelatedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
 
 
 
-                    if (obj.basedCommitId) {
-                        obj.basedCommitId = psContentCommitId(obj.basedCommitId);
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
-                    } else {
-                        obj.basedCommitId = Data_Maybe.Nothing.value;
-                    }
-                
-
 
                     if (obj.contentId) {
                         obj.contentId = psContentId(obj.contentId);
@@ -897,21 +805,11 @@ function psRelatedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
                         obj.contentId = Data_Maybe.Nothing.value;
                     }
                 
-obj.format = psFocusedFormat(obj.format);
-obj.changeType = psContentChangeType(obj.changeType);
-return obj;}
+obj.format = psFocusedFormat(obj.format);return obj;}exports.fromJsonToRelatedContentDraft = psRelatedContentDraft;
 
 function jsFocusedContentDraft(obj){obj.draftId = jsContentDraftId(obj.draftId);
 
 
-
-                        if (obj.basedCommitId instanceof Data_Maybe.Just) {
-                            obj.basedCommitId = obj.basedCommitId.value0;
-                            obj.basedCommitId = jsContentCommitId(obj.basedCommitId);
-                        } else {
-                            obj.basedCommitId = null;
-                        }
-                    
 
 
                         if (obj.contentId instanceof Data_Maybe.Just) {
@@ -921,21 +819,11 @@ function jsFocusedContentDraft(obj){obj.draftId = jsContentDraftId(obj.draftId);
                             obj.contentId = null;
                         }
                     
-obj.format = jsFocusedFormat(obj.format);
-obj.changeType = jsContentChangeType(obj.changeType);
-return obj;}
+obj.format = jsFocusedFormat(obj.format);return obj;}exports.fromFocusedContentDraftToJson = jsFocusedContentDraft;
 
 function psFocusedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
 
 
-
-                    if (obj.basedCommitId) {
-                        obj.basedCommitId = psContentCommitId(obj.basedCommitId);
-                        obj.basedCommitId = new Data_Maybe.Just(obj.basedCommitId);
-                    } else {
-                        obj.basedCommitId = Data_Maybe.Nothing.value;
-                    }
-                
 
 
                     if (obj.contentId) {
@@ -945,168 +833,7 @@ function psFocusedContentDraft(obj){obj.draftId = psContentDraftId(obj.draftId);
                         obj.contentId = Data_Maybe.Nothing.value;
                     }
                 
-obj.format = psFocusedFormat(obj.format);
-obj.changeType = psContentChangeType(obj.changeType);
-return obj;}
-
-function jsContentNodeType(obj) {
-                if(E.ContentNodeTypeCommitted && obj instanceof E.ContentNodeTypeCommitted) {
-                    return "committed";
-                }
-            
-                if(E.ContentNodeTypePresent && obj instanceof E.ContentNodeTypePresent) {
-                    return "present";
-                }
-            
-                if(E.ContentNodeTypeCanceld && obj instanceof E.ContentNodeTypeCanceld) {
-                    return "canceled";
-                }
-            }
-
-function psContentNodeType(str) {switch(str){
-case "committed":
-return (E.ContentNodeTypeCommitted || { value: null }).value;
-case "present":
-return (E.ContentNodeTypePresent || { value: null }).value;
-case "canceled":
-return (E.ContentNodeTypeCanceld || { value: null }).value;
-}}
-
-function jsContentNodeTarget(obj) {
-                if(E.ContentNodeTargetContent && obj instanceof E.ContentNodeTargetContent) {
-                    return "content";
-                }
-            
-                if(E.ContentNodeTargetMaterial && obj instanceof E.ContentNodeTargetMaterial) {
-                    return "material";
-                }
-            
-                if(E.ContentNodeTargetWhole && obj instanceof E.ContentNodeTargetWhole) {
-                    return "whole";
-                }
-            }
-
-function psContentNodeTarget(str) {switch(str){
-case "content":
-return (E.ContentNodeTargetContent || { value: null }).value;
-case "material":
-return (E.ContentNodeTargetMaterial || { value: null }).value;
-case "whole":
-return (E.ContentNodeTargetWhole || { value: null }).value;
-}}
-
-function jsContentNode(obj){obj.type = jsContentNodeType(obj.type);
-obj.target = jsContentNodeTarget(obj.target);
-obj.user = jsRelatedUser(obj.user);
-
-                        if (obj.editingId instanceof Data_Maybe.Just) {
-                            obj.editingId = obj.editingId.value0;
-                            
-                        } else {
-                            obj.editingId = null;
-                        }
-                    
-obj.rivision = jsRelatedContentRevision(obj.rivision);return obj;}
-
-function psContentNode(obj){obj.type = psContentNodeType(obj.type);
-obj.target = psContentNodeTarget(obj.target);
-obj.user = psRelatedUser(obj.user);
-
-                    if (obj.editingId) {
-                        
-                        obj.editingId = new Data_Maybe.Just(obj.editingId);
-                    } else {
-                        obj.editingId = Data_Maybe.Nothing.value;
-                    }
-                
-obj.rivision = psRelatedContentRevision(obj.rivision);return obj;}
-
-const jsContentRevisionId = x => x;
-
-
-const psContentRevisionId = x => x;
-
-
-const jsContentWholeRevisionId = x => x;
-
-
-const psContentWholeRevisionId = x => x;
-
-
-function jsContentRevisionSource(obj) {
-                if(E.ContentRevisionSourceCommit && obj instanceof E.ContentRevisionSourceCommit) {
-                    return "commit";
-                }
-            
-                if(E.ContentRevisionSourceSnapshot && obj instanceof E.ContentRevisionSourceSnapshot) {
-                    return "snapshot";
-                }
-            
-                if(E.ContentRevisionSourceEditing && obj instanceof E.ContentRevisionSourceEditing) {
-                    return "editing";
-                }
-            
-                if(E.ContentRevisionSourceDraft && obj instanceof E.ContentRevisionSourceDraft) {
-                    return "draft";
-                }
-            }
-
-function psContentRevisionSource(str) {switch(str){
-case "commit":
-return (E.ContentRevisionSourceCommit || { value: null }).value;
-case "snapshot":
-return (E.ContentRevisionSourceSnapshot || { value: null }).value;
-case "editing":
-return (E.ContentRevisionSourceEditing || { value: null }).value;
-case "draft":
-return (E.ContentRevisionSourceDraft || { value: null }).value;
-}}
-
-function jsContentRivisionStructure(obj){obj.source = jsContentRevisionSource(obj.source);
-return obj;}
-
-function psContentRivisionStructure(obj){obj.source = psContentRevisionSource(obj.source);
-return obj;}
-
-function jsContentWholeRevisionStructure(obj){obj.content = jsContentRevisionId(obj.content);
-
-                            obj.materials = obj.materials.map(x => {
-                                x = jsMaterialRevisionId(x);
-                                return x;
-                            });
-                        return obj;}
-
-function psContentWholeRevisionStructure(obj){obj.content = psContentRevisionId(obj.content);
-
-                        obj.materials = obj.materials.map(x => {
-                            x = psMaterialRevisionId(x);
-                            return x;
-                        });
-                    return obj;}
-
-function jsRelatedContentRevision(obj){obj.snapshotId = jsContentWholeRevisionId(obj.snapshotId);
-return obj;}
-
-function psRelatedContentRevision(obj){obj.snapshotId = psContentWholeRevisionId(obj.snapshotId);
-return obj;}
-
-function jsFocusedContentRevision(obj){
-
-
-                            obj.materials = obj.materials.map(x => {
-                                x = jsFocusedMaterialRevision(x);
-                                return x;
-                            });
-                        return obj;}
-
-function psFocusedContentRevision(obj){
-
-
-                        obj.materials = obj.materials.map(x => {
-                            x = psFocusedMaterialRevision(x);
-                            return x;
-                        });
-                    return obj;}
+obj.format = psFocusedFormat(obj.format);return obj;}exports.fromJsonToFocusedContentDraft = psFocusedContentDraft;
 
 function jsRelatedFormat(obj){obj.formatId = jsFormatId(obj.formatId);
 obj.displayId = jsFormatDisplayId(obj.displayId);
@@ -1130,7 +857,7 @@ obj.usage = jsFormatUsage(obj.usage);
                             obj.semanticId = null;
                         }
                     
-obj.currentStructureId = jsStructureId(obj.currentStructureId);return obj;}
+obj.currentStructureId = jsStructureId(obj.currentStructureId);return obj;}exports.fromRelatedFormatToJson = jsRelatedFormat;
 
 function psRelatedFormat(obj){obj.formatId = psFormatId(obj.formatId);
 obj.displayId = psFormatDisplayId(obj.displayId);
@@ -1154,15 +881,15 @@ obj.usage = psFormatUsage(obj.usage);
                         obj.semanticId = Data_Maybe.Nothing.value;
                     }
                 
-obj.currentStructureId = psStructureId(obj.currentStructureId);return obj;}
+obj.currentStructureId = psStructureId(obj.currentStructureId);return obj;}exports.fromJsonToRelatedFormat = psRelatedFormat;
 
 function jsRelation(obj){obj.property = jsPropertyInfo(obj.property);
 
-obj.formatId = jsFormatId(obj.formatId);return obj;}
+obj.formatId = jsFormatId(obj.formatId);return obj;}exports.fromRelationToJson = jsRelation;
 
 function psRelation(obj){obj.property = psPropertyInfo(obj.property);
 
-obj.formatId = psFormatId(obj.formatId);return obj;}
+obj.formatId = psFormatId(obj.formatId);return obj;}exports.fromJsonToRelation = psRelation;
 
 function jsFocusedFormat(obj){obj.formatId = jsFormatId(obj.formatId);
 obj.displayId = jsFormatDisplayId(obj.displayId);
@@ -1196,7 +923,7 @@ obj.currentStructure = jsFocusedStructure(obj.currentStructure);
                                 x = jsRelation(x);
                                 return x;
                             });
-                        return obj;}
+                        return obj;}exports.fromFocusedFormatToJson = jsFocusedFormat;
 
 function psFocusedFormat(obj){obj.formatId = psFormatId(obj.formatId);
 obj.displayId = psFormatDisplayId(obj.displayId);
@@ -1230,13 +957,13 @@ obj.currentStructure = psFocusedStructure(obj.currentStructure);
                             x = psRelation(x);
                             return x;
                         });
-                    return obj;}
+                    return obj;}exports.fromJsonToFocusedFormat = psFocusedFormat;
 
 function jsIntactMetaProperty(obj){obj.id = jsMetaPropertyId(obj.id);
-obj.type = jsMetaPropertyType(obj.type);return obj;}
+obj.type = jsMetaPropertyType(obj.type);return obj;}exports.fromIntactMetaPropertyToJson = jsIntactMetaProperty;
 
 function psIntactMetaProperty(obj){obj.id = psMetaPropertyId(obj.id);
-obj.type = psMetaPropertyType(obj.type);return obj;}
+obj.type = psMetaPropertyType(obj.type);return obj;}exports.fromJsonToIntactMetaProperty = psIntactMetaProperty;
 
 function jsPropertyInfo(obj){
 
@@ -1271,7 +998,7 @@ obj.type = jsType(obj.type);
                                 x = jsIntactMetaProperty(x);
                                 return x;
                             });
-                        return obj;}
+                        return obj;}exports.fromPropertyInfoToJson = jsPropertyInfo;
 
 function psPropertyInfo(obj){
 
@@ -1306,7 +1033,7 @@ obj.type = psType(obj.type);
                             x = psIntactMetaProperty(x);
                             return x;
                         });
-                    return obj;}
+                    return obj;}exports.fromJsonToPropertyInfo = psPropertyInfo;
 
 function jsEnumerator(obj){
 
@@ -1317,7 +1044,7 @@ function jsEnumerator(obj){
                         } else {
                             obj.fieldName = null;
                         }
-                    return obj;}
+                    return obj;}exports.fromEnumeratorToJson = jsEnumerator;
 
 function psEnumerator(obj){
 
@@ -1328,7 +1055,7 @@ function psEnumerator(obj){
                     } else {
                         obj.fieldName = Data_Maybe.Nothing.value;
                     }
-                return obj;}
+                return obj;}exports.fromJsonToEnumerator = psEnumerator;
 
 function jsType(obj) {
                 if(E.IntType && obj instanceof E.IntType) {
@@ -1485,7 +1212,7 @@ obj.structureId = jsStructureId(obj.structureId);
                             obj.title = null;
                         }
                     
-return obj;}
+return obj;}exports.fromRelatedStructureToJson = jsRelatedStructure;
 
 function psRelatedStructure(obj){obj.formatId = psFormatId(obj.formatId);
 obj.structureId = psStructureId(obj.structureId);
@@ -1498,7 +1225,7 @@ obj.structureId = psStructureId(obj.structureId);
                         obj.title = Data_Maybe.Nothing.value;
                     }
                 
-return obj;}
+return obj;}exports.fromJsonToRelatedStructure = psRelatedStructure;
 
 function jsFocusedStructure(obj){obj.structureId = jsStructureId(obj.structureId);
 
@@ -1516,7 +1243,7 @@ function jsFocusedStructure(obj){obj.structureId = jsStructureId(obj.structureId
                                 return x;
                             });
                         
-return obj;}
+return obj;}exports.fromFocusedStructureToJson = jsFocusedStructure;
 
 function psFocusedStructure(obj){obj.structureId = psStructureId(obj.structureId);
 
@@ -1534,7 +1261,7 @@ function psFocusedStructure(obj){obj.structureId = psStructureId(obj.structureId
                             return x;
                         });
                     
-return obj;}
+return obj;}exports.fromJsonToFocusedStructure = psFocusedStructure;
 
 const jsDocumentBlockId = x => x;
 
@@ -1560,10 +1287,10 @@ return (E.Header || { value: null }).value;
 }}
 
 function jsDocumentBlock(obj){obj.id = jsDocumentBlockId(obj.id);
-obj.data = jsBlockData(obj.data);return obj;}
+obj.data = jsBlockData(obj.data);return obj;}exports.fromDocumentBlockToJson = jsDocumentBlock;
 
 function psDocumentBlock(obj){obj.id = psDocumentBlockId(obj.id);
-obj.data = psBlockData(obj.data);return obj;}
+obj.data = psBlockData(obj.data);return obj;}exports.fromJsonToDocumentBlock = psDocumentBlock;
 
 function jsBlockData(obj) {
                 if(E.ParagraphBlockData && obj instanceof E.ParagraphBlockData) {
@@ -1594,14 +1321,14 @@ function jsDocument(obj){
                                 x = jsDocumentBlock(x);
                                 return x;
                             });
-                        return obj;}
+                        return obj;}exports.fromDocumentToJson = jsDocument;
 
 function psDocument(obj){
                         obj.blocks = obj.blocks.map(x => {
                             x = psDocumentBlock(x);
                             return x;
                         });
-                    return obj;}
+                    return obj;}exports.fromJsonToDocument = psDocument;
 
 function jsRelatedMaterial(obj){obj.materialId = jsMaterialId(obj.materialId);
 
@@ -1617,7 +1344,7 @@ obj.materialType = jsMaterialType(obj.materialType);
 
 obj.creatorUser = jsRelatedUser(obj.creatorUser);
 
-obj.updaterUser = jsRelatedUser(obj.updaterUser);return obj;}
+obj.updaterUser = jsRelatedUser(obj.updaterUser);return obj;}exports.fromRelatedMaterialToJson = jsRelatedMaterial;
 
 function psRelatedMaterial(obj){obj.materialId = psMaterialId(obj.materialId);
 
@@ -1633,13 +1360,13 @@ obj.materialType = psMaterialType(obj.materialType);
 
 obj.creatorUser = psRelatedUser(obj.creatorUser);
 
-obj.updaterUser = psRelatedUser(obj.updaterUser);return obj;}
+obj.updaterUser = psRelatedUser(obj.updaterUser);return obj;}exports.fromJsonToRelatedMaterial = psRelatedMaterial;
 
 function jsMaterialData(obj) {
-                if(E.FolderMaterialData && obj instanceof E.FolderMaterialData) {
+                if(E.PlaintextMaterialData && obj instanceof E.PlaintextMaterialData) {
                     
                     return {
-                        type: "folder",
+                        type: "plaintext",
                         
                     };
                 }
@@ -1653,8 +1380,8 @@ function jsMaterialData(obj) {
                 }
             }
 
-function psMaterialData(obj) {switch(obj.type){case "folder":
-return new E.FolderMaterialData();
+function psMaterialData(obj) {switch(obj.type){case "plaintext":
+return new E.PlaintextMaterialData();
 case "document":
 obj.document = psDocument(obj.document);return new E.DocumentMaterialData(obj.document);
 }}
@@ -1682,7 +1409,7 @@ obj.data = jsMaterialData(obj.data);
                         } else {
                             obj.draft = null;
                         }
-                    return obj;}
+                    return obj;}exports.fromFocusedMaterialToJson = jsFocusedMaterial;
 
 function psFocusedMaterial(obj){obj.materialId = psMaterialId(obj.materialId);
 
@@ -1707,7 +1434,7 @@ obj.data = psMaterialData(obj.data);
                     } else {
                         obj.draft = Data_Maybe.Nothing.value;
                     }
-                return obj;}
+                return obj;}exports.fromJsonToFocusedMaterial = psFocusedMaterial;
 
 function jsRelatedMaterialCommit(obj){obj.commitId = jsMaterialCommitId(obj.commitId);
 
@@ -1720,7 +1447,7 @@ function jsRelatedMaterialCommit(obj){obj.commitId = jsMaterialCommitId(obj.comm
                             obj.basedCommitId = null;
                         }
                     
-obj.committerUser = jsRelatedUser(obj.committerUser);return obj;}
+obj.committerUser = jsRelatedUser(obj.committerUser);return obj;}exports.fromRelatedMaterialCommitToJson = jsRelatedMaterialCommit;
 
 function psRelatedMaterialCommit(obj){obj.commitId = psMaterialCommitId(obj.commitId);
 
@@ -1733,42 +1460,34 @@ function psRelatedMaterialCommit(obj){obj.commitId = psMaterialCommitId(obj.comm
                         obj.basedCommitId = Data_Maybe.Nothing.value;
                     }
                 
-obj.committerUser = psRelatedUser(obj.committerUser);return obj;}
+obj.committerUser = psRelatedUser(obj.committerUser);return obj;}exports.fromJsonToRelatedMaterialCommit = psRelatedMaterialCommit;
 
 function jsFocusedMaterialCommit(obj){obj.commitId = jsMaterialCommitId(obj.commitId);
 
 
-return obj;}
+return obj;}exports.fromFocusedMaterialCommitToJson = jsFocusedMaterialCommit;
 
 function psFocusedMaterialCommit(obj){obj.commitId = psMaterialCommitId(obj.commitId);
 
 
-return obj;}
+return obj;}exports.fromJsonToFocusedMaterialCommit = psFocusedMaterialCommit;
 
 function jsRelatedMaterialDraft(obj){obj.draftId = jsMaterialDraftId(obj.draftId);
 
 
 
-return obj;}
+return obj;}exports.fromRelatedMaterialDraftToJson = jsRelatedMaterialDraft;
 
 function psRelatedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId);
 
 
 
-return obj;}
+return obj;}exports.fromJsonToRelatedMaterialDraft = psRelatedMaterialDraft;
 
 function jsFocusedMaterialDraft(obj){obj.draftId = jsMaterialDraftId(obj.draftId);
 
 
 
-
-                        if (obj.contentDraftId instanceof Data_Maybe.Just) {
-                            obj.contentDraftId = obj.contentDraftId.value0;
-                            obj.contentDraftId = jsContentDraftId(obj.contentDraftId);
-                        } else {
-                            obj.contentDraftId = null;
-                        }
-                    
 
                         if (obj.material instanceof Data_Maybe.Just) {
                             obj.material = obj.material.value0;
@@ -1786,20 +1505,12 @@ function jsFocusedMaterialDraft(obj){obj.draftId = jsMaterialDraftId(obj.draftId
                         }
                     
 obj.data = jsMaterialData(obj.data);
-return obj;}
+return obj;}exports.fromFocusedMaterialDraftToJson = jsFocusedMaterialDraft;
 
 function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId);
 
 
 
-
-                    if (obj.contentDraftId) {
-                        obj.contentDraftId = psContentDraftId(obj.contentDraftId);
-                        obj.contentDraftId = new Data_Maybe.Just(obj.contentDraftId);
-                    } else {
-                        obj.contentDraftId = Data_Maybe.Nothing.value;
-                    }
-                
 
                     if (obj.material) {
                         obj.material = psRelatedMaterial(obj.material);
@@ -1817,109 +1528,33 @@ function psFocusedMaterialDraft(obj){obj.draftId = psMaterialDraftId(obj.draftId
                     }
                 
 obj.data = psMaterialData(obj.data);
-return obj;}
+return obj;}exports.fromJsonToFocusedMaterialDraft = psFocusedMaterialDraft;
 
-function jsMaterialNodeType(obj) {
-                if(E.MaterialNodeTypeCommitted && obj instanceof E.MaterialNodeTypeCommitted) {
-                    return "committed";
-                }
-            
-                if(E.MaterialNodeTypePresent && obj instanceof E.MaterialNodeTypePresent) {
-                    return "present";
-                }
-            
-                if(E.MaterialNodeTypeCanceld && obj instanceof E.MaterialNodeTypeCanceld) {
-                    return "canceled";
-                }
-            }
+function jsIntactMaterialEditing(obj){obj.materialEditingId = jsMaterialEditingId(obj.materialEditingId);
 
-function psMaterialNodeType(str) {switch(str){
-case "committed":
-return (E.MaterialNodeTypeCommitted || { value: null }).value;
-case "present":
-return (E.MaterialNodeTypePresent || { value: null }).value;
-case "canceled":
-return (E.MaterialNodeTypeCanceld || { value: null }).value;
-}}
+return obj;}exports.fromIntactMaterialEditingToJson = jsIntactMaterialEditing;
 
-function jsMaterialNode(obj){obj.type = jsMaterialNodeType(obj.type);
-obj.user = jsRelatedUser(obj.user);
+function psIntactMaterialEditing(obj){obj.materialEditingId = psMaterialEditingId(obj.materialEditingId);
 
-                        if (obj.editingId instanceof Data_Maybe.Just) {
-                            obj.editingId = obj.editingId.value0;
-                            
-                        } else {
-                            obj.editingId = null;
-                        }
-                    
-obj.revision = jsRelatedMaterialRevision(obj.revision);return obj;}
+return obj;}exports.fromJsonToIntactMaterialEditing = psIntactMaterialEditing;
 
-function psMaterialNode(obj){obj.type = psMaterialNodeType(obj.type);
-obj.user = psRelatedUser(obj.user);
+function jsRelatedMaterialSnapshot(obj){
 
-                    if (obj.editingId) {
-                        
-                        obj.editingId = new Data_Maybe.Just(obj.editingId);
-                    } else {
-                        obj.editingId = Data_Maybe.Nothing.value;
-                    }
-                
-obj.revision = psRelatedMaterialRevision(obj.revision);return obj;}
+return obj;}exports.fromRelatedMaterialSnapshotToJson = jsRelatedMaterialSnapshot;
 
-const jsMaterialRevisionId = x => x;
+function psRelatedMaterialSnapshot(obj){
+
+return obj;}exports.fromJsonToRelatedMaterialSnapshot = psRelatedMaterialSnapshot;
+
+function jsFocusedMaterialSnapshot(obj){obj.data = jsMaterialData(obj.data);
 
 
-const psMaterialRevisionId = x => x;
+return obj;}exports.fromFocusedMaterialSnapshotToJson = jsFocusedMaterialSnapshot;
+
+function psFocusedMaterialSnapshot(obj){obj.data = psMaterialData(obj.data);
 
 
-function jsMaterialRevisionSource(obj) {
-                if(E.MaterialRevisionSourceCommit && obj instanceof E.MaterialRevisionSourceCommit) {
-                    return "commit";
-                }
-            
-                if(E.MaterialRevisionSourceSnapshot && obj instanceof E.MaterialRevisionSourceSnapshot) {
-                    return "snapshot";
-                }
-            
-                if(E.MaterialRevisionSourceEditing && obj instanceof E.MaterialRevisionSourceEditing) {
-                    return "editing";
-                }
-            
-                if(E.MaterialRevisionSourceDraft && obj instanceof E.MaterialRevisionSourceDraft) {
-                    return "draft";
-                }
-            }
-
-function psMaterialRevisionSource(str) {switch(str){
-case "commit":
-return (E.MaterialRevisionSourceCommit || { value: null }).value;
-case "snapshot":
-return (E.MaterialRevisionSourceSnapshot || { value: null }).value;
-case "editing":
-return (E.MaterialRevisionSourceEditing || { value: null }).value;
-case "draft":
-return (E.MaterialRevisionSourceDraft || { value: null }).value;
-}}
-
-function jsMaterialRevisionStructure(obj){obj.source = jsMaterialRevisionSource(obj.source);
-return obj;}
-
-function psMaterialRevisionStructure(obj){obj.source = psMaterialRevisionSource(obj.source);
-return obj;}
-
-function jsRelatedMaterialRevision(obj){obj.snapshotId = jsMaterialRevisionId(obj.snapshotId);
-
-return obj;}
-
-function psRelatedMaterialRevision(obj){obj.snapshotId = psMaterialRevisionId(obj.snapshotId);
-
-return obj;}
-
-function jsFocusedMaterialRevision(obj){
-return obj;}
-
-function psFocusedMaterialRevision(obj){
-return obj;}
+return obj;}exports.fromJsonToFocusedMaterialSnapshot = psFocusedMaterialSnapshot;
 
 function jsIntactReactor(obj){obj.reactorId = jsReactorId(obj.reactorId);
 obj.container = jsRelatedContainer(obj.container);
@@ -1933,7 +1568,7 @@ obj.state = jsReactorState(obj.state);
                         }
                     
 
-obj.creatorUser = jsRelatedUser(obj.creatorUser);return obj;}
+obj.creatorUser = jsRelatedUser(obj.creatorUser);return obj;}exports.fromIntactReactorToJson = jsIntactReactor;
 
 function psIntactReactor(obj){obj.reactorId = psReactorId(obj.reactorId);
 obj.container = psRelatedContainer(obj.container);
@@ -1947,17 +1582,17 @@ obj.state = psReactorState(obj.state);
                     }
                 
 
-obj.creatorUser = psRelatedUser(obj.creatorUser);return obj;}
+obj.creatorUser = psRelatedUser(obj.creatorUser);return obj;}exports.fromJsonToIntactReactor = psIntactReactor;
 
 function jsAdditionalSpaceInfo(obj){
 
 
-return obj;}
+return obj;}exports.fromAdditionalSpaceInfoToJson = jsAdditionalSpaceInfo;
 
 function psAdditionalSpaceInfo(obj){
 
 
-return obj;}
+return obj;}exports.fromJsonToAdditionalSpaceInfo = psAdditionalSpaceInfo;
 
 function jsRelatedSpace(obj){obj.spaceId = jsSpaceId(obj.spaceId);
 obj.displayId = jsSpaceDisplayId(obj.displayId);
@@ -1974,7 +1609,7 @@ obj.displayId = jsSpaceDisplayId(obj.displayId);
                     
 
 obj.membershipMethod = jsMembershipMethod(obj.membershipMethod);
-obj.defaultAuthority = jsSpaceAuth(obj.defaultAuthority);return obj;}
+obj.defaultAuthority = jsSpaceAuth(obj.defaultAuthority);return obj;}exports.fromRelatedSpaceToJson = jsRelatedSpace;
 
 function psRelatedSpace(obj){obj.spaceId = psSpaceId(obj.spaceId);
 obj.displayId = psSpaceDisplayId(obj.displayId);
@@ -1991,7 +1626,7 @@ obj.displayId = psSpaceDisplayId(obj.displayId);
                 
 
 obj.membershipMethod = psMembershipMethod(obj.membershipMethod);
-obj.defaultAuthority = psSpaceAuth(obj.defaultAuthority);return obj;}
+obj.defaultAuthority = psSpaceAuth(obj.defaultAuthority);return obj;}exports.fromJsonToRelatedSpace = psRelatedSpace;
 
 function jsFocusedSpace(obj){obj.spaceId = jsSpaceId(obj.spaceId);
 obj.displayId = jsSpaceDisplayId(obj.displayId);
@@ -2013,7 +1648,7 @@ obj.defaultAuthority = jsSpaceAuth(obj.defaultAuthority);
 
 
 
-return obj;}
+return obj;}exports.fromFocusedSpaceToJson = jsFocusedSpace;
 
 function psFocusedSpace(obj){obj.spaceId = psSpaceId(obj.spaceId);
 obj.displayId = psSpaceDisplayId(obj.displayId);
@@ -2035,21 +1670,21 @@ obj.defaultAuthority = psSpaceAuth(obj.defaultAuthority);
 
 
 
-return obj;}
+return obj;}exports.fromJsonToFocusedSpace = psFocusedSpace;
 
 function jsIntactSpaceMember(obj){obj.user = jsRelatedUser(obj.user);
 
-obj.type = jsMemberType(obj.type);return obj;}
+obj.type = jsMemberType(obj.type);return obj;}exports.fromIntactSpaceMemberToJson = jsIntactSpaceMember;
 
 function psIntactSpaceMember(obj){obj.user = psRelatedUser(obj.user);
 
-obj.type = psMemberType(obj.type);return obj;}
+obj.type = psMemberType(obj.type);return obj;}exports.fromJsonToIntactSpaceMember = psIntactSpaceMember;
 
 function jsIntactSpaceMembershipApplication(obj){obj.user = jsRelatedUser(obj.user);
-return obj;}
+return obj;}exports.fromIntactSpaceMembershipApplicationToJson = jsIntactSpaceMembershipApplication;
 
 function psIntactSpaceMembershipApplication(obj){obj.user = psRelatedUser(obj.user);
-return obj;}
+return obj;}exports.fromJsonToIntactSpaceMembershipApplication = psIntactSpaceMembershipApplication;
 
 function jsIntactAccount(obj){obj.userId = jsUserId(obj.userId);
 obj.displayId = jsUserDisplayId(obj.displayId);
@@ -2063,7 +1698,7 @@ obj.displayId = jsUserDisplayId(obj.displayId);
                         }
                     
 
-return obj;}
+return obj;}exports.fromIntactAccountToJson = jsIntactAccount;
 
 function psIntactAccount(obj){obj.userId = psUserId(obj.userId);
 obj.displayId = psUserDisplayId(obj.displayId);
@@ -2077,7 +1712,7 @@ obj.displayId = psUserDisplayId(obj.displayId);
                     }
                 
 
-return obj;}
+return obj;}exports.fromJsonToIntactAccount = psIntactAccount;
 
 function jsRelatedUser(obj){obj.userId = jsUserId(obj.userId);
 obj.displayId = jsUserDisplayId(obj.displayId);
@@ -2090,7 +1725,7 @@ obj.displayId = jsUserDisplayId(obj.displayId);
                             obj.iconUrl = null;
                         }
                     
-return obj;}
+return obj;}exports.fromRelatedUserToJson = jsRelatedUser;
 
 function psRelatedUser(obj){obj.userId = psUserId(obj.userId);
 obj.displayId = psUserDisplayId(obj.displayId);
@@ -2103,7 +1738,7 @@ obj.displayId = psUserDisplayId(obj.displayId);
                         obj.iconUrl = Data_Maybe.Nothing.value;
                     }
                 
-return obj;}
+return obj;}exports.fromJsonToRelatedUser = psRelatedUser;
 
 function jsFocusedUser(obj){obj.userId = jsUserId(obj.userId);
 obj.displayId = jsUserDisplayId(obj.displayId);
@@ -2116,7 +1751,7 @@ obj.displayId = jsUserDisplayId(obj.displayId);
                             obj.iconUrl = null;
                         }
                     
-return obj;}
+return obj;}exports.fromFocusedUserToJson = jsFocusedUser;
 
 function psFocusedUser(obj){obj.userId = psUserId(obj.userId);
 obj.displayId = psUserDisplayId(obj.displayId);
@@ -2129,13 +1764,13 @@ obj.displayId = psUserDisplayId(obj.displayId);
                         obj.iconUrl = Data_Maybe.Nothing.value;
                     }
                 
-return obj;}
+return obj;}exports.fromJsonToFocusedUser = psFocusedUser;
 
 function jsAuthInfo(obj){
-obj.userId = jsUserId(obj.userId);return obj;}
+obj.userId = jsUserId(obj.userId);return obj;}exports.fromAuthInfoToJson = jsAuthInfo;
 
 function psAuthInfo(obj){
-obj.userId = psUserId(obj.userId);return obj;}
+obj.userId = psUserId(obj.userId);return obj;}exports.fromJsonToAuthInfo = psAuthInfo;
 
 exports.__getContainers = (() => {return async function (spaceId) {
                 let argObject = { spaceId };
@@ -2219,13 +1854,6 @@ exports.__createNewContentDraft = (() => {return (structureId) => {return (space
                             argObject.spaceId = null;
                         }
                     
-                        if (argObject.data instanceof Data_Maybe.Just) {
-                            argObject.data = argObject.data.value0;
-                            
-                        } else {
-                            argObject.data = null;
-                        }
-                    
                 argObject = [ argObject.structureId,argObject.spaceId,argObject.data ];
                 let result = await requestApi("createNewContentDraft", argObject);
                 result = psContentDraftId(result);
@@ -2237,13 +1865,6 @@ exports.__editContentDraft = (() => {return (contentDraftId) => {return async fu
                 argObject.contentDraftId = jsContentDraftId(argObject.contentDraftId);
                 argObject = [ argObject.contentDraftId,argObject.data ];
                 let result = await requestApi("editContentDraft", argObject);
-                
-                    if (result) {
-                        result = psRelatedContentRevision(result);
-                        result = new Data_Maybe.Just(result);
-                    } else {
-                        result = Data_Maybe.Nothing.value;
-                    }
                 
                 return result;}};})();
 
@@ -2350,29 +1971,6 @@ exports.__getContentCommits = (() => {return async function (contentId) {
                             return x;
                         });
                     
-                return result;};})();
-
-exports.__getContentEditingNodes = (() => {return async function (draftId) {
-                let argObject = { draftId };
-                argObject = _.cloneDeep(argObject);
-                argObject.draftId = jsContentDraftId(argObject.draftId);
-                argObject = [ argObject.draftId ];
-                let result = await requestApi("getContentEditingNodes", argObject);
-                
-                        result = result.map(x => {
-                            x = psContentNode(x);
-                            return x;
-                        });
-                    
-                return result;};})();
-
-exports.__getContentRevision = (() => {return async function (revisionId) {
-                let argObject = { revisionId };
-                argObject = _.cloneDeep(argObject);
-                argObject.revisionId = jsContentWholeRevisionId(argObject.revisionId);
-                argObject = [ argObject.revisionId ];
-                let result = await requestApi("getContentRevision", argObject);
-                result = psFocusedContentRevision(result);
                 return result;};})();
 
 exports.__getContentCommit = (() => {return async function (commitId) {
@@ -2570,14 +2168,7 @@ exports.__createNewMaterialDraft = (() => {return (spaceId) => {return (type) =>
                         } else {
                             argObject.spaceId = null;
                         }
-                    argObject.type = jsMaterialType(argObject.type);
-                        if (argObject.materialData instanceof Data_Maybe.Just) {
-                            argObject.materialData = argObject.materialData.value0;
-                            argObject.materialData = jsMaterialData(argObject.materialData);
-                        } else {
-                            argObject.materialData = null;
-                        }
-                    
+                    argObject.type = jsMaterialType(argObject.type);argObject.materialData = jsMaterialData(argObject.materialData);
                 argObject = [ argObject.spaceId,argObject.type,argObject.materialData ];
                 let result = await requestApi("createNewMaterialDraft", argObject);
                 result = psRelatedMaterialDraft(result);
@@ -2590,13 +2181,6 @@ exports.__editMaterialDraft = (() => {return (materialDraftId) => {return async 
                 argObject = [ argObject.materialDraftId,argObject.materialData ];
                 let result = await requestApi("editMaterialDraft", argObject);
                 
-                    if (result) {
-                        result = psRelatedMaterialRevision(result);
-                        result = new Data_Maybe.Just(result);
-                    } else {
-                        result = Data_Maybe.Nothing.value;
-                    }
-                
                 return result;}};})();
 
 exports.__commitMaterial = (() => {return (materialDraftId) => {return async function (materialData) {
@@ -2605,7 +2189,7 @@ exports.__commitMaterial = (() => {return (materialDraftId) => {return async fun
                 argObject.materialDraftId = jsMaterialDraftId(argObject.materialDraftId);argObject.materialData = jsMaterialData(argObject.materialData);
                 argObject = [ argObject.materialDraftId,argObject.materialData ];
                 let result = await requestApi("commitMaterial", argObject);
-                result = psRelatedMaterialRevision(result);
+                
                 return result;}};})();
 
 exports.__getMaterial = (() => {return async function (materialId) {
@@ -2653,27 +2237,27 @@ exports.__getMaterialCommits = (() => {return async function (materialId) {
                     
                 return result;};})();
 
-exports.__getMaterialEditingNodes = (() => {return async function (draftId) {
+exports.__getMaterialEditings = (() => {return async function (draftId) {
                 let argObject = { draftId };
                 argObject = _.cloneDeep(argObject);
                 argObject.draftId = jsMaterialDraftId(argObject.draftId);
                 argObject = [ argObject.draftId ];
-                let result = await requestApi("getMaterialEditingNodes", argObject);
+                let result = await requestApi("getMaterialEditings", argObject);
                 
                         result = result.map(x => {
-                            x = psMaterialNode(x);
+                            x = psIntactMaterialEditing(x);
                             return x;
                         });
                     
                 return result;};})();
 
-exports.__getMaterialRevision = (() => {return async function (revisionId) {
-                let argObject = { revisionId };
+exports.__getMaterialSnapshot = (() => {return async function (snapshotId) {
+                let argObject = { snapshotId };
                 argObject = _.cloneDeep(argObject);
-                argObject.revisionId = jsMaterialRevisionId(argObject.revisionId);
-                argObject = [ argObject.revisionId ];
-                let result = await requestApi("getMaterialRevision", argObject);
-                result = psFocusedMaterialRevision(result);
+                argObject.snapshotId = jsMaterialSnapshotId(argObject.snapshotId);
+                argObject = [ argObject.snapshotId ];
+                let result = await requestApi("getMaterialSnapshot", argObject);
+                result = psFocusedMaterialSnapshot(result);
                 return result;};})();
 
 exports.__getMaterialCommit = (() => {return async function (commitId) {

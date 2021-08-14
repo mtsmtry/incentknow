@@ -1,1 +1,24 @@
-SELECT `x`.`id` AS `x_id`, `x`.`entityId` AS `x_entityId`, `x`.`displayId` AS `x_displayId`, `x`.`displayName` AS `x_displayName`, `x`.`createdAt` AS `x_createdAt`, `x`.`creatorUserId` AS `x_creatorUserId`, `x`.`description` AS `x_description`, `x`.`homeUrl` AS `x_homeUrl`, `x`.`membershipMethod` AS `x_membershipMethod`, `x`.`published` AS `x_published`, `x`.`defaultAuthority` AS `x_defaultAuthority`, `creatorUser`.`id` AS `creatorUser_id`, `creatorUser`.`entityId` AS `creatorUser_entityId`, `creatorUser`.`displayId` AS `creatorUser_displayId`, `creatorUser`.`displayName` AS `creatorUser_displayName`, `creatorUser`.`passwordHash` AS `creatorUser_passwordHash`, `creatorUser`.`email` AS `creatorUser_email`, `creatorUser`.`iconUrl` AS `creatorUser_iconUrl`, `creatorUser`.`createdAt` AS `creatorUser_createdAt`, (SELECT COUNT(*) FROM space_member WHERE spaceId = `x`.`id`) AS `memberCount`, (SELECT COUNT(*) FROM format WHERE spaceId = `x`.`id`) AS `formatCount`, (SELECT COUNT(*) FROM content as c INNER JOIN container as con ON c.containerId = con.id WHERE con.spaceId = `x`.`id`) AS `contentCount` FROM `space` `x` LEFT JOIN `members` `m`  LEFT JOIN `user` `creatorUser` ON `creatorUser`.`id`=`x`.`creatorUserId` WHERE m.userId = ?
+SELECT 
+    `x`.`id` AS `x_id`, 
+    `x`.`entityId` AS `x_entityId`, 
+    `x`.`currentEditingId` AS `x_currentEditingId`,
+    `x`.`intendedMaterialType` AS `x_intendedMaterialType`,
+    `x`.`materialId` AS `x_materialId`,
+    `x`.`intendedContentDraftId` AS `x_intendedContentDraftId`,
+    `x`.`intendedSpaceId` AS `x_intendedSpaceId`,
+    `x`.`userId` AS `x_userId`, `x`.`createdAt` AS `x_createdAt`,
+    `x`.`updatedAt` AS `x_updatedAt`,
+    `x`.`changeType` AS `x_changeType`,
+    `currentEditing`.`id` AS `currentEditing_id`,
+    `currentEditing`.`entityId` AS `currentEditing_entityId`,
+    `currentEditing`.`draftId` AS `currentEditing_draftId`,
+    `currentEditing`.`snapshotId` AS `currentEditing_snapshotId`,
+    `currentEditing`.`createdAt` AS `currentEditing_createdAt`,
+    `currentEditing`.`updatedAt` AS `currentEditing_updatedAt`,
+    `currentEditing`.`basedCommitId` AS `currentEditing_basedCommitId`,
+    `currentEditing`.`state` AS `currentEditing_state`,
+    `snapshot`.*, snapshot.data 
+    FROM `material_draft` `x` 
+    LEFT JOIN `material_editing` `currentEditing` ON `currentEditing`.`id`=`x`.`currentEditingId`
+    LEFT JOIN `currentEditing` `snapshot`
+    WHERE `x`.`userId` = ?

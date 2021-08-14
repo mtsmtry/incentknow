@@ -1,6 +1,7 @@
 module Incentknow.Molecules.Setting.Image where
 
 import Prelude
+
 import DOM.HTML.Indexed.InputAcceptType (mediaType)
 import Data.Either (Either(..))
 import Data.Foldable (for_, traverse_)
@@ -18,10 +19,10 @@ import Incentknow.HTML.Utils (css, maybeElem, whenElem)
 import Incentknow.Molecules.Setting (ChangingState(..), SettingOutput(..), SettingQuery, handleSettingQuery, renderEditButton, renderMessage, renderSubmitButton)
 import Web.Event.Internal.Types (Event)
 import Web.File.Blob (Blob)
-import Web.File.File (File, name, toBlob)
+import Web.File.File (File, toBlob)
 import Web.File.FileList (item)
 import Web.File.Url (createObjectURL)
-import Web.HTML.HTMLInputElement (files, fromElement, fromHTMLElement)
+import Web.HTML.HTMLInputElement (files, fromElement)
 
 type Input
   = { submit :: Blob -> Aff (Either String {})
@@ -51,7 +52,7 @@ type Slot
 type ChildSlots
   = ()
 
-component :: forall q o m. MonadAff m => MonadEffect m => H.Component HH.HTML SettingQuery Input SettingOutput m
+component :: forall m. MonadAff m => MonadEffect m => H.Component HH.HTML SettingQuery Input SettingOutput m
 component =
   H.mkComponent
     { initialState
@@ -84,6 +85,7 @@ setInput input state =
   , disabled: input.disabled
   }
 
+iconInput_ :: H.RefLabel
 iconInput_ = H.RefLabel "iconInput"
 
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
@@ -144,7 +146,7 @@ render state =
   renderImage :: Maybe String -> H.ComponentHTML Action ChildSlots m
   renderImage url = maybeElem url \x -> HH.img [ HP.src x ]
 
-handleAction :: forall o m. MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots SettingOutput m Unit
+handleAction :: forall m. MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots SettingOutput m Unit
 handleAction = case _ of
   Initialize -> pure unit
   HandleInput input -> H.modify_ $ setInput input

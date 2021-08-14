@@ -3,25 +3,21 @@ module Incentknow.Molecules.IconMenu where
 import Prelude
 
 import Control.Promise (Promise, toAff)
-import Data.Array (elem, filter, foldl)
+import Data.Array (filter)
 import Data.Map (Map)
 import Data.Map as M
-import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing)
+import Data.Maybe (Maybe(..), isJust)
 import Data.Maybe.Utils (flatten)
-import Data.Newtype (unwrap, wrap)
 import Data.String (joinWith)
 import Data.String.Utils (includes)
 import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (iconSolid)
-import Incentknow.Data.Entities (SpaceAuth(..))
-import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 import Incentknow.Molecules.SelectMenuImpl as SelectMenuImpl

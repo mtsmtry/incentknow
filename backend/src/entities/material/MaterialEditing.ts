@@ -1,11 +1,9 @@
 import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { NewTypeInt, NewTypeString } from "../../Implication";
-import { ContentEditing, ContentEditingSk } from "../content/ContentEditing";
-import { User, UserSk } from "../user/User";
 import { CreatedAt, createEntityId, EntityId, UpdatedAt } from '../Utils';
 import { MaterialCommit, MaterialCommitSk } from "./MaterialCommit";
 import { MaterialDraft, MaterialDraftSk } from "./MaterialDraft";
-import { MaterialSnapshot } from "./MaterialSnapshot";
+import { MaterialSnapshot, MaterialSnapshotSk } from "./MaterialSnapshot";
 
 export enum MaterialEditingState {
     EDITING = "editing",
@@ -32,17 +30,11 @@ export class MaterialEditing {
     @Column()
     draftId: MaterialDraftSk;
 
-    @OneToOne(type => ContentEditing, { onDelete: "SET NULL" })
-    @JoinColumn({ name: "parentEditingId" })
-    parentEditing: ContentEditing | null;
-    @Column("int", { nullable: true })
-    parentEditingId: ContentEditingSk | null;
-
-    @ManyToOne(type => User, { onDelete: "CASCADE" })
-    @JoinColumn({ name: "userId" })
-    user: User;
-    @Column()
-    userId: UserSk;
+    @OneToOne(type => MaterialSnapshot, { onDelete: "RESTRICT" })
+    @JoinColumn({ name: "snapshotId" })
+    snapshot: MaterialSnapshot;
+    @Column({ nullable: true }) // トランザクション外ではnullにならない
+    snapshotId: MaterialSnapshotSk;
 
     @CreatedAt()
     createdAt: Date;
@@ -63,11 +55,13 @@ export class MaterialEditing {
     })
     state: MaterialEditingState;
 
-    @OneToMany(type => MaterialSnapshot, x => x.draft, { onDelete: "RESTRICT" })
+    @OneToMany(type => MaterialSnapshot, x => x.editing, { onDelete: "RESTRICT" })
     snapshots: MaterialSnapshot[];
 
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId() as MaterialEditingId;
+        if (!this.entityId) {
+            this.entityId = createEntityId() as MaterialEditingId;
+        }
     }
 }

@@ -7,7 +7,7 @@ import Control.Coroutine.Aff (close, emit)
 import Control.Coroutine.Aff as CRA
 import Control.Monad.Except (runExcept)
 import Data.Argonaut.Core (Json, jsonNull, stringify)
-import Data.Argonaut.Decode (decodeJson, getField)
+import Data.Argonaut.Decode (class DecodeJson, decodeJson, getField)
 import Data.Argonaut.Encode (encodeJson)
 import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..), either)
@@ -16,17 +16,16 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff, Error, runAff_)
-import Effect.Aff.Class (class MonadAff, liftAff)
-import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Class (liftEffect)
 import Effect.Random (randomInt)
 import Foreign (F, Foreign, unsafeToForeign, readString)
 import Foreign.Object as Object
-import Halogen.Aff (runHalogenAff)
 import Web.Event.EventTarget as EET
 import Web.Socket.Event.EventTypes as WSET
 import Web.Socket.Event.MessageEvent as ME
 import Web.Socket.WebSocket as WS
 
+genId :: Effect Int
 genId = randomInt 0 1000000000
 
 notify :: WS.WebSocket -> String -> Json -> Effect Unit
@@ -40,10 +39,10 @@ notify socket method params = do
       , Tuple "id" $ encodeJson id
       ]
   let
-    request = stringify $ encodeJson $ Object.fromFoldable values
-  WS.sendString socket request
+    req = stringify $ encodeJson $ Object.fromFoldable values
+  WS.sendString socket req
 
-request :: forall m. WS.WebSocket -> String -> Json -> (Either Error Json -> Effect Unit) -> Effect Unit
+request :: WS.WebSocket -> String -> Json -> (Either Error Json -> Effect Unit) -> Effect Unit
 request socket method params callback = do
   id <- genId
   let
@@ -54,10 +53,16 @@ request socket method params callback = do
       , Tuple "id" $ encodeJson id
       ]
   let
-    request = stringify $ encodeJson $ Object.fromFoldable values
-  WS.sendString socket request
+    req = stringify $ encodeJson $ Object.fromFoldable values
+  WS.sendString socket req
   runAff_ callback $ CR.runProcess (wsProducer socket id CR.$$ CR.await)
 
+getResponse :: forall t11 t15.
+  DecodeJson t11 => DecodeJson t15 => String
+                                      -> Either String
+                                           { id :: t11
+                                           , result :: t15
+                                           }
 getResponse msg = do
   json <- jsonParser msg
   response <- decodeJson json

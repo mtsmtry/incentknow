@@ -6,7 +6,6 @@ import { toTimestamp } from "../Utils";
 export interface RelatedContentCommit {
     commitId: ContentCommitId;
     timestamp: number;
-    basedCommitId: ContentCommitId | null;
     committerUser: RelatedUser;
     contentId: ContentId;
 }
@@ -15,7 +14,6 @@ export function toRelatedContentCommit(commit: ContentCommit): RelatedContentCom
     return {
         commitId: commit.entityId,
         timestamp: toTimestamp(commit.timestamp),
-        basedCommitId: commit.basedCommit ? commit.basedCommit.entityId : null,
         committerUser: toRelatedUser(commit.committerUser),
         contentId: commit.content.entityId
     }
@@ -24,7 +22,6 @@ export function toRelatedContentCommit(commit: ContentCommit): RelatedContentCom
 export interface FocusedContentCommit {
     commitId: ContentCommitId;
     timestamp: number;
-    basedCommitId: ContentCommitId | null;
     committerUser: RelatedUser;
     contentId: ContentId;
 }
@@ -33,7 +30,6 @@ export function toFocusedContentCommit(commit: ContentCommit): FocusedContentCom
     return {
         commitId: commit.entityId,
         timestamp: toTimestamp(commit.timestamp),
-        basedCommitId: commit.basedCommit ? commit.basedCommit.entityId : null,
         committerUser: toRelatedUser(commit.committerUser),
         contentId: commit.content.entityId
     }

@@ -51,6 +51,8 @@ export class Container {
 
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId() as ContainerId;
+        if (!this.entityId) {
+            this.entityId = createEntityId() as ContainerId;
+        }
     }
 }

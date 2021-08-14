@@ -39,6 +39,8 @@ export class MetaProperty {
 
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId() as MetaPropertyId;
+        if (!this.entityId) {
+            this.entityId = createEntityId() as MetaPropertyId;
+        }
     }
 }

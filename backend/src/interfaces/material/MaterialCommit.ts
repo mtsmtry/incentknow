@@ -5,7 +5,7 @@ import { toTimestamp } from "../Utils";
 export interface RelatedMaterialCommit {
     commitId: MaterialCommitId;
     timestamp: number;
-    dataSize: number;
+    textCount: number;
     basedCommitId: MaterialCommitId | null;
     committerUser: RelatedUser;
 }
@@ -14,7 +14,7 @@ export function toRelatedMaterialCommit(commit: MaterialCommit): RelatedMaterial
     return {
         commitId: commit.entityId,
         timestamp: toTimestamp(commit.timestamp),
-        dataSize: commit.dataSize,
+        textCount: commit.textCount,
         basedCommitId: commit.basedCommit?.entityId || null,
         committerUser: toRelatedUser(commit.committerUser)
     }
@@ -24,7 +24,7 @@ export interface FocusedMaterialCommit {
     commitId: MaterialCommitId;
     timestamp: number;
     data: string;
-    dataSize: number;
+    textCount: number;
 }
 
 export function toFocusedMaterialCommit(commit: MaterialCommit): FocusedMaterialCommit {
@@ -32,6 +32,6 @@ export function toFocusedMaterialCommit(commit: MaterialCommit): FocusedMaterial
         commitId: commit.entityId,
         timestamp: toTimestamp(commit.timestamp),
         data: commit.data,
-        dataSize: commit.dataSize
+        textCount: commit.textCount
     }
 }

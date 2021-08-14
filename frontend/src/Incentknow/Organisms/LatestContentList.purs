@@ -10,12 +10,12 @@ import Halogen.HTML as HH
 import Incentknow.API (getSpaceLatestContents)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
-import Incentknow.Atoms.Icon (formatWithIcon, iconSolid, remoteWith, userIcon)
+import Incentknow.Atoms.Icon (formatWithIcon, remoteWith, userIcon)
 import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (RelatedContent)
 import Incentknow.Data.Ids (SpaceId)
 import Incentknow.HTML.DateTime (dateTime)
-import Incentknow.HTML.Utils (css, maybeElem)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Organisms.BoxView as BoxView
 import Incentknow.Organisms.DataGridView as DataGridView

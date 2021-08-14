@@ -2,18 +2,16 @@ module JsonFormatter where
 
 import Prelude
 
-import Ace.Types (Completer, Position, EditSession, Editor, Completion)
 import Data.Argonaut.Core (Json)
 import Data.Foldable (traverse_)
-import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
-import Data.Maybe (Maybe(..), isJust, fromJust)
+import Data.Function.Uncurried (Fn2, runFn2)
+import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen (RefLabel(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Partial.Unsafe (unsafePartial)
 import Web.DOM (Element)
 
 foreign import setFormatterImpl :: Fn2 Element Json (Effect Unit)
@@ -48,6 +46,7 @@ component =
 initialState :: Input -> State
 initialState input = { value: input.value }
 
+div_ :: RefLabel
 div_ = RefLabel "div"
 
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m

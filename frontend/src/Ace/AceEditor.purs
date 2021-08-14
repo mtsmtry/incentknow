@@ -57,7 +57,7 @@ type State
     }
 
 -- | The Ace component definition.
-component :: forall q i m. MonadAff m => H.Component HH.HTML q Input Output m
+component :: forall q m. MonadAff m => H.Component HH.HTML q Input Output m
 component =
   H.mkComponent
     { initialState

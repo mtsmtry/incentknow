@@ -112,6 +112,8 @@ export class Property {
 
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId(2) as PropertyId;
+        if (!this.entityId) {
+            this.entityId = createEntityId(2) as PropertyId;
+        }
     }
 }

@@ -3,6 +3,7 @@ module Incentknow.Router where
 import Prelude
 
 import Control.Monad.Reader.Trans (class MonadAsk, asks)
+import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.AVar as AVar
@@ -14,9 +15,8 @@ import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour, Env, GlobalMessage(..), Message)
 import Incentknow.Organisms.Footer as Footer
 import Incentknow.Organisms.Header as Header
-import Incentknow.Pages.Content as Content
 import Incentknow.Pages.Container as Container
-import Incentknow.Pages.DraftList as DraftList
+import Incentknow.Pages.Content as Content
 import Incentknow.Pages.EditDraft as EditDraft
 import Incentknow.Pages.Home as Home
 import Incentknow.Pages.JoinSpace as JoinSpace
@@ -64,8 +64,6 @@ type ChildSlots
     --, workList :: WorkList.Slot Unit
     , home :: Home.Slot Unit
 
-    , draftList :: DraftList.Slot Unit
-
     --, snapshot :: Snapshot.Slot Unit
     -- , workViewer :: WorkViewer.Slot Unit
     --, contentQuery :: ContentQuery.Slot Unit
@@ -103,7 +101,7 @@ component =
   initialState :: Unit -> State
   initialState _ = { route: Home, loading: 0, msgs: [] }
 
-  renderBody :: forall m. Behaviour m => MonadAff m => Route -> H.ComponentHTML Action ChildSlots m
+  renderBody :: Behaviour m => MonadAff m => Route -> H.ComponentHTML Action ChildSlots m
   renderBody = case _ of
     Home -> HH.slot (SProxy :: SProxy "home") unit Home.component {} absurd
     NotFound -> HH.text ""
@@ -117,13 +115,15 @@ component =
     --Snapshot workId changeId snapshotDiff -> HH.slot (SProxy :: SProxy "snapshot") unit Snapshot.component { workId, changeId, snapshotDiff } absurd
     --NewContent spaceId formatId -> HH.slot (SProxy :: SProxy "newContent") unit NewContent.component (NewContent.NewInput spaceId formatId) absurd
     --ContentList spaceId formatId urlParams -> HH.slot (SProxy :: SProxy "pageContentQuery") unit PageContentQuery.component { spaceId, formatId, urlParams } absurd
-    Container spaceId formatId -> HH.slot (SProxy :: SProxy "container") unit Container.component { spaceId, formatId } absurd
+    
     -- community
     JoinSpace spaceId -> HH.slot (SProxy :: SProxy "joinSpace") unit JoinSpace.component { spaceId } absurd
     SpaceList -> HH.slot (SProxy :: SProxy "spaceList") unit SpaceList.component {} absurd
     -- space
     NewSpace -> HH.slot (SProxy :: SProxy "newSpace") unit NewSpace.component {} absurd
-    Space spaceId tab -> HH.slot (SProxy :: SProxy "space") unit Space.component { spaceId, tab } absurd
+    Space spaceId tab -> HH.slot (SProxy :: SProxy "space") unit Space.component { spaceId, tab: Left tab } absurd
+    Container spaceId formatId ->HH.slot (SProxy :: SProxy "space") unit Space.component { spaceId, tab: Right (Just formatId) } absurd
+    ContainerList spaceId ->HH.slot (SProxy :: SProxy "space") unit Space.component { spaceId, tab: Right Nothing } absurd
     -- crawler
     --NewCrawler -> HH.slot (SProxy :: SProxy "newCrawler") unit NewCrawler.component {} absurd
     --Crawler crawlerId tab -> HH.slot (SProxy :: SProxy "crawler") unit Crawler.component { crawlerId, tab } absurd
@@ -132,7 +132,7 @@ component =
     Sign -> HH.slot (SProxy :: SProxy "sign") unit Sign.component {} absurd
     Rivision contentId version -> HH.text "" --HH.slot (SProxy :: SProxy "rivision") unit Rivision.component { contentId, version } absurd
     RivisionList contentId -> HH.text "" --HH.slot (SProxy :: SProxy "rivisionList") unit RivisionList.component { contentId } absurd
-    DraftList -> HH.slot (SProxy :: SProxy "draftList") unit DraftList.component { } absurd
+    DraftList -> HH.text ""-- HH.slot (SProxy :: SProxy "draftList") unit DraftList.component { } absurd
 
   --  EditWork workId -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId, route } absurd
   --  EditContent contentId -> HH.slot (SProxy :: SProxy "workViewer") unit WorkViewer.component { workId: WorkId $ unwrap contentId, route } absurd

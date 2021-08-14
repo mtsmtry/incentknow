@@ -62,48 +62,6 @@ derive instance newtypeContentDraftId :: Newtype ContentDraftId _
 
 
 
-newtype ContentEditingSk = ContentEditingSk Int
-derive instance eqContentEditingSk :: Eq ContentEditingSk
-derive instance ordContentEditingSk :: Ord ContentEditingSk
-derive instance newtypeContentEditingSk :: Newtype ContentEditingSk _
-
-
-
-newtype ContentEditingId = ContentEditingId String
-derive instance eqContentEditingId :: Eq ContentEditingId
-derive instance ordContentEditingId :: Ord ContentEditingId
-derive instance newtypeContentEditingId :: Newtype ContentEditingId _
-
-
-
-newtype ContentSnapshotSk = ContentSnapshotSk Int
-derive instance eqContentSnapshotSk :: Eq ContentSnapshotSk
-derive instance ordContentSnapshotSk :: Ord ContentSnapshotSk
-derive instance newtypeContentSnapshotSk :: Newtype ContentSnapshotSk _
-
-
-
-newtype ContentSnapshotId = ContentSnapshotId String
-derive instance eqContentSnapshotId :: Eq ContentSnapshotId
-derive instance ordContentSnapshotId :: Ord ContentSnapshotId
-derive instance newtypeContentSnapshotId :: Newtype ContentSnapshotId _
-
-
-
-newtype ContentTransitionSk = ContentTransitionSk Int
-derive instance eqContentTransitionSk :: Eq ContentTransitionSk
-derive instance ordContentTransitionSk :: Ord ContentTransitionSk
-derive instance newtypeContentTransitionSk :: Newtype ContentTransitionSk _
-
-
-
-newtype ContentTransitionId = ContentTransitionId String
-derive instance eqContentTransitionId :: Eq ContentTransitionId
-derive instance ordContentTransitionId :: Ord ContentTransitionId
-derive instance newtypeContentTransitionId :: Newtype ContentTransitionId _
-
-
-
 newtype FormatSk = FormatSk Int
 derive instance eqFormatSk :: Eq FormatSk
 derive instance ordFormatSk :: Ord FormatSk
@@ -321,31 +279,10 @@ derive instance newtypeUserDisplayId :: Newtype UserDisplayId _
 
 
 
-newtype ContentRevisionId = ContentRevisionId String
-derive instance eqContentRevisionId :: Eq ContentRevisionId
-derive instance ordContentRevisionId :: Ord ContentRevisionId
-derive instance newtypeContentRevisionId :: Newtype ContentRevisionId _
-
-
-
-newtype ContentWholeRevisionId = ContentWholeRevisionId String
-derive instance eqContentWholeRevisionId :: Eq ContentWholeRevisionId
-derive instance ordContentWholeRevisionId :: Ord ContentWholeRevisionId
-derive instance newtypeContentWholeRevisionId :: Newtype ContentWholeRevisionId _
-
-
-
 newtype DocumentBlockId = DocumentBlockId String
 derive instance eqDocumentBlockId :: Eq DocumentBlockId
 derive instance ordDocumentBlockId :: Ord DocumentBlockId
 derive instance newtypeDocumentBlockId :: Newtype DocumentBlockId _
-
-
-
-newtype MaterialRevisionId = MaterialRevisionId String
-derive instance eqMaterialRevisionId :: Eq MaterialRevisionId
-derive instance ordMaterialRevisionId :: Ord MaterialRevisionId
-derive instance newtypeMaterialRevisionId :: Newtype MaterialRevisionId _
 
 
 

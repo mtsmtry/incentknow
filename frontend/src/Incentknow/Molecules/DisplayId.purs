@@ -4,22 +4,19 @@ import Prelude
 
 import Data.Either (Either, either)
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), maybe)
-import Data.Tuple (Tuple(..))
+import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff, Milliseconds(..), error)
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
 import Halogen (SubscriptionId)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Halogen.Query.EventSource (EventSource(..))
+import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
 import Incentknow.Atoms.Icon (loadingWith)
-import Incentknow.Atoms.Inputs (textarea)
-import Incentknow.HTML.Utils (css, maybeElem)
+import Incentknow.HTML.Utils (css)
 
 type Input
   = { checkId :: String -> Aff (Either String Boolean)

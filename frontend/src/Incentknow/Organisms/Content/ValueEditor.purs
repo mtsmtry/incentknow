@@ -2,33 +2,22 @@ module Incentknow.Organisms.Content.ValueEditor where
 
 import Prelude
 
-import Data.Argonaut.Core (Json, fromArray, fromString, jsonNull, stringify, toArray, toBoolean, toString)
-import Data.Argonaut.Decode (decodeJson)
-import Data.Argonaut.Encode (encodeJson)
-import Data.Array (cons, deleteAt, index, mapWithIndex)
+import Data.Argonaut.Core (toString)
+import Data.Array (deleteAt, mapWithIndex)
 import Data.Either (Either(..))
-import Data.Foldable (traverse_)
-import Data.Map (Map, empty, insert, lookup)
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Newtype (unwrap, wrap)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
-import Effect.Class.Console (log, logShow)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getFocusedFormat, getFormat)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
-import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigateRoute)
-import Incentknow.Atoms.Icon (icon, iconSolid, propertyIcon, remoteWith, typeIcon)
+import Incentknow.Atoms.Icon (propertyIcon)
 import Incentknow.Atoms.Inputs (button, checkbox, numberarea, textarea)
-import Incentknow.Data.Content (getContentSemanticData)
-import Incentknow.Data.Entities (FocusedContent, FocusedFormat, FocusedMaterial, FormatUsage(..), Type(..), RelatedContent)
-import Incentknow.Data.EntityUtils (getTypeName)
-import Incentknow.Data.Ids (ContentId, FormatId(..), MaterialId, PropertyId, SemanticId)
-import Incentknow.Data.Property (Enumerator, MaterialObject(..), Property, ReferenceValue(..), TypedProperty, TypedValue(..), encodeProperties, forceConvert, mkProperties, toMaybeFromReferenceValue, toReferenceValue, toRelatedContentFromContentId)
-import Incentknow.HTML.Utils (css, link, maybeElem)
+import Incentknow.Data.Entities (FormatUsage(..))
+import Incentknow.Data.Ids (PropertyId)
+import Incentknow.Data.Property (Enumerator, ReferenceValue(..), TypedProperty, TypedValue(..), toMaybeFromReferenceValue, toRelatedContentFromContentId)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.AceEditor as AceEditor
 import Incentknow.Molecules.ContentMenu as ContentMenu
 import Incentknow.Molecules.EntityMenu as EntityMenu
@@ -38,8 +27,7 @@ import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Organisms.Content.Common (EditEnvironment)
 import Incentknow.Organisms.Material.SlotEditor as Material
-import Incentknow.Route (FormatTab(..), Route(..), SpaceTab(..))
-import Test.Unit.Console (consoleLog)
+import Incentknow.Route (Route)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
@@ -77,7 +65,7 @@ type ChildSlots
     , entityMenu :: EntityMenu.Slot Unit
     )
 
-component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q Input Output m
+component :: forall q m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q Input Output m
 component =
   H.mkComponent
     { initialState
@@ -201,7 +189,7 @@ render state = case state.value of
     Just x -> JustReference x
     Nothing -> NullReference
 
-handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
+handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
   Initialize -> pure unit
   ChangeValue value -> do
@@ -218,7 +206,7 @@ handleAction = case _ of
     state <- H.get
     let
       array = case state.value of
-        ArrayTypedValue array -> array
+        ArrayTypedValue array2 -> array2
         _ -> []
 
       newValue = ArrayTypedValue $ mapWithIndex (\i -> \x -> if i == index then value else x) array
@@ -228,7 +216,7 @@ handleAction = case _ of
     state <- H.get
     let
       array = case state.value of
-        ArrayTypedValue array -> array
+        ArrayTypedValue array2 -> array2
         _ -> []
 
       newValue = ArrayTypedValue $ fromMaybe array $ deleteAt index array

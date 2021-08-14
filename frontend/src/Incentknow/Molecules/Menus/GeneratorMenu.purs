@@ -2,10 +2,7 @@ module Incentknow.Molecules.GeneratorMenu where
 
 import Prelude
 
-import Data.Array (elem, filter)
-import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing)
-import Data.Maybe.Utils (flatten)
-import Data.Newtype (unwrap, wrap)
+import Data.Maybe (Maybe(..), isJust)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
@@ -13,10 +10,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (ContentGenerator(..))
-import Incentknow.Data.Ids (FormatId(..), SpaceId(..))
-import Incentknow.Data.Property (Enumerator)
 import Incentknow.HTML.Utils (css)
-import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 

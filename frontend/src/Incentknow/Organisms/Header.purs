@@ -70,8 +70,6 @@ render state =
         [ css "links" ]
         [ headerLink "Spaces" SpaceList
         , maybeElem state.account \_ ->
-            headerLink "Drafts" DraftList
-        , maybeElem state.account \_ ->
             headerLinkEditDraft "Create"
         , HH.span [ css "space" ] []
         , case state.account of

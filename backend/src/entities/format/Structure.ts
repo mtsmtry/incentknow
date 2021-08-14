@@ -41,6 +41,8 @@ export class Structure {
 
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId() as StructureId;
+        if (!this.entityId) {
+            this.entityId = createEntityId() as StructureId;
+        }
     }
 }

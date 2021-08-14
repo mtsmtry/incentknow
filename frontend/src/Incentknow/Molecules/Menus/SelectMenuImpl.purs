@@ -4,7 +4,7 @@ import Prelude
 
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
-import Data.String (Pattern(..), Replacement(..), replace, replaceAll)
+import Data.String (Pattern(..), Replacement(..), replaceAll)
 import Effect.Aff.Class (class MonadAff)
 import Halogen (RefLabel(..), getHTMLElementRef, liftEffect)
 import Halogen as H

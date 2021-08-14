@@ -2,20 +2,19 @@ module Incentknow.Molecules.PropertyMenu where
 
 import Prelude
 
-import Data.Array (filter, fromFoldable)
-import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Array (filter)
+import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getFocusedFormat, getFormat, getFormats)
-import Incentknow.API.Execution (Fetch, callbackAPI, executeAPI, forItem, forRemote, toQueryCallback)
+import Incentknow.API (getFocusedFormat)
+import Incentknow.API.Execution (Fetch, callbackAPI, forItem, toQueryCallback)
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (FocusedFormat, RelatedFormat, Type, PropertyInfo)
-import Incentknow.Data.Ids (SpaceId(..), FormatId(..))
+import Incentknow.Data.Entities (FocusedFormat, PropertyInfo, Type)
+import Incentknow.Data.Ids (FormatId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)

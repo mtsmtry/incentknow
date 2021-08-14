@@ -61,12 +61,12 @@ render state =
         [ HH.slot (SProxy :: SProxy "draftExplorer") unit DraftExplorer.component { } absurd
         ]
     , rightSide:
-        [ HH.slot (SProxy :: SProxy "draftHistory") unit DraftHistory.component 
-            { draftId: 
-                case state.target of
-                  ContentTarget (TargetDraft draftId) -> Just draftId
-                  _ -> Nothing
-            } absurd
+        [ --HH.slot (SProxy :: SProxy "draftHistory") unit DraftHistory.component 
+          --  { draftId: 
+          --      case state.target of
+          --        ContentTarget (TargetDraft draftId) -> Just draftId
+          --        _ -> Nothing
+          --  } absurd
         ]
     }
     [ HH.div [ css "page-new-content" ]

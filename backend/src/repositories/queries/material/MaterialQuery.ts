@@ -15,15 +15,16 @@ export class MaterialQuery extends SelectFromSingleTableQuery<Material, Material
         return new MaterialQuery(this.qb.where({ contentId }));
     }
 
-    selectAll() {
-        return new MaterialQuery(this.qb.addSelect("x.data"));
+    joinCommitAndSelectData() {
+        return new MaterialQuery(this.qb.leftJoinAndSelect("x.commit", "commit").addSelect("commit.data"));
     }
 
     selectRelated() {
         const query = this.qb
             .leftJoinAndSelect("x.creatorUser", "creatorUser")
             .leftJoinAndSelect("x.updaterUser", "updaterUser")
-            .leftJoinAndSelect("x.content", "content");
+            .leftJoinAndSelect("x.content", "content")
+            .leftJoinAndSelect("x.commit", "commit");
 
         return mapQuery(query, toRelatedMaterial);
     }
@@ -33,7 +34,8 @@ export class MaterialQuery extends SelectFromSingleTableQuery<Material, Material
             .leftJoinAndSelect("x.creatorUser", "creatorUser")
             .leftJoinAndSelect("x.updaterUser", "updaterUser")
             .leftJoinAndSelect("x.content", "content")
-            .addSelect("x.data");
+            .leftJoinAndSelect("x.commit", "commit")
+            .addSelect("commit.data");
 
         return mapQuery(query, x => (d: RelatedMaterialDraft | null) => toFocusedMaterial(x, d));
     }

@@ -1,6 +1,5 @@
 module Incentknow.Molecules.Form where
 
-import Prelude
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.Atoms.Inputs (textarea)

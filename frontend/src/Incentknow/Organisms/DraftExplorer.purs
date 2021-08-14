@@ -90,7 +90,7 @@ render state =
     where
     common = getContentSemanticData draft.data draft.format
 
-handleAction :: forall o s m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> callbackQuery FetchedDrafts $ getMyContentDrafts
   HandleInput props -> pure unit

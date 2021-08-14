@@ -89,18 +89,14 @@ component =
 
 initialState :: Input -> State
 initialState input =
-  { document: 
-      if length input.value.blocks == 0 then
-        { blocks: [{ id: wrap "1", data: ParagraphBlockData "text" }] }
-      else
-        input.value
+  { document: input.value
   , composition: false
   }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div
-    [ css "org-document" ]
+    [ css "org-document org-document-editor" ]
     [ HH.div 
         [ css "blocks"            
         , HH.attr (HH.AttrName "contenteditable") "true"
@@ -116,8 +112,8 @@ render state =
   renderBlock :: DocumentBlock -> H.ComponentHTML Action ChildSlots m
   renderBlock block = HH.slot (SProxy :: SProxy "block") block.id Block.component { value: block } (\_-> Nothing)
 
-genId :: Effect DocumentBlockId
-genId = do
+generateDocumentBlockId :: Effect DocumentBlockId
+generateDocumentBlockId = do
   randoms <- sequence $ replicate 12 $ randomInt 0 (S.length text - 1)
   pure $ wrap $ fromCharArray $ catMaybes $ map (\x-> charAt x text) randoms
   where
@@ -126,7 +122,9 @@ genId = do
 handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
   Initialize -> pure unit
-  HandleInput input -> H.put $ initialState input
+  HandleInput input -> do
+    H.put $ initialState input
+    handleAction Initialize
   OnPase event -> do
     H.liftEffect $ preventDefault $ C.toEvent event
     selection <- H.liftEffect getSelection
@@ -151,7 +149,7 @@ handleAction = case _ of
       let
         text = fromMaybe "" $ head lines
         newLines = fromMaybe [] $ tail lines
-      newLineDatas <- H.liftEffect $ sequence $ map (\text-> map (\id-> { id, text }) genId) newLines
+      newLineDatas <- H.liftEffect $ sequence $ map (\text2-> map (\id-> { id, text: text2 }) generateDocumentBlockId) newLines
       let
         index = getBlockIndex (wrap selection.startBlockId) state.document.blocks
         endText = getBlockTextFromBlocks index state.document.blocks
@@ -195,7 +193,7 @@ handleAction = case _ of
           else do
             -- insert new block
             state2 <- H.get
-            newId <- H.liftEffect genId
+            newId <- H.liftEffect generateDocumentBlockId
             let
               endIndex = getBlockIndex (wrap selection.endBlockId) state2.document.blocks
               endText = getBlockTextFromBlocks endIndex state2.document.blocks

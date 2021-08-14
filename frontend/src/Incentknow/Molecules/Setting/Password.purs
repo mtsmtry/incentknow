@@ -11,7 +11,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.HTML.Utils (css)
-import Incentknow.Molecules.Setting (ChangingState(..), SettingQuery(..), SettingOutput(..), handleSettingQuery, renderEditButton, renderMessage, renderSubmitButton, toState)
+import Incentknow.Molecules.Setting (ChangingState(..), SettingOutput(..), SettingQuery, handleSettingQuery, renderEditButton, renderMessage, renderSubmitButton, toState)
 
 type Input
   = { submit :: { oldPassword :: String, newPassword :: String } -> Aff (Either String {})
@@ -39,7 +39,7 @@ type Slot
 type ChildSlots
   = ()
 
-component :: forall o m. MonadAff m => MonadEffect m => H.Component HH.HTML SettingQuery Input SettingOutput m
+component :: forall m. MonadAff m => MonadEffect m => H.Component HH.HTML SettingQuery Input SettingOutput m
 component =
   H.mkComponent
     { initialState
@@ -130,7 +130,7 @@ render state =
           ]
       ]
 
-handleAction :: forall o m. MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots SettingOutput m Unit
+handleAction :: forall m. MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots SettingOutput m Unit
 handleAction = case _ of
   Initialize -> pure unit
   HandleInput input -> H.modify_ $ setInput input

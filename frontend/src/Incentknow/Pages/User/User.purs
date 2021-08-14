@@ -73,8 +73,8 @@ render state =
           , onChangeTab: ChangeTab
           , showTab:
               case _ of
-                UserMain -> "Home"
-                UserSetting -> "Setting"
+                UserMain -> HH.text "Home"
+                UserSetting -> HH.text "Setting"
           }
           ( if userId == state.myUserId then
               [ HH.div [ css "page-user-logout", HE.onClick $ \_ -> Just Logout ] [ HH.text "Logout" ] ]

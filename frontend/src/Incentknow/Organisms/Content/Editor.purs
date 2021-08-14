@@ -11,8 +11,8 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (FocusedContent, FocusedContentDraft, Type(..), FocusedFormat)
-import Incentknow.Data.Ids (PropertyId(..))
+import Incentknow.Data.Entities (FocusedFormat, Type(..))
+import Incentknow.Data.Ids (PropertyId)
 import Incentknow.Data.Property (Property, TypedValue, assignJson, insertJson, mkProperties, toJsonFromTypedValue, toPropertyComposition, toTypedValue)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.Content.Common (EditEnvironment, EditorInput)

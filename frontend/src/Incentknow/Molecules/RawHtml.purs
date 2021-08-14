@@ -1,7 +1,6 @@
 module Incentknow.HTML.RawHTML where
 
 import Prelude
-import Data.Const (Const)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)

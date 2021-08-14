@@ -11,14 +11,13 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (createFormat)
 import Incentknow.API.Execution (executeCommand)
-import Incentknow.AppM (class Behaviour, Message(..), message, navigate)
+import Incentknow.AppM (class Behaviour, Message(..), message)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Data.Entities (FormatUsage(..), PropertyInfo)
 import Incentknow.Data.Ids (SpaceId)
 import Incentknow.Molecules.Form (define, defineText)
 import Incentknow.Molecules.FormatUsageMenu as FormatUsageMenu
 import Incentknow.Organisms.Structure as Structure
-import Incentknow.Route (FormatTab(..), Route(..))
 import Incentknow.Templates.Page (creationPage)
 
 type Input

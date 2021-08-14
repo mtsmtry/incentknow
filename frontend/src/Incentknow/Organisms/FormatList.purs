@@ -10,12 +10,10 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Properties as HP
 import Incentknow.API (getContainers, getFormats)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Icon (formatWithIcon, icon, iconButton, remoteWith)
-import Incentknow.Atoms.Inputs (menuPositiveButton)
 import Incentknow.Data.Entities (FocusedContainer, RelatedFormat)
 import Incentknow.Data.Ids (SpaceDisplayId, SpaceId)
 import Incentknow.HTML.DateTime (dateTime)
@@ -128,7 +126,7 @@ render state =
     where
     maybeFormat = if internalFormat == Nothing then map _.format maybeContainer else internalFormat
 
-handleAction :: forall o s m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> pure unit
   HandleInput props -> do

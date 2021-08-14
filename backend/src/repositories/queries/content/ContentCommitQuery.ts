@@ -23,7 +23,6 @@ export class ContentCommitQuery extends SelectFromSingleTableQuery<ContentCommit
     selectFocused() {
         const query = this.qb
             .leftJoinAndSelect("x.content", "content")
-            .leftJoinAndSelect("x.basedCommit", "basedCommit")
             .leftJoinAndSelect("x.committerUser", "committerUser")
         return mapQuery(query, toFocusedContentCommit);
     }

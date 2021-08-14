@@ -2,20 +2,18 @@ module Incentknow.Molecules.SpaceMenu where
 
 import Prelude
 
-import Data.Array (filter, fromFoldable)
-import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getCandidateSpaces, getPublishedSpaces, getRelatedSpace, getSpace)
-import Incentknow.API.Execution (Fetch, executeAPI, forItem, toQueryCallback)
+import Incentknow.API (getCandidateSpaces, getRelatedSpace)
+import Incentknow.API.Execution (toQueryCallback)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (RelatedSpace)
-import Incentknow.Data.Ids (SpaceId(..))
+import Incentknow.Data.Ids (SpaceId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu

@@ -6,7 +6,6 @@ import Data.Argonaut.Core (fromString, jsonNull, toString)
 import Data.Either (Either(..))
 import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
@@ -15,16 +14,15 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour, navigateRoute)
-import Incentknow.Atoms.Icon (icon, propertyIcon, typeIcon)
+import Incentknow.Atoms.Icon (propertyIcon)
 import Incentknow.Data.Entities (Type(..))
-import Incentknow.Data.EntityUtils (getTypeName)
 import Incentknow.Data.Ids (PropertyId)
-import Incentknow.Data.Property (ReferenceValue(..), TypedProperty, TypedValue(..), toMaybeFromReferenceValue)
-import Incentknow.HTML.Utils (css, link, maybeElem)
+import Incentknow.Data.Property (ReferenceValue(..), TypedProperty, TypedValue(..))
+import Incentknow.HTML.Utils (css, link)
 import Incentknow.Molecules.AceEditor as AceEditor
 import Incentknow.Molecules.ContentLink as ContentLink
 import Incentknow.Organisms.Material.Viewer as Material
-import Incentknow.Route (FormatTab(..), Route(..), SpaceTab(..))
+import Incentknow.Route (Route(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
@@ -125,12 +123,12 @@ render state = case state.value of
     
   maybeNullWith :: forall a. Maybe a -> (a -> H.ComponentHTML Action ChildSlots m) -> H.ComponentHTML Action ChildSlots m
   maybeNullWith value mk = case value of
-    Just value -> mk value
+    Just value2 -> mk value2
     Nothing -> HH.span [ css "null" ] [ HH.text "Null" ]
 
   referenceValueWith:: forall a. ReferenceValue a -> (a -> H.ComponentHTML Action ChildSlots m) -> H.ComponentHTML Action ChildSlots m
   referenceValueWith value mk = case value of
-    JustReference value -> mk value
+    JustReference value2 -> mk value2
     NullReference -> HH.span [ css "null" ] [ HH.text "Null" ]
     DeletedReference -> HH.text "削除されました"
 

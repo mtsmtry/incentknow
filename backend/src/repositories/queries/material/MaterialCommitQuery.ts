@@ -18,7 +18,7 @@ export class MaterialCommitQuery extends SelectFromSingleTableQuery<MaterialComm
         return new MaterialCommitQuery(this.qb.orderBy("x.id", "DESC"));
     }
 
-    selectAll() {
+    addSelectData() {
         return new MaterialCommitQuery(this.qb.select("x.data"));
     }
 
@@ -30,7 +30,6 @@ export class MaterialCommitQuery extends SelectFromSingleTableQuery<MaterialComm
     selectFocused() {
         const query = this.qb
             .leftJoinAndSelect("x.material", "material")
-            .leftJoinAndSelect("x.basedCommit", "basedCommit")
             .leftJoinAndSelect("x.committerUser", "committerUser")
         return mapQuery(query, toFocusedMaterialCommit);
     }

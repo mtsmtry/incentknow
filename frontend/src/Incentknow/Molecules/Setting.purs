@@ -48,7 +48,7 @@ data Action val
 type Slot
   = H.Slot SettingQuery SettingOutput
 
-component :: forall q o m val slots. Eq val => MonadAff m => StaticState val slots m -> H.Component HH.HTML SettingQuery (Input val) SettingOutput m
+component :: forall m val slots. Eq val => MonadAff m => StaticState val slots m -> H.Component HH.HTML SettingQuery (Input val) SettingOutput m
 component static =
   H.mkComponent
     { initialState

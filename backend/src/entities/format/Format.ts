@@ -90,7 +90,11 @@ export class Format {
 
     @BeforeInsert()
     onInsert() {
-        this.displayId = createDisplayId() as FormatDisplayId;
-        this.entityId = createEntityId() as FormatId;
+        if (!this.displayId) {
+            this.displayId = createDisplayId() as FormatDisplayId;
+        }
+        if (!this.entityId) {
+            this.entityId = createEntityId() as FormatId;
+        }
     }
 }

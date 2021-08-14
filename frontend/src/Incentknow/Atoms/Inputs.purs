@@ -3,8 +3,8 @@ module Incentknow.Atoms.Inputs where
 import Prelude
 
 import Data.Int (fromString)
-import Data.Maybe (Maybe(..), maybe)
-import Data.String (Pattern(..), Replacement(..), replace, replaceAll)
+import Data.Maybe (Maybe(..))
+import Data.String (Pattern(..), Replacement(..), replaceAll)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE

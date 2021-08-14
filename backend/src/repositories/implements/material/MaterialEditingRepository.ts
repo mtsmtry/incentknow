@@ -9,6 +9,7 @@ import { UserSk } from "../../../entities/user/User";
 import { InternalError } from "../../../services/Errors";
 import { MaterialDraftQuery, MaterialDraftQueryFromEntity } from "../../queries/material/MaterialDraftQuery";
 import { MaterialEditingQuery } from "../../queries/material/MaterialEditingQuery";
+import { MaterialSnapshotQuery } from "../../queries/material/MaterialSnapshotQuery";
 import { BaseCommand, BaseRepository, Command, Repository } from "../../Repository";
 import { Transaction } from "../../Transaction";
 
@@ -34,6 +35,10 @@ export class MaterialEditingRepository implements BaseRepository<MaterialEditing
 
     fromEditings(trx?: Transaction) {
         return new MaterialEditingQuery(this.editings.createQuery(trx));
+    }
+
+    fromSnapshots(trx?: Transaction) {
+        return new MaterialSnapshotQuery(this.snapshots.createQuery(trx));
     }
 
     createCommand(trx: Transaction) {
@@ -69,11 +74,8 @@ export class MaterialEditingCommand implements BaseCommand {
         // get or create draft
         let draft = await this.drafts.findOne({ materialId, userId });
         if (!draft) {
-            draft = this.drafts.create({ materialId, userId, data });
+            draft = this.drafts.create({ materialId, userId });
             draft = await this.drafts.save(draft);
-        } else if (!draft.data) {
-            await this.drafts.update({ id: draft.id }, { data });
-            draft.data = data;
         }
 
         // activate draft
@@ -81,11 +83,26 @@ export class MaterialEditingCommand implements BaseCommand {
             let editing = this.editings.create({
                 draftId: draft.id,
                 basedCommitId: basedCommit?.id,
-                userId: userId,
                 state: MaterialEditingState.EDITING
             });
             editing = await this.editings.save(editing);
-            await this.drafts.update(draft.id, { currentEditingId: editing.id });
+
+            let snapshot = this.snapshots.create({
+                data,
+                editingId: editing.id
+            })
+
+            await Promise.all([
+                this.drafts.update(draft.id, { currentEditingId: editing.id }),
+                this.editings.update(editing.id, { snapshotId: snapshot.id })
+            ])
+        } else {
+            let snapshot = this.snapshots.create({
+                data,
+                editingId: draft.currentEditingId
+            })
+
+            this.editings.update(draft.currentEditingId, { snapshotId: snapshot.id });
         }
 
         return new MaterialDraftQueryFromEntity(draft);
@@ -98,30 +115,29 @@ export class MaterialEditingCommand implements BaseCommand {
             throw new InternalError();
         }
 
-        console.log(draft);
-
         // activate draft
         if (!draft.currentEditingId) {
             let editing = this.editings.create({
                 draftId: draft.id,
-                basedCommitId: basedCommit.id,
-                userId: draft.userId,
-                state: MaterialEditingState.EDITING
+                basedCommitId: basedCommit.id
             });
             editing = await this.editings.save(editing);
-            console.log(editing);
-            await this.drafts.update(draft.id, { currentEditingId: editing.id, data: basedCommit.data });
+
+            let snapshot = this.snapshots.create({
+                editingId: editing.id,
+                data: basedCommit.data
+            })
+            await this.editings.update(draft.id, { snapshotId: snapshot.id });
         }
 
         return new MaterialDraftQueryFromEntity(draft);
     }
 
-    async createActiveBlankDraft(userId: UserSk, spaceId: SpaceSk | null, type: MaterialType, data: string | null) {
+    async createActiveBlankDraft(userId: UserSk, spaceId: SpaceSk | null, materialType: MaterialType, data: string) {
         // create draft
         let draft = this.drafts.create({
-            //intendedMaterialType: type,
             intendedSpaceId: spaceId,
-            data,
+            intendedMaterialType: materialType,
             userId
         });
         draft = await this.drafts.save(draft);
@@ -129,49 +145,56 @@ export class MaterialEditingCommand implements BaseCommand {
         // create editing
         let editing = this.editings.create({
             draftId: draft.id,
-            userId,
             state: MaterialEditingState.EDITING
         });
         editing = await this.editings.save(editing);
 
+        // create snapshot
+        let snapshot = this.snapshots.create({
+            data,
+            editingId: editing.id
+        })
+        snapshot = await this.snapshots.save(snapshot);
+
         // set editing to draft
-        await this.drafts.update(draft.id, { currentEditingId: editing.id });
+        await Promise.all([
+            this.editings.update(draft.id, { snapshotId: snapshot.id }),
+            this.drafts.update(draft.id, { currentEditingId: editing.id })
+        ])
 
         return new MaterialDraftQueryFromEntity(draft);
     }
 
     async updateDraft(draft: MaterialDraft, data: any): Promise<MaterialSnapshot | null> {
-        if (draft.data == data) {
-            return null;
-        }
-
-        if (!draft.currentEditingId) {
+        const currentEditing = draft.currentEditing;
+        if (!currentEditing) {
             throw "This draft is not active";
         }
 
-        if (draft.data) {
-            const changeType = getChangeType(draft.data?.length, data.length);
+        if (currentEditing.snapshot.data == data) {
+            return null;
+        }
+
+        if (currentEditing.snapshot.data) {
+            const changeType = getChangeType(currentEditing.snapshot.data.length, data.length);
 
             // create snapshot if the number of characters takes the maximum value
             if (draft.changeType != MaterialChangeType.REMOVE && changeType == MaterialChangeType.REMOVE) {
                 let snapshot = this.snapshots.create({
-                    draftId: draft.id,
-                    editingId: draft.currentEditingId,
-                    data: draft.data,
+                    editingId: currentEditing.id,
+                    data: data,
                     timestamp: draft.updatedAt
                 });
+                snapshot = await this.snapshots.save(snapshot);
 
-                await Promise.all([
-                    this.snapshots.save(snapshot),
-                    this.drafts.update(draft.id, { data, changeType })
-                ]);
+                await this.editings.update(currentEditing.id, { snapshotId: snapshot.id });
 
                 return snapshot;
             } else {
-                await this.drafts.update(draft.id, { data, changeType });
+                await this.snapshots.update(currentEditing.snapshot, { data });
             }
         } else {
-            await this.drafts.update(draft.id, { data });
+            await this.snapshots.update(currentEditing.snapshot.id, { data });
         }
         return null;
     }
@@ -181,7 +204,7 @@ export class MaterialEditingCommand implements BaseCommand {
             throw "Editing is not closed state";
         }
         await Promise.all([
-            this.drafts.update(draft.id, { data: null, currentEditingId: null }),
+            this.drafts.update(draft.id, { currentEditingId: null }),
             this.editings.update(draft.currentEditingId, { state })
         ]);
     }

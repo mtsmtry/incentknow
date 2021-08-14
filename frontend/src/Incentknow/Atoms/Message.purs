@@ -1,9 +1,9 @@
 module Incentknow.Atoms.Message where
 
 import Prelude
-import Halogen as H
+
 import Halogen.HTML as HH
-import Incentknow.Atoms.Icon (loadingWith)
+import Incentknow.Atoms.Icon (icon)
 import Incentknow.HTML.Utils (css)
 
 error :: forall w i. String -> HH.HTML w i
@@ -25,9 +25,9 @@ saveState :: forall w i. SaveState -> HH.HTML w i
 saveState state =
   HH.div [ css "atom-save-state" ]
     [ case state of
-        HasNotChange -> HH.text "変更なし"
-        NotSaved -> loadingWith "保存中"
-        Saving -> loadingWith "保存中"
-        SavingButChanged -> loadingWith "保存中"
-        Saved -> HH.text "保存済み"
+        HasNotChange -> HH.text ""
+        NotSaved -> icon "fas fa-edit"
+        Saving -> icon "fas fa-edit"
+        SavingButChanged -> icon "fas fa-edit"
+        Saved -> icon "fas fa-save"
     ]

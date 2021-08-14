@@ -274,7 +274,7 @@ toPropertyInfo prop = do
     , metaProperties: []
     }
 
-getTypeArguments :: forall o m a. PendingPropertyInfo -> H.HalogenM State Action ChildSlots o m PendingPropertyInfo
+getTypeArguments :: forall o m. PendingPropertyInfo -> H.HalogenM State Action ChildSlots o m PendingPropertyInfo
 getTypeArguments prop = do
   argProps <- H.query structure_ prop.id (H.request GetValue)
   argEnum <- H.query enumeration_ prop.id (H.request Enumeration.GetValue)

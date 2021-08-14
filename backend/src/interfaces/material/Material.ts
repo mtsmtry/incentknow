@@ -60,7 +60,7 @@ export function toRelatedMaterial(material: Material): RelatedMaterial {
     return {
         materialId: material.entityId,
         contentId: material.content?.entityId || null,
-        displayName: material.beginning,
+        displayName: material.commit.beginning,
         materialType: material.materialType,
         createdAt: toTimestamp(material.createdAt),
         creatorUser: material.creatorUser ? toRelatedUser(material.creatorUser) : null as any,
@@ -82,27 +82,27 @@ export interface FocusedMaterial {
     draft: RelatedMaterialDraft | null;
 }
 
-export function toMaterialData(material: { materialType: MaterialType, data: string }) {
-    const data: MaterialData = { type: material.materialType };
-    switch (material.materialType) {
+export function toMaterialData(materialType: MaterialType, data: string) {
+    const materialData: MaterialData = { type: materialType };
+    switch (materialType) {
         case MaterialType.DOCUMENT:
-            data.document = JSON.parse(material.data);
+            materialData.document = JSON.parse(data);
             break;
     }
-    return data;
+    return materialData;
 }
 
 export function toFocusedMaterial(material: Material, draft: RelatedMaterialDraft | null): FocusedMaterial {
     return {
         materialId: material.entityId,
         contentId: material.content?.entityId || null,
-        displayName: material.beginning,
+        displayName: material.commit.beginning,
         materialType: material.materialType,
         createdAt: toTimestamp(material.createdAt),
         creatorUser: material.creatorUser ? toRelatedUser(material.creatorUser) : null as any,
         updatedAt: toTimestamp(material.updatedAt),
         updaterUser: material.updaterUser ? toRelatedUser(material.updaterUser) : null as any,
-        data: toMaterialData(material),
+        data: toMaterialData(material.materialType, material.commit.data),
         draft: draft
     };
 }

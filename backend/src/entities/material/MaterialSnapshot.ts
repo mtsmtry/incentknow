@@ -1,17 +1,15 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { NewTypeInt, NewTypeString } from "../../Implication";
-import { createEntityId, EntityId } from '../Utils';
-import { MaterialDraft, MaterialDraftSk } from "./MaterialDraft";
+import { Document } from "../../interfaces/material/Material";
+import { createEntityId, EntityId, UpdatedAt } from '../Utils';
 import { MaterialEditing, MaterialEditingSk } from "./MaterialEditing";
-
-// 制約: 一度作成されると変更されない
-// 指針: 永久保存される必要が生じた場合に作成される
 
 export type MaterialSnapshotSk = NewTypeInt<"MaterialSnapshotSk">;
 
 export type MaterialSnapshotId = NewTypeString<"MaterialSnapshotId">;
 
 // Index: material -> ownerUser -> timestamp
+
 @Entity()
 export class MaterialSnapshot {
 
@@ -20,12 +18,6 @@ export class MaterialSnapshot {
 
     @EntityId()
     entityId: MaterialSnapshotId;
-
-    @ManyToOne(type => MaterialDraft, { onDelete: "CASCADE" })
-    @JoinColumn({ name: "draftId" })
-    draft: MaterialDraft;
-    @Column()
-    draftId: MaterialDraftSk;
 
     @ManyToOne(type => MaterialEditing, { onDelete: "RESTRICT" })
     @JoinColumn({ name: "editingId" })
@@ -36,14 +28,35 @@ export class MaterialSnapshot {
     @Column({ type: "text", select: false })
     data: string;
 
-    @Column({ asExpression: "char_length(`data`)", generatedType: "STORED" })
-    dataSize: number;
-
     @Column()
+    textCount: number;
+
+    @Column({ type: "varchar", length: 140 })
+    beginning: string;
+
+    @UpdatedAt()
     timestamp: Date;
 
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId() as MaterialSnapshotId;
+        if (!this.entityId) {
+            this.entityId = createEntityId() as MaterialSnapshotId;
+        }
+    }
+
+    @BeforeInsert()
+    @BeforeUpdate()
+    onUpdate() {
+        if (this.data) {
+            const doc: Document = JSON.parse(this.data);
+            let text = "";
+            doc.blocks.forEach(block => {
+                if (block.data.text) {
+                    text += block.data.text + " ";
+                }
+            });
+            this.beginning = text.substring(0, 140);
+            this.textCount = text.length;
+        }
     }
 }

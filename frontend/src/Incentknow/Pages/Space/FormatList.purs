@@ -9,18 +9,16 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
 import Incentknow.API (getFormats)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
-import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Data.Entities (RelatedFormat)
-import Incentknow.Data.Ids (FormatDisplayId, SpaceDisplayId, SpaceId(..))
+import Incentknow.Data.Ids (FormatDisplayId, SpaceDisplayId, SpaceId)
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Organisms.FormatList as FormatList
 import Incentknow.Pages.Format as Format
-import Incentknow.Route (FormatTab(..), Route(..))
+import Incentknow.Route (FormatTab, Route(..))
 
 type Input
   = { spaceId :: SpaceId, spaceDisplayId :: SpaceDisplayId, formatTab :: Maybe (Tuple FormatDisplayId FormatTab) }

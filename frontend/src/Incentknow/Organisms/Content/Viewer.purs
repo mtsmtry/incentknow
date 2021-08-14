@@ -2,7 +2,6 @@ module Incentknow.Organisms.Content.Viewer where
 
 import Prelude
 
-import Data.Argonaut.Core (Json)
 import Data.Array (filter, length)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
@@ -10,11 +9,10 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.VDom.Util (removeAttribute)
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Atoms.Icon (formatWithIcon)
 import Incentknow.Data.Content (getContentSemanticData)
-import Incentknow.Data.Entities (FocusedContent, FocusedFormat, Type(..), PropertyInfo)
+import Incentknow.Data.Entities (FocusedContent, Type(..))
 import Incentknow.Data.Property (Property, mkProperties, toPropertyComposition, toTypedValue)
 import Incentknow.HTML.Utils (css, link, maybeElem, whenElem)
 import Incentknow.Organisms.Content.ValueViewer as Value

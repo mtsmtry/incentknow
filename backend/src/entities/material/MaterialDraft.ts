@@ -5,13 +5,18 @@ import { ContentDraft, ContentDraftSk } from "../content/ContentDraft";
 import { Space, SpaceSk } from "../space/Space";
 import { User, UserSk } from "../user/User";
 import { CreatedAt, createEntityId, EntityId, UpdatedAt } from '../Utils';
-import { Material, MaterialSk } from "./Material";
+import { Material, MaterialSk, MaterialType } from "./Material";
 import { MaterialEditing, MaterialEditingSk } from "./MaterialEditing";
 
 export enum MaterialChangeType {
     INITIAL = "initial",
     WRITE = "write",
     REMOVE = "remove"
+}
+
+export enum MaterialType2 {
+    PLAINTEXT = "plaintext",
+    DOCUMENT = "document"
 }
 
 export type MaterialDraftSk = NewTypeInt<"MaterialDraftSk">;
@@ -35,8 +40,8 @@ export class MaterialDraft {
     @Column("int", { nullable: true })
     currentEditingId: MaterialEditingSk | null;
 
-    //@Column("enum", { enum: MaterialType })
-    //intendedMaterialType: MaterialType;
+    @Column({ type: "enum", enum: MaterialType2 })
+    intendedMaterialType: MaterialType;
 
     // one of content or space is specified and material is priority and content is secondary
     @ManyToOne(type => Content, { onDelete: "SET NULL" })
@@ -56,9 +61,6 @@ export class MaterialDraft {
     intendedSpace: Space | null;
     @Column("int", { nullable: true })
     intendedSpaceId: SpaceSk | null;
-
-    //@Column({ asExpression: "coalesce(materialId, intendedContentDraftId, intendedSpaceId)", generatedType: "VIRTUAL" })
-    //not_null_constrain: number;
 
     @ManyToOne(type => User, { onDelete: "CASCADE" })
     @JoinColumn({ name: "userId" })
@@ -85,15 +87,10 @@ export class MaterialDraft {
     })
     changeType: MaterialChangeType;
 
-    // null when committed
-    @Column("text", { select: false, nullable: true })
-    data: string | null;
-
-    @Column({ type: "varchar", length: 140, nullable: true, asExpression: "left(data, 140)", generatedType: "STORED" })
-    beginning: string | null;
-
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId() as MaterialDraftId;
+        if (!this.entityId) {
+            this.entityId = createEntityId() as MaterialDraftId;
+        }
     }
 }

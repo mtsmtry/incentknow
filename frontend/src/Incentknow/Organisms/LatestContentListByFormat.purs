@@ -7,16 +7,15 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getContents, getSpaceLatestContents)
+import Incentknow.API (getContents)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigate)
-import Incentknow.Atoms.Icon (formatWithIcon, iconButton, iconSolid, remoteWith, userIcon)
-import Incentknow.Atoms.Inputs (menuPositiveButton)
+import Incentknow.Atoms.Icon (formatWithIcon, iconButton, remoteWith, userIcon)
 import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (RelatedContent, RelatedFormat)
-import Incentknow.Data.Ids (FormatId, SpaceId)
+import Incentknow.Data.Ids (SpaceId)
 import Incentknow.HTML.DateTime (dateTime)
-import Incentknow.HTML.Utils (css, maybeElem)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Organisms.BoxView as BoxView
 import Incentknow.Organisms.DataGridView as DataGridView

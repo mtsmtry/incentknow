@@ -9,7 +9,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Atoms.Icon (spaceScopeIcon)
-import Incentknow.Data.Entities (MembershipMethod(..), RelatedSpace, SpaceAuth(..), FocusedSpace)
+import Incentknow.Data.Entities (FocusedSpace)
 import Incentknow.HTML.Utils (css, link, whenElem)
 import Incentknow.Route (Route(..), SpaceTab(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
@@ -68,7 +68,7 @@ render state =
         ]
       ]
 
-handleAction :: forall o s m. MonadEffect m => Behaviour m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. MonadEffect m => Behaviour m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> pure unit
   HandleInput props -> H.put $ initialState props

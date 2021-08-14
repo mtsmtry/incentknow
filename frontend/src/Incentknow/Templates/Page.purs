@@ -13,7 +13,7 @@ tabPage ::
   { tabs :: Array t
   , onChangeTab :: (t -> a)
   , currentTab :: t
-  , showTab :: t -> String
+  , showTab :: t -> H.ComponentHTML a s m
   } ->
   Array (H.ComponentHTML a s m) ->
   Array (H.ComponentHTML a s m) ->
@@ -37,7 +37,7 @@ tabPage input menu header body =
       [ css $ "tab-item" <> if input.currentTab == tab then " selected" else ""
       , HE.onClick $ \_ -> Just $ input.onChangeTab tab
       ]
-      [ HH.text $ input.showTab tab ]
+      [ input.showTab tab ]
 
 verticalTabPage ::
   forall a s m t.

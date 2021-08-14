@@ -39,7 +39,7 @@ type Slot
 type ChildSlots
   = ( delete :: DangerChange.Slot String )
 
-component :: forall q o m. MonadEffect m => H.Component HH.HTML Query Input o m
+component :: forall o m. MonadEffect m => H.Component HH.HTML Query Input o m
 component =
   H.mkComponent
     { initialState

@@ -22,4 +22,5 @@ getMyUserId = map toMaybe _getMyUserId
 login :: { email :: String, password :: String } -> Promise {}
 login args = storeSession $ getPromise $ authenticate args
 
+getPromise :: forall t3. CommandAPI t3 -> Promise t3
 getPromise (CommandAPI api) = api

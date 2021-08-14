@@ -1,4 +1,4 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { NewTypeInt, NewTypeString } from "../../Implication";
 import { Container, ContainerSk } from "../container/Container";
 import { Content, ContentSk } from "../content/Content";
@@ -13,7 +13,7 @@ export type ReactorSk = NewTypeInt<"ReactorSk">;
 
 export type ReactorId = NewTypeString<"ReactorId">;
 
-@Entity()
+// @Entity()
 export class Reactor {
 
     @PrimaryGeneratedColumn()

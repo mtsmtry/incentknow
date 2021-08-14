@@ -7,7 +7,7 @@ import Data.Argonaut.Core (Json, fromObject, fromString, toObject, toString)
 import Data.Either (either)
 import Data.Map (Map)
 import Data.Map as M
-import Data.Maybe (Maybe, fromMaybe)
+import Data.Maybe (fromMaybe)
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..))
 import Foreign (Foreign, F)

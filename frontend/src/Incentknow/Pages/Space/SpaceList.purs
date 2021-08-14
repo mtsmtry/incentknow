@@ -13,11 +13,11 @@ import Incentknow.API (getMySpaces, getPublishedSpaces)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (menuPositiveButton, submitButton)
-import Incentknow.Data.Entities (RelatedSpace, FocusedSpace)
+import Incentknow.Atoms.Inputs (menuPositiveButton)
+import Incentknow.Data.Entities (FocusedSpace)
 import Incentknow.HTML.Utils (css, whenElem)
 import Incentknow.Organisms.SpaceCardView as SpaceCardView
-import Incentknow.Route (Route(..), SpaceTab(..))
+import Incentknow.Route (Route(..))
 import Incentknow.Templates.Main (centerLayout)
 
 type Input

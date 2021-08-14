@@ -2,33 +2,30 @@ module Incentknow.Organisms.ListView where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
+import Data.Array (catMaybes, filter, head)
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.String as S
+import Data.String.CodeUnits (splitAt)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour, navigateRoute)
-import Incentknow.Data.Entities (FocusedFormat, RelatedUser)
+import Incentknow.Atoms.Icon (propertyIcon, userIcon)
+import Incentknow.Data.Content (getContentSemanticData)
+import Incentknow.Data.Entities (RelatedContent)
+import Incentknow.Data.Property (MaterialObject(..), Property, ReferenceValue(..), TypedValue(..), fromJsonToMaterialObject, mkProperties, toTypedValue)
 import Incentknow.HTML.DateTime (dateTime)
-import Incentknow.HTML.Utils (css, link, link_, maybeElem)
-import Incentknow.Route (Route)
-import Incentknow.Route as R
+import Incentknow.HTML.Utils (css, link)
+import Incentknow.Route (Route(..), UserTab(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
 
-type ListViewItem
-  = { user :: Maybe RelatedUser
-    , datetime :: Maybe Number
-    , title :: String
-    , format :: Maybe FocusedFormat
-    , route :: Route
-    }
-
 type Input
-  = { items :: Array ListViewItem
+  = { value :: Array RelatedContent
     }
 
 type State
-  = { items :: Array ListViewItem
+  = { items :: Array RelatedContent
     }
 
 data Action
@@ -47,11 +44,15 @@ component =
   H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval H.defaultEval { initialize = Just Initialize, receive = Just <<< HandleInput, handleAction = handleAction }
+    , eval: H.mkEval H.defaultEval 
+        { initialize = Just Initialize
+        , receive = Just <<< HandleInput
+        , handleAction = handleAction
+        }
     }
 
 initialState :: Input -> State
-initialState input = { items: input.items }
+initialState input = { items: input.value }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
@@ -59,27 +60,61 @@ render state =
     [ css "org-listview" ]
     (map renderItem state.items)
   where
-  renderItem :: ListViewItem -> H.ComponentHTML Action ChildSlots m
+  renderItem :: RelatedContent -> H.ComponentHTML Action ChildSlots m
   renderItem item =
-    link Navigate item.route
-      [ css "item" ]
-      [ maybeElem item.format \format ->
-          HH.div [ css "format" ]
-            [ link_ Navigate (R.Space format.space.displayId $ R.SpaceFormat format.displayId R.FormatMain) [ HH.text $ format.displayName ] ]
-      , HH.div [ css "title" ]
-          [ HH.text item.title ]
-      , case item.user, item.datetime of
-          Just user, Just dt ->
-            HH.div [ css "user" ]
-              [ HH.div [ css "username" ] [ HH.span [] [ link_ Navigate (R.User user.displayId R.UserMain) [HH.text user.displayName] ] ]
-              , HH.div [ css "datetime" ] [ HH.span [] [ dateTime dt ] ]
+    HH.div [ css "item" ]
+      [ HH.div [ css "user" ]
+          [ link Navigate (User item.creatorUser.displayId UserMain) 
+              []
+              [ userIcon item.creatorUser ]
+          ]
+      , HH.div [ css "main" ]
+          [ link Navigate (Content item.contentId)
+              []
+              [ HH.span [ css "title" ] [ HH.text semantic.title ]
+              , HH.span [ css "properties" ] (map renderProperty properties)
               ]
-          Just user, Nothing -> HH.div [ css "username" ] [ HH.span [] [ link_ Navigate (R.User user.displayId R.UserMain) [ HH.text user.displayName ] ] ]
-          Nothing, Just dt -> HH.div [ css "datetime" ] [ HH.span [] [ dateTime dt ] ]
-          _, _ -> HH.text ""
+          ]
+      , HH.div [ css "timestamp" ]
+          [ link Navigate (Content item.contentId) 
+              []
+              [ dateTime item.createdAt ]
+          ]
+      ]
+    where
+    properties =
+      catMaybes
+      $ map (\prop-> map (\str-> { str, prop }) $ showProperty prop)
+      $ filter (\x-> fromMaybe true $ map (\title-> title.info.id /= x.info.id) semantic.titleProperty) 
+      $ mkProperties item.data item.format.currentStructure.properties
+    semantic = getContentSemanticData item.data item.format
+
+    showProperty :: Property -> Maybe String
+    showProperty prop = map (\x-> if S.length x > maxLength then (splitAt maxLength x).before <> "..." else x) str
+      where
+      str = case toTypedValue prop.value prop.info.type of
+        IntTypedValue (Just vl) -> Just $ show vl
+        BoolTypedValue (Just vl) -> Just $ show vl
+        StringTypedValue (Just vl) -> Just vl
+        TextTypedValue (Just vl) -> Just vl
+        EnumTypedValue enums (Just vl) -> map _.displayName $ head $ filter (\en-> en.id == vl) enums
+        ContentTypedValue _ (JustReference content) -> map _.text sm.titleProperty
+          where
+          sm = getContentSemanticData content.data content.format
+        DocumentTypedValue (JustReference vl) -> case fromJsonToMaterialObject vl of
+          MaterialObjectRelated mat -> Just mat.displayName
+          _ -> Nothing
+        _ -> Nothing
+
+      maxLength = 15
+
+    renderProperty :: { str :: String, prop :: Property } -> H.ComponentHTML Action ChildSlots m
+    renderProperty { str, prop } = HH.span [ css "property" ] 
+      [ propertyIcon prop.info
+      , HH.text str
       ]
 
-handleAction :: forall o s m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> pure unit
   HandleInput props -> H.put $ initialState props

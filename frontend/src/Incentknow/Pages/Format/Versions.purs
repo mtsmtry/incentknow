@@ -8,11 +8,11 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getStructures)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeAPI, forRemote)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (RelatedStructure)
-import Incentknow.Data.Ids (FormatId(..))
+import Incentknow.Data.Ids (FormatId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.Structure as Structure
 

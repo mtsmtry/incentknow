@@ -4,7 +4,6 @@ import Prelude
 
 import Data.Array (head, mapWithIndex)
 import Data.Maybe (Maybe(..), maybe)
-import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
@@ -61,7 +60,7 @@ render state =
         --  { format: item.format, value: item.data } absurd
       ]
 
-handleAction :: forall o s m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> pure unit
   HandleInput props -> H.put $ initialState props

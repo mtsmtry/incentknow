@@ -1,11 +1,11 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { NewTypeInt, NewTypeString } from "../../Implication";
 import { Container, ContainerSk } from "../container/Container";
 import { Structure, StructureSk } from "../format/Structure";
 import { Material } from "../material/Material";
 import { User, UserSk } from "../user/User";
 import { CreatedAt, createEntityId, DateColumn, EntityId, UpdatedAt } from '../Utils';
-import { ContentCommit } from "./ContentCommit";
+import { ContentCommit, ContentCommitSk } from "./ContentCommit";
 
 export type ContentSk = NewTypeInt<"ContentSk">;
 
@@ -28,8 +28,11 @@ export class Content {
     @EntityId()
     entityId: ContentId;
 
-    @Column("simple-json", { select: false })
-    data: any;
+    @OneToOne(type => ContentCommit, { onDelete: "RESTRICT" })
+    @JoinColumn({ name: "commitId" })
+    commit: ContentCommit;
+    @Column({ nullable: true }) // トランザクション外ではnullにならない
+    commitId: ContentCommitSk;
 
     @ManyToOne(type => Container, { onDelete: "RESTRICT" })
     @JoinColumn({ name: "containerId" })
@@ -79,6 +82,8 @@ export class Content {
 
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId() as ContentId;
+        if (!this.entityId) {
+            this.entityId = createEntityId() as ContentId;
+        }
     }
 }

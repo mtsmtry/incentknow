@@ -3,7 +3,6 @@ import { ContentDraftSk } from "../../../entities/content/ContentDraft";
 import { MaterialSk } from "../../../entities/material/Material";
 import { MaterialDraft, MaterialDraftId, MaterialDraftSk } from "../../../entities/material/MaterialDraft";
 import { UserSk } from "../../../entities/user/User";
-import { RelatedMaterial } from "../../../interfaces/material/Material";
 import { toFocusedMaterialDraft, toRelatedMaterialDraft } from "../../../interfaces/material/MaterialDraft";
 import { InternalError } from "../../../services/Errors";
 import { mapQuery } from "../MappedQuery";
@@ -22,6 +21,10 @@ export class MaterialDraftQuery extends SelectFromSingleTableQuery<MaterialDraft
         return new MaterialDraftQuery(this.qb.where({ materialId }));
     }
 
+    byMaterialAndUser(materialId: MaterialSk, userId: UserSk) {
+        return new MaterialDraftQuery(this.qb.where({ materialId, userId }));
+    }
+
     byMaterials(materialIds: MaterialSk[]) {
         return new MaterialDraftQuery(this.qb.where("x.materialId IN (:...ids)", { ids: materialIds }));
     }
@@ -30,12 +33,19 @@ export class MaterialDraftQuery extends SelectFromSingleTableQuery<MaterialDraft
         return new MaterialDraftQuery(this.qb.where({ intendedContentDraftId }));
     }
 
-    selectRaw() {
-        return new MaterialDraftQuery(this.qb.addSelect("x.data"));
+    joinSnapshotAndSelectData() {
+        const query = this.qb
+            .leftJoinAndSelect("x.currentEditing", "currentEditing")
+            .leftJoinAndSelect("currentEditing.snapshot", "snapshot")
+            .addSelect("snapshot.data");
+        return new MaterialDraftQuery(query);
     }
 
     selectRelated() {
-        const query = this.qb;
+        const query = this.qb
+            .leftJoinAndSelect("x.currentEditing", "currentEditing")
+            .leftJoinAndSelect("currentEditing.snapshot", "snapshot")
+            .addSelect("snapshot.data");
         return mapQuery(query, toRelatedMaterialDraft);
     }
 
@@ -43,14 +53,16 @@ export class MaterialDraftQuery extends SelectFromSingleTableQuery<MaterialDraft
         const query = this.qb
             .leftJoinAndSelect("x.material", "material")
             .leftJoinAndSelect("x.intendedContentDraft", "intendedContentDraft")
-            .addSelect("x.data");
+            .leftJoinAndSelect("x.currentEditing", "currentEditing")
+            .leftJoinAndSelect("currentEditing.snapshot", "snapshot")
+            .addSelect("snapshot.data");
 
         return mapQuery(query, x => {
-            const data = x.data;
+            const data = x.currentEditing?.snapshot.data;
             if (!data) {
                 throw new InternalError("data is null");
             }
-            return (m: RelatedMaterial | null) => toFocusedMaterialDraft(x, data, m);
+            return toFocusedMaterialDraft(x, data);
         });
     }
 }

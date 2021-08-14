@@ -2,7 +2,6 @@ module Incentknow.Pages.Content where
 
 import Prelude
 
-import Data.Array (filter, head)
 import Data.Foldable (for_)
 import Data.Map as M
 import Data.Maybe (Maybe(..))
@@ -13,20 +12,17 @@ import Halogen (SubscriptionId)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getContent)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forItem, forRemote, toMaybe)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forItem, forRemote)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute, pushState)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Atoms.Inputs (button)
-import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (FocusedContent, Relation)
-import Incentknow.HTML.Utils (css, link_, maybeElem)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.Content.Viewer as Content
 import Incentknow.Organisms.RelatedContents as RelatedContents
 import Incentknow.Organisms.UserCard as UserCard
-import Incentknow.Route (ContentSpec(..), EditContentTarget(..), EditTarget(..), Route(..))
+import Incentknow.Route (ContentSpec(..), Route)
 import Incentknow.Route as R
 import Incentknow.Templates.Main (centerLayout)
-import Incentknow.Templates.Page (section, tabPage)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input

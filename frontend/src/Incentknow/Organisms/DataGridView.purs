@@ -10,16 +10,14 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour, navigateRoute)
-import Incentknow.Data.Entities (FocusedFormat, PropertyInfo, RelatedUser, RelatedContent)
+import Incentknow.Data.Entities (PropertyInfo, RelatedContent)
 import Incentknow.Data.Property (Property, mkProperties)
-import Incentknow.HTML.DateTime (dateTime)
-import Incentknow.HTML.Utils (css, link, link_, maybeElem)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Route (Route)
-import Incentknow.Route as R
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
-  = { items :: Array RelatedContent
+  = { value :: Array RelatedContent
     }
 
 type State
@@ -46,7 +44,7 @@ component =
     }
 
 initialState :: Input -> State
-initialState input = { items: input.items }
+initialState input = { items: input.value }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
@@ -76,7 +74,7 @@ render state =
   renderContent item =
     HH.tr [] (map renderCell $ mkProperties item.data properties)
 
-handleAction :: forall o s m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> pure unit
   HandleInput props -> H.put $ initialState props

@@ -2,27 +2,28 @@ module Incentknow.Organisms.ContentList where
 
 import Prelude
 
-import Data.Array (catMaybes, filter, head, length, nubByEq)
+import Data.Array (head, length, nubByEq)
 import Data.Map (Map)
 import Data.Map as M
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Data.Set (fromFoldable, toUnfoldable)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 import Incentknow.AppM (class Behaviour, navigate)
-import Incentknow.Atoms.Inputs (button)
-import Incentknow.Data.Content (getContentSemanticData)
-import Incentknow.Data.Entities (FocusedFormat, RelatedContent, RelatedUser)
+import Incentknow.Atoms.Icon (icon)
+import Incentknow.Data.Entities (FocusedFormat, RelatedContent)
 import Incentknow.Data.Ids (FormatId, UserId)
+import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.FormatMenu as FormatMenu
-import Incentknow.Organisms.ListView (ListViewItem)
-import Incentknow.Organisms.ListView as ListView
 import Incentknow.Organisms.BoxView as BoxView
 import Incentknow.Organisms.DataGridView as DataGridView
-import Incentknow.Route (Route(..))
+import Incentknow.Organisms.ListView as ListView
+import Incentknow.Route (Route)
+import Incentknow.Templates.Page (sectionWithHeader)
 
 data ViewType
   = ListView
@@ -84,54 +85,24 @@ initialState input =
 
   formatIds = toUnfoldable $ fromFoldable $ map (\x -> x.format.formatId) input.value
 
-toListViewItem :: State -> RelatedContent -> Maybe ListViewItem
-toListViewItem state content = Just $ toItem content maybeUser
-  where
-  maybeUser = Nothing
-
-  toItem :: RelatedContent -> Maybe RelatedUser -> ListViewItem
-  toItem content maybeUser =
-    { user: maybeUser
-    , datetime: Just content.updatedAt
-    , title: common.title
-    , format: Just content.format
-    , route: Content content.contentId
-    }
-    where
-    common = getContentSemanticData content.data content.format
-
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  {- tabGrouping
-    { tabs: [ ContentMain ]
-    , onChangeTab: ChangeTab
-    , currentTab: state.tab
-    , showTab:
-        case _ of
-          ContentMain -> "全て"
-    }
-    [ HH.text $ show state.formatNum <> "種類のフォーマット"
-    , whenElem (state.formatNum > 1) \_ ->
-    -- TODO
-        HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component { value: state.formatId, filter: FormatMenu.None, disabled: length items == 0 }
-          (Just <<< ChangeFormat)
-    ]
-    [ HH.slot (SProxy :: SProxy "listView") unit ListView.component { items } absurd
-    ]
-  -}
-  HH.div []
-    [ HH.div []
-      [ button "List" (ChageViewType ListView)
-      , button "DataGrid" (ChageViewType DataGridView)
-      , button "Box" (ChageViewType BoxView)
+  sectionWithHeader "org-content-list"
+    [ HH.span [ css "info" ] [ HH.text $ (show $ length state.contents) <> "件のコンテンツ" ]
+    , HH.span [ css "viewtype" ]
+      [ HH.span [ css "item", HE.onClick $ \_-> Just $ ChageViewType ListView ] 
+          [ icon "fas fa-list" ]
+      , HH.span [ css "item", HE.onClick $ \_-> Just $ ChageViewType DataGridView ] 
+          [ icon "fas fa-th" ]
       ]
-    , case state.viewType of
-        ListView -> HH.slot (SProxy :: SProxy "listView") unit ListView.component { items } absurd
-        DataGridView -> HH.slot (SProxy :: SProxy "dataGridView") unit DataGridView.component { items: state.contents } absurd
+    ]
+    [ case state.viewType of
+        ListView -> HH.slot (SProxy :: SProxy "listView") unit ListView.component { value: state.contents } absurd
+        DataGridView -> HH.slot (SProxy :: SProxy "dataGridView") unit DataGridView.component { value: state.contents } absurd
         BoxView -> HH.slot (SProxy :: SProxy "boxView") unit BoxView.component { items: state.contents } absurd
     ]
   where
-  items = catMaybes $ map (toListViewItem state) $ filter (\x -> maybe true (\y -> x.format.formatId == y) state.formatId) state.contents
+  format = map _.format $ head state.contents
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of

@@ -1,13 +1,13 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { NewTypeInt, NewTypeString } from "../../Implication";
 import { Content, ContentSk } from "../content/Content";
 import { Space, SpaceSk } from "../space/Space";
 import { User, UserSk } from "../user/User";
 import { CreatedAt, createEntityId, EntityId, UpdatedAt } from '../Utils';
-import { MaterialCommit } from "./MaterialCommit";
+import { MaterialCommit, MaterialCommitSk } from "./MaterialCommit";
 
 export enum MaterialType {
-    FOLDER = "folder",
+    PLAINTEXT = "plaintext",
     DOCUMENT = "document"
 }
 
@@ -39,17 +39,14 @@ export class Material {
     @Column({ asExpression: "coalesce(contentId, spaceId)", generatedType: "VIRTUAL" })
     not_null_constrain: number;
 
-    @Column({ type: "varchar", length: 140, asExpression: "left(data, 140)", generatedType: "STORED" })
-    beginning: string;
-
-    @Column({
-        type: "enum",
-        enum: MaterialType
-    })
+    @Column({ type: "enum", enum: MaterialType })
     materialType: MaterialType;
 
-    @Column({ type: "text", select: false })
-    data: string;
+    @OneToOne(type => MaterialCommit, { onDelete: "RESTRICT" })
+    @JoinColumn({ name: "commitId" })
+    commit: MaterialCommit;
+    @Column({ nullable: true }) // トランザクション外ではnullにならない
+    commitId: MaterialCommitSk;
 
     @CreatedAt()
     createdAt: Date;
@@ -74,6 +71,8 @@ export class Material {
 
     @BeforeInsert()
     onInsert() {
-        this.entityId = createEntityId() as MaterialId;
+        if (!this.entityId) {
+            this.entityId = createEntityId() as MaterialId;
+        }
     }
 }
