@@ -4,8 +4,8 @@ services:
   db:
     image: mysql:5.7
     environment:
-      MYSQL_USER: docker
-      MYSQL_PASSWORD: password
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 21280712
       MYSQL_DATABASE: incentknow
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       TZ: 'Asia/Tokyo'
@@ -15,4 +15,12 @@ services:
       - ./db/conf.d:/etc/mysql/conf.d
     ports:
       - "3306:3306"
+    restart: always
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
     restart: always
