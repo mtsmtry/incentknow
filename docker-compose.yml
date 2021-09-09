@@ -20,6 +20,7 @@ services:
   api:
     environment:
       ENV_SETTINGS: production
+      PORT: 8081
     build:
       context: .
       dockerfile: Dockerfile
