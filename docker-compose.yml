@@ -4,7 +4,7 @@ services:
   db:
     image: mysql:5.7
     environment:
-      MYSQL_USER: root
+      MYSQL_USER: docker
       MYSQL_PASSWORD: 21280712
       MYSQL_DATABASE: incentknow
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"

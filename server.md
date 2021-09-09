@@ -73,3 +73,8 @@ ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password
 # MySQL User
 user: root
 pass: 21280712
+
+
+mysql -u root --port 3306 -h 34.146.76.189 -ppassword 21280712
+
+mysql -u root --port 3306 -h localhost -ppassword 21280712
