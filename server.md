@@ -75,6 +75,5 @@ user: root
 pass: 21280712
 
 
-mysql -u root --port 3306 -h 34.146.76.189 -ppassword 21280712
-
-mysql -u root --port 3306 -h localhost -ppassword 21280712
+mysql -u docker --port 3306 -h 34.146.76.189 -p21280712
+mysql -u docker --port 3306 -h localhost -p21280712
