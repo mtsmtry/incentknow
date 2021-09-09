@@ -1,7 +1,7 @@
 {
    "type": "mysql",
    "database": "incentknow",
-   "host": "docker",
+   "host": "db",
    "port": 3306,
    "username": "docker",
    "password": "21280712",
