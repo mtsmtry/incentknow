@@ -52,3 +52,7 @@ mysql -u docker --port 3306 -h 0.0.0.0 -p21280712
 mysqldump -u root -ppassword incentknow > dbdump.sql
 - dbdump.sqlのutf8mb4_0900_ai_ciをutf8mb4_unicode_ciに置き換える
 mysql -u docker -h 34.146.76.189 -p21280712 incentknow < dbdump.sql
+
+# APIテスト
+curl -sS -w '\n' -X POST 'localhost:8081/getPublishedSpaces' --data '[]' -XPOST
+curl -sS -w '\n' -X POST '0.0.0.0:8081/getPublishedSpaces' --data '[]' -XPOST
