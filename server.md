@@ -2,7 +2,8 @@
 chmod 600 Incentknow.cer
 ssh -i Incentknow.cer ubuntu@13.113.194.38
 
-ssh ryoui@34.146.76.189
+ssh -i ~/.ssh/id_rsa ryoui@34.146.76.189
+ssh 34.146.76.189
 
 # MySQLインストール
 sudo apt-get update
