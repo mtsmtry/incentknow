@@ -20,4 +20,5 @@ WORKDIR /code/backend/
 RUN npm run build
 
 # 実行
+EXPOSE 8081
 ENTRYPOINT [ "npm", "run", "start" ]

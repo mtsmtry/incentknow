@@ -18,6 +18,8 @@ services:
     restart: always
 
   api:
+    environment:
+      ENV_SETTINGS: production
     build:
       context: .
       dockerfile: Dockerfile

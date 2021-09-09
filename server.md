@@ -1,17 +1,11 @@
 # 接続
-chmod 600 Incentknow.cer
-ssh -i Incentknow.cer ubuntu@13.113.194.38
-
-ssh -i ~/.ssh/id_rsa ryoui@34.146.76.189
 ssh 34.146.76.189
 
 # MySQLインストール
 sudo apt-get update
 sudo apt-get install docker.io
 sudo apt install docker-compose
-
 sudo apt install mysql-server mysql-client
-
 sudo apt install apache2
 
 # ファイアーウォールの設定
@@ -21,18 +15,14 @@ sudo ufw allow 'Apache'
 sudo ufw enable
 sudo ufw status
 
-sudo chown -R root:root /home/ryoui/incentknow
-
+# Appacheの設定
+- 権限設定
 sudo chown -R $USER:$USER /home/ryoui/incentknow
 sudo chmod -R 755 /home/ryoui/incentknow
-
-sudo chown -R apache:apache /home/ryoui/incentknow
-
+- 権限確認
 ll /var/www/incentknow.com
 ll /home/ryoui/incentknow/frontend/public
-
-sudo nano /home/ryoui/incentknow/frontend/public/index.html
-
+- 設定する(上位設定のDocumentRootに制約されるためDocumentRootは/var/wwwの配下にする)
 sudo nano /etc/apache2/sites-available/incentknow.com.conf
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost
@@ -42,38 +32,23 @@ sudo nano /etc/apache2/sites-available/incentknow.com.conf
     ErrorLog ${APACHE_LOG_DIR}/error.log
     CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
-sudo a2ensite incentknow.com.conf
 
+- 有効化
+sudo a2ensite incentknow.com.conf
+- 再起動
 sudo systemctl restart apache2
 
 # GitHub SSH接続
 https://blog.katsubemakito.net/git/github-ssh-keys
-
 git clone git@github.com:mtsmtry/incentknow.git
 
-# docker-composeをdockerに接続できるようにする
-sudo usermod -aG docker $USER
-ログアウト
+# データベースへの接続
+- ローカルから接続する(GCPのファイアーウォールとuwfで3306を許可する)
+mysql -u docker --port 3306 -h 34.146.76.189 -p21280712 incentknow
+- サーバー内で接続する
+mysql -u docker --port 3306 -h 0.0.0.0 -p21280712
 
-mysql -u docker --port 3306 -h 13.113.194.38 -ppassword incentknow
-mysql -u root --port 3306 -h localhost -ppassword incentknow
-
-show variables like '%char%';
-
-# 起動確認
-mysqladmin ping -u docker -p
-# 起動
-mysql.server start
-
-
-
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
-
-
-# MySQL User
-user: root
-pass: 21280712
-
-
-mysql -u docker --port 3306 -h 34.146.76.189 -p21280712
-mysql -u docker --port 3306 -h localhost -p21280712
+# データベースのコピー
+mysqldump -u root -ppassword incentknow > dbdump.sql
+- dbdump.sqlのutf8mb4_0900_ai_ciをutf8mb4_unicode_ciに置き換える
+mysql -u docker -h 34.146.76.189 -p21280712 incentknow < dbdump.sql
