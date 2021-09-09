@@ -17,7 +17,7 @@ COPY ./ /code
 WORKDIR /code/backend/
 
 # コンパイル
-RUN tsc
+RUN npm run build
 
 # 実行
 ENTRYPOINT [ "npm", "run", "start" ]
