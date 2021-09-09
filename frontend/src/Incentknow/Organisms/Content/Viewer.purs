@@ -4,20 +4,22 @@ import Prelude
 
 import Data.Array (filter, length)
 import Data.Maybe (Maybe(..))
+import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.AppM (class Behaviour, navigateRoute)
+import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Icon (formatWithIcon)
+import Incentknow.Atoms.Inputs (menuPositiveButton)
 import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (FocusedContent, Type(..))
 import Incentknow.Data.Property (Property, mkProperties, toPropertyComposition, toTypedValue)
 import Incentknow.HTML.Utils (css, link, maybeElem, whenElem)
 import Incentknow.Organisms.Content.ValueViewer as Value
 import Incentknow.Organisms.UserCard as UserCard
-import Incentknow.Route (FormatTab(..), Route(..), SpaceTab(..))
+import Incentknow.Route (EditContentTarget(..), EditTarget(..), Route(..))
 import Incentknow.Templates.Page (section, sectionWithHeader)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
@@ -29,13 +31,14 @@ type State
 
 data Action
   = HandleInput Input
-  | Navigate MouseEvent Route
+  | Navigate Route
+  | NavigateRoute MouseEvent Route
 
 type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = ( value :: Value.Slot Unit
+  = ( value :: Value.Slot String
     , userCard :: UserCard.Slot Unit
     )
 
@@ -67,9 +70,10 @@ render state =
                   ]
             , HH.div [ css "side" ]
                 [ HH.div [ css "side-format" ] 
-                    [ link Navigate (Space state.content.format.space.displayId $ SpaceFormat state.content.format.displayId FormatMain)
+                    [ link NavigateRoute (Container state.content.format.space.displayId state.content.format.displayId)
                         []
                         [ formatWithIcon state.content.format ]
+                    , menuPositiveButton "編集" (Navigate $ EditDraft $ ContentTarget $ TargetContent state.content.contentId)
                     ]
                 , HH.div [ css "side-user" ]
                     [ HH.slot (SProxy :: SProxy "userCard") unit UserCard.component 
@@ -81,7 +85,7 @@ render state =
             ]
         , whenElem (length infoProps > 0) \_->
             HH.div [ css "info" ] 
-              [ HH.slot (SProxy :: SProxy "value") unit Value.component 
+              [ HH.slot (SProxy :: SProxy "value") "top" Value.component 
                   { value: toTypedValue state.content.data $ ObjectType $ map _.info infoProps } absurd
               ]
         ]
@@ -98,7 +102,7 @@ render state =
     sectionWithHeader "section"
       [ HH.text prop.info.displayName ]
       [ HH.div [ css "section-value" ] 
-          [ HH.slot (SProxy :: SProxy "value") unit Value.component 
+          [ HH.slot (SProxy :: SProxy "value") (unwrap prop.info.id) Value.component 
               { value: toTypedValue prop.value prop.info.type } absurd
           ]
       ]
@@ -106,4 +110,5 @@ render state =
 handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   HandleInput input -> H.put $ initialState input
-  Navigate e route -> navigateRoute e route
+  Navigate route -> navigate route
+  NavigateRoute e route -> navigateRoute e route

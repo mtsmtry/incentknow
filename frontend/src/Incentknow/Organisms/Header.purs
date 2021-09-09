@@ -13,7 +13,7 @@ import Incentknow.API.Execution as R
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Data.Entities (IntactAccount)
 import Incentknow.HTML.Utils (css, link, link_, maybeElem)
-import Incentknow.Route (EditMaterialTarget(..), EditTarget(..), Route(..), UserTab(..))
+import Incentknow.Route (EditContentTarget(..), EditMaterialTarget(..), EditTarget(..), Route(..), UserTab(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
@@ -86,7 +86,7 @@ render state =
 
   headerLinkEditDraft :: String -> H.ComponentHTML Action () m
   headerLinkEditDraft name =
-    link Navigate (EditDraft $ MaterialTarget $ MaterialTargetBlank Nothing)
+    link Navigate (EditDraft $ ContentTarget $ TargetBlank Nothing Nothing)
       [ css $ case state.route of
           EditDraft _ -> "link link-selected"
           _ -> "link" ]

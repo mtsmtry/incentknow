@@ -1,9 +1,10 @@
 import { ContentSk } from "../../../entities/content/Content";
-import { Material, MaterialSk, MaterialType } from "../../../entities/material/Material";
+import { Material, MaterialSk } from "../../../entities/material/Material";
 import { MaterialCommit } from "../../../entities/material/MaterialCommit";
 import { MaterialEditingSk } from "../../../entities/material/MaterialEditing";
 import { SpaceSk } from "../../../entities/space/Space";
 import { UserSk } from "../../../entities/user/User";
+import { encodeMaterialData, MaterialData } from "../../../interfaces/material/Material";
 import { MaterialCommitQuery, MaterialCommitQueryFromEntity } from "../../queries/material/MaterialCommitQuery";
 import { MaterialQuery, MaterialQueryFromEntity } from "../../queries/material/MaterialQuery";
 import { BaseCommand, BaseRepository, Command, Repository } from "../../Repository";
@@ -40,10 +41,10 @@ export class MaterialCommand implements BaseCommand {
         await this.materials.update(materialId, { spaceId, contentId: null });
     }
 
-    async createMaterialInSpace(spaceId: SpaceSk, userId: UserSk, data: string, materialType: MaterialType, editingId: MaterialEditingSk) {
+    async createMaterialInSpace(spaceId: SpaceSk, userId: UserSk, materialData: MaterialData, editingId: MaterialEditingSk) {
         let material = this.materials.create({
             spaceId,
-            materialType,
+            materialType: materialData.type,
             creatorUserId: userId,
             updaterUserId: userId
         });
@@ -52,7 +53,7 @@ export class MaterialCommand implements BaseCommand {
         let commit = this.commits.create({
             materialId: material.id,
             editingId,
-            data: data,
+            ...encodeMaterialData(materialData),
             committerUserId: userId
         });
         commit = await this.commits.save(commit);
@@ -62,33 +63,37 @@ export class MaterialCommand implements BaseCommand {
         return new MaterialQueryFromEntity(material);
     }
 
-    async createMaterialInContent(contentId: ContentSk, userId: UserSk, data: string, materialType: MaterialType, editingId: MaterialEditingSk) {
+    async createMaterialInContent(contentId: ContentSk, userId: UserSk, materialData: MaterialData, editingId: MaterialEditingSk) {
         let material = this.materials.create({
             contentId,
-            materialType,
+            materialType: materialData.type,
             creatorUserId: userId,
             updaterUserId: userId
         });
         material = await this.materials.save(material);
 
+        console.log(material);
+
         let commit = this.commits.create({
             materialId: material.id,
             editingId,
-            data: data,
+            ...encodeMaterialData(materialData),
             committerUserId: userId
         });
         commit = await this.commits.save(commit);
+
+        console.log(commit);
 
         await this.materials.update(material.id, { commitId: commit.id });
 
         return new MaterialQueryFromEntity(material);
     }
 
-    async commitMaterial(userId: UserSk, materialId: MaterialSk, data: string, editingId: MaterialEditingSk) {
+    async commitMaterial(userId: UserSk, materialId: MaterialSk, materialData: MaterialData, editingId: MaterialEditingSk) {
         let commit = this.commits.create({
             materialId,
             editingId,
-            data: data,
+            ...encodeMaterialData(materialData),
             committerUserId: userId
         });
         commit = await this.commits.save(commit);

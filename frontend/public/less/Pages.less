@@ -153,12 +153,7 @@
 }
 
 .page-format {
-    .name {
-       
-    }
-
-    .desc {
-    }
+    margin-top: 20px;
 }
 
 .page-container {
@@ -372,7 +367,6 @@
 }
 
 .page-user-setting {
-    .section;
     padding: 0px;
 
     >.item {
@@ -556,6 +550,15 @@
             margin-inline-start: 40px;
         }
     }
+
+    >.relations {
+        margin-top: 25px;
+
+        .org-content-list {
+            border-top-left-radius: 0px;
+            border-top-right-radius: 0px;
+        }
+    }
 }
 
 .page-cmp-outliner {
@@ -576,11 +579,11 @@
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
-        margin: 0px -4px;
+        margin: 0px -7px;
 
         .item {
-            width : calc(100%/2 - 8px);
-            margin: 6px 4px;
+            width : calc(100%/2 - 14px);
+            margin: 16px 7px;
         }
     }
 }
@@ -748,5 +751,47 @@
         border-bottom-left-radius: 0px;
         border-bottom-right-radius: 0px;
         padding: 10px;
+    }
+}
+
+.page-home {
+    background: white;
+    font-family: Rubik, "Noto Sans JP", sans-serif;
+    margin: auto;
+    width: 800px;
+
+    >.logo {
+        font-family: "play";
+        font-size: 80px;
+        text-align: center;
+        color: #444;
+    }
+
+    >.desc {
+        color: #666;
+        text-align: center;
+        font-size: 20px;
+    }
+
+    >.part {
+        margin-top: 30px;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 25px;
+        padding: 20px;
+
+        >.header {
+            text-align: center;
+            font-size: 30px;
+        }
+
+        >.desc {
+            color: #666;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        >.example {
+            pointer-events: none;
+        }
     }
 }

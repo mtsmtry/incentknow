@@ -19,7 +19,7 @@ export class MaterialSnapshot {
     @EntityId()
     entityId: MaterialSnapshotId;
 
-    @ManyToOne(type => MaterialEditing, { onDelete: "RESTRICT" })
+    @ManyToOne(type => MaterialEditing, { onDelete: "CASCADE" })
     @JoinColumn({ name: "editingId" })
     editing: MaterialEditing;
     @Column()
@@ -41,22 +41,6 @@ export class MaterialSnapshot {
     onInsert() {
         if (!this.entityId) {
             this.entityId = createEntityId() as MaterialSnapshotId;
-        }
-    }
-
-    @BeforeInsert()
-    @BeforeUpdate()
-    onUpdate() {
-        if (this.data) {
-            const doc: Document = JSON.parse(this.data);
-            let text = "";
-            doc.blocks.forEach(block => {
-                if (block.data.text) {
-                    text += block.data.text + " ";
-                }
-            });
-            this.beginning = text.substring(0, 140);
-            this.textCount = text.length;
         }
     }
 }

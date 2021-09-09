@@ -30,6 +30,8 @@ data ViewType
   | DataGridView
   | BoxView
 
+derive instance eqViewType :: Eq ViewType
+
 type Input
   = { value :: Array RelatedContent }
 
@@ -90,9 +92,15 @@ render state =
   sectionWithHeader "org-content-list"
     [ HH.span [ css "info" ] [ HH.text $ (show $ length state.contents) <> "件のコンテンツ" ]
     , HH.span [ css "viewtype" ]
-      [ HH.span [ css "item", HE.onClick $ \_-> Just $ ChageViewType ListView ] 
-          [ icon "fas fa-list" ]
-      , HH.span [ css "item", HE.onClick $ \_-> Just $ ChageViewType DataGridView ] 
+      [ HH.span 
+          [ css $ "item" <> if state.viewType == ListView then " selected" else ""
+          , HE.onClick $ \_-> Just $ ChageViewType ListView
+          ] 
+          [ icon "fas fa-th-list" ]
+      , HH.span
+          [ css $ "item" <> if state.viewType == DataGridView then " selected" else ""
+          , HE.onClick $ \_-> Just $ ChageViewType DataGridView
+          ] 
           [ icon "fas fa-th" ]
       ]
     ]

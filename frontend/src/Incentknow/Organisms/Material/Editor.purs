@@ -10,6 +10,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (MaterialData(..))
+import Incentknow.Molecules.PlainTextEditor as PlainTextEditor
 import Incentknow.Organisms.Document.Editor as DocumentEditor
 
 type Input 
@@ -32,6 +33,7 @@ type Slot p
 
 type ChildSlots
   = ( documentEditor :: DocumentEditor.Slot Unit
+    , plainTextEditor :: PlainTextEditor.Slot Unit
     )
 
 component :: forall q m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q Input Output m
@@ -59,7 +61,9 @@ render state =
     DocumentMaterialData doc ->
       HH.slot (SProxy :: SProxy "documentEditor") unit DocumentEditor.component { value: doc }
         (Just <<< ChangeData <<< DocumentMaterialData)
-    _ -> HH.text ""
+    PlaintextMaterialData text ->
+      HH.slot (SProxy :: SProxy "plainTextEditor") unit PlainTextEditor.component { value: text, variableHeight: true, readonly: false }
+        (Just <<< ChangeData <<< PlaintextMaterialData)
 
 handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of

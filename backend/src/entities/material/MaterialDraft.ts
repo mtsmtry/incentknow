@@ -44,7 +44,7 @@ export class MaterialDraft {
     intendedMaterialType: MaterialType;
 
     // one of content or space is specified and material is priority and content is secondary
-    @ManyToOne(type => Content, { onDelete: "SET NULL" })
+    @ManyToOne(type => Material, { onDelete: "SET NULL" })
     @JoinColumn({ name: "materialId" })
     material: Material | null;
     @Column("int", { nullable: true })

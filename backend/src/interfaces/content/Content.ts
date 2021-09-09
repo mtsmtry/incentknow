@@ -1,6 +1,6 @@
 import { Content, ContentId } from "../../entities/content/Content";
 import { Int } from "../../Implication";
-import { FocusedFormat } from "../format/Format";
+import { FocusedFormat, Relation } from "../format/Format";
 import { RelatedUser, toRelatedUser } from "../user/User";
 import { toTimestamp } from "../Utils";
 import { RelatedContentDraft } from "./ContentDraft";
@@ -59,5 +59,7 @@ export function toFocusedContent(content: Content, draft: RelatedContentDraft | 
     };
 }
 
-
-
+export interface ContentRelation {
+    contents: RelatedContent[];
+    relation: Relation;
+}

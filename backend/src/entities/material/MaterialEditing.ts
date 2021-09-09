@@ -30,7 +30,7 @@ export class MaterialEditing {
     @Column()
     draftId: MaterialDraftSk;
 
-    @OneToOne(type => MaterialSnapshot, { onDelete: "RESTRICT" })
+    @OneToOne(type => MaterialSnapshot, { onDelete: "SET NULL" })
     @JoinColumn({ name: "snapshotId" })
     snapshot: MaterialSnapshot;
     @Column({ nullable: true }) // トランザクション外ではnullにならない

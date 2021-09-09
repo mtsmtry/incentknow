@@ -1,0 +1,4 @@
+git add .
+git commit -m "update"
+git push
+ssh ryoui@34.146.76.189 git pull

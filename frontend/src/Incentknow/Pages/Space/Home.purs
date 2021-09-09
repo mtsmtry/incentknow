@@ -51,7 +51,7 @@ initialState input = { spaceId: input.spaceId, spaceDisplayId: input.spaceDispla
 render :: forall m. MonadAff m => Behaviour m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div [ css "page-space-home" ]
-    [ HH.slot (SProxy :: SProxy "latestContentList") unit LatestContentList.component { spaceId: state.spaceId } absurd
+    [ HH.slot (SProxy :: SProxy "latestContentList") unit LatestContentList.component { spaceId: state.spaceId, spaceDisplayId: state.spaceDisplayId } absurd
     , remoteWith state.formats \formats->
         HH.div [ css "byformat" ] (map renderItem formats)
     ]
@@ -59,7 +59,8 @@ render state =
   renderItem :: RelatedFormat -> H.ComponentHTML Action ChildSlots m
   renderItem format =
     HH.div [ css "item" ]
-      [ HH.slot (SProxy :: SProxy "latestContentListByFormat") format.formatId LatestContentListByFormat.component { spaceId: state.spaceId, format } absurd
+      [ HH.slot (SProxy :: SProxy "latestContentListByFormat") format.formatId LatestContentListByFormat.component 
+          { spaceId: state.spaceId, spaceDisplayId: state.spaceDisplayId, format } absurd
       ]
 
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit

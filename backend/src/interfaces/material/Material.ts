@@ -54,6 +54,32 @@ export class MaterialData {
 
     @DataMember([MaterialType.DOCUMENT])
     document?: Document;
+
+    @DataMember([MaterialType.PLAINTEXT])
+    text?: string;
+}
+
+export function encodeMaterialData(mat: MaterialData): { data: string, textCount: number, beginning: string } {
+    switch (mat.type) {
+        case MaterialType.DOCUMENT:
+            let text = "";
+            mat.document?.blocks.forEach(block => {
+                if (block.data.text) {
+                    text += block.data.text + " ";
+                }
+            });
+            return {
+                data: JSON.stringify(mat.document),
+                beginning: text.substring(0, 140),
+                textCount: text.length
+            };
+        case MaterialType.PLAINTEXT:
+            return {
+                data: mat.text || "",
+                beginning: mat.text?.substring(0, 140) || "",
+                textCount: mat.text?.length || 0
+            };
+    }
 }
 
 export function toRelatedMaterial(material: Material): RelatedMaterial {
@@ -87,6 +113,9 @@ export function toMaterialData(materialType: MaterialType, data: string) {
     switch (materialType) {
         case MaterialType.DOCUMENT:
             materialData.document = JSON.parse(data);
+            break;
+        case MaterialType.PLAINTEXT:
+            materialData.text = data;
             break;
     }
     return materialData;

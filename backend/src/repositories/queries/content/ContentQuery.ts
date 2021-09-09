@@ -34,8 +34,12 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
     }
 
     byProperty(containerId: ContainerSk, propertyId: PropertyId, value: any) {
-        const query = this.qb.where({ containerId }).andWhere(`x.data->>"$.${propertyId}" = :value`, { value });
+        const query = this.qb.where({ containerId }).andWhere(`commit.data->>"$.${propertyId}" = :value`, { value });
         return new ContentQuery(query);
+    }
+
+    joinStructureAndFormat() {
+        return new ContentQuery(this.qb.leftJoinAndSelect("x.structure", "structure").leftJoinAndSelect("structure.format", "format"));
     }
 
     latest() {
@@ -67,7 +71,7 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
             if (!value) {
                 return;
             }
-            if (prop.type.name == TypeName.DOCUMENT) {
+            if (prop.type.name == TypeName.DOCUMENT || prop.type.name == TypeName.TEXT) {
                 const material = materialDict[value];
                 if (!material) {
                     data[prop.id] = "deleted";
@@ -118,9 +122,9 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         const structIds = Array.from(new Set(contents.map(x => x.raw.structureId)));
         const getFormat = (structId: StructureSk) => formatRep.fromStructures().byId(structId).selectFocusedFormat().getNeededOneWithRaw();
         const structs = await Promise.all(structIds.map(async x => {
-            const [buildFormat, struct] = await getFormat(x);
-            const relations = await formatRep.getRelations(struct.formatId);
-            const format = buildFormat(relations);
+            const [format, struct] = await getFormat(x);
+            //const relations = await formatRep.getRelations(struct.formatId);
+            //const format = buildFormat(relations);
             return { format, id: x };
         }));
         const structMap = mapBy(structs, x => x.id);
@@ -145,9 +149,9 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         const structIds = Array.from(new Set(contents.map(x => x.raw.structureId)));
         const getFormat = (structId: StructureSk) => formatRep.fromStructures().byId(structId).selectFocusedFormat().getNeededOneWithRaw();
         const structs = await Promise.all(structIds.map(async x => {
-            const [buildFormat, struct] = await getFormat(x);
-            const relations = await formatRep.getRelations(struct.formatId);
-            const format = buildFormat(relations);
+            const [format, struct] = await getFormat(x);
+            //const relations = await formatRep.getRelations(struct.formatId);
+            //const format = buildFormat(relations);
             return { format, id: x };
         }));
         const structMap = mapBy(structs, x => x.id);

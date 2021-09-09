@@ -73,7 +73,7 @@ initialState input = { formatId: input.formatId, spaceId: input.spaceId, format:
 --                    (\_ -> Just Delete)
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  verticalTabPage
+  verticalTabPage "page-format"
     { tabs:
         [ FormatMain, FormatSetting ]
          -- <> if maybe false (\x -> x.generator == "reactor") (toMaybe state.format) then [ FormatReactor ] else []
@@ -88,10 +88,7 @@ render state =
           FormatReactor -> "Reactor"
     }
     [ remoteWith state.format \x ->
-        HH.div [ css "page-format" ]
-          [ HH.div [ css "name" ] [ HH.text x.displayName ]
-          , HH.div [ css "desc" ] [ HH.text x.description ]
-          ]
+        HH.text x.displayName
     ]
     [ remoteWith state.format \x -> case state.tab of
         FormatMain -> HH.slot (SProxy :: SProxy "main") unit Main.component { format: x } absurd

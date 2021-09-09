@@ -61,11 +61,13 @@ foreign import getMaterialDataOptions :: E.MaterialData -> MaterialDataOptions
 
 type MaterialDataOptions
   = { document :: Maybe E.Document
+    , text :: Maybe String
     }
 
 defaultMaterialDataOptions :: MaterialDataOptions
 defaultMaterialDataOptions =
   { document: Nothing
+  , text: Nothing
   }
 
 

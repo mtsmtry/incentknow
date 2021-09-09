@@ -17,6 +17,10 @@ export class MaterialDraftQuery extends SelectFromSingleTableQuery<MaterialDraft
         return new MaterialDraftQuery(this.qb.where({ userId }));
     }
 
+    byUserOwn(userId: UserSk) {
+        return new MaterialDraftQuery(this.qb.where({ userId }).andWhere("x.intendedContentDraftId IS NULL AND x.currentEditingId IS NOT NULL"));
+    }
+
     byMaterial(materialId: MaterialSk) {
         return new MaterialDraftQuery(this.qb.where({ materialId }));
     }
@@ -52,6 +56,9 @@ export class MaterialDraftQuery extends SelectFromSingleTableQuery<MaterialDraft
     selectFocused() {
         const query = this.qb
             .leftJoinAndSelect("x.material", "material")
+            .leftJoinAndSelect("material.commit", "materialCommit")
+            .leftJoinAndSelect("material.creatorUser", "materialCreatorUser")
+            .leftJoinAndSelect("material.updaterUser", "materialUpdaterUser")
             .leftJoinAndSelect("x.intendedContentDraft", "intendedContentDraft")
             .leftJoinAndSelect("x.currentEditing", "currentEditing")
             .leftJoinAndSelect("currentEditing.snapshot", "snapshot")

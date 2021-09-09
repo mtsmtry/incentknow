@@ -216,6 +216,13 @@ type FocusedContent
 
 
 
+type ContentRelation
+  = { contents :: Array RelatedContent
+    , relation :: Relation
+    }
+
+
+
 type RelatedContentCommit
   = { commitId :: ContentCommitId
     , timestamp :: Number
@@ -292,7 +299,6 @@ type FocusedFormat
     , updaterUser :: RelatedUser
     , currentStructure :: FocusedStructure
     , semanticId :: Maybe String
-    , relations :: Array Relation
     }
 
 
@@ -407,7 +413,7 @@ type RelatedMaterial
 
 
 data MaterialData
-  = PlaintextMaterialData 
+  = PlaintextMaterialData String
   | DocumentMaterialData Document
 
 derive instance eqMaterialData :: Eq MaterialData

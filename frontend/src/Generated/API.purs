@@ -31,6 +31,10 @@ foreign import fromJsonToFocusedContent :: Json -> E.FocusedContent
 foreign import fromFocusedContentToJson :: E.FocusedContent -> Json
 
 
+foreign import fromJsonToContentRelation :: Json -> E.ContentRelation
+foreign import fromContentRelationToJson :: E.ContentRelation -> Json
+
+
 foreign import fromJsonToRelatedContentCommit :: Json -> E.RelatedContentCommit
 foreign import fromRelatedContentCommitToJson :: E.RelatedContentCommit -> Json
 
@@ -220,6 +224,14 @@ foreign import __getContent ::
 
 getContent :: E.ContentId -> QueryAPI E.FocusedContent
 getContent x0 = __queryAPI "getContent" $ __getContent x0
+
+
+
+foreign import __getContentRelations :: 
+  E.ContentId -> Promise (Array E.ContentRelation)
+
+getContentRelations :: E.ContentId -> QueryAPI (Array E.ContentRelation)
+getContentRelations x0 = __queryAPI "getContentRelations" $ __getContentRelations x0
 
 
 
@@ -433,10 +445,10 @@ startMaterialEditing x0 x1 = __commandAPI "startMaterialEditing" $ __startMateri
 
 
 foreign import __createNewMaterialDraft :: 
-  Maybe E.SpaceId -> E.MaterialType -> E.MaterialData -> Promise E.RelatedMaterialDraft
+  Maybe E.SpaceId -> E.MaterialData -> Promise E.RelatedMaterialDraft
 
-createNewMaterialDraft :: Maybe E.SpaceId -> E.MaterialType -> E.MaterialData -> CommandAPI E.RelatedMaterialDraft
-createNewMaterialDraft x0 x1 x2 = __commandAPI "createNewMaterialDraft" $ __createNewMaterialDraft x0 x1 x2
+createNewMaterialDraft :: Maybe E.SpaceId -> E.MaterialData -> CommandAPI E.RelatedMaterialDraft
+createNewMaterialDraft x0 x1 = __commandAPI "createNewMaterialDraft" $ __createNewMaterialDraft x0 x1
 
 
 

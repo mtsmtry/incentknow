@@ -20,6 +20,7 @@ import Incentknow.Molecules.DisplayId (CheckState(..))
 import Incentknow.Molecules.DisplayId as DisplayId
 import Incentknow.Molecules.Form (define, defineText)
 import Incentknow.Route (Route(..), SpaceTab(..))
+import Incentknow.Templates.Main (centerLayout)
 import Incentknow.Templates.Page (creationPage)
 
 type Input
@@ -66,25 +67,27 @@ regulation_ = SProxy :: SProxy "regulation"
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  creationPage { title: "新しいスペースを作成", desc: "スペースは、コンテンツとフォーマットを保持します。また、スペースではコンテンツとフォーマットの閲覧および編集の権限を管理するメンバーを保持します。" }
-    [ defineText { label: "表示名", value: state.displayName, onChange: ChangeDisplayName }
-    , define "ID"
-        [ HH.slot (SProxy :: SProxy "displayId") unit DisplayId.component
-            { checkId: callQuery <<< getAvailableSpaceDisplayId <<< wrap
-            , disabled: false
-            , value: state.displayId
-            }
-            (Just <<< ChangeDisplayId)
-        ]
-    , defineText { label: "説明", value: state.description, onChange: ChangeDescription }
-    --    , HH.slot regulation_ unit SpaceRegulation.component { value: initialRegulation } absurd
-    , submitButton
-        { isDisabled: state.loading || state.displayId.checkState /= Available || length state.displayName == 0
-        , isLoading: state.loading
-        , loadingText: ""
-        , text: "スペースを作成"
-        , onClick: Submit
-        }
+  centerLayout { leftSide: [], rightSide: [] }
+    [ creationPage { title: "新しいスペースを作成", desc: "スペースは、コンテンツとフォーマットを保持します。また、スペースではコンテンツとフォーマットの閲覧および編集の権限を管理するメンバーを保持します。" }
+      [ defineText { label: "表示名", value: state.displayName, onChange: ChangeDisplayName }
+      , define "ID"
+          [ HH.slot (SProxy :: SProxy "displayId") unit DisplayId.component
+              { checkId: callQuery <<< getAvailableSpaceDisplayId <<< wrap
+              , disabled: false
+              , value: state.displayId
+              }
+              (Just <<< ChangeDisplayId)
+          ]
+      , defineText { label: "説明", value: state.description, onChange: ChangeDescription }
+      --    , HH.slot regulation_ unit SpaceRegulation.component { value: initialRegulation } absurd
+      , submitButton
+          { isDisabled: state.loading || state.displayId.checkState /= Available || length state.displayName == 0
+          , isLoading: state.loading
+          , loadingText: ""
+          , text: "スペースを作成"
+          , onClick: Submit
+          }
+      ]
     ]
 
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit

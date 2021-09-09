@@ -18,6 +18,7 @@ import Incentknow.Data.Ids (SpaceId)
 import Incentknow.Molecules.Form (define, defineText)
 import Incentknow.Molecules.FormatUsageMenu as FormatUsageMenu
 import Incentknow.Organisms.Structure as Structure
+import Incentknow.Templates.Main (centerLayout)
 import Incentknow.Templates.Page (creationPage)
 
 type Input
@@ -73,25 +74,27 @@ usage_ = SProxy :: SProxy "usage"
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  creationPage { title: "新しいフォーマットを作成する", desc: "フォーマットは、コンテンツの形式を定義します。また、そのコンテンツのページの形式やコンテンツの他の媒体からのインポートについて定義します。" }
-    [ defineText { label: "名前", value: state.displayName, onChange: ChangeDisplayName }
-    --, defineText { label: "ID", value: state.displayId, onChange: ChangeDisplayId }
-    , defineText { label: "説明", value: state.description, onChange: ChangeDescription }
-    --, defineText { label: "説明コンテンツ", value: state.descContentId, onChange: ChangeDescContentId }
-    , define "フォーマットの使用用途"
-        [ HH.slot usage_ unit FormatUsageMenu.component { value: state.usage, disabled: false } (Just <<< ChangeUsage) ]
-    , define "テータ定義"
-        [ HH.slot structure_ unit Structure.component { readonly: false, spaceId: state.spaceId } absurd ]
-    , HH.div
-        []
-        [ submitButton
-            { isDisabled: state.loading
-            , isLoading: state.loading
-            , loadingText: ""
-            , text: "フォーマットを作成"
-            , onClick: Submit
-            }
-        ]
+  centerLayout { leftSide: [], rightSide: [] }
+    [ creationPage { title: "新しいフォーマットを作成する", desc: "フォーマットは、コンテンツの形式を定義します。また、そのコンテンツのページの形式やコンテンツの他の媒体からのインポートについて定義します。" }
+      [ defineText { label: "名前", value: state.displayName, onChange: ChangeDisplayName }
+      --, defineText { label: "ID", value: state.displayId, onChange: ChangeDisplayId }
+      , defineText { label: "説明", value: state.description, onChange: ChangeDescription }
+      --, defineText { label: "説明コンテンツ", value: state.descContentId, onChange: ChangeDescContentId }
+      , define "フォーマットの使用用途"
+          [ HH.slot usage_ unit FormatUsageMenu.component { value: state.usage, disabled: false } (Just <<< ChangeUsage) ]
+      , define "テータ定義"
+          [ HH.slot structure_ unit Structure.component { readonly: false, spaceId: state.spaceId } absurd ]
+      , HH.div
+          []
+          [ submitButton
+              { isDisabled: state.loading
+              , isLoading: state.loading
+              , loadingText: ""
+              , text: "フォーマットを作成"
+              , onClick: Submit
+              }
+          ]
+      ]
     ]
 
 handleAction :: forall o m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit

@@ -4,46 +4,12 @@ import { PropertyId } from '../../entities/format/Property';
 import { StructureId } from '../../entities/format/Structure';
 import { SpaceAuth, SpaceId } from '../../entities/space/Space';
 import { FocusedFormat, RelatedFormat } from '../../interfaces/format/Format';
-import { PropertyInfo, RelatedStructure, toPropertyInfo, Type } from '../../interfaces/format/Structure';
+import { PropertyInfo, RelatedStructure } from '../../interfaces/format/Structure';
 import { FormatRepository } from '../../repositories/implements/format/FormatRepository';
 import { AuthorityRepository } from "../../repositories/implements/space/AuthorityRepository";
-import { mapByString } from '../../utils';
 import { BaseService } from "../BaseService";
 import { LackOfAuthority } from '../Errors';
 import { ServiceContext } from '../ServiceContext';
-
-function hasTypeDeepChange(oldType: Type, newType: Type) {
-    return oldType.name != newType.name
-        || oldType.format != newType.format
-        || oldType.language != newType.language
-        || (oldType.subType
-            && newType.subType
-            && hasTypeDeepChange(oldType.subType, newType.subType))
-        || (oldType.properties
-            && newType.properties
-            && hasDeepChange(oldType.properties, newType.properties));
-}
-
-function hasDeepChange(oldProps: PropertyInfo[], newProps: PropertyInfo[]) {
-    if (oldProps.length != newProps.length) {
-        return true;
-    }
-    const oldMap = mapByString(oldProps, x => x.id);
-    const newMap = mapByString(newProps, x => x.id);
-    let changed = false;
-    Object.keys(oldMap).forEach(id => {
-        const oldProp = oldMap[id];
-        const newProp = newMap[id];
-        if (!newProp) {
-            changed = true;
-        } else {
-            if (hasTypeDeepChange(oldProp.type, newProp.type)) {
-                changed = true;
-            }
-        }
-    });
-    return changed;
-}
 
 export class FormatService extends BaseService {
     constructor(
@@ -65,15 +31,17 @@ export class FormatService extends BaseService {
     }
 
     async getFormat(formatDisplayId: FormatDisplayId): Promise<FocusedFormat> {
-        const [buildFormat, formatRaw] = await this.formats.fromFormats().byDisplayId(formatDisplayId).selectFocused().getNeededOneWithRaw();
-        const relations = await this.formats.getRelations(formatRaw.id);
-        return buildFormat(relations);
+        const [format, formatRaw] = await this.formats.fromFormats().byDisplayId(formatDisplayId).selectFocused().getNeededOneWithRaw();
+        //const relations = await this.formats.getRelations(formatRaw.id);
+        //return buildFormat(relations);
+        return format;
     }
 
     async getFocusedFormat(formatId: FormatId): Promise<FocusedFormat> {
-        const [buildFormat, formatRaw] = await this.formats.fromFormats().byEntityId(formatId).selectFocused().getNeededOneWithRaw();
-        const relations = await this.formats.getRelations(formatRaw.id);
-        return buildFormat(relations);
+        const [format, formatRaw] = await this.formats.fromFormats().byEntityId(formatId).selectFocused().getNeededOneWithRaw();
+        //const relations = await this.formats.getRelations(formatRaw.id);
+        //return buildFormat(relations);
+        return format;
     }
 
     async getRelatedFormat(formatId: FormatId): Promise<RelatedFormat> {
@@ -81,9 +49,7 @@ export class FormatService extends BaseService {
     }
 
     async getFocusedFormatByStructure(structureId: StructureId): Promise<FocusedFormat> {
-        const [buildFormat, struct] = await this.formats.fromStructures().byEntityId(structureId).selectFocusedFormat().getNeededOneWithRaw();
-        const relations = await this.formats.getRelations(struct.formatId);
-        return buildFormat(relations);
+        return await this.formats.fromStructures().byEntityId(structureId).selectFocusedFormat().getNeededOne();
     }
 
     async getRelatedStructure(structureId: StructureId): Promise<RelatedStructure> {
@@ -103,11 +69,9 @@ export class FormatService extends BaseService {
 
     async updateFormatStructure(formatId: FormatId, properties: PropertyInfo[]): Promise<{}> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
-            const format = await this.formats.fromFormats().byEntityId(formatId).joinProperties().getNeededOne();
+            const format = await this.formats.fromFormats().byEntityId(formatId).joinProperties().joinCurrentStructure().getNeededOne();
             const struct = await this.formats.fromStructures().byId(format.currentStructureId).selectPropertiesJoined().getNeededOne();
-            if (hasDeepChange(struct.properties.map(toPropertyInfo), properties)) {
-                await this.formats.createCommand(trx).updateStructure(format, properties);
-            }
+            await this.formats.createCommand(trx).updateStructure(format, properties);
             return {};
         });
     }

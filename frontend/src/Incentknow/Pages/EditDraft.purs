@@ -2,6 +2,7 @@ module Incentknow.Pages.EditDraft where
 
 import Prelude
 
+import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
@@ -58,7 +59,14 @@ render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.Com
 render state =
   centerLayout 
     { leftSide: 
-        [ HH.slot (SProxy :: SProxy "draftExplorer") unit DraftExplorer.component { } absurd
+        [ HH.slot (SProxy :: SProxy "draftExplorer") unit DraftExplorer.component 
+            { selectedDraftId:
+                case state.target of
+                  ContentTarget (TargetDraft draftId) -> Just (Left draftId)
+                  MaterialTarget (MaterialTargetDraft draftId) -> Just (Right draftId)
+                  _ -> Nothing
+            } 
+            absurd
         ]
     , rightSide:
         [ --HH.slot (SProxy :: SProxy "draftHistory") unit DraftHistory.component 
@@ -71,8 +79,8 @@ render state =
     }
     [ HH.div [ css "page-new-content" ]
       [ section ("selector" <> if isContent then " selector-content" else " selector-material")
-          [ button "Content" (Navigate $ EditDraft $ ContentTarget $ TargetBlank Nothing Nothing)
-          , button "Material" (Navigate $ EditDraft $ MaterialTarget $ MaterialTargetBlank Nothing)
+          [ button "New" (Navigate $ EditDraft $ ContentTarget $ TargetBlank Nothing Nothing)
+         --, button "Material" (Navigate $ EditDraft $ MaterialTarget $ MaterialTargetBlank Nothing)
           ]
       , case state.target of
           ContentTarget target ->

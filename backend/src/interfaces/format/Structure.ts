@@ -78,13 +78,13 @@ export function toPropertyInfo(prop: Property): PropertyInfo {
     if (prop.typeName == TypeName.ARRAY) {
         Object.assign(res.type, {
             name: prop.argType,
-            format: prop.argFormat ? toFocusedFormat(prop.argFormat, []) : null,
+            format: prop.argFormat ? toFocusedFormat(prop.argFormat) : null,
             language: prop.argLanguage,
             properties: (prop.argProperties || []).map(toPropertyInfo)
         });
     } else {
         Object.assign(res.type, {
-            format: prop.argFormat ? toFocusedFormat(prop.argFormat, []) : null,
+            format: prop.argFormat ? toFocusedFormat(prop.argFormat) : null,
             language: prop.argLanguage,
             properties: (prop.argProperties || []).map(toPropertyInfo),
         });

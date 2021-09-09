@@ -57,7 +57,7 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
             if (!value) {
                 return;
             }
-            if (prop.type.name == TypeName.DOCUMENT) {
+            if (prop.type.name == TypeName.DOCUMENT || prop.type.name == TypeName.TEXT) {
                 const matDraft = isFocused
                     ? await matRep.fromDrafts().byEntityId(value).selectFocused().getOne()
                     : await matRep.fromDrafts().byEntityId(value).selectRelated().getOne();
@@ -78,9 +78,9 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
         const structIds = Array.from(new Set(drafts.map(x => x.raw.structureId).filter(notNull)));
         const getFormat = (structId: StructureSk) => formatRep.fromStructures().byId(structId).selectFocusedFormat().getNeededOneWithRaw();
         const structs = await Promise.all(structIds.map(async x => {
-            const [buildFormat, struct] = await getFormat(x);
-            const relations = await formatRep.getRelations(struct.formatId);
-            const format = buildFormat(relations);
+            const [format, struct] = await getFormat(x);
+            //const relations = await formatRep.getRelations(struct.formatId);
+            //const format = buildFormat(relations);
             return { format, id: x };
         }));
         const structMap = mapBy(structs, x => x.id);
@@ -106,9 +106,9 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
         const structIds = Array.from(new Set(drafts.map(x => x.raw.structureId).filter(notNull)));
         const getFormat = (structId: StructureSk) => formatRep.fromStructures().byId(structId).selectFocusedFormat().getNeededOneWithRaw();
         const structs = await Promise.all(structIds.map(async x => {
-            const [buildFormat, struct] = await getFormat(x);
-            const relations = await formatRep.getRelations(struct.formatId);
-            const format = buildFormat(relations);
+            const [format, struct] = await getFormat(x);
+            //const relations = await formatRep.getRelations(struct.formatId);
+            //const format = buildFormat(relations);
             return { format, id: x };
         }));
         const structMap = mapBy(structs, x => x.id);

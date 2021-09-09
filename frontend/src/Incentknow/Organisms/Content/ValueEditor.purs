@@ -14,7 +14,7 @@ import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Atoms.Icon (propertyIcon)
 import Incentknow.Atoms.Inputs (button, checkbox, numberarea, textarea)
-import Incentknow.Data.Entities (FormatUsage(..))
+import Incentknow.Data.Entities (FormatUsage(..), MaterialType(..))
 import Incentknow.Data.Ids (PropertyId)
 import Incentknow.Data.Property (Enumerator, ReferenceValue(..), TypedProperty, TypedValue(..), toMaybeFromReferenceValue, toRelatedContentFromContentId)
 import Incentknow.HTML.Utils (css)
@@ -124,9 +124,9 @@ render state = case state.value of
       }
       (Just <<< ChangeValue <<< EnumTypedValue enums)
   BoolTypedValue bool -> checkbox "" (fromMaybe false $ bool) (ChangeValue <<< BoolTypedValue <<< Just) false
-  TextTypedValue text ->
-    HH.slot (SProxy :: SProxy "aceEditor") unit AceEditor.component { value: fromMaybe "" text, language: Nothing, variableHeight: true, readonly: false }
-      (Just <<< ChangeValue <<< TextTypedValue <<< toMaybeString)
+  TextTypedValue material ->
+    HH.slot (SProxy :: SProxy "material") unit Material.component { value: toMaybeFromReferenceValue material, materialType: MaterialTypePlaintext }
+      (Just <<< ChangeValue <<< DocumentTypedValue <<< toReferenceValueFromMaybe)
   ContentTypedValue format value ->
     HH.slot (SProxy :: SProxy "contentMenu") unit ContentMenu.component 
       { spaceId: if format.usage == Internal then Just format.space.spaceId else state.env.spaceId
@@ -138,8 +138,8 @@ render state = case state.value of
     --HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: Just $ wrap "", formatId: format.formatId, disabled: false }
     --  (Just <<< ChangeValue <<< EntityTypedValue format <<< toReferenceValueFromMaybe <<< map toForceRelatedContentFromSemanticId)
   DocumentTypedValue material ->
-      HH.slot (SProxy :: SProxy "material") unit Material.component { value: toMaybeFromReferenceValue material }
-        (Just <<< ChangeValue <<< DocumentTypedValue <<< toReferenceValueFromMaybe)
+    HH.slot (SProxy :: SProxy "material") unit Material.component { value: toMaybeFromReferenceValue material, materialType: MaterialTypeDocument }
+      (Just <<< ChangeValue <<< DocumentTypedValue <<< toReferenceValueFromMaybe)
   UrlTypedValue url ->
     textarea
       { onChange: ChangeValue <<< UrlTypedValue <<< toMaybeString

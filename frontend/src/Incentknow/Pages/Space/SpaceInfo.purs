@@ -100,8 +100,8 @@ render state =
           SpaceSetting -> HH.text if isAdmin then "Setting" else "Information"
           _ -> HH.text ""
     }
-    [ whenElem writable \_ ->
-        menuPositiveButton "コンテンツを追加" (Navigate $ EditDraft $ ContentTarget $ TargetBlank (Just state.space.spaceId) Nothing)
+    [ --whenElem writable \_ ->
+      --  menuPositiveButton "コンテンツを追加" (Navigate $ EditDraft $ ContentTarget $ TargetBlank (Just state.space.spaceId) Nothing)
     ]
     [ HH.div [ css "page-space-header page-space-header-info" ]
         [ HH.div [ css "backward" ] [ HH.img [ HP.src "/assets/imgs/default.jpg" ] ]

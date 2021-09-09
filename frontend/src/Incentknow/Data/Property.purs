@@ -82,6 +82,7 @@ data PropertyInfoItem
   | FieldNameItem
   | TypeItem
   | SemanticItem
+  | IconItem
   | OrderItem
   | CreationItem
   | OptionalItem
@@ -109,7 +110,7 @@ type PropertyInfosDiffrence
     }
 
 difference :: Array PropertyInfo -> Array PropertyInfo -> PropertyInfosDiffrence
-difference before after = { diffs: diffs, changeType: getChangeType diffs }
+difference before2 after2 = { diffs: diffs, changeType: getChangeType diffs }
   where
   getChangeType :: Array PropertyInfoDiffrence -> ChangeType
   getChangeType props =
@@ -119,7 +120,7 @@ difference before after = { diffs: diffs, changeType: getChangeType diffs }
       if 0 < length (filter (\x -> x.changeType == MajorChange) props) then MajorChange else MinorChange
 
   diffs :: Array PropertyInfoDiffrence
-  diffs = concat $ fromFoldable $ map (uncurry propDifference) $ values $ mergeFromArray (\(Tuple _ x) -> unwrap x.id) (\(Tuple _ x) -> unwrap x.id) (withIndex 1 before) (withIndex 1 after)
+  diffs = concat $ fromFoldable $ map (uncurry propDifference) $ values $ mergeFromArray (\(Tuple _ x) -> unwrap x.id) (\(Tuple _ x) -> unwrap x.id) (withIndex 1 before2) (withIndex 1 after2)
 
   withIndex :: forall a. Int -> Array a -> Array (Tuple Int a)
   withIndex start array = case uncons array of
@@ -154,6 +155,10 @@ difference before after = { diffs: diffs, changeType: getChangeType diffs }
                 Just $ mkDiff SemanticItem MinorChange before.semantic after.semantic
               else
                 Nothing
+            , if before.icon /= after.icon then
+                Just $ mkDiff IconItem MinorChange before.icon after.icon
+              else
+                Nothing
             , if before.optional /= after.optional then
                 Just $ mkDiff OptionalItem MinorChange (Just $ show before.optional) (Just $ show after.optional)
               else
@@ -183,6 +188,7 @@ toPropertyComposition isEditor props =
   isSection :: Property -> Boolean
   isSection prop = case prop.info.type of
     DocumentType -> if isNull prop.value && not isEditor then false else true
+    TextType -> if isNull prop.value && not isEditor then false else true
     _ -> false
 
 type TypedProperty = { value :: TypedValue, info :: PropertyInfo }
@@ -193,7 +199,7 @@ data TypedValue
   | StringTypedValue (Maybe String)
   | UrlTypedValue (Maybe String)
   | ObjectTypedValue (Array TypedProperty)
-  | TextTypedValue (Maybe String)
+  | TextTypedValue (ReferenceValue Json)
   | ArrayTypedValue (Array TypedValue)
   | EnumTypedValue (Array Enumerator) (Maybe String)
   | ContentTypedValue FocusedFormat (ReferenceValue RelatedContent)
@@ -271,7 +277,7 @@ toTypedValue value ty = case ty of
   ContentType format -> ContentTypedValue format $ toReferenceValue value
   UrlType -> UrlTypedValue $ toString value
   ObjectType props -> ObjectTypedValue $ map (\x-> { value: toTypedValue x.value x.info.type, info: x.info }) $ mkProperties value props
-  TextType -> TextTypedValue $ toString value
+  TextType -> TextTypedValue $ toReferenceValue value
   ArrayType ty2 -> ArrayTypedValue $ map (\x-> toTypedValue x ty2) $ fromMaybe [] $ toArray value
   EnumType enums -> EnumTypedValue enums $ toString value
   DocumentType -> DocumentTypedValue $ toReferenceValue value
@@ -288,7 +294,7 @@ toJsonFromTypedValue = case _ of
   ObjectTypedValue props -> encodeJson $ Object.fromFoldable $ map toTuple props
     where
     toTuple prop = Tuple (unwrap prop.info.id) $ toJsonFromTypedValue prop.value
-  TextTypedValue (Just vl) -> J.fromString vl
+  TextTypedValue (JustReference vl) -> vl
   ArrayTypedValue vls -> forceConvert $ map toJsonFromTypedValue vls
   EnumTypedValue _ (Just vl) -> J.fromString vl
   DocumentTypedValue (JustReference vl) -> vl

@@ -49,7 +49,7 @@ initialState input = { items: input.value }
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div
-    [ css "org-structure" ]
+    [ css "org-datagridview" ]
     [ HH.table_
         [ HH.thead
             []

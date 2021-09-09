@@ -1,2 +1,2 @@
 
-exports.toRelatedFormat = formatId => { formatId };
+exports.toRelatedFormat = formatId => ({ formatId });

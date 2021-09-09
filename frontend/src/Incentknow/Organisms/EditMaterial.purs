@@ -222,7 +222,7 @@ handleAction = case _ of
       H.modify_ _ { saveState = Saving }
       case state.target of
         MaterialTargetBlank spaceId -> do
-          result <- executeCommand $ createNewMaterialDraft spaceId MaterialTypeDocument state.data
+          result <- executeCommand $ createNewMaterialDraft spaceId state.data
           case result of
             Just draft -> do
               pushState $ EditDraft $ MaterialTarget $ MaterialTargetDraft draft.draftId

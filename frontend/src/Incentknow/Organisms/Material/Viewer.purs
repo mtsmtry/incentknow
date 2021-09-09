@@ -67,7 +67,9 @@ render state =
     [ case getMaterialData state.material of
         Just (DocumentMaterialData doc) ->
           HH.slot (SProxy :: SProxy "document") unit Document.component { value: doc } absurd    
-        _ -> HH.text ""
+        Just (PlaintextMaterialData text) ->
+          HH.text text
+        _ -> HH.text "Error"
     ]
 
 changeRoute :: forall o m. Behaviour m => Route -> H.HalogenM State Action ChildSlots o m Unit

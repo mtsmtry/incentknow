@@ -72,7 +72,9 @@ render state = case state.value of
   StringTypedValue str -> maybeNullWith str \x-> HH.text x
   IntTypedValue int -> maybeNullWith int \x-> HH.text $ show x
   BoolTypedValue bool -> maybeNullWith bool \x-> HH.text $ show x
-  TextTypedValue text -> maybeNullWith text \x-> HH.text x
+  TextTypedValue refMaterial -> 
+    referenceValueWith refMaterial \value->
+      HH.slot (SProxy :: SProxy "material") unit Material.component { value } absurd
   ContentTypedValue _ maybeContent -> 
     referenceValueWith maybeContent \value->
       HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value } absurd

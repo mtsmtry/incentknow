@@ -10,12 +10,14 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
+import Halogen.HTML.Properties as HP
 import Incentknow.API (getContainers, getFormats)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Icon (formatWithIcon, icon, iconButton, remoteWith)
+import Incentknow.Atoms.Inputs (menuPositiveButton)
 import Incentknow.Data.Entities (FocusedContainer, RelatedFormat)
-import Incentknow.Data.Ids (SpaceDisplayId, SpaceId)
+import Incentknow.Data.Ids (FormatDisplayId, SpaceDisplayId, SpaceId)
 import Incentknow.HTML.DateTime (dateTime)
 import Incentknow.HTML.Utils (css, link, maybeElem)
 import Incentknow.Route (EditContentTarget(..), EditTarget(..), FormatTab(..), Route(..), SpaceTab(..))
@@ -24,6 +26,7 @@ import Web.UIEvent.MouseEvent (MouseEvent)
 type Input
   = { spaceId :: SpaceId
     , spaceDisplayId :: SpaceDisplayId
+    , selectedFormatid :: Maybe FormatDisplayId
     }
 
 type State
@@ -31,6 +34,7 @@ type State
     , spaceDisplayId :: SpaceDisplayId
     , containers :: Remote (Array FocusedContainer)
     , formats :: Remote (Array RelatedFormat)
+    , selectedFormatid :: Maybe FormatDisplayId
     }
 
 data Action
@@ -61,6 +65,7 @@ initialState input =
   , spaceDisplayId: input.spaceDisplayId
   , containers: Loading
   , formats: Loading
+  , selectedFormatid: input.selectedFormatid
   }
 
 zipContainerAndFormat :: Array FocusedContainer -> Array RelatedFormat -> Array (Tuple (Maybe FocusedContainer) (Maybe RelatedFormat))
@@ -77,10 +82,12 @@ render state =
     [ HH.table_ 
         [ HH.thead []
             [ HH.td [] [ HH.text "Name" ]
-            , HH.td [] [ ]
+            , HH.td [] [ HH.text "Information" ]
             , HH.td [] [ HH.text "Last Updated" ]
-            , HH.td [] []
-            , HH.td [] []
+            , HH.td [ css "last" ] 
+                [ link Navigate (NewFormat state.spaceId)
+                    [ css "creation" ] [ HH.text "新しいフォーマット ", icon "fas fa-plus-circle" ]
+                ]
             ]
         , remoteWith state.containers \containers->
             remoteWith state.formats \formats->
@@ -113,14 +120,13 @@ render state =
               maybeElem container.latestUpdatedAt \timestamp->
                 HH.span [ css "timestamp" ] [ dateTime timestamp ]
           ]
-      , HH.th []
+      , HH.th [ css "icons" ]
           [ maybeElem internalFormat \format->
               link Navigate (Space state.spaceDisplayId $ SpaceFormat format.displayId FormatMain)  
-                [ css "setting" ] [ icon "fas fa-cog" ]
-          ]
-      , HH.th []
-          [ maybeElem maybeFormat \format->
-              iconButton "far fa-plus-circle"  (Navigate2 $ EditDraft $ ContentTarget $ TargetBlank (Just state.spaceId) (Just format.currentStructureId))
+                [ css $ "setting" <> if Just format.displayId == state.selectedFormatid then " selected-setting" else "" ] [ icon "fas fa-cog" ]
+          , maybeElem maybeFormat \format->
+              link Navigate (EditDraft $ ContentTarget $ TargetBlank (Just state.spaceId) (Just format.currentStructureId))
+                [ css "creation" ] [ icon "far fa-plus-circle" ]
           ]
       ]
     where
@@ -128,11 +134,16 @@ render state =
 
 handleAction :: forall o m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
-  Initialize -> pure unit
-  HandleInput props -> do
+  Initialize -> do
     state <- H.get
     callbackQuery FetchedContainers $ getContainers state.spaceId
     callbackQuery FetchedFormats $ getFormats state.spaceId
+  HandleInput input -> do
+    state <- H.get
+    H.modify_ _ { selectedFormatid = input.selectedFormatid }
+    when (state.spaceId /= input.spaceId) do
+      H.put $ initialState input
+      handleAction Initialize
   Navigate event route -> navigateRoute event route
   Navigate2 route -> navigate route
   FetchedContainers fetch -> do

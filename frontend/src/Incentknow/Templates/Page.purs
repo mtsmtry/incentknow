@@ -39,17 +39,48 @@ tabPage input menu header body =
       ]
       [ input.showTab tab ]
 
+upperTabPage ::
+  forall a s m t.
+  Eq t =>
+  { tabs :: Array t
+  , onChangeTab :: (t -> a)
+  , currentTab :: t
+  , showTab :: t -> H.ComponentHTML a s m
+  } ->
+  Array (H.ComponentHTML a s m) ->
+  Array (H.ComponentHTML a s m) -> H.ComponentHTML a s m
+upperTabPage input menu body =
+  HH.div [ css "tmp-upper-tab-page" ]
+    [ HH.div [ css "header" ]
+        [ HH.div [ css "menu" ]
+            ( (map renderTab input.tabs)
+                <> [ HH.div [ css "space" ] [] ]
+                <> [ HH.div [ css "ext-menu" ] menu ]
+            )
+        ]
+    , HH.div [ css "body" ] body
+    ]
+  where
+  renderTab :: t -> H.ComponentHTML a s m
+  renderTab tab =
+    HH.div
+      [ css $ "tab-item" <> if input.currentTab == tab then " selected" else ""
+      , HE.onClick $ \_ -> Just $ input.onChangeTab tab
+      ]
+      [ input.showTab tab ]
+
 verticalTabPage ::
   forall a s m t.
   Eq t =>
+  String ->
   { tabs :: Array t
   , onChangeTab :: (t -> a)
   , currentTab :: t
   , showTab :: t -> String
   } ->
   Array (H.ComponentHTML a s m) -> Array (H.ComponentHTML a s m) -> H.ComponentHTML a s m
-verticalTabPage input header body =
-  sectionWithHeader "tmp-vertical-tab-page"
+verticalTabPage cls input header body =
+  sectionWithHeader ("tmp-vertical-tab-page" <> " " <> cls)
     header
     [ HH.div [ css "sidemenu" ] (map renderTab input.tabs)
     , HH.div [ css "main" ] body

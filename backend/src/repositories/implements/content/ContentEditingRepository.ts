@@ -28,12 +28,14 @@ export class ContentEditingCommand implements BaseCommand {
         private drafts: Command<ContentDraft>) {
     }
 
-    async getOrCreateActiveDraft(userId: UserSk, contentId: ContentSk, data: any) {
+    async getOrCreateActiveDraft(userId: UserSk, contentId: ContentSk, data: any, structureId: StructureSk) {
         // get or create draft
         let draft = await this.drafts.findOne({ contentId, userId });
         if (!draft) {
-            draft = this.drafts.create({ contentId, userId, data, updatedAtOnlyContent: new Date() });
+            draft = this.drafts.create({ contentId, userId, data, updatedAtOnlyContent: new Date(), structureId });
             draft = await this.drafts.save(draft);
+        } else {
+            await this.drafts.update(draft.id, { data, state: ContentDraftState.EDITING });
         }
 
         return new ContentDraftQueryFromEntity(draft);

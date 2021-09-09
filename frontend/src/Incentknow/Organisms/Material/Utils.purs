@@ -14,4 +14,4 @@ createNewMaterialData = case _ of
     let document = { blocks: [{ id: newId, data: ParagraphBlockData "" }] }
     pure $ DocumentMaterialData document
   MaterialTypePlaintext -> do
-    pure $ PlaintextMaterialData
+    pure $ PlaintextMaterialData ""

@@ -54,8 +54,14 @@ initialState input = { spaceId: input.spaceId, spaceDisplayId: input.spaceDispla
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div [ css "page-format-list" ]
-    [ submitButton { isDisabled: false, isLoading: false, loadingText: "", onClick: Navigate $ NewFormat state.spaceId, text: "新しいフォーマットを作成する" }
-    , HH.slot (SProxy :: SProxy "formatList") unit FormatList.component { spaceId: state.spaceId, spaceDisplayId: state.spaceDisplayId } absurd
+    [ HH.slot (SProxy :: SProxy "formatList") unit FormatList.component 
+        { spaceId: state.spaceId
+        , spaceDisplayId: state.spaceDisplayId
+        , selectedFormatid:
+            case state.formatTab of
+              Just (Tuple formatId _) -> Just formatId
+              _ -> Nothing
+        } absurd
     , maybeElem state.formatTab \(Tuple formatId formatTab)->
         HH.slot (SProxy :: SProxy "format") unit Format.component { formatId, spaceId: state.spaceDisplayId, tab: formatTab } absurd
     ]

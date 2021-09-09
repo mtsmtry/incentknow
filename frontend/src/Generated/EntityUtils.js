@@ -197,8 +197,10 @@ exports.getMaterialType = src => {if (src instanceof E.PlaintextMaterialData) {
                 }if (src instanceof E.DocumentMaterialData) {
                     return E.MaterialTypeDocument.value;
 
-                }};exports.buildMaterialData = type => { return options => { if (type instanceof E.MaterialTypePlaintext) {
-                    const result = new E.PlaintextMaterialData();
+                }};exports.buildMaterialData = type => { return options => { if (type instanceof E.MaterialTypePlaintext) {if (options.text instanceof Data_Maybe.Nothing) {
+                            return Data_Maybe.Nothing.value;
+                    }
+                    const result = new E.PlaintextMaterialData(options.text.value0);
                     return new Data_Maybe.Just(result);
                 } if (type instanceof E.MaterialTypeDocument) {if (options.document instanceof Data_Maybe.Nothing) {
                             return Data_Maybe.Nothing.value;
@@ -208,13 +210,13 @@ exports.getMaterialType = src => {if (src instanceof E.PlaintextMaterialData) {
                 }}};exports.getMaterialDataOptions = src => {
                     if (src instanceof E.PlaintextMaterialData) {
                         return {
-                            document: Data_Maybe.Nothing.value
+                            text: new Data_Maybe.Just(src.value0),document: Data_Maybe.Nothing.value
                         }
                     }
                     
                     if (src instanceof E.DocumentMaterialData) {
                         return {
-                            document: new Data_Maybe.Just(src.value0)
+                            document: new Data_Maybe.Just(src.value0),text: Data_Maybe.Nothing.value
                         }
                     }
                     };

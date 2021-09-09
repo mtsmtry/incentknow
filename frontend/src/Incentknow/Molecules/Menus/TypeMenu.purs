@@ -163,7 +163,7 @@ render state =
     , case state.typeName of
         Just TypeNameContent ->
           HH.div_
-            [ whenElem (isNothing state.typeOptions.format) \_ ->
+            [ --whenElem (isNothing state.typeOptions.format) \_ ->
                 HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
                   { value: state.selectedSpaceId, disabled: false }
                   (Just <<< ChangeSpace)
@@ -173,7 +173,7 @@ render state =
             ]
         Just TypeNameEntity ->
           HH.div_
-            [ whenElem (isNothing state.typeOptions.format) \_ ->
+            [ --whenElem (isNothing state.typeOptions.format) \_ ->
                 HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
                   { value: state.selectedSpaceId, disabled: false }
                   (Just <<< ChangeSpace)
@@ -212,7 +212,7 @@ handleAction = case _ of
   Initialize -> pure unit
   HandleInput input -> do
     when (isJust input.value) $ H.put $ initialState input
-  ChangeFormat formatId -> do    
+  ChangeFormat formatId -> do
     state <- H.get
     raiseOrModify $ state { typeOptions = state.typeOptions { format = map toRelatedFormat formatId } }
   ChangeTypeName typeName -> do

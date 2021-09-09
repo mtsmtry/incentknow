@@ -1,12 +1,14 @@
 import { Content } from "../../../entities/content/Content";
 import { Format, FormatDisplayId, FormatSk, FormatUsage } from "../../../entities/format/Format";
 import { MetaProperty, MetaPropertyId, MetaPropertyType } from "../../../entities/format/MetaProperty";
-import { Property, PropertySk } from "../../../entities/format/Property";
+import { Property, PropertyId, PropertySk } from "../../../entities/format/Property";
 import { Structure } from "../../../entities/format/Structure";
 import { SpaceSk } from "../../../entities/space/Space";
 import { UserSk } from "../../../entities/user/User";
+import { createEntityId } from "../../../entities/Utils";
 import { Relation } from "../../../interfaces/format/Format";
 import { PropertyInfo, toPropertyInfo, Type } from "../../../interfaces/format/Structure";
+import { mapBy, mapByString } from "../../../Utils";
 import { FormatQuery, FormatQueryFromEntity } from "../../queries/format/FormatQuery";
 import { PropertyQuery } from "../../queries/format/PropertyQuery";
 import { joinPropertyArguments, StructureQuery } from "../../queries/format/StructureQuery";
@@ -42,7 +44,7 @@ export class FormatRepository implements BaseRepository<FormatCommand> {
     }
 
     async getRelations(formatId: FormatSk) {
-        let qb = this.props.createQuery().where({ argFormat: formatId });
+        let qb = this.props.createQuery().where({ argFormatId: formatId }).orderBy("x.createdAt", "ASC");
         qb = joinPropertyArguments("x", qb);
         qb = qb.innerJoinAndSelect("x.format", "format")
         qb = qb.addSelect(
@@ -54,14 +56,15 @@ export class FormatRepository implements BaseRepository<FormatCommand> {
             'contentCount',
         );
         const props = await qb.getRawAndEntities();
-        const relations: Relation[] = props.entities.map((prop, i) => {
+        const relations = props.entities.map((prop, i) => {
             return {
                 property: toPropertyInfo(prop),
                 contentCount: parseInt(props.raw[i].contentCount),
-                formatId: prop.format.entityId
+                format: prop.format
             }
         });
-        return relations;
+        const relMap = mapBy(relations, x => x.format.id);
+        return Object.keys(relMap).map(x => relMap[x]);
     }
 }
 
@@ -154,23 +157,86 @@ export class FormatCommand implements BaseCommand {
         return new FormatQueryFromEntity(format);
     }
 
+    static hasTypeDeepChange(oldType: Type, newType: Type) {
+        return oldType.name != newType.name
+            || oldType.format?.formatId != newType.format?.formatId
+            || oldType.language != newType.language
+            || (oldType.subType
+                && newType.subType
+                && this.hasTypeDeepChange(oldType.subType, newType.subType))
+            || (oldType.properties
+                && newType.properties
+                && this.hasDeepChange(oldType.properties, newType.properties));
+    }
+
+    static hasDeepChange(oldProps: PropertyInfo[], newProps: PropertyInfo[]) {
+        if (oldProps.length != newProps.length) {
+            return true;
+        }
+        const oldMap = mapByString(oldProps, x => x.id);
+        const newMap = mapByString(newProps, x => x.id);
+        let changed = false;
+        Object.keys(oldMap).forEach(id => {
+            const oldProp = oldMap[id];
+            const newProp = newMap[id];
+            if (!newProp) {
+                changed = true;
+            } else {
+                if (this.hasTypeDeepChange(oldProp.type, newProp.type)) {
+                    changed = true;
+                }
+            }
+        });
+        return changed;
+    }
+
+    static normalizeProperties(oldProps: PropertyInfo[], newProps: PropertyInfo[]) {
+        const oldMap = mapByString(oldProps, x => x.id);
+        const newMap = mapByString(newProps, x => x.id);
+        Object.keys(newMap).forEach(id => {
+            const oldProp = oldMap[id];
+            if (!oldProp) {
+                return;
+            }
+            const newProp = newMap[id];
+            if (this.hasTypeDeepChange(oldProp.type, newProp.type)) {
+                newProp.id = createEntityId(2) as PropertyId;
+            }
+        });
+    }
+
+    private async updateProperties(formatId: FormatSk, properties: PropertyInfo[]) {
+        const promises = properties.map(async prop => {
+            await this.props.update({ formatId, entityId: prop.id }, {
+                displayName: prop.displayName,
+                fieldName: prop.fieldName,
+                icon: prop.icon
+            });
+        });
+        await Promise.all(promises);
+    }
+
     async updateStructure(format: Format, properties: PropertyInfo[]) {
+        const oldProps = format.currentStructure.properties.map(toPropertyInfo);
+        FormatCommand.normalizeProperties(oldProps, properties);
+        if (FormatCommand.hasDeepChange(oldProps, properties)) {
+            await this.createNewStructure(format, properties);
+        } else {
+            await this.updateProperties(format.id, properties);
+        }
+    }
+
+    private async createNewStructure(format: Format, properties: PropertyInfo[]) {
 
         // 新プロパティにもある旧プロパティ (古い共通のプロパティ)
-        const oldProps = format.properties.filter(x => properties.filter(y => x.entityId == y.id).length > 0);
+        const oldCommonProps = format.properties.filter(x => properties.filter(y => x.entityId == y.id).length > 0);
         // 旧プロパティにもある新プロパティ (新しい共通のプロパティ)
-        const oldProps2 = properties.filter(x => format.properties.filter(y => x.id == y.entityId).length > 0);
+        const newCommonProps = properties.filter(x => format.properties.filter(y => x.id == y.entityId).length > 0);
         // 新規のプロパティ
         const newProps = properties.filter(x => format.properties.filter(y => x.id == y.entityId).length == 0);
 
         // Update old properties
-        const promises = oldProps2.map(async prop => {
-            await this.props.update({ formatId: format.id, entityId: prop.id }, {
-                displayName: prop.displayName,
-                fieldName: prop.fieldName
-            });
-        });
-        await Promise.all(promises);
+        await this.updateProperties(format.id, newCommonProps);
 
         // Properties
         let savedNewProps = await Promise.all(newProps.map((x, i) => this._createProperty(format.id, null, i, x)));
@@ -180,12 +246,15 @@ export class FormatCommand implements BaseCommand {
         let structure = this.structures.create({
             formatId: format.id,
             version: format.latestVersion + 1,
-            properties: oldProps.concat(savedNewProps)
+            properties: oldCommonProps.concat(savedNewProps)
         });
         structure = await this.structures.save(structure);
 
         // Format
-        this.formats.update(format.id, { currentStructureId: structure.id });
+        await this.formats.update(format.id, {
+            currentStructureId: structure.id,
+            latestVersion: format.latestVersion + 1
+        });
     }
 
     async addMetaProperty(propertyId: PropertySk, type: MetaPropertyType) {

@@ -53,6 +53,7 @@ data Action
   | ChangeType PropertyId (Maybe Type)
   | ChangeSemantic PropertyId String
   | ChangeOptional PropertyId Boolean
+  | ChangeIcon PropertyId (Maybe String)
   | AddProperty
   | DeleteProperty PropertyId
   | HandleInput Input
@@ -67,7 +68,6 @@ type Slot
 type ChildSlots
   = ( icon :: IconMenu.Slot PropertyId
     , typeMenu :: TypeMenu.Slot PropertyId
-    , formatMenu :: FormatMenu.Slot PropertyId
     , structure :: Slot PropertyId
     , enumeration :: Enumeration.Slot PropertyId
     , delete :: DangerChange.Slot PropertyId
@@ -113,12 +113,12 @@ render state =
             [ HH.tr []
                 [ whenElem (not state.readonly) \_ ->
                     HH.th [] [ HH.text "" ]
-                , HH.th [] [ HH.text "ID" ]
+                --, HH.th [] [ HH.text "ID" ]
                 , HH.th [] [ HH.text "アイコン" ]
-                , HH.th [] [ HH.text "フィールド名" ]
+                --, HH.th [] [ HH.text "フィールド名" ]
                 , HH.th [] [ HH.text "表示名" ]
                 , HH.th [] [ HH.text "型" ]
-                , HH.th [] [ HH.text "意味" ]
+                --, HH.th [] [ HH.text "意味" ]
                 , HH.th [] [ HH.text "Optional" ]
                 ]
             ]
@@ -141,16 +141,16 @@ render state =
                   }
                   (\_ -> Just $ DeleteProperty prop.id)
               ]
-        , HH.td []
-            [ HH.text $ unwrap prop.id ]
+        {-|, HH.td []
+            [ HH.text $ unwrap prop.id ] -}
         , HH.td []
             [ HH.slot (SProxy :: SProxy "icon") prop.id IconMenu.component
                 { value: prop.icon
                 , disabled: state.readonly
                 }
-                (\_ -> Just $ DeleteProperty prop.id)
+                (Just <<< ChangeIcon prop.id)
             ]
-        , HH.td []
+        {-|, HH.td []
             [ if state.readonly then
                 HH.text $ fromMaybe "" prop.fieldName
               else
@@ -159,7 +159,7 @@ render state =
                   , placeholder: ""
                   , onChange: ChangeFieldName prop.id
                   }
-            ]
+            ] -}
         , HH.td []
             [ if state.readonly then
                 HH.text $ fromMaybe "" prop.displayName
@@ -175,7 +175,7 @@ render state =
                 { value: prop.type, exceptions: [ TypeNameObject ], spaceId: state.spaceId, disabled: state.readonly }
                 (Just <<< ChangeType prop.id)
             ]
-        , HH.td []
+        {-|, HH.td []
             [ if state.readonly then
                 HH.text $ fromMaybe "" prop.semantic
               else
@@ -184,7 +184,7 @@ render state =
                   , placeholder: ""
                   , onChange: ChangeSemantic prop.id
                   }
-            ]
+            ] -}
         , HH.td []
             [ if state.readonly then
                 HH.text $ fromMaybe "" prop.semantic
@@ -194,7 +194,7 @@ render state =
         ]
     , maybeElem (flatten $ map getSubStructure prop.type) \props ->
         HH.tr []
-          [ HH.td [ HP.colSpan 7 ]
+          [ HH.td [ HP.colSpan 4 ]
               [ HH.slot structure_ prop.id component
                   { readonly: state.readonly, spaceId: state.spaceId }
                   absurd
@@ -202,7 +202,7 @@ render state =
           ]
     , maybeElem (flatten $ map getEnumerators prop.type) \enums ->
         HH.tr []
-          [ HH.td [ HP.colSpan 7 ]
+          [ HH.td [ HP.colSpan 4 ]
               [ HH.slot (SProxy :: SProxy "enumeration") prop.id Enumeration.component
                   { value: enums, readonly: state.readonly }
                   absurd
@@ -243,6 +243,8 @@ handleAction = case _ of
     H.modify_ (\x -> x { props = modifyProp id (_ { displayName = toMaybeString displayName }) x.props })
   ChangeFieldName id fieldName -> do
     H.modify_ (\x -> x { props = modifyProp id (_ { fieldName = toMaybeString fieldName }) x.props })
+  ChangeIcon id icon -> do
+    H.modify_ (\x -> x { props = modifyProp id (_ { icon = icon }) x.props })
   ChangeType id ty -> do    
     H.modify_ (\x -> x { props = modifyProp id (_ { type = ty }) x.props })
   ChangeSemantic id semantic -> do

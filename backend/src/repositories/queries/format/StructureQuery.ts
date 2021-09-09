@@ -62,7 +62,7 @@ export class StructureQuery extends SelectFromSingleTableQuery<Structure, Struct
             .leftJoinAndSelect("format.updaterUser", "updaterUser")
             .leftJoinAndSelect("format.currentStructure", "currentStructure");
         query = joinProperties("x", query);
-        return mapQuery(query, x => (relations: Relation[]) => toFocusedFormatFromStructure(x, relations));
+        return mapQuery(query, toFocusedFormatFromStructure);
     }
 }
 

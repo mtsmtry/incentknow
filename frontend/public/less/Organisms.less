@@ -123,8 +123,8 @@
     background-color: #fafafa;
 
     table {
-        width         : 100%;
-        border-spacing: 0px;
+        width           : 100%;
+        border-spacing  : 0px;
         background-color: white;
     }
 
@@ -172,12 +172,17 @@
             float: right;
 
             >.item {
-                cursor: pointer;
+                color: rgba(0, 0, 0, 0.4);
+                cursor : pointer;
                 padding: 5px;
 
                 >i {
                     margin-right: 0px;
                 }
+            }
+
+            >.selected {
+                color: rgba(0, 0, 0, 0.7);
             }
         }
     }
@@ -213,46 +218,59 @@
 .org-listview {
     >.item {
         flex-basis : 120px;
-        height: 60px;
-        cursor: pointer;
-        padding: 15px 25px;
+        height     : 60px;
+        cursor     : pointer;
+        padding    : 0px 25px;
         display    : flex;
+        align-items: center;
 
         >.user {
-
+            padding-right: 10px;
         }
 
         >.main {
             flex-grow: 1;
-            min-width: 0;
+            height: 100%;
+            width: 100%;
 
-            .title {
-                margin-right: 10px;
-                font-size: 15px;
-            }
+            >a {
+                height: 100%;
+                width: 100%;
+                display: flex;
+                align-items: center;
 
-            .properties {
-                color:rgb(99, 99, 99);
+                >.title {
+                    margin-right: 10px;
+                    font-size   : 15px;
+                }
 
-                >.property {
-                    margin-right: 5px;
+                >.properties {
+                    color: rgb(99, 99, 99);
+
+                    >.property {
+                        margin-right: 5px;
+                    }
                 }
             }
         }
 
         >.timestamp {
+            flex-basis: 160px;
             font-size: 12px;
-            color: rgba(0, 0, 0, .4);
+            color    : rgba(0, 0, 0, .4);
 
             span {
                 padding: 4px;
             }
         }
 
+        border-top    : 1px solid rgba(0, 0, 0, 0);
+        border-bottom : 1px solid rgba(0, 0, 0, 0);
+
         &:hover {
             background-color: rgba(0, 0, 0, .02);
+            border-top      : 1px solid #ebecec;
             border-bottom   : 1px solid #ebecec;
-            color           : #008abc;
         }
     }
 }
@@ -260,28 +278,60 @@
 .org-format-list {
     .section;
 
+    table {
+        width: 100%;
+        margin: 0px -2px;
+    }
+
     td {
-        color: gray;
+        color: rgb(83, 83, 83);
+        border-bottom: 0.7px solid rgba(0, 0, 0, .22);
+        text-align: left;
+        font-size: 15px;
+        padding: 6px;
+        padding-left: 15px;
+    }
+
+    th {
+        text-align: left;
+        padding-left: 15px;
+    }
+
+    .last {
+        text-align: right;
+        padding-right: 12px;
     }
 
     .item {
-        .name {
-        }
+        .name {}
 
         .info {
-            font-size: 14px;
-            color: gray;
-            padding-left: 25px;
+            font-size   : 14px;
+            color       : gray;
         }
 
         .timestamp {
-            font-size: 14px;
-            color: gray;
-            padding-left: 25px;
+            font-size   : 14px;
+            color       : gray;
         }
 
         .setting {
             width: 50px;
+            padding-right: 10px;
+        }
+
+        .selected-setting {
+            width: 50px;
+            color: #008abc;
+        }
+
+        .creation {
+            width: 50px;
+            padding-right: 10px;
+        }
+
+        .icons {
+            text-align: right;
         }
     }
 }
@@ -294,58 +344,58 @@
     margin: -6px -4px;
 
     >.item {
-        box-shadow: 0 1.3px 3px rgba(0, 0, 0, .2);
+        box-shadow   : 0 1.3px 3px rgba(0, 0, 0, .2);
         border-radius: 5px;
 
-        display: flex;
+        display       : flex;
         flex-direction: column;
-        width : calc(100%/3 - 8px);
-        margin: 6px 4px;
-        height: 150px;
+        width         : calc(100%/3 - 8px);
+        margin        : 6px 4px;
+        height        : 150px;
 
         >.upper {
             .section;
-            padding: 0px;
-            border-bottom: 0px;
-            border-bottom-left-radius: 0px;
+            padding                   : 0px;
+            border-bottom             : 0px;
+            border-bottom-left-radius : 0px;
             border-bottom-right-radius: 0px;
-            box-shadow: none;
+            box-shadow                : none;
 
             overflow: hidden;
             position: relative;
-            flex: 3;
+            flex    : 3;
 
             img {
-                position: absolute;
-                top: 50%;
-                left: 50%;
+                position         : absolute;
+                top              : 50%;
+                left             : 50%;
                 -webkit-transform: translate(-50%, -50%);
-                -ms-transform: translate(-50%, -50%);
-                transform: translate(-50%, -50%);
-                width: 105%;
-                height: auto;
+                -ms-transform    : translate(-50%, -50%);
+                transform        : translate(-50%, -50%);
+                width            : 105%;
+                height           : auto;
             }
         }
 
-        >.upper:after{
-            position: absolute;
-            content:"";
-            top:0;
-            left:0;
-            width: 100%;
-            height:100%;
-            background: linear-gradient(rgba(255,255,255,0) 60%, rgba(255,255,255,1));
+        >.upper:after {
+            position  : absolute;
+            content   : "";
+            top       : 0;
+            left      : 0;
+            width     : 100%;
+            height    : 100%;
+            background: linear-gradient(rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 1));
         }
 
         >.lower {
             .section;
-            border-top: 0px;
-            border-top-left-radius: 0px;
+            border-top             : 0px;
+            border-top-left-radius : 0px;
             border-top-right-radius: 0px;
-            box-shadow: none;
+            box-shadow             : none;
 
             padding: 15px 25px;
-            flex: 2;
+            flex   : 2;
 
             >.title {
                 font-size: 17px;
@@ -358,6 +408,7 @@
             >.info {
                 font-size: 13px;
                 color    : #666;
+                float: left;
             }
         }
     }
@@ -366,9 +417,9 @@
 .org-userlist {
     >.item {
         .section;
-        padding-top: 10px;
+        padding-top   : 10px;
         padding-bottom: 10px;
-        margin-bottom: 10px;
+        margin-bottom : 10px;
 
         display: flex;
 
@@ -442,35 +493,50 @@
 
         >.id {
             font-size: 15px;
-            color: rgb(88, 96, 105);
+            color    : rgb(88, 96, 105);
         }
 
         >.slash {
             font-size: 17px;
-            padding: 0px 2px;
+            padding  : 0px 2px;
         }
     }
 }
 
 .org-latest-contentlist {
     .section;
+    .body {
+        padding: 5px 10px;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    th {
+        text-align: left;
+    }
 
     .item {
-        .user {
-
-        }
+        .user {}
 
         .format {
-
+            text-align: left;
         }
 
         .title {
             font-size: 17px;
+            display: flex;
+            height: 100%;
+            width: 100%;
         }
 
         .timestamp {
             font-size: 15px;
-            color: gray;
+            color    : gray;
+            display: flex;
+            height: 100%;
+            width: 100%;
         }
     }
 }
@@ -478,8 +544,20 @@
 .org-latest-contentlist-byformat {
     .section;
 
+    table {
+        width: 100%;
+    }
+
+    th {
+        text-align: left;
+    }
+
     .creation {
         float: right;
+    }
+
+    .body {
+        padding: 5px 10px;
     }
 
     .item {
@@ -489,40 +567,79 @@
 
         .title {
             font-size: 17px;
+            display: flex;
+            height: 100%;
+            width: 100%;
         }
 
         .timestamp {
             font-size: 15px;
             color: gray;
+            display: flex;
+            height: 100%;
+            width: 100%;
         }
     }
 }
 
 .org-draft-explorer {
     .section;
+
+    >.body {
+        >.box {
+            >.draft-set {
+                >.item {
+                    padding: 0px 7px;
+
+                    >.creation {
+                        float: right;
+                    }
+                }
+
+                >.drafts {
+                    >.draft {
+                        padding-left: 20px;
+
+                        >a {
+                            display: flex;
+                            width: 100%;
+                            height: 100%;
+                        }
+
+                        &:hover {
+                            background-color: rgba(0, 0, 0, .03);
+                        }
+
+                        &.selected {
+                            background-color: rgba(0, 0, 0, .07);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 .org-draft-history {
     .section;
 
     >.box {
-        >.node {
-            
-        }
+        >.node {}
     }
 }
 
 .org-content-viewer {
+
     // ValueViewer
     .property-type {
         text-align: left;
-        color: rgb(99, 99, 99);
-        width: 100px;
+        color     : rgb(99, 99, 99);
+        width     : 100px;
     }
 
     .property-value {
         >.null {
-            color:rgb(88, 96, 105);
+            color    : rgb(88, 96, 105);
             font-size: 12px;
         }
     }
@@ -532,11 +649,11 @@
             display: flex;
 
             >.title {
-                flex: 1;
+                flex   : 1;
                 padding: 10px 25px;
 
                 >.title-property {
-                    color: rgb(99, 99, 99);
+                    color    : rgb(99, 99, 99);
                     font-size: 15px;
                 }
 
@@ -547,19 +664,15 @@
 
             >.side {
                 padding: 10px 25px;
-                
-                >.side-format {
 
-                }
+                >.side-format {}
 
-                >.side-user {
-
-                }
+                >.side-user {}
             }
         }
 
         >.info {
-            padding: 10px 25px;
+            padding   : 10px 25px;
             border-top: 0.7px solid rgba(0, 0, 0, .22);
         }
     }
@@ -574,21 +687,23 @@
 }
 
 .org-content-editor {
+
     // ValueEditor
     .property-type {
         text-align: left;
-        color: rgb(99, 99, 99);
-        width: 100px;
+        color     : rgb(99, 99, 99);
+        width     : 100px;
     }
 
     .property-value {
         padding: 2px 0px;
+
         >.null {
-            color:rgb(88, 96, 105);
+            color    : rgb(88, 96, 105);
             font-size: 12px;
         }
     }
-    
+
     >.section {
         margin-top: 20px;
 
@@ -613,8 +728,8 @@
 .org-document-block {
     >.paragraph {
         min-height: 32px;
-        font-size: 16px;
-        padding: 4px 6px;
+        font-size : 16px;
+        padding   : 4px 6px;
     }
 
     >.header {
@@ -639,11 +754,13 @@
 }
 
 .org-value-editor-object {
-    .property-type {
-
-    }
+    .property-type {}
 
     .property-value {
         width: 500px;
     }
+}
+
+.org-datagridview {
+    
 }

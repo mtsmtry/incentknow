@@ -74,10 +74,10 @@ export class Content {
     @Column({ default: 0 })
     viewCount: number;
 
-    @OneToMany(type => ContentCommit, strc => strc.content, { onDelete: "RESTRICT" })
+    @OneToMany(type => ContentCommit, strc => strc.content)
     commits: ContentCommit[];
 
-    @OneToMany(type => Material, mat => mat.content, { onDelete: "RESTRICT" })
+    @OneToMany(type => Material, mat => mat.content)
     materials: Material[];
 
     @BeforeInsert()

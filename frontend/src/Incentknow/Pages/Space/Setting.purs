@@ -22,6 +22,7 @@ import Incentknow.Molecules.Setting.DisplayId as SettingDisplayId
 import Incentknow.Molecules.Setting.Image as SettingImage
 import Incentknow.Molecules.Setting.MembershipMethodMenu as MembershipMethodMenu
 import Incentknow.Molecules.Setting.Text as SettingText
+import Incentknow.Templates.Page (section)
 
 type Input
   = { space :: FocusedSpace
@@ -84,7 +85,7 @@ membershipMethodMenu_ = SProxy :: SProxy "membershipMethodMenu"
 
 render :: forall m. MonadAff m => Behaviour m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  HH.div [ css "page-user-setting" ]
+  section "page-user-setting"
     [ HH.slot displayName_ unit SettingText.component
         { submit: callCommand <<< setSpaceDisplayName state.space.spaceId
         , value: state.space.displayName

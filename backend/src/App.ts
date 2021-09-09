@@ -1,11 +1,12 @@
 import * as AWS from "aws-sdk";
 import * as bodyParser from "body-parser";
 import * as express from "express";
-import * as multer from 'multer';
 import Router from 'express-promise-router';
+import * as multer from 'multer';
 import { initConnection } from "./Connection";
 import { Service } from "./services/Service";
 import { ServiceContext } from "./services/ServiceContext";
+import 'source-map-support/register';
 
 const app = express();
 const router = Router();
@@ -20,12 +21,12 @@ const storage = multer.diskStorage({
     //ファイルの保存先を指定(ここでは保存先は./public/images) 
     //Express4の仕様かなんかで画像staticなファイルを保存するときはpublic/以下のフォルダに置かないとダメらしい
     //詳しくは express.static public でググろう！
-    destination: function(req, file, cb) {
+    destination: function (req, file, cb) {
         cb(null, './public/imgs/')
     },
     //ファイル名を指定
     //ここでは image.jpg という名前で保存
-    filename: function(req, file, cb) {
+    filename: function (req, file, cb) {
         cb(null, 'image.jpg')
     }
 });
@@ -40,7 +41,6 @@ init().then(conn => {
 
     const upload = multer({ storage });
     router.post('/:method', upload.single('file'), async (req, res) => {
-        res.json({ 'result': 'success!' });
 
         res.header('Access-Control-Allow-Origin', req.headers.origin);
         res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Session');

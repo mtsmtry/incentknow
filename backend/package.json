@@ -30,6 +30,7 @@
       "multer": "^1.4.3",
       "mysql": "^2.18.1",
       "reflect-metadata": "^0.1.10",
+      "source-map-support": "^0.5.19",
       "typeorm": "0.2.28",
       "typeorm-aurora-data-api-driver": "^1.4.0"
    },

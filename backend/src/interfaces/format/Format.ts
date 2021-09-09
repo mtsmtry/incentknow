@@ -52,10 +52,9 @@ export interface FocusedFormat {
     updaterUser: RelatedUser;
     currentStructure: FocusedStructure;
     semanticId: string | null;
-    relations: Relation[];
 }
 
-export function toFocusedFormat(format: Format, relations: Relation[]): FocusedFormat {
+export function toFocusedFormat(format: Format): FocusedFormat {
     return {
         formatId: format.entityId,
         displayId: format.displayId,
@@ -69,12 +68,11 @@ export function toFocusedFormat(format: Format, relations: Relation[]): FocusedF
         updatedAt: toTimestamp(format.updatedAt),
         updaterUser: toRelatedUser(format.updaterUser),
         currentStructure: toFocusedStructure(format.currentStructure),
-        semanticId: format.semanticId,
-        relations
+        semanticId: format.semanticId
     }
 }
 
-export function toFocusedFormatFromStructure(structure: Structure, relations: Relation[]): FocusedFormat {
+export function toFocusedFormatFromStructure(structure: Structure): FocusedFormat {
     return {
         formatId: structure.format.entityId,
         displayId: structure.format.displayId,
@@ -88,7 +86,6 @@ export function toFocusedFormatFromStructure(structure: Structure, relations: Re
         updatedAt: toTimestamp(structure.format.updatedAt),
         updaterUser: toRelatedUser(structure.format.updaterUser),
         currentStructure: toFocusedStructure(structure),
-        semanticId: structure.format.semanticId,
-        relations
+        semanticId: structure.format.semanticId
     }
 }

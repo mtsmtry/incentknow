@@ -10,18 +10,20 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
+import Incentknow.Data.Entities (MaterialType)
 import Incentknow.Data.Ids (MaterialDraftId)
 import Incentknow.Data.Property (MaterialObject(..), fromJsonToMaterialObject, fromMaterialObjectToJson, getMaterialObjectId, toMaterialObjectFromDraftId)
 import Incentknow.Organisms.Material.EditorFromDraft as EditorFromDraft
 
 type Input 
-  = { value :: Maybe Json }
+  = { value :: Maybe Json, materialType :: MaterialType }
 
 type Output
     = Maybe Json
 
 type State
   = { materialObject :: Maybe Json
+    , materialType :: MaterialType
     }
 
 data Action
@@ -53,6 +55,7 @@ component =
 initialState :: Input -> State
 initialState input =
   { materialObject: input.value
+  , materialType: input.materialType
   }
 
 editor_ = SProxy :: SProxy "editor"
@@ -63,6 +66,7 @@ render state =
     { value: case map fromJsonToMaterialObject state.materialObject of 
         Just (MaterialObjectDraft draft) -> Just draft
         _ -> Nothing
+    , materialType: state.materialType
     } (Just <<< ChangeDraftId)
 
 handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit

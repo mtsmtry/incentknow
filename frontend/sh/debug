@@ -1,6 +1,7 @@
 
 # ビルド
-spago -q bundle-app --main Incentknow.Main --to public/index.js >sh/spago.log 2>&1
+spago -q bundle-app --main Incentknow.Main --to public/index.js
+#  >sh/spago.log 2>&1
 
 # cd functions
 # npm run build

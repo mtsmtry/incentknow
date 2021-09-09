@@ -2,36 +2,46 @@ module Incentknow.Pages.Home where
 
 import Prelude
 
-import Affjax as AX
-import Affjax.ResponseFormat as ResponseFormat
+import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
-import Data.Maybe.Utils (fromEither)
+import Data.Newtype (wrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.HTML.RawHTML as RawHtml
-import Incentknow.HTML.Utils (maybeElem)
+import Incentknow.API (getPublishedSpaces)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
+import Incentknow.AppM (class Behaviour)
+import Incentknow.Atoms.Icon (remoteWith)
+import Incentknow.Data.Entities (FocusedSpace)
+import Incentknow.HTML.Utils (css)
+import Incentknow.Organisms.SpaceCardView as SpaceCardView
+import Incentknow.Pages.Content as Content
+import Incentknow.Pages.Space as Space
+import Incentknow.Route (ContentSpec(..))
 import Incentknow.Templates.Main (centerLayout)
 
 type Input
   = {}
 
 type State
-  = { html :: Maybe String }
+  = { publishedSpaces :: Remote (Array FocusedSpace) }
 
 data Action
   = Initialize
   | HandleInput Input
+  | FetchedPublishedSpaces (Fetch (Array FocusedSpace))
 
 type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = ( rawHtml :: RawHtml.Slot Unit )
+  = ( space :: Space.Slot Unit
+    , content :: Content.Slot Unit
+    , cardview :: SpaceCardView.Slot Unit
+    )
 
-component :: forall q o m. MonadAff m => MonadEffect m => H.Component HH.HTML q Input o m
+component :: forall q o m. Behaviour m => MonadAff m => H.Component HH.HTML q Input o m
 component =
   H.mkComponent
     { initialState
@@ -40,18 +50,50 @@ component =
     }
 
 initialState :: Input -> State
-initialState input = { html: Nothing }
+initialState input = { publishedSpaces: Loading }
 
-render :: forall m. MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
+render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  centerLayout { leftSide: [], rightSide: [] }
-    [ maybeElem state.html \html ->
-        HH.slot (SProxy :: SProxy "rawHtml") unit RawHtml.component { html } absurd
+  HH.div [ css "page-home" ]
+    [ HH.div [ css "logo" ]
+        [ HH.text "Incentknow" ]
+    , HH.div [ css "desc" ]
+        [ HH.text "情報を整理し共有するためのプラットフォーム" ]
+    , HH.div [ css "part" ]
+        [ HH.div [ css "header" ]
+            [ HH.text "ちらばった情報を一箇所に整理" ]
+        , HH.div [ css "desc" ]
+            [ HH.text "もうどこに必要な情報があるのか探す必要はなくなります。一箇所にまとまっているのでどれが本当の情報かを確かめる必要もありません。" ]
+        , HH.div [ css "example" ]
+            [ HH.slot (SProxy :: SProxy "space") unit Space.component { spaceId: wrap "930774711778059", tab: Right (Just $ wrap "135605421976660") } absurd
+            ]
+        ]
+    , HH.div [ css "part" ]
+        [ HH.div [ css "header" ]
+            [ HH.text "自在に情報を関連づける" ]
+        , HH.div [ css "desc" ]
+            [ HH.text "どのような構造の情報でも整理することができます。情報同士を紐付け、すぐに必要な情報にアクセスできるようにすることができます。" ]
+        , HH.div [ css "example" ]
+            [ HH.slot (SProxy :: SProxy "content") unit Content.component { contentSpec: ContentSpecContentId $ wrap "vME9fV25gHek" } absurd 
+            ]
+        ]
+    , HH.div [ css "part" ]
+        [ HH.div [ css "header" ]
+            [ HH.text "チームで整理し、公開できる" ]
+        , HH.div [ css "desc" ]
+            [ HH.text "今のたくさんの整理された情報が公開されています。" ]
+        , HH.div [ css "example" ]
+            [ remoteWith state.publishedSpaces \spaces ->
+                HH.slot (SProxy :: SProxy "cardview") unit SpaceCardView.component { value: spaces } absurd
+          ]
+        ]
     ]
 
-handleAction :: forall o m. MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
-    html <- H.liftAff $ AX.get ResponseFormat.string "home.html"
-    H.modify_ _ { html = map (\x-> x.body) $ fromEither html }
-  HandleInput input -> pure unit
+   callbackQuery FetchedPublishedSpaces getPublishedSpaces
+  HandleInput input -> handleAction Initialize
+  FetchedPublishedSpaces fetch ->
+    forRemote fetch \spaces ->
+      H.modify_ _ { publishedSpaces = spaces }

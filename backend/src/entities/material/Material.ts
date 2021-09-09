@@ -24,13 +24,13 @@ export class Material {
     @EntityId()
     entityId: MaterialId;
 
-    @ManyToOne(type => Content, { onDelete: "RESTRICT" })
+    @ManyToOne(type => Content, { onDelete: "CASCADE" })
     @JoinColumn({ name: "contentId" })
     content: Content | null;
     @Column("int", { nullable: true })
     contentId: ContentSk | null;
 
-    @ManyToOne(type => Space, { onDelete: "RESTRICT" })
+    @ManyToOne(type => Space, { onDelete: "CASCADE" })
     @JoinColumn({ name: "spaceId" })
     space: Space | null;
     @Column("int", { nullable: true })

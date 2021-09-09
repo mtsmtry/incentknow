@@ -4,7 +4,6 @@ import Prelude
 
 import Control.Monad.Rec.Class (forever)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
-import Data.Newtype (wrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
@@ -20,7 +19,7 @@ import Incentknow.API (createNewMaterialDraft, editMaterialDraft)
 import Incentknow.API.Execution (executeCommand)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Message (SaveState(..))
-import Incentknow.Data.Entities (BlockData(..), FocusedMaterialDraft, MaterialData(..), MaterialType(..))
+import Incentknow.Data.Entities (FocusedMaterialDraft, MaterialData(..), MaterialType)
 import Incentknow.Data.Ids (MaterialDraftId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.Material.Editor as Editor
@@ -28,7 +27,7 @@ import Incentknow.Organisms.Material.Utils (createNewMaterialData)
 import Incentknow.Route (Route)
 
 type Input 
-  = { value :: Maybe FocusedMaterialDraft }
+  = { value :: Maybe FocusedMaterialDraft, materialType :: MaterialType }
 
 type Output
     = MaterialDraftId
@@ -42,6 +41,7 @@ type State
     , timerSubId :: Maybe SubscriptionId
     , data :: MaterialData
     , draftId :: Maybe MaterialDraftId
+    , materialType :: MaterialType
     }
 
 data Action
@@ -78,8 +78,9 @@ initialState input =
   { saveState: HasNotChange
   , loading: false
   , timerSubId: Nothing
-  , data: fromMaybe (DocumentMaterialData { blocks: [{id:wrap "", data:ParagraphBlockData ""}] }) $ map _.data input.value
+  , data: fromMaybe (PlaintextMaterialData "") $ map _.data input.value
   , draftId: map _.draftId input.value
+  , materialType: input.materialType
   }
 
 editor_ = SProxy :: SProxy "editor"
@@ -118,7 +119,7 @@ handleAction = case _ of
       timerSubId <- H.subscribe timer
       H.modify_ _ { timerSubId = Just timerSubId }
     when (isNothing state.draftId) do
-      newData <- createNewMaterialData MaterialTypeDocument
+      newData <- createNewMaterialData state.materialType
       H.modify_ _ { data = newData }
   -- Change
   ChangeData data2 -> do
@@ -141,7 +142,7 @@ handleAction = case _ of
               Just _ -> makeSaveStateSaved
               Nothing -> H.modify_ _ { saveState = NotSaved }
         Nothing -> do
-          result <- executeCommand $ createNewMaterialDraft Nothing MaterialTypeDocument state.data
+          result <- executeCommand $ createNewMaterialDraft Nothing state.data
           case result of
               Just draft -> do
                 makeSaveStateSaved

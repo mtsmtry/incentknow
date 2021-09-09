@@ -13,12 +13,12 @@ import Incentknow.API.Execution (Fetch, Remote(..), callCommand, callbackQuery, 
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (IntactAccount)
-import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.Setting (SettingOutput)
 import Incentknow.Molecules.Setting.DisplayId as SettingDisplayId
 import Incentknow.Molecules.Setting.Image as SettingImage
 import Incentknow.Molecules.Setting.Password as SettingPassword
 import Incentknow.Molecules.Setting.Text as SettingText
+import Incentknow.Templates.Page (section)
 
 type Input
   = {}
@@ -67,7 +67,7 @@ email_ = SProxy :: SProxy "email"
 render :: forall m. MonadAff m => Behaviour m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   remoteWith state.account \account ->
-    HH.div [ css "page-user-setting" ]
+    section "page-user-setting"
       [ HH.slot displayName_ unit SettingText.component
           { submit: callCommand <<< setMyDisplayName
           , value: account.displayName

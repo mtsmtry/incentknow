@@ -96,7 +96,9 @@ render state =
         IntTypedValue (Just vl) -> Just $ show vl
         BoolTypedValue (Just vl) -> Just $ show vl
         StringTypedValue (Just vl) -> Just vl
-        TextTypedValue (Just vl) -> Just vl
+        TextTypedValue (JustReference vl) -> case fromJsonToMaterialObject vl of
+          MaterialObjectRelated mat -> Just mat.displayName
+          _ -> Nothing
         EnumTypedValue enums (Just vl) -> map _.displayName $ head $ filter (\en-> en.id == vl) enums
         ContentTypedValue _ (JustReference content) -> map _.text sm.titleProperty
           where

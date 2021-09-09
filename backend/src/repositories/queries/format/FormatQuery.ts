@@ -16,7 +16,13 @@ export class FormatQuery extends SelectFromSingleTableQuery<Format, FormatQuery,
     }
 
     joinProperties() {
-        return new FormatQuery(this.qb.leftJoinAndSelect("x.properties", "properties"));
+        return new FormatQuery(this.qb.leftJoinAndSelect("x.properties", "allProperties"));
+    }
+
+    joinCurrentStructure() {
+        let query = this.qb.leftJoinAndSelect("x.currentStructure", "currentStructure");
+        query = joinProperties("currentStructure", query);
+        return new FormatQuery(query);
     }
 
     selectRelated() {
@@ -35,7 +41,7 @@ export class FormatQuery extends SelectFromSingleTableQuery<Format, FormatQuery,
             .leftJoinAndSelect("x.currentStructure", "currentStructure");
         let query2 = joinProperties("currentStructure", query);
 
-        return mapQuery(query2, x => (relations: Relation[]) => toFocusedFormat(x, relations));
+        return mapQuery(query2, toFocusedFormat);
     }
 }
 

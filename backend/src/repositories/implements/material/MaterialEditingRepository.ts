@@ -1,11 +1,12 @@
 import { ContentDraftSk } from "../../../entities/content/ContentDraft";
-import { MaterialSk, MaterialType } from "../../../entities/material/Material";
+import { MaterialSk } from "../../../entities/material/Material";
 import { MaterialCommit } from "../../../entities/material/MaterialCommit";
 import { MaterialChangeType, MaterialDraft, MaterialDraftSk } from "../../../entities/material/MaterialDraft";
 import { MaterialEditing, MaterialEditingState } from "../../../entities/material/MaterialEditing";
 import { MaterialSnapshot } from "../../../entities/material/MaterialSnapshot";
 import { SpaceSk } from "../../../entities/space/Space";
 import { UserSk } from "../../../entities/user/User";
+import { encodeMaterialData, MaterialData } from "../../../interfaces/material/Material";
 import { InternalError } from "../../../services/Errors";
 import { MaterialDraftQuery, MaterialDraftQueryFromEntity } from "../../queries/material/MaterialDraftQuery";
 import { MaterialEditingQuery } from "../../queries/material/MaterialEditingQuery";
@@ -65,7 +66,7 @@ export class MaterialEditingCommand implements BaseCommand {
         await this.drafts.update({ id: materialDraftId }, { intendedSpaceId: spaceId, intendedContentDraftId: null });
     }
 
-    async getOrCreateActiveDraft(userId: UserSk, materialId: MaterialSk, data: string, basedCommit: MaterialCommit | null) {
+    async getOrCreateActiveDraft(userId: UserSk, materialId: MaterialSk, materialData: MaterialData, basedCommit: MaterialCommit | null) {
         // validate basedCommit
         if (basedCommit && basedCommit.materialId != materialId) {
             throw "The material of the specified forked commit is not the specified material";
@@ -88,21 +89,23 @@ export class MaterialEditingCommand implements BaseCommand {
             editing = await this.editings.save(editing);
 
             let snapshot = this.snapshots.create({
-                data,
+                ...encodeMaterialData(materialData),
                 editingId: editing.id
             })
+            snapshot = await this.snapshots.save(snapshot);
 
             await Promise.all([
                 this.drafts.update(draft.id, { currentEditingId: editing.id }),
                 this.editings.update(editing.id, { snapshotId: snapshot.id })
-            ])
+            ]);
         } else {
             let snapshot = this.snapshots.create({
-                data,
+                ...encodeMaterialData(materialData),
                 editingId: draft.currentEditingId
             })
+            snapshot = await this.snapshots.save(snapshot);
 
-            this.editings.update(draft.currentEditingId, { snapshotId: snapshot.id });
+            await this.editings.update(draft.currentEditingId, { snapshotId: snapshot.id });
         }
 
         return new MaterialDraftQueryFromEntity(draft);
@@ -133,11 +136,11 @@ export class MaterialEditingCommand implements BaseCommand {
         return new MaterialDraftQueryFromEntity(draft);
     }
 
-    async createActiveBlankDraft(userId: UserSk, spaceId: SpaceSk | null, materialType: MaterialType, data: string) {
+    async createActiveBlankDraft(userId: UserSk, spaceId: SpaceSk | null, materialData: MaterialData) {
         // create draft
         let draft = this.drafts.create({
             intendedSpaceId: spaceId,
-            intendedMaterialType: materialType,
+            intendedMaterialType: materialData.type,
             userId
         });
         draft = await this.drafts.save(draft);
@@ -151,50 +154,55 @@ export class MaterialEditingCommand implements BaseCommand {
 
         // create snapshot
         let snapshot = this.snapshots.create({
-            data,
+            ...encodeMaterialData(materialData),
             editingId: editing.id
         })
         snapshot = await this.snapshots.save(snapshot);
 
         // set editing to draft
         await Promise.all([
-            this.editings.update(draft.id, { snapshotId: snapshot.id }),
+            this.editings.update(editing.id, { snapshotId: snapshot.id }),
             this.drafts.update(draft.id, { currentEditingId: editing.id })
         ])
 
         return new MaterialDraftQueryFromEntity(draft);
     }
 
-    async updateDraft(draft: MaterialDraft, data: any): Promise<MaterialSnapshot | null> {
+    async updateDraft(draft: MaterialDraft, materialData: MaterialData): Promise<MaterialSnapshot | null> {
+        const encodedData = encodeMaterialData(materialData);
+
         const currentEditing = draft.currentEditing;
         if (!currentEditing) {
             throw "This draft is not active";
         }
 
-        if (currentEditing.snapshot.data == data) {
+        if (currentEditing.snapshot.data == encodedData.data) {
             return null;
         }
 
         if (currentEditing.snapshot.data) {
-            const changeType = getChangeType(currentEditing.snapshot.data.length, data.length);
+            const changeType = getChangeType(currentEditing.snapshot.data.length, encodedData.data.length);
 
             // create snapshot if the number of characters takes the maximum value
             if (draft.changeType != MaterialChangeType.REMOVE && changeType == MaterialChangeType.REMOVE) {
                 let snapshot = this.snapshots.create({
                     editingId: currentEditing.id,
-                    data: data,
+                    ...encodedData,
                     timestamp: draft.updatedAt
                 });
                 snapshot = await this.snapshots.save(snapshot);
 
-                await this.editings.update(currentEditing.id, { snapshotId: snapshot.id });
+                await Promise.all([
+                    this.drafts.update(draft.id, { changeType }),
+                    this.editings.update(currentEditing.id, { snapshotId: snapshot.id })
+                ]);
 
                 return snapshot;
             } else {
-                await this.snapshots.update(currentEditing.snapshot, { data });
+                await this.snapshots.update(currentEditing.snapshot, encodedData);
             }
         } else {
-            await this.snapshots.update(currentEditing.snapshot.id, { data });
+            await this.snapshots.update(currentEditing.snapshot.id, encodedData);
         }
         return null;
     }

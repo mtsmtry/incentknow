@@ -21,7 +21,7 @@ export class MaterialCommit {
     @EntityId()
     entityId: MaterialCommitId;
 
-    @ManyToOne(type => Content, { onDelete: "CASCADE" })
+    @ManyToOne(type => Material, { onDelete: "CASCADE" })
     @JoinColumn({ name: "materialId" })
     material: Material;
     @Column()
@@ -66,21 +66,5 @@ export class MaterialCommit {
     @BeforeInsert()
     onInsert() {
         this.entityId = createEntityId() as MaterialCommitId;
-    }
-
-    @BeforeInsert()
-    @BeforeUpdate()
-    onUpdate() {
-        if (this.data) {
-            const doc: Document = JSON.parse(this.data);
-            let text = "";
-            doc.blocks.forEach(block => {
-                if (block.data.text) {
-                    text += block.data.text + " ";
-                }
-            });
-            this.beginning = text.substring(0, 140);
-            this.textCount = text.length;
-        }
     }
 }
