@@ -4,17 +4,20 @@ const E = PS["Incentknow.Data.Entities"] || {};
 PS["Incentknow.Data.Entities"] = E;
 const endpoint = "http://localhost:8080";
 
+exports.apiEndpoint = endpoint;
+
 async function requestApi(method, args) {
     console.log({ method: method, body: args });
     const session = localStorage.getItem("session");
-    const headers = {
-        'Content-Type': 'application/json',
-    };
+    const headers = {};
     if (session) {
         headers['Session'] = session;
     }
     let body = null;
-    if (args.blob) {
+    if (method.startsWith("upload")) {
+        if (Array.isArray(args)) {
+            args = args[0];
+        }
         body = new FormData();
         const json = {};
         Object.keys(args).forEach(key => { 
@@ -22,10 +25,13 @@ async function requestApi(method, args) {
                 json[key] = args[key];
             }
         });
+        console.log("args.blob");
+        console.log(args.blob);
         body.append('blob', args.blob);
         body.append('json', JSON.stringify(json));
     } else {
         body = JSON.stringify(args);
+        headers['Content-Type'] = 'application/json';
     }
     const response = await fetch(endpoint + "/" + method, {
         method: 'POST',
@@ -467,6 +473,111 @@ const jsMaterialSnapshotId = x => x;
 const psMaterialSnapshotId = x => x;
 
 
+function jsActivityType(obj) {
+                if(E.ActivityTypeContentCreated && obj instanceof E.ActivityTypeContentCreated) {
+                    return "content_created";
+                }
+            
+                if(E.ActivityTypeContentUpdated && obj instanceof E.ActivityTypeContentUpdated) {
+                    return "content_updated";
+                }
+            
+                if(E.ActivityTypeContentCommented && obj instanceof E.ActivityTypeContentCommented) {
+                    return "content_commented";
+                }
+            }
+
+function psActivityType(str) {switch(str){
+case "content_created":
+return (E.ActivityTypeContentCreated || { value: null }).value;
+case "content_updated":
+return (E.ActivityTypeContentUpdated || { value: null }).value;
+case "content_commented":
+return (E.ActivityTypeContentCommented || { value: null }).value;
+}}
+
+const jsActivitySk = x => x;
+
+
+const psActivitySk = x => x;
+
+
+const jsActivityId = x => x;
+
+
+const psActivityId = x => x;
+
+
+const jsCommentSk = x => x;
+
+
+const psCommentSk = x => x;
+
+
+const jsCommentId = x => x;
+
+
+const psCommentId = x => x;
+
+
+function jsCommentState(obj) {
+                if(E.CommentStateNormal && obj instanceof E.CommentStateNormal) {
+                    return "normal";
+                }
+            
+                if(E.CommentStateDeleted && obj instanceof E.CommentStateDeleted) {
+                    return "deleted";
+                }
+            }
+
+function psCommentState(str) {switch(str){
+case "normal":
+return (E.CommentStateNormal || { value: null }).value;
+case "deleted":
+return (E.CommentStateDeleted || { value: null }).value;
+}}
+
+const jsCommentLikeSk = x => x;
+
+
+const psCommentLikeSk = x => x;
+
+
+const jsContentLikeSk = x => x;
+
+
+const psContentLikeSk = x => x;
+
+
+function jsNotificationType(obj) {
+                if(E.NotificationTypeContentCommented && obj instanceof E.NotificationTypeContentCommented) {
+                    return "content_commented";
+                }
+            
+                if(E.NotificationTypeCommentReplied && obj instanceof E.NotificationTypeCommentReplied) {
+                    return "comment_replied";
+                }
+            }
+
+function psNotificationType(str) {switch(str){
+case "content_commented":
+return (E.NotificationTypeContentCommented || { value: null }).value;
+case "comment_replied":
+return (E.NotificationTypeCommentReplied || { value: null }).value;
+}}
+
+const jsNotificationSk = x => x;
+
+
+const psNotificationSk = x => x;
+
+
+const jsNotificationId = x => x;
+
+
+const psNotificationId = x => x;
+
+
 function jsReactorState(obj) {
                 if(E.Invaild && obj instanceof E.Invaild) {
                     return "invaild";
@@ -507,33 +618,33 @@ case "app":
 return (E.MembershipMethodApp || { value: null }).value;
 }}
 
-function jsSpaceAuth(obj) {
-                if(E.SpaceAuthNone && obj instanceof E.SpaceAuthNone) {
+function jsSpaceAuthority(obj) {
+                if(E.SpaceAuthorityNone && obj instanceof E.SpaceAuthorityNone) {
                     return "none";
                 }
             
-                if(E.SpaceAuthVisible && obj instanceof E.SpaceAuthVisible) {
+                if(E.SpaceAuthorityVisible && obj instanceof E.SpaceAuthorityVisible) {
                     return "visible";
                 }
             
-                if(E.SpaceAuthReadable && obj instanceof E.SpaceAuthReadable) {
+                if(E.SpaceAuthorityReadable && obj instanceof E.SpaceAuthorityReadable) {
                     return "readable";
                 }
             
-                if(E.SpaceAuthWritable && obj instanceof E.SpaceAuthWritable) {
+                if(E.SpaceAuthorityWritable && obj instanceof E.SpaceAuthorityWritable) {
                     return "writable";
                 }
             }
 
-function psSpaceAuth(str) {switch(str){
+function psSpaceAuthority(str) {switch(str){
 case "none":
-return (E.SpaceAuthNone || { value: null }).value;
+return (E.SpaceAuthorityNone || { value: null }).value;
 case "visible":
-return (E.SpaceAuthVisible || { value: null }).value;
+return (E.SpaceAuthorityVisible || { value: null }).value;
 case "readable":
-return (E.SpaceAuthReadable || { value: null }).value;
+return (E.SpaceAuthorityReadable || { value: null }).value;
 case "writable":
-return (E.SpaceAuthWritable || { value: null }).value;
+return (E.SpaceAuthorityWritable || { value: null }).value;
 }}
 
 const jsSpaceSk = x => x;
@@ -561,20 +672,20 @@ const psSpaceFollowSk = x => x;
 
 
 function jsMemberType(obj) {
-                if(E.Normal && obj instanceof E.Normal) {
+                if(E.MemberTypeNormal && obj instanceof E.MemberTypeNormal) {
                     return "normal";
                 }
             
-                if(E.Owner && obj instanceof E.Owner) {
+                if(E.MemberTypeOwner && obj instanceof E.MemberTypeOwner) {
                     return "owner";
                 }
             }
 
 function psMemberType(str) {switch(str){
 case "normal":
-return (E.Normal || { value: null }).value;
+return (E.MemberTypeNormal || { value: null }).value;
 case "owner":
-return (E.Owner || { value: null }).value;
+return (E.MemberTypeOwner || { value: null }).value;
 }}
 
 const jsSpaceMemberSk = x => x;
@@ -613,6 +724,7 @@ obj.format = obj.format ? jsRelatedFormat(obj.format) : null;
 
 
 
+
                         if (obj.generator instanceof Data_Maybe.Just) {
                             obj.generator = obj.generator.value0;
                             obj.generator = obj.generator ? jsContentGenerator(obj.generator) : null;
@@ -624,6 +736,7 @@ obj.format = obj.format ? jsRelatedFormat(obj.format) : null;
 function psRelatedContainer(obj){obj.containerId = obj.containerId ? psContainerId(obj.containerId) : null;
 obj.space = obj.space ? psRelatedSpace(obj.space) : null;
 obj.format = obj.format ? psRelatedFormat(obj.format) : null;
+
 
 
 
@@ -717,6 +830,29 @@ obj.format = obj.format ? psRelatedFormat(obj.format) : null;
                     }
                 return obj;}exports.fromJsonToFocusedContainer = x => psFocusedContainer(_.cloneDeep(x));
 
+function jsAuthority(obj) {
+                if(E.AuthorityNone && obj instanceof E.AuthorityNone) {
+                    return "none";
+                }
+            
+                if(E.AuthorityReadable && obj instanceof E.AuthorityReadable) {
+                    return "readable";
+                }
+            
+                if(E.AuthorityWritable && obj instanceof E.AuthorityWritable) {
+                    return "writable";
+                }
+            }
+
+function psAuthority(str) {switch(str){
+case "none":
+return (E.AuthorityNone || { value: null }).value;
+case "readable":
+return (E.AuthorityReadable || { value: null }).value;
+case "writable":
+return (E.AuthorityWritable || { value: null }).value;
+}}
+
 function jsRelatedContent(obj){obj.contentId = obj.contentId ? jsContentId(obj.contentId) : null;
 
 
@@ -724,8 +860,10 @@ obj.creatorUser = obj.creatorUser ? jsRelatedUser(obj.creatorUser) : null;
 obj.updaterUser = obj.updaterUser ? jsRelatedUser(obj.updaterUser) : null;
 
 
+
 obj.format = obj.format ? jsFocusedFormat(obj.format) : null;
-return obj;}exports.fromRelatedContentToJson = x => jsRelatedContent(_.cloneDeep(x));
+
+obj.authority = obj.authority ? jsAuthority(obj.authority) : null;return obj;}exports.fromRelatedContentToJson = x => jsRelatedContent(_.cloneDeep(x));
 
 function psRelatedContent(obj){obj.contentId = obj.contentId ? psContentId(obj.contentId) : null;
 
@@ -734,8 +872,10 @@ obj.creatorUser = obj.creatorUser ? psRelatedUser(obj.creatorUser) : null;
 obj.updaterUser = obj.updaterUser ? psRelatedUser(obj.updaterUser) : null;
 
 
+
 obj.format = obj.format ? psFocusedFormat(obj.format) : null;
-return obj;}exports.fromJsonToRelatedContent = x => psRelatedContent(_.cloneDeep(x));
+
+obj.authority = obj.authority ? psAuthority(obj.authority) : null;return obj;}exports.fromJsonToRelatedContent = x => psRelatedContent(_.cloneDeep(x));
 
 function jsFocusedContent(obj){obj.contentId = obj.contentId ? jsContentId(obj.contentId) : null;
 
@@ -744,15 +884,9 @@ obj.creatorUser = obj.creatorUser ? jsRelatedUser(obj.creatorUser) : null;
 obj.updaterUser = obj.updaterUser ? jsRelatedUser(obj.updaterUser) : null;
 
 
-obj.format = obj.format ? jsFocusedFormat(obj.format) : null;
 
-                        if (obj.draft instanceof Data_Maybe.Just) {
-                            obj.draft = obj.draft.value0;
-                            obj.draft = obj.draft ? jsRelatedContentDraft(obj.draft) : null;
-                        } else {
-                            obj.draft = null;
-                        }
-                    
+obj.format = obj.format ? jsFocusedFormat(obj.format) : null;
+obj.authority = obj.authority ? jsAuthority(obj.authority) : null;
 return obj;}exports.fromFocusedContentToJson = x => jsFocusedContent(_.cloneDeep(x));
 
 function psFocusedContent(obj){obj.contentId = obj.contentId ? psContentId(obj.contentId) : null;
@@ -762,15 +896,9 @@ obj.creatorUser = obj.creatorUser ? psRelatedUser(obj.creatorUser) : null;
 obj.updaterUser = obj.updaterUser ? psRelatedUser(obj.updaterUser) : null;
 
 
-obj.format = obj.format ? psFocusedFormat(obj.format) : null;
 
-                    if (obj.draft) {
-                        obj.draft = obj.draft ? psRelatedContentDraft(obj.draft) : null;
-                        obj.draft = new Data_Maybe.Just(obj.draft);
-                    } else {
-                        obj.draft = Data_Maybe.Nothing.value;
-                    }
-                
+obj.format = obj.format ? psFocusedFormat(obj.format) : null;
+obj.authority = obj.authority ? psAuthority(obj.authority) : null;
 return obj;}exports.fromJsonToFocusedContent = x => psFocusedContent(_.cloneDeep(x));
 
 function jsContentRelation(obj){
@@ -788,6 +916,68 @@ function psContentRelation(obj){
                         }) : null;
                     
 obj.relation = obj.relation ? psRelation(obj.relation) : null;return obj;}exports.fromJsonToContentRelation = x => psContentRelation(_.cloneDeep(x));
+
+function jsSearchedContent(obj){obj.content = obj.content ? jsRelatedContent(obj.content) : null;
+
+                            obj.highlights = obj.highlights ? obj.highlights.map(x => {
+                                
+                                return x;
+                            }) : null;
+                        
+return obj;}exports.fromSearchedContentToJson = x => jsSearchedContent(_.cloneDeep(x));
+
+function psSearchedContent(obj){obj.content = obj.content ? psRelatedContent(obj.content) : null;
+
+                        obj.highlights = obj.highlights ? obj.highlights.map(x => {
+                            
+                            return x;
+                        }) : null;
+                    
+return obj;}exports.fromJsonToSearchedContent = x => psSearchedContent(_.cloneDeep(x));
+
+function jsIntactContentPage(obj){obj.content = obj.content ? jsFocusedContent(obj.content) : null;
+
+                        if (obj.draft instanceof Data_Maybe.Just) {
+                            obj.draft = obj.draft.value0;
+                            obj.draft = obj.draft ? jsRelatedContentDraft(obj.draft) : null;
+                        } else {
+                            obj.draft = null;
+                        }
+                    
+
+                            obj.comments = obj.comments ? obj.comments.map(x => {
+                                x = x ? jsFocusedTreeComment(x) : null;
+                                return x;
+                            }) : null;
+                        
+
+                            obj.relations = obj.relations ? obj.relations.map(x => {
+                                x = x ? jsContentRelation(x) : null;
+                                return x;
+                            }) : null;
+                        return obj;}exports.fromIntactContentPageToJson = x => jsIntactContentPage(_.cloneDeep(x));
+
+function psIntactContentPage(obj){obj.content = obj.content ? psFocusedContent(obj.content) : null;
+
+                    if (obj.draft) {
+                        obj.draft = obj.draft ? psRelatedContentDraft(obj.draft) : null;
+                        obj.draft = new Data_Maybe.Just(obj.draft);
+                    } else {
+                        obj.draft = Data_Maybe.Nothing.value;
+                    }
+                
+
+                        obj.comments = obj.comments ? obj.comments.map(x => {
+                            x = x ? psFocusedTreeComment(x) : null;
+                            return x;
+                        }) : null;
+                    
+
+                        obj.relations = obj.relations ? obj.relations.map(x => {
+                            x = x ? psContentRelation(x) : null;
+                            return x;
+                        }) : null;
+                    return obj;}exports.fromJsonToIntactContentPage = x => psIntactContentPage(_.cloneDeep(x));
 
 function jsRelatedContentCommit(obj){obj.commitId = obj.commitId ? jsContentCommitId(obj.commitId) : null;
 
@@ -1548,6 +1738,12 @@ function psFocusedMaterialDraft(obj){obj.draftId = obj.draftId ? psMaterialDraft
 obj.data = obj.data ? psMaterialData(obj.data) : null;
 return obj;}exports.fromJsonToFocusedMaterialDraft = x => psFocusedMaterialDraft(_.cloneDeep(x));
 
+function jsMaterialDraftUpdation(obj){obj.draftId = obj.draftId ? jsMaterialDraftId(obj.draftId) : null;
+obj.data = obj.data ? jsMaterialData(obj.data) : null;return obj;}exports.fromMaterialDraftUpdationToJson = x => jsMaterialDraftUpdation(_.cloneDeep(x));
+
+function psMaterialDraftUpdation(obj){obj.draftId = obj.draftId ? psMaterialDraftId(obj.draftId) : null;
+obj.data = obj.data ? psMaterialData(obj.data) : null;return obj;}exports.fromJsonToMaterialDraftUpdation = x => psMaterialDraftUpdation(_.cloneDeep(x));
+
 function jsIntactMaterialEditing(obj){obj.materialEditingId = obj.materialEditingId ? jsMaterialEditingId(obj.materialEditingId) : null;
 
 return obj;}exports.fromIntactMaterialEditingToJson = x => jsIntactMaterialEditing(_.cloneDeep(x));
@@ -1573,6 +1769,148 @@ function psFocusedMaterialSnapshot(obj){obj.data = obj.data ? psMaterialData(obj
 
 
 return obj;}exports.fromJsonToFocusedMaterialSnapshot = x => psFocusedMaterialSnapshot(_.cloneDeep(x));
+
+function jsActivityAction(obj) {
+                if(E.ContentCreatedActivityAction && obj instanceof E.ContentCreatedActivityAction) {
+                    obj.value0 = obj.value0 ? jsRelatedContent(obj.value0) : null;
+                    return {
+                        type: "content_created",
+                        content: obj.value0
+                    };
+                }
+            
+                if(E.ContentUpdatedActivityAction && obj instanceof E.ContentUpdatedActivityAction) {
+                    obj.value0 = obj.value0 ? jsRelatedContent(obj.value0) : null;
+                    return {
+                        type: "content_updated",
+                        content: obj.value0
+                    };
+                }
+            
+                if(E.ContentCommentedActivityAction && obj instanceof E.ContentCommentedActivityAction) {
+                    obj.value0 = obj.value0 ? jsRelatedContent(obj.value0) : null;;obj.value1 = obj.value1 ? jsRelatedComment(obj.value1) : null;
+                    return {
+                        type: "content_commented",
+                        content: obj.value0,comment: obj.value1
+                    };
+                }
+            }
+
+function psActivityAction(obj) {switch(obj.type){case "content_created":
+obj.content = obj.content ? psRelatedContent(obj.content) : null;return new E.ContentCreatedActivityAction(obj.content);
+case "content_updated":
+obj.content = obj.content ? psRelatedContent(obj.content) : null;return new E.ContentUpdatedActivityAction(obj.content);
+case "content_commented":
+obj.content = obj.content ? psRelatedContent(obj.content) : null;;obj.comment = obj.comment ? psRelatedComment(obj.comment) : null;return new E.ContentCommentedActivityAction(obj.content,obj.comment);
+}}
+
+function jsIntactActivityBySpace(obj){obj.activityId = obj.activityId ? jsActivityId(obj.activityId) : null;
+obj.action = obj.action ? jsActivityAction(obj.action) : null;
+obj.actorUser = obj.actorUser ? jsRelatedUser(obj.actorUser) : null;
+return obj;}exports.fromIntactActivityBySpaceToJson = x => jsIntactActivityBySpace(_.cloneDeep(x));
+
+function psIntactActivityBySpace(obj){obj.activityId = obj.activityId ? psActivityId(obj.activityId) : null;
+obj.action = obj.action ? psActivityAction(obj.action) : null;
+obj.actorUser = obj.actorUser ? psRelatedUser(obj.actorUser) : null;
+return obj;}exports.fromJsonToIntactActivityBySpace = x => psIntactActivityBySpace(_.cloneDeep(x));
+
+function jsIntactActivityByUser(obj){obj.activityId = obj.activityId ? jsActivityId(obj.activityId) : null;
+obj.action = obj.action ? jsActivityAction(obj.action) : null;
+obj.space = obj.space ? jsRelatedSpace(obj.space) : null;
+return obj;}exports.fromIntactActivityByUserToJson = x => jsIntactActivityByUser(_.cloneDeep(x));
+
+function psIntactActivityByUser(obj){obj.activityId = obj.activityId ? psActivityId(obj.activityId) : null;
+obj.action = obj.action ? psActivityAction(obj.action) : null;
+obj.space = obj.space ? psRelatedSpace(obj.space) : null;
+return obj;}exports.fromJsonToIntactActivityByUser = x => psIntactActivityByUser(_.cloneDeep(x));
+
+function jsRelatedComment(obj){obj.commentId = obj.commentId ? jsCommentId(obj.commentId) : null;
+obj.user = obj.user ? jsRelatedUser(obj.user) : null;
+
+
+return obj;}exports.fromRelatedCommentToJson = x => jsRelatedComment(_.cloneDeep(x));
+
+function psRelatedComment(obj){obj.commentId = obj.commentId ? psCommentId(obj.commentId) : null;
+obj.user = obj.user ? psRelatedUser(obj.user) : null;
+
+
+return obj;}exports.fromJsonToRelatedComment = x => psRelatedComment(_.cloneDeep(x));
+
+function jsFocusedComment(obj){obj.commentId = obj.commentId ? jsCommentId(obj.commentId) : null;
+obj.user = obj.user ? jsRelatedUser(obj.user) : null;
+
+
+
+return obj;}exports.fromFocusedCommentToJson = x => jsFocusedComment(_.cloneDeep(x));
+
+function psFocusedComment(obj){obj.commentId = obj.commentId ? psCommentId(obj.commentId) : null;
+obj.user = obj.user ? psRelatedUser(obj.user) : null;
+
+
+
+return obj;}exports.fromJsonToFocusedComment = x => psFocusedComment(_.cloneDeep(x));
+
+function jsFocusedTreeComment(obj){obj.commentId = obj.commentId ? jsCommentId(obj.commentId) : null;
+obj.user = obj.user ? jsRelatedUser(obj.user) : null;
+
+
+
+
+
+                            obj.replies = obj.replies ? obj.replies.map(x => {
+                                x = x ? jsFocusedComment(x) : null;
+                                return x;
+                            }) : null;
+                        return obj;}exports.fromFocusedTreeCommentToJson = x => jsFocusedTreeComment(_.cloneDeep(x));
+
+function psFocusedTreeComment(obj){obj.commentId = obj.commentId ? psCommentId(obj.commentId) : null;
+obj.user = obj.user ? psRelatedUser(obj.user) : null;
+
+
+
+
+
+                        obj.replies = obj.replies ? obj.replies.map(x => {
+                            x = x ? psFocusedComment(x) : null;
+                            return x;
+                        }) : null;
+                    return obj;}exports.fromJsonToFocusedTreeComment = x => psFocusedTreeComment(_.cloneDeep(x));
+
+function jsNotificationAction(obj) {
+                if(E.ContentCommentedNotificationAction && obj instanceof E.ContentCommentedNotificationAction) {
+                    obj.value0 = obj.value0 ? jsRelatedContent(obj.value0) : null;;obj.value1 = obj.value1 ? jsRelatedComment(obj.value1) : null;
+                    return {
+                        type: "content_commented",
+                        content: obj.value0,comment: obj.value1
+                    };
+                }
+            
+                if(E.CommentRepliedNotificationAction && obj instanceof E.CommentRepliedNotificationAction) {
+                    obj.value0 = obj.value0 ? jsRelatedContent(obj.value0) : null;;obj.value1 = obj.value1 ? jsRelatedComment(obj.value1) : null;
+                    return {
+                        type: "comment_replied",
+                        content: obj.value0,comment: obj.value1
+                    };
+                }
+            }
+
+function psNotificationAction(obj) {switch(obj.type){case "content_commented":
+obj.content = obj.content ? psRelatedContent(obj.content) : null;;obj.comment = obj.comment ? psRelatedComment(obj.comment) : null;return new E.ContentCommentedNotificationAction(obj.content,obj.comment);
+case "comment_replied":
+obj.content = obj.content ? psRelatedContent(obj.content) : null;;obj.comment = obj.comment ? psRelatedComment(obj.comment) : null;return new E.CommentRepliedNotificationAction(obj.content,obj.comment);
+}}
+
+function jsIntactNotification(obj){obj.notificationId = obj.notificationId ? jsNotificationId(obj.notificationId) : null;
+obj.action = obj.action ? jsNotificationAction(obj.action) : null;
+obj.notifiedFromUser = obj.notifiedFromUser ? jsRelatedUser(obj.notifiedFromUser) : null;
+
+return obj;}exports.fromIntactNotificationToJson = x => jsIntactNotification(_.cloneDeep(x));
+
+function psIntactNotification(obj){obj.notificationId = obj.notificationId ? psNotificationId(obj.notificationId) : null;
+obj.action = obj.action ? psNotificationAction(obj.action) : null;
+obj.notifiedFromUser = obj.notifiedFromUser ? psRelatedUser(obj.notifiedFromUser) : null;
+
+return obj;}exports.fromJsonToIntactNotification = x => psIntactNotification(_.cloneDeep(x));
 
 function jsIntactReactor(obj){obj.reactorId = obj.reactorId ? jsReactorId(obj.reactorId) : null;
 obj.container = obj.container ? jsRelatedContainer(obj.container) : null;
@@ -1604,11 +1942,9 @@ obj.creatorUser = obj.creatorUser ? psRelatedUser(obj.creatorUser) : null;return
 
 function jsAdditionalSpaceInfo(obj){
 
-
 return obj;}exports.fromAdditionalSpaceInfoToJson = x => jsAdditionalSpaceInfo(_.cloneDeep(x));
 
 function psAdditionalSpaceInfo(obj){
-
 
 return obj;}exports.fromJsonToAdditionalSpaceInfo = x => psAdditionalSpaceInfo(_.cloneDeep(x));
 
@@ -1618,16 +1954,16 @@ obj.displayId = obj.displayId ? jsSpaceDisplayId(obj.displayId) : null;
 
 
 
-                        if (obj.homeUrl instanceof Data_Maybe.Just) {
-                            obj.homeUrl = obj.homeUrl.value0;
+                        if (obj.headerImage instanceof Data_Maybe.Just) {
+                            obj.headerImage = obj.headerImage.value0;
                             
                         } else {
-                            obj.homeUrl = null;
+                            obj.headerImage = null;
                         }
                     
 
 obj.membershipMethod = obj.membershipMethod ? jsMembershipMethod(obj.membershipMethod) : null;
-obj.defaultAuthority = obj.defaultAuthority ? jsSpaceAuth(obj.defaultAuthority) : null;return obj;}exports.fromRelatedSpaceToJson = x => jsRelatedSpace(_.cloneDeep(x));
+obj.defaultAuthority = obj.defaultAuthority ? jsSpaceAuthority(obj.defaultAuthority) : null;return obj;}exports.fromRelatedSpaceToJson = x => jsRelatedSpace(_.cloneDeep(x));
 
 function psRelatedSpace(obj){obj.spaceId = obj.spaceId ? psSpaceId(obj.spaceId) : null;
 obj.displayId = obj.displayId ? psSpaceDisplayId(obj.displayId) : null;
@@ -1635,16 +1971,16 @@ obj.displayId = obj.displayId ? psSpaceDisplayId(obj.displayId) : null;
 
 
 
-                    if (obj.homeUrl) {
+                    if (obj.headerImage) {
                         
-                        obj.homeUrl = new Data_Maybe.Just(obj.homeUrl);
+                        obj.headerImage = new Data_Maybe.Just(obj.headerImage);
                     } else {
-                        obj.homeUrl = Data_Maybe.Nothing.value;
+                        obj.headerImage = Data_Maybe.Nothing.value;
                     }
                 
 
 obj.membershipMethod = obj.membershipMethod ? psMembershipMethod(obj.membershipMethod) : null;
-obj.defaultAuthority = obj.defaultAuthority ? psSpaceAuth(obj.defaultAuthority) : null;return obj;}exports.fromJsonToRelatedSpace = x => psRelatedSpace(_.cloneDeep(x));
+obj.defaultAuthority = obj.defaultAuthority ? psSpaceAuthority(obj.defaultAuthority) : null;return obj;}exports.fromJsonToRelatedSpace = x => psRelatedSpace(_.cloneDeep(x));
 
 function jsFocusedSpace(obj){obj.spaceId = obj.spaceId ? jsSpaceId(obj.spaceId) : null;
 obj.displayId = obj.displayId ? jsSpaceDisplayId(obj.displayId) : null;
@@ -1653,20 +1989,26 @@ obj.displayId = obj.displayId ? jsSpaceDisplayId(obj.displayId) : null;
 obj.creatorUser = obj.creatorUser ? jsRelatedUser(obj.creatorUser) : null;
 
 
-                        if (obj.homeUrl instanceof Data_Maybe.Just) {
-                            obj.homeUrl = obj.homeUrl.value0;
+                        if (obj.headerImage instanceof Data_Maybe.Just) {
+                            obj.headerImage = obj.headerImage.value0;
                             
                         } else {
-                            obj.homeUrl = null;
+                            obj.headerImage = null;
                         }
                     
 
 obj.membershipMethod = obj.membershipMethod ? jsMembershipMethod(obj.membershipMethod) : null;
-obj.defaultAuthority = obj.defaultAuthority ? jsSpaceAuth(obj.defaultAuthority) : null;
+obj.defaultAuthority = obj.defaultAuthority ? jsSpaceAuthority(obj.defaultAuthority) : null;
 
 
 
-return obj;}exports.fromFocusedSpaceToJson = x => jsFocusedSpace(_.cloneDeep(x));
+
+
+                            obj.containers = obj.containers ? obj.containers.map(x => {
+                                x = x ? jsRelatedContainer(x) : null;
+                                return x;
+                            }) : null;
+                        return obj;}exports.fromFocusedSpaceToJson = x => jsFocusedSpace(_.cloneDeep(x));
 
 function psFocusedSpace(obj){obj.spaceId = obj.spaceId ? psSpaceId(obj.spaceId) : null;
 obj.displayId = obj.displayId ? psSpaceDisplayId(obj.displayId) : null;
@@ -1675,20 +2017,64 @@ obj.displayId = obj.displayId ? psSpaceDisplayId(obj.displayId) : null;
 obj.creatorUser = obj.creatorUser ? psRelatedUser(obj.creatorUser) : null;
 
 
-                    if (obj.homeUrl) {
+                    if (obj.headerImage) {
                         
-                        obj.homeUrl = new Data_Maybe.Just(obj.homeUrl);
+                        obj.headerImage = new Data_Maybe.Just(obj.headerImage);
                     } else {
-                        obj.homeUrl = Data_Maybe.Nothing.value;
+                        obj.headerImage = Data_Maybe.Nothing.value;
                     }
                 
 
 obj.membershipMethod = obj.membershipMethod ? psMembershipMethod(obj.membershipMethod) : null;
-obj.defaultAuthority = obj.defaultAuthority ? psSpaceAuth(obj.defaultAuthority) : null;
+obj.defaultAuthority = obj.defaultAuthority ? psSpaceAuthority(obj.defaultAuthority) : null;
 
 
 
-return obj;}exports.fromJsonToFocusedSpace = x => psFocusedSpace(_.cloneDeep(x));
+
+
+                        obj.containers = obj.containers ? obj.containers.map(x => {
+                            x = x ? psRelatedContainer(x) : null;
+                            return x;
+                        }) : null;
+                    return obj;}exports.fromJsonToFocusedSpace = x => psFocusedSpace(_.cloneDeep(x));
+
+function jsIntactSpageHomePage(obj){
+                            obj.activities = obj.activities ? obj.activities.map(x => {
+                                x = x ? jsIntactActivityBySpace(x) : null;
+                                return x;
+                            }) : null;
+                        
+
+                            obj.topics = obj.topics ? obj.topics.map(x => {
+                                x = x ? jsFocusedContent(x) : null;
+                                return x;
+                            }) : null;
+                        
+
+                            obj.members = obj.members ? obj.members.map(x => {
+                                x = x ? jsIntactSpaceMember(x) : null;
+                                return x;
+                            }) : null;
+                        return obj;}exports.fromIntactSpageHomePageToJson = x => jsIntactSpageHomePage(_.cloneDeep(x));
+
+function psIntactSpageHomePage(obj){
+                        obj.activities = obj.activities ? obj.activities.map(x => {
+                            x = x ? psIntactActivityBySpace(x) : null;
+                            return x;
+                        }) : null;
+                    
+
+                        obj.topics = obj.topics ? obj.topics.map(x => {
+                            x = x ? psFocusedContent(x) : null;
+                            return x;
+                        }) : null;
+                    
+
+                        obj.members = obj.members ? obj.members.map(x => {
+                            x = x ? psIntactSpaceMember(x) : null;
+                            return x;
+                        }) : null;
+                    return obj;}exports.fromJsonToIntactSpageHomePage = x => psIntactSpageHomePage(_.cloneDeep(x));
 
 function jsIntactSpaceMember(obj){obj.user = obj.user ? jsRelatedUser(obj.user) : null;
 
@@ -1708,11 +2094,11 @@ function jsIntactAccount(obj){obj.userId = obj.userId ? jsUserId(obj.userId) : n
 obj.displayId = obj.displayId ? jsUserDisplayId(obj.displayId) : null;
 
 
-                        if (obj.iconUrl instanceof Data_Maybe.Just) {
-                            obj.iconUrl = obj.iconUrl.value0;
+                        if (obj.iconImage instanceof Data_Maybe.Just) {
+                            obj.iconImage = obj.iconImage.value0;
                             
                         } else {
-                            obj.iconUrl = null;
+                            obj.iconImage = null;
                         }
                     
 
@@ -1722,11 +2108,11 @@ function psIntactAccount(obj){obj.userId = obj.userId ? psUserId(obj.userId) : n
 obj.displayId = obj.displayId ? psUserDisplayId(obj.displayId) : null;
 
 
-                    if (obj.iconUrl) {
+                    if (obj.iconImage) {
                         
-                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrl);
+                        obj.iconImage = new Data_Maybe.Just(obj.iconImage);
                     } else {
-                        obj.iconUrl = Data_Maybe.Nothing.value;
+                        obj.iconImage = Data_Maybe.Nothing.value;
                     }
                 
 
@@ -1736,11 +2122,11 @@ function jsRelatedUser(obj){obj.userId = obj.userId ? jsUserId(obj.userId) : nul
 obj.displayId = obj.displayId ? jsUserDisplayId(obj.displayId) : null;
 
 
-                        if (obj.iconUrl instanceof Data_Maybe.Just) {
-                            obj.iconUrl = obj.iconUrl.value0;
+                        if (obj.iconImage instanceof Data_Maybe.Just) {
+                            obj.iconImage = obj.iconImage.value0;
                             
                         } else {
-                            obj.iconUrl = null;
+                            obj.iconImage = null;
                         }
                     
 return obj;}exports.fromRelatedUserToJson = x => jsRelatedUser(_.cloneDeep(x));
@@ -1749,11 +2135,11 @@ function psRelatedUser(obj){obj.userId = obj.userId ? psUserId(obj.userId) : nul
 obj.displayId = obj.displayId ? psUserDisplayId(obj.displayId) : null;
 
 
-                    if (obj.iconUrl) {
+                    if (obj.iconImage) {
                         
-                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrl);
+                        obj.iconImage = new Data_Maybe.Just(obj.iconImage);
                     } else {
-                        obj.iconUrl = Data_Maybe.Nothing.value;
+                        obj.iconImage = Data_Maybe.Nothing.value;
                     }
                 
 return obj;}exports.fromJsonToRelatedUser = x => psRelatedUser(_.cloneDeep(x));
@@ -1762,11 +2148,11 @@ function jsFocusedUser(obj){obj.userId = obj.userId ? jsUserId(obj.userId) : nul
 obj.displayId = obj.displayId ? jsUserDisplayId(obj.displayId) : null;
 
 
-                        if (obj.iconUrl instanceof Data_Maybe.Just) {
-                            obj.iconUrl = obj.iconUrl.value0;
+                        if (obj.iconImage instanceof Data_Maybe.Just) {
+                            obj.iconImage = obj.iconImage.value0;
                             
                         } else {
-                            obj.iconUrl = null;
+                            obj.iconImage = null;
                         }
                     
 return obj;}exports.fromFocusedUserToJson = x => jsFocusedUser(_.cloneDeep(x));
@@ -1775,11 +2161,11 @@ function psFocusedUser(obj){obj.userId = obj.userId ? psUserId(obj.userId) : nul
 obj.displayId = obj.displayId ? psUserDisplayId(obj.displayId) : null;
 
 
-                    if (obj.iconUrl) {
+                    if (obj.iconImage) {
                         
-                        obj.iconUrl = new Data_Maybe.Just(obj.iconUrl);
+                        obj.iconImage = new Data_Maybe.Just(obj.iconImage);
                     } else {
-                        obj.iconUrl = Data_Maybe.Nothing.value;
+                        obj.iconImage = Data_Maybe.Nothing.value;
                     }
                 
 return obj;}exports.fromJsonToFocusedUser = x => psFocusedUser(_.cloneDeep(x));
@@ -1877,23 +2263,33 @@ exports.__createNewContentDraft = (() => {return (structureId) => {return (space
                 result = result ? psContentDraftId(result) : null;
                 return result;}}};})();
 
-exports.__editContentDraft = (() => {return (contentDraftId) => {return async function (data) {
-                let argObject = { contentDraftId,data };
+exports.__editContentDraft = (() => {return (contentDraftId) => {return (data) => {return async function (materialUpdations) {
+                let argObject = { contentDraftId,data,materialUpdations };
                 argObject = _.cloneDeep(argObject);
                 argObject.contentDraftId = argObject.contentDraftId ? jsContentDraftId(argObject.contentDraftId) : null;
-                argObject = [ argObject.contentDraftId,argObject.data ];
+                            argObject.materialUpdations = argObject.materialUpdations ? argObject.materialUpdations.map(x => {
+                                x = x ? jsMaterialDraftUpdation(x) : null;
+                                return x;
+                            }) : null;
+                        
+                argObject = [ argObject.contentDraftId,argObject.data,argObject.materialUpdations ];
                 let result = await requestApi("editContentDraft", argObject);
                 
-                return result;}};})();
+                return result;}}};})();
 
-exports.__commitContent = (() => {return (contentDraftId) => {return async function (data) {
-                let argObject = { contentDraftId,data };
+exports.__commitContent = (() => {return (contentDraftId) => {return (data) => {return async function (materialUpdations) {
+                let argObject = { contentDraftId,data,materialUpdations };
                 argObject = _.cloneDeep(argObject);
                 argObject.contentDraftId = argObject.contentDraftId ? jsContentDraftId(argObject.contentDraftId) : null;
-                argObject = [ argObject.contentDraftId,argObject.data ];
+                            argObject.materialUpdations = argObject.materialUpdations ? argObject.materialUpdations.map(x => {
+                                x = x ? jsMaterialDraftUpdation(x) : null;
+                                return x;
+                            }) : null;
+                        
+                argObject = [ argObject.contentDraftId,argObject.data,argObject.materialUpdations ];
                 let result = await requestApi("commitContent", argObject);
                 result = result ? psContentId(result) : null;
-                return result;}};})();
+                return result;}}};})();
 
 exports.__getContent = (() => {return async function (contentId) {
                 let argObject = { contentId };
@@ -1904,18 +2300,13 @@ exports.__getContent = (() => {return async function (contentId) {
                 result = result ? psFocusedContent(result) : null;
                 return result;};})();
 
-exports.__getContentRelations = (() => {return async function (contentId) {
+exports.__getContentPage = (() => {return async function (contentId) {
                 let argObject = { contentId };
                 argObject = _.cloneDeep(argObject);
                 argObject.contentId = argObject.contentId ? jsContentId(argObject.contentId) : null;
                 argObject = [ argObject.contentId ];
-                let result = await requestApi("getContentRelations", argObject);
-                
-                        result = result ? result.map(x => {
-                            x = x ? psContentRelation(x) : null;
-                            return x;
-                        }) : null;
-                    
+                let result = await requestApi("getContentPage", argObject);
+                result = result ? psIntactContentPage(result) : null;
                 return result;};})();
 
 exports.__getRelatedContent = (() => {return async function (contentId) {
@@ -1941,20 +2332,6 @@ exports.__getContents = (() => {return (spaceId) => {return async function (form
                     
                 return result;}};})();
 
-exports.__getContentsByProperty = (() => {return (spaceId) => {return (formatId) => {return (propertyId) => {return async function (value) {
-                let argObject = { spaceId,formatId,propertyId,value };
-                argObject = _.cloneDeep(argObject);
-                argObject.spaceId = argObject.spaceId ? jsSpaceId(argObject.spaceId) : null;argObject.formatId = argObject.formatId ? jsFormatId(argObject.formatId) : null;argObject.propertyId = argObject.propertyId ? jsPropertyId(argObject.propertyId) : null;
-                argObject = [ argObject.spaceId,argObject.formatId,argObject.propertyId,argObject.value ];
-                let result = await requestApi("getContentsByProperty", argObject);
-                
-                        result = result ? result.map(x => {
-                            x = x ? psRelatedContent(x) : null;
-                            return x;
-                        }) : null;
-                    
-                return result;}}}};})();
-
 exports.__getContentsByDisplayId = (() => {return (spaceId) => {return async function (formatId) {
                 let argObject = { spaceId,formatId };
                 argObject = _.cloneDeep(argObject);
@@ -1964,6 +2341,20 @@ exports.__getContentsByDisplayId = (() => {return (spaceId) => {return async fun
                 
                         result = result ? result.map(x => {
                             x = x ? psRelatedContent(x) : null;
+                            return x;
+                        }) : null;
+                    
+                return result;}};})();
+
+exports.__getFocusedContentsByDisplayId = (() => {return (spaceId) => {return async function (formatId) {
+                let argObject = { spaceId,formatId };
+                argObject = _.cloneDeep(argObject);
+                argObject.spaceId = argObject.spaceId ? jsSpaceDisplayId(argObject.spaceId) : null;argObject.formatId = argObject.formatId ? jsFormatDisplayId(argObject.formatId) : null;
+                argObject = [ argObject.spaceId,argObject.formatId ];
+                let result = await requestApi("getFocusedContentsByDisplayId", argObject);
+                
+                        result = result ? result.map(x => {
+                            x = x ? psFocusedContent(x) : null;
                             return x;
                         }) : null;
                     
@@ -1979,7 +2370,7 @@ exports.__getContentsByDisplayId = (() => {return (spaceId) => {return async fun
                         }) : null;
                     
                     return result;
-                }})()();
+                }})();
             
 
 exports.__getContentDraft = (() => {return async function (draftId) {
@@ -1989,6 +2380,15 @@ exports.__getContentDraft = (() => {return async function (draftId) {
                 argObject = [ argObject.draftId ];
                 let result = await requestApi("getContentDraft", argObject);
                 result = result ? psFocusedContentDraft(result) : null;
+                return result;};})();
+
+exports.__cancelContentDraft = (() => {return async function (draftId) {
+                let argObject = { draftId };
+                argObject = _.cloneDeep(argObject);
+                argObject.draftId = argObject.draftId ? jsContentDraftId(argObject.draftId) : null;
+                argObject = [ argObject.draftId ];
+                let result = await requestApi("cancelContentDraft", argObject);
+                
                 return result;};})();
 
 exports.__getContentCommits = (() => {return async function (contentId) {
@@ -2014,19 +2414,33 @@ exports.__getContentCommit = (() => {return async function (commitId) {
                 result = result ? psFocusedContentCommit(result) : null;
                 return result;};})();
 
-exports.__getSpaceLatestContents = (() => {return async function (spaceId) {
-                let argObject = { spaceId };
+exports.__getSearchedAllContents = (() => {return async function (text) {
+                let argObject = { text };
                 argObject = _.cloneDeep(argObject);
-                argObject.spaceId = argObject.spaceId ? jsSpaceId(argObject.spaceId) : null;
-                argObject = [ argObject.spaceId ];
-                let result = await requestApi("getSpaceLatestContents", argObject);
+                
+                argObject = [ argObject.text ];
+                let result = await requestApi("getSearchedAllContents", argObject);
                 
                         result = result ? result.map(x => {
-                            x = x ? psRelatedContent(x) : null;
+                            x = x ? psSearchedContent(x) : null;
                             return x;
                         }) : null;
                     
                 return result;};})();
+
+exports.__getSearchedContentsInContainer = (() => {return (spaceId) => {return (formatId) => {return async function (text) {
+                let argObject = { spaceId,formatId,text };
+                argObject = _.cloneDeep(argObject);
+                argObject.spaceId = argObject.spaceId ? jsSpaceDisplayId(argObject.spaceId) : null;argObject.formatId = argObject.formatId ? jsFormatDisplayId(argObject.formatId) : null;
+                argObject = [ argObject.spaceId,argObject.formatId,argObject.text ];
+                let result = await requestApi("getSearchedContentsInContainer", argObject);
+                
+                        result = result ? result.map(x => {
+                            x = x ? psSearchedContent(x) : null;
+                            return x;
+                        }) : null;
+                    
+                return result;}}};})();
 
 
                 exports.__createFormat = (() => {return async function (argObject) {
@@ -2243,7 +2657,7 @@ exports.__getMaterial = (() => {return async function (materialId) {
                         }) : null;
                     
                     return result;
-                }})()();
+                }})();
             
 
 exports.__getMaterialDraft = (() => {return async function (draftId) {
@@ -2253,6 +2667,15 @@ exports.__getMaterialDraft = (() => {return async function (draftId) {
                 argObject = [ argObject.draftId ];
                 let result = await requestApi("getMaterialDraft", argObject);
                 result = result ? psFocusedMaterialDraft(result) : null;
+                return result;};})();
+
+exports.__cancelMaterialDraft = (() => {return async function (draftId) {
+                let argObject = { draftId };
+                argObject = _.cloneDeep(argObject);
+                argObject.draftId = argObject.draftId ? jsMaterialDraftId(argObject.draftId) : null;
+                argObject = [ argObject.draftId ];
+                let result = await requestApi("cancelMaterialDraft", argObject);
+                
                 return result;};})();
 
 exports.__getMaterialCommits = (() => {return async function (materialId) {
@@ -2300,6 +2723,108 @@ exports.__getMaterialCommit = (() => {return async function (commitId) {
                 let result = await requestApi("getMaterialCommit", argObject);
                 result = result ? psFocusedMaterialCommit(result) : null;
                 return result;};})();
+
+exports.__commentContent = (() => {return (contentId) => {return async function (text) {
+                let argObject = { contentId,text };
+                argObject = _.cloneDeep(argObject);
+                argObject.contentId = argObject.contentId ? jsContentId(argObject.contentId) : null;
+                argObject = [ argObject.contentId,argObject.text ];
+                let result = await requestApi("commentContent", argObject);
+                result = result ? psFocusedTreeComment(result) : null;
+                return result;}};})();
+
+exports.__replyToComment = (() => {return (commentId) => {return async function (text) {
+                let argObject = { commentId,text };
+                argObject = _.cloneDeep(argObject);
+                argObject.commentId = argObject.commentId ? jsCommentId(argObject.commentId) : null;
+                argObject = [ argObject.commentId,argObject.text ];
+                let result = await requestApi("replyToComment", argObject);
+                result = result ? psFocusedComment(result) : null;
+                return result;}};})();
+
+exports.__modifyComment = (() => {return (commentId) => {return async function (text) {
+                let argObject = { commentId,text };
+                argObject = _.cloneDeep(argObject);
+                argObject.commentId = argObject.commentId ? jsCommentId(argObject.commentId) : null;
+                argObject = [ argObject.commentId,argObject.text ];
+                let result = await requestApi("modifyComment", argObject);
+                
+                return result;}};})();
+
+exports.__likeComment = (() => {return async function (commentId) {
+                let argObject = { commentId };
+                argObject = _.cloneDeep(argObject);
+                argObject.commentId = argObject.commentId ? jsCommentId(argObject.commentId) : null;
+                argObject = [ argObject.commentId ];
+                let result = await requestApi("likeComment", argObject);
+                
+                return result;};})();
+
+exports.__unlikeComment = (() => {return async function (commentId) {
+                let argObject = { commentId };
+                argObject = _.cloneDeep(argObject);
+                argObject.commentId = argObject.commentId ? jsCommentId(argObject.commentId) : null;
+                argObject = [ argObject.commentId ];
+                let result = await requestApi("unlikeComment", argObject);
+                
+                return result;};})();
+
+
+                exports.__getNotifications = (() => { return async function () { 
+                    let result = await requestApi("getNotifications", []);
+                    
+                        result = result ? result.map(x => {
+                            x = x ? psIntactNotification(x) : null;
+                            return x;
+                        }) : null;
+                    
+                    return result;
+                }})();
+            
+
+exports.__getActivitiesBySpace = (() => {return async function (spaceId) {
+                let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
+                argObject.spaceId = argObject.spaceId ? jsSpaceId(argObject.spaceId) : null;
+                argObject = [ argObject.spaceId ];
+                let result = await requestApi("getActivitiesBySpace", argObject);
+                
+                        result = result ? result.map(x => {
+                            x = x ? psIntactActivityBySpace(x) : null;
+                            return x;
+                        }) : null;
+                    
+                return result;};})();
+
+exports.__getActivitiesByUser = (() => {return async function (spaceId) {
+                let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
+                argObject.spaceId = argObject.spaceId ? jsSpaceId(argObject.spaceId) : null;
+                argObject = [ argObject.spaceId ];
+                let result = await requestApi("getActivitiesByUser", argObject);
+                
+                        result = result ? result.map(x => {
+                            x = x ? psIntactActivityByUser(x) : null;
+                            return x;
+                        }) : null;
+                    
+                return result;};})();
+
+
+                exports.__getNotReadNotificationCount = (() => { return async function () { 
+                    let result = await requestApi("getNotReadNotificationCount", []);
+                    
+                    return result;
+                }})();
+            
+
+
+                exports.__readAllNotifications = (() => { return async function () { 
+                    let result = await requestApi("readAllNotifications", []);
+                    
+                    return result;
+                }})();
+            
 
 
                 exports.__createSpace = (() => {return async function (argObject) {
@@ -2377,7 +2902,7 @@ exports.__getAvailableSpaceDisplayId = (() => {return async function (spaceDispl
                         }) : null;
                     
                     return result;
-                }})()();
+                }})();
             
 
 
@@ -2385,12 +2910,12 @@ exports.__getAvailableSpaceDisplayId = (() => {return async function (spaceDispl
                     let result = await requestApi("getMySpaces", []);
                     
                         result = result ? result.map(x => {
-                            x = x ? psFocusedSpace(x) : null;
+                            x = x ? psRelatedSpace(x) : null;
                             return x;
                         }) : null;
                     
                     return result;
-                }})()();
+                }})();
             
 
 
@@ -2398,12 +2923,12 @@ exports.__getAvailableSpaceDisplayId = (() => {return async function (spaceDispl
                     let result = await requestApi("getFollowingSpaces", []);
                     
                         result = result ? result.map(x => {
-                            x = x ? psFocusedSpace(x) : null;
+                            x = x ? psRelatedSpace(x) : null;
                             return x;
                         }) : null;
                     
                     return result;
-                }})()();
+                }})();
             
 
 
@@ -2411,12 +2936,12 @@ exports.__getAvailableSpaceDisplayId = (() => {return async function (spaceDispl
                     let result = await requestApi("getPublishedSpaces", []);
                     
                         result = result ? result.map(x => {
-                            x = x ? psFocusedSpace(x) : null;
+                            x = x ? psRelatedSpace(x) : null;
                             return x;
                         }) : null;
                     
                     return result;
-                }})()();
+                }})();
             
 
 exports.__applySpaceMembership = (() => {return async function (spaceId) {
@@ -2473,6 +2998,24 @@ exports.__setSpaceDisplayName = (() => {return (spaceId) => {return async functi
                 
                 return result;}};})();
 
+exports.__setSpaceDescription = (() => {return (spaceId) => {return async function (description) {
+                let argObject = { spaceId,description };
+                argObject = _.cloneDeep(argObject);
+                argObject.spaceId = argObject.spaceId ? jsSpaceId(argObject.spaceId) : null;
+                argObject = [ argObject.spaceId,argObject.description ];
+                let result = await requestApi("setSpaceDescription", argObject);
+                
+                return result;}};})();
+
+exports.__uploadSpaceHeaderImage = (() => {return async function (args) {
+                let argObject = { args };
+                argObject = _.cloneDeep(argObject);
+                argObject.args.spaceId = argObject.args.spaceId ? jsSpaceId(argObject.args.spaceId) : null;
+                argObject = [ argObject.args ];
+                let result = await requestApi("uploadSpaceHeaderImage", argObject);
+                
+                return result;};})();
+
 exports.__setSpaceDisplayId = (() => {return (spaceId) => {return async function (displayId) {
                 let argObject = { spaceId,displayId };
                 argObject = _.cloneDeep(argObject);
@@ -2494,7 +3037,7 @@ exports.__setSpacePublished = (() => {return (spaceId) => {return async function
 exports.__setSpaceDefaultAuthority = (() => {return (spaceId) => {return async function (defaultAuthority) {
                 let argObject = { spaceId,defaultAuthority };
                 argObject = _.cloneDeep(argObject);
-                argObject.spaceId = argObject.spaceId ? jsSpaceId(argObject.spaceId) : null;argObject.defaultAuthority = argObject.defaultAuthority ? jsSpaceAuth(argObject.defaultAuthority) : null;
+                argObject.spaceId = argObject.spaceId ? jsSpaceId(argObject.spaceId) : null;argObject.defaultAuthority = argObject.defaultAuthority ? jsSpaceAuthority(argObject.defaultAuthority) : null;
                 argObject = [ argObject.spaceId,argObject.defaultAuthority ];
                 let result = await requestApi("setSpaceDefaultAuthority", argObject);
                 
@@ -2514,6 +3057,15 @@ exports.__getSpaceContainers = (() => {return async function (spaceId) {
                     
                 return result;};})();
 
+exports.__getSpaceHomePage = (() => {return async function (spaceId) {
+                let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
+                argObject.spaceId = argObject.spaceId ? jsSpaceId(argObject.spaceId) : null;
+                argObject = [ argObject.spaceId ];
+                let result = await requestApi("getSpaceHomePage", argObject);
+                result = result ? psIntactSpageHomePage(result) : null;
+                return result;};})();
+
 
                 exports.__createUser = (() => {return async function (argObject) {
                     argObject = _.cloneDeep(argObject);
@@ -2530,7 +3082,7 @@ exports.__getSpaceContainers = (() => {return async function (spaceId) {
                     let result = await requestApi("getMyUser", []);
                     result = result ? psFocusedUser(result) : null;
                     return result;
-                }})()();
+                }})();
             
 
 
@@ -2538,7 +3090,7 @@ exports.__getSpaceContainers = (() => {return async function (spaceId) {
                     let result = await requestApi("getMyAccount", []);
                     result = result ? psIntactAccount(result) : null;
                     return result;
-                }})()();
+                }})();
             
 
 exports.__getUser = (() => {return async function (displayId) {
@@ -2560,6 +3112,15 @@ exports.__getUser = (() => {return async function (displayId) {
                     return result;
                 } })();
             
+
+exports.__activateAccount = (() => {return async function (token) {
+                let argObject = { token };
+                argObject = _.cloneDeep(argObject);
+                
+                argObject = [ argObject.token ];
+                let result = await requestApi("activateAccount", argObject);
+                result = result ? psAuthInfo(result) : null;
+                return result;};})();
 
 exports.__getFocusedUser = (() => {return async function (userId) {
                 let argObject = { userId };
@@ -2617,12 +3178,12 @@ exports.__setMyEmail = (() => {return async function (email) {
                 
                 return result;};})();
 
-exports.__setMyIcon = (() => {return async function (icon) {
-                let argObject = { icon };
+exports.__uploadMyIcon = (() => {return async function (args) {
+                let argObject = { args };
                 argObject = _.cloneDeep(argObject);
                 
-                argObject = [ argObject.icon ];
-                let result = await requestApi("setMyIcon", argObject);
+                argObject = [ argObject.args ];
+                let result = await requestApi("uploadMyIcon", argObject);
                 
                 return result;};})();
 

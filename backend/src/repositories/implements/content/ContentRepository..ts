@@ -34,7 +34,7 @@ export class ContentCommand implements BaseCommand {
         private commits: Command<ContentCommit>) {
     }
 
-    async createContent(containerId: ContainerSk, structureId: StructureSk, userId: UserSk, data: any) {
+    async createContent(containerId: ContainerSk, structureId: StructureSk, userId: UserSk, data: ObjectLiteral) {
         let content = this.contents.create({
             containerId,
             structureId,
@@ -58,7 +58,7 @@ export class ContentCommand implements BaseCommand {
         return { content, commit };
     }
 
-    async updateCommit(commitId: ContentCommitSk, data: any) {
+    async updateCommit(commitId: ContentCommitSk, data: ObjectLiteral) {
         await this.commits.update(commitId, { data });
     }
 

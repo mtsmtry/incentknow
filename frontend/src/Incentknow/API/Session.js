@@ -15,3 +15,13 @@ exports.logout = () => {
     localStorage.removeItem("session");
     localStorage.removeItem("userId");
 }
+
+exports.reloadPage = () => {
+    location.reload(true);
+}
+
+exports.loadPage = url => {
+    return () => {
+        window.location.href = url;
+    }
+}

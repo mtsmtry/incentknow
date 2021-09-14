@@ -13,9 +13,11 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.API (getFormats)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote, toMaybe)
+import Incentknow.API.Static (getFullsizeHeaderImageUrl)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Icon (formatWithIcon)
 import Incentknow.Atoms.Inputs (menuPositiveButton)
@@ -24,7 +26,7 @@ import Incentknow.Data.Ids (FormatDisplayId)
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Pages.Container as Container
 import Incentknow.Pages.Space.Utils (renderMode)
-import Incentknow.Route (EditContentTarget(..), EditTarget(..), Route(..))
+import Incentknow.Route (EditContentTarget(..), EditTarget(..), Route(..), SpaceTab(..))
 import Incentknow.Templates.Page (tabPage)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
@@ -79,13 +81,18 @@ render state =
     { tabs: map _.displayId formats
     , currentTab: fromMaybe (wrap "") $ maybeFormatId
     , onChangeTab: ChangeTab
-    , showTab: \id-> fromMaybe (HH.text "") $ map formatWithIcon $ M.lookup id formatMap
+    , isTabAlphabet: false
+    , showTab: \id-> [ fromMaybe (HH.text "") $ map formatWithIcon $ M.lookup id formatMap ]
     }
-    [ maybeElem maybeFormat \format->
-        menuPositiveButton "コンテンツを追加" (Navigate $ EditDraft $ ContentTarget $ TargetBlank (Just state.space.spaceId) (Just format.currentStructureId))
+    [ --maybeElem maybeFormat \format->
+      --  menuPositiveButton "コンテンツを追加" (Navigate $ EditDraft $ ContentTarget $ TargetBlank (Just state.space.spaceId) (Just format.currentStructureId))
     ]
-    [ HH.div [ css "page-space-header page-space-header-containers" ]
-        [ HH.div [ css "backward" ] [ HH.img [ HP.src "/assets/imgs/default.jpg" ] ]
+    [ HH.div 
+        [ css "page-space-header page-space-header-containers"
+        , HE.onDoubleClick $ \_-> Just $ Navigate $ Space state.space.displayId SpaceHome
+        ]
+        [ HH.div [ css "backward" ] 
+            [ HH.img [ HP.src $ getFullsizeHeaderImageUrl state.space.headerImage ] ]
         , HH.div [ css "forward" ]
             [ renderMode false state.space.displayId NavigateRoute
             , HH.div [ css "name" ] [ HH.text state.space.displayName ]

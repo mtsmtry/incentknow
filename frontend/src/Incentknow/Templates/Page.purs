@@ -13,7 +13,8 @@ tabPage ::
   { tabs :: Array t
   , onChangeTab :: (t -> a)
   , currentTab :: t
-  , showTab :: t -> H.ComponentHTML a s m
+  , showTab :: t -> Array (H.ComponentHTML a s m)
+  , isTabAlphabet :: Boolean
   } ->
   Array (H.ComponentHTML a s m) ->
   Array (H.ComponentHTML a s m) ->
@@ -34,10 +35,12 @@ tabPage input menu header body =
   renderTab :: t -> H.ComponentHTML a s m
   renderTab tab =
     HH.div
-      [ css $ "tab-item" <> if input.currentTab == tab then " selected" else ""
+      [ css $ "tab-item" 
+          <> (if input.currentTab == tab then " selected" else "")
+          <> (if input.isTabAlphabet then " alphabet" else "")
       , HE.onClick $ \_ -> Just $ input.onChangeTab tab
       ]
-      [ input.showTab tab ]
+      (input.showTab tab)
 
 upperTabPage ::
   forall a s m t.
@@ -76,7 +79,7 @@ verticalTabPage ::
   { tabs :: Array t
   , onChangeTab :: (t -> a)
   , currentTab :: t
-  , showTab :: t -> String
+  , showTab :: t -> Array (H.ComponentHTML a s m)
   } ->
   Array (H.ComponentHTML a s m) -> Array (H.ComponentHTML a s m) -> H.ComponentHTML a s m
 verticalTabPage cls input header body =
@@ -92,7 +95,7 @@ verticalTabPage cls input header body =
       [ css $ "tab-item" <> if input.currentTab == tab then " selected" else ""
       , HE.onClick $ \_ -> Just $ input.onChangeTab tab
       ]
-      [ HH.text $ input.showTab tab ]
+      (input.showTab tab)
 
 section :: forall a s m. String -> Array (H.ComponentHTML a s m) -> H.ComponentHTML a s m
 section class_ body = HH.div [ css $ "tmp-section" <> " " <> class_ ] body

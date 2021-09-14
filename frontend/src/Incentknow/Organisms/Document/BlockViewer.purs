@@ -76,7 +76,7 @@ toHtmlText str = replaceAll (Pattern space2) (Replacement "&nbsp;") $ replaceAll
   where
   space1 = " "
   space2 = " "
-    
+  
 handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
   Initialize -> pure unit

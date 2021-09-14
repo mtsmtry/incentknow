@@ -86,6 +86,10 @@
             &:hover {
                 background-color: #f6f8fa;
             }
+
+            &:first-child {
+                border-top-width: 0px;
+            }
         }
     }
 
@@ -94,8 +98,101 @@
             background-color: #edeff2;
             box-shadow      : inset 0 1px 0 rgba(225, 228, 232, .2);
             transition      : none;
-            cursor: default;
+            cursor          : default;
         }
+    }
+}
+
+.mol-context-menu {
+    max-width: 300px;
+    width    : 100%;
+    position : relative;
+    height   : 32px;
+
+    &.notvisible {
+        width      : 0px;
+        margin-left: -20px;
+    }
+
+    >.button {
+        padding: 2px;
+
+        >i {
+            margin-right: 0px;
+        }
+
+        &.notvisible {
+            opacity: 0;
+        }
+
+        &:hover {
+            background-color: rgba(0, 0, 0, .1);
+            border-radius   : 2px;
+        }
+    }
+
+    >.listbox {
+        border            : 1px solid #d1d5da;
+        border-radius     : 3px;
+        box-shadow        : 0 1px 5px rgba(27, 31, 35, .15);
+        background        : #fff;
+        max-height        : 300px;
+        width             : 100px;
+        left              : -80px;
+        overflow          : auto;
+        position          : absolute;
+        margin-block-start: 0px;
+        margin-block-end  : 0px;
+        padding           : 0px;
+        box-sizing        : border-box;
+
+        >.item {
+            border-top-color: #eaeded;
+            color           : #545b64;
+
+            list-style      : none;
+            border-top-style: solid;
+            border-top-width: 1px;
+            padding         : 5px 8px;
+            cursor          : pointer;
+
+            &:hover {
+                background-color: #f6f8fa;
+            }
+
+            &:first-child {
+                border-top-width: 0px;
+            }
+        }
+    }
+}
+
+.mol-notifications {
+    position: relative;
+
+    >.count {
+        top          : -5px;
+        left         : 6px;
+        position     : absolute;
+        background   : #00a7ec;
+        border-radius: 15px;
+        padding      : 2px 4px;
+        font-size    : 12px;
+    }
+}
+
+.mol-multiline-textarea {
+    height        : 100%;
+    vertical-align: middle;
+    line-height   : 20px;
+    font-size     : 16px;
+    width         : 100%;
+    border        : none;
+    box-sizing    : border-box;
+    resize        : none;
+
+    &:focus {
+        outline: none;
     }
 }
 
@@ -156,26 +253,22 @@
 }
 
 .mol-format-menu-item {
-    >.displayName {
-
-    }
+    >.displayName {}
 
     >.displayId {
-        float: right;
+        float    : right;
         font-size: 12px;
-        color:rgba(225, 228, 232, .2);
+        color    : rgba(225, 228, 232, .2);
     }
 }
 
 .mol-space-menu-item {
-    >.displayName {
-
-    }
+    >.displayName {}
 
     >.displayId {
-        float: right;
+        float    : right;
         font-size: 12px;
-        color:rgba(225, 228, 232, .2);
+        color    : rgba(225, 228, 232, .2);
     }
 }
 
@@ -197,33 +290,36 @@
 
         >.mol-select-menu {
             >.value {
-                border-top-right-radius: 0px;
+                border-top-right-radius   : 0px;
                 border-bottom-right-radius: 0px;
-                border-right: 0px;
+                border-right              : 0px;
             }
+
             textarea {
-                border-top-right-radius: 0px;
+                border-top-right-radius   : 0px;
                 border-bottom-right-radius: 0px;
-                border-right: 0px;
+                border-right              : 0px;
             }
         }
-        
+
         border-right: 1px solid rgba(27, 31, 35, 0.15);
     }
 
     >.structure-menu {
-        width: 15%;;
+        width: 15%;
+        ;
 
         >.mol-select-menu {
             >.value {
-                border-top-left-radius: 0px;
+                border-top-left-radius   : 0px;
                 border-bottom-left-radius: 0px;
-                border-left: 0px;
+                border-left              : 0px;
             }
+
             textarea {
-                border-top-left-radius: 0px;
+                border-top-left-radius   : 0px;
                 border-bottom-left-radius: 0px;
-                border-left: 0px;
+                border-left              : 0px;
             }
         }
     }

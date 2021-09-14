@@ -2,19 +2,19 @@ module Incentknow.Router where
 
 import Prelude
 
-import Control.Monad.Reader.Trans (class MonadAsk, asks)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
-import Effect.Aff.AVar as AVar
 import Effect.Aff.Class (class MonadAff)
 import Foreign (unsafeToForeign)
+import Halogen (liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.AppM (class Behaviour, Env, GlobalMessage(..), Message)
+import Incentknow.AppM (class Behaviour, GlobalMessage(..), Message, getPushStateInterface, takeGlobalMessage)
 import Incentknow.Organisms.Footer as Footer
 import Incentknow.Organisms.Header as Header
+import Incentknow.Pages.Activate as Activate
 import Incentknow.Pages.Container as Container
 import Incentknow.Pages.Content as Content
 import Incentknow.Pages.EditDraft as EditDraft
@@ -22,13 +22,16 @@ import Incentknow.Pages.Home as Home
 import Incentknow.Pages.JoinSpace as JoinSpace
 import Incentknow.Pages.NewFormat as NewFormat
 import Incentknow.Pages.NewSpace as NewSpace
+import Incentknow.Pages.Notifications as Notifications
 import Incentknow.Pages.Public as Public
+import Incentknow.Pages.SearchAll as SearchAll
 import Incentknow.Pages.Sign as Sign
 import Incentknow.Pages.Space as Space
 import Incentknow.Pages.SpaceList as SpaceList
 import Incentknow.Pages.User as User
 import Incentknow.Route (ContentSpec(..), Route(..), pathToRoute, routeToPath)
 import Incentknow.Templates.Main as Layout
+import Test.Unit.Console (consoleLog)
 import Web.HTML (window)
 import Web.HTML.Location (pathname, search)
 import Web.HTML.Window (location)
@@ -45,7 +48,9 @@ type ChildSlots
     , content :: Content.Slot Unit
     , container :: Container.Slot Unit
     , public :: Public.Slot Unit
+    , notifications :: Notifications.Slot Unit
     , editDraft :: EditDraft.Slot Unit
+    , searchAll :: SearchAll.Slot Unit
     -- , editScraper :: EditScraper.Slot Unit
     --  , newCommunity :: NewCommunity.Slot Unit
    -- , newContent :: NewContent.Slot Unit
@@ -63,6 +68,7 @@ type ChildSlots
     --, rivisionList :: RivisionList.Slot Unit
     --, workList :: WorkList.Slot Unit
     , home :: Home.Slot Unit
+    , activate :: Activate.Slot Unit
 
     --, snapshot :: Snapshot.Slot Unit
     -- , workViewer :: WorkViewer.Slot Unit
@@ -83,7 +89,6 @@ component ::
   forall o m.
   MonadAff m =>
   Behaviour m =>
-  MonadAsk Env m =>
   H.Component HH.HTML Query Unit o m
 component =
   H.mkComponent
@@ -104,8 +109,11 @@ component =
   renderBody :: Behaviour m => MonadAff m => Route -> H.ComponentHTML Action ChildSlots m
   renderBody = case _ of
     Home -> HH.slot (SProxy :: SProxy "home") unit Home.component {} absurd
+    ActivateAccount token -> HH.slot (SProxy :: SProxy "activate") unit Activate.component { token } absurd
     NotFound -> HH.text ""
+    SearchAll query -> HH.slot (SProxy :: SProxy "searchAll") unit SearchAll.component { query } absurd
     Public -> HH.slot (SProxy :: SProxy "public") unit Public.component {} absurd
+    Notifications -> HH.slot (SProxy :: SProxy "notifications") unit Notifications.component {} absurd
     Content contentId -> HH.slot (SProxy :: SProxy "content") unit Content.component { contentSpec: ContentSpecContentId contentId } absurd
     ContentBySemanticId formatId semanticId -> HH.slot (SProxy :: SProxy "content") unit Content.component { contentSpec: ContentSpecSemanticId formatId semanticId } absurd
     EditDraft target -> HH.slot (SProxy :: SProxy "editDraft") unit EditDraft.component target absurd
@@ -171,15 +179,14 @@ component =
 
   globalMessageLoop :: forall action slots output. H.HalogenM State action slots output m Unit
   globalMessageLoop = do
-    globalMessage <- asks _.globalMessage
-    query <- H.liftAff $ AVar.take globalMessage
+    query <- takeGlobalMessage
     -- 再起だと H.modify_ (_ { route = Just route }) でなぜかハングするの
     void $ H.fork globalMessageLoop
     case query of
       PushStateG route -> pushState route
       NavigateG route -> do
-        pushState route
         H.modify_ (_ { route = route })
+        pushState route
         pure unit
       StartLoadingG -> H.modify_ \st -> st { loading = st.loading + 1 }
       StopLoadingG -> H.modify_ \st -> st { loading = st.loading - 1 }
@@ -188,7 +195,9 @@ component =
 
   pushState :: forall action slots output. Route -> H.HalogenM State action slots output m Unit
   pushState route = do
-    pushStateInterface <- asks _.pushStateInterface
+    pushStateInterface <- getPushStateInterface
     H.liftEffect $ pushStateInterface.pushState (unsafeToForeign {}) $ routeToPath route
 
-  updateRoute path = H.modify_ \st -> st { route = pathToRoute path }
+  updateRoute path = do
+    liftEffect $ consoleLog $ "updateRoute"  <> show path
+    H.modify_ \st -> st { route = pathToRoute path }

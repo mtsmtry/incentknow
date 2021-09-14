@@ -2,7 +2,11 @@ module Incentknow.Pages.Sign where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
+import Data.Either (Either(..), isLeft, isRight)
+import Data.Maybe (Maybe(..), isJust)
+import Data.String (length)
+import Data.String.Regex (match, regex)
+import Data.String.Regex.Flags (noFlags)
 import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
@@ -11,12 +15,12 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.API (createUser)
 import Incentknow.API.Execution (executeAPI, executeCommand)
-import Incentknow.API.Session (login)
+import Incentknow.API.Session (loadPage, login, reloadPage)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute, resetMessage)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Atoms.Message (success)
-import Incentknow.HTML.Utils (css, link)
-import Incentknow.Route (Route(..))
+import Incentknow.HTML.Utils (css, link, whenElem)
+import Incentknow.Route (Route(..), routeToPath)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 data Mode
@@ -34,22 +38,24 @@ type Input
 
 type State
   = { mode :: Mode
-    , email :: String
-    , password :: String
-    , username :: String
+    , email :: Either String String
+    , password :: Either String String
+    , username :: Either String String
     , isRegistering :: Boolean
     , isLogining :: Boolean
     , resultMessage :: Maybe String
+    , focused :: Maybe String
     }
 
 data Action
   = Register
   | Login
   | ChangeMode Mode
-  | ChangeUsername String
-  | ChangeEmail String
-  | ChangePassword String
+  | ChangeUsername (Either String String)
+  | ChangeEmail (Either String String)
+  | ChangePassword (Either String String)
   | Navigate MouseEvent Route
+  | Focused String
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -65,21 +71,24 @@ component =
 initialState :: Input -> State
 initialState input =
   { mode: RegisterMode
-  , email: ""
-  , password: ""
-  , username: ""
+  , email: Left ""
+  , password: Left ""
+  , username: Left ""
   , isRegistering: false
   , isLogining: false
   , resultMessage: Nothing
+  , focused: Nothing
   }
 
 textbox ::
   forall a m.
-  { value :: String
+  { value :: Either String String
   , placeholder :: String
   , type_ :: HP.InputType
-  , onChange :: String -> a
+  , onChange :: Either String String -> a
+  , onFocus :: Maybe a
   , isDisabled :: Boolean
+  , validate :: String -> Boolean
   } ->
   H.ComponentHTML a () m
 textbox input =
@@ -88,10 +97,34 @@ textbox input =
         [ HP.placeholder input.placeholder
         , HP.type_ input.type_
         , HP.disabled input.isDisabled
-        , HE.onValueInput $ Just <<< input.onChange
+        , HP.value $ toString input.value
+        , HE.onValueInput \x-> Just $ input.onChange $ if input.validate x then Right x else Left x
+        , HE.onFocus \_-> input.onFocus
         ]
-    , HH.div [ css "icon" ] [ HH.img [ HP.src "/assets/imgs/checkmark_ng.svg" ] ]
+    , HH.div [ css "icon" ] 
+        [ HH.img 
+            [ HP.src $ if isRight input.value then "/assets/imgs/checkmark_ok.svg" else "/assets/imgs/checkmark_ng.svg" 
+            ] 
+        ]
     ]
+  
+toString :: Either String String -> String
+toString = case _ of
+  Right x -> x
+  Left x -> x
+
+validateUsername :: String -> Boolean
+validateUsername x = length x >= 4
+
+validatePassword :: String -> Boolean
+validatePassword x = length x >= 8
+
+validateEmail :: String -> Boolean
+validateEmail x = case reg of
+  Right r -> isJust $ match r x 
+  _ -> false
+  where
+  reg = regex "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$" noFlags
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render state =
@@ -126,30 +159,40 @@ render state =
                 , HH.div [ css "form" ]
                     [ case state.mode of
                         RegisterMode ->
-                          HH.div []
+                          HH.div [ css "register" ]
                             [ textbox
                                 { value: state.username
                                 , placeholder: "ユーザー名"
                                 , type_: HP.InputText
                                 , onChange: ChangeUsername
+                                , onFocus: Just $ Focused "username"
                                 , isDisabled: state.isRegistering
+                                , validate: validateUsername
                                 }
+                            , whenElem (state.focused == Just "username") \_->
+                                HH.div [ css "rule" ] [ HH.text "4文字以上で入力してください" ]
                             , textbox
                                 { value: state.email
                                 , placeholder: "メールアドレス"
                                 , type_: HP.InputEmail
                                 , onChange: ChangeEmail
+                                , onFocus: Just $ Focused "email"
                                 , isDisabled: state.isRegistering
+                                , validate: validateEmail
                                 }
                             , textbox
                                 { value: state.password
                                 , placeholder: "パスワード"
                                 , type_: HP.InputPassword
                                 , onChange: ChangePassword
+                                , onFocus: Just $ Focused "password"
                                 , isDisabled: state.isRegistering
+                                , validate: validatePassword
                                 }
+                            , whenElem (state.focused == Just "password") \_->
+                                HH.div [ css "rule" ] [ HH.text "半角英字、数字、記号を組み合わせて 8文字以上で入力してください" ]
                             , submitButton
-                                { isDisabled: state.isRegistering
+                                { isDisabled: state.isRegistering || isLeft state.username || isLeft state.email || isLeft state.password
                                 , isLoading: state.isRegistering
                                 , loadingText: ""
                                 , text: "登録"
@@ -157,23 +200,27 @@ render state =
                                 }
                             ]
                         LoginMode ->
-                          HH.div []
+                          HH.div [ css "login" ]
                             [ textbox
                                 { value: state.email
                                 , placeholder: "メールアドレス"
                                 , type_: HP.InputEmail
                                 , onChange: ChangeEmail
+                                , onFocus: Just $ Focused "login-email"
                                 , isDisabled: state.isLogining
+                                , validate: validateEmail
                                 }
                             , textbox
                                 { value: state.password
                                 , placeholder: "パスワード"
                                 , type_: HP.InputPassword
                                 , onChange: ChangePassword
+                                , onFocus: Just $ Focused "login-password"
                                 , isDisabled: state.isLogining
+                                , validate: validatePassword
                                 }
                             , submitButton
-                                { isDisabled: state.isLogining
+                                { isDisabled: state.isLogining || isLeft state.email || isLeft state.password
                                 , isLoading: state.isLogining
                                 , loadingText: ""
                                 , text: "ログイン"
@@ -197,19 +244,20 @@ handleAction = case _ of
   ChangeEmail email -> H.modify_ (_ { email = email })
   ChangePassword password -> H.modify_ (_ { password = password })
   Navigate event route -> navigateRoute event route
+  Focused focused -> H.modify_ _ { focused = Just focused }
   Register -> do
     state <- H.get
     H.modify_ (_ { isRegistering = true })
     let
       user =
-        { displayName: state.username
-        , email: state.email
-        , password: state.password
+        { displayName: toString state.username
+        , email: toString state.email
+        , password: toString state.password
         }
     result <- executeCommand $ createUser user
     case result of
       Just _ -> do
-        H.modify_ (_ { resultMessage = Just $ "登録が完了しました。" <> state.email <> "に送信したリンクからメールアドレスを認証してください。" })
+        H.modify_ (_ { resultMessage = Just $ "登録が完了しました。" <> toString state.email <> "に送信したリンクからメールアドレスを認証してください。" })
         resetMessage
       Nothing -> H.modify_ (_ { isRegistering = false })
   Login -> do
@@ -217,10 +265,10 @@ handleAction = case _ of
     H.modify_ _ { isLogining = true }
     let
       user =
-        { email: state.email
-        , password: state.password
+        { email: toString state.email
+        , password: toString state.password
         }
     result <- executeAPI $ login user
     case result of
-      Just _ -> navigate Home
+      Just _ -> H.liftEffect $ loadPage $ routeToPath Home
       Nothing -> H.modify_ _ { isLogining = false }

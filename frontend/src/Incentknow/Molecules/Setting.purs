@@ -9,6 +9,7 @@ import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
+import Incentknow.Atoms.Icon (icon)
 import Incentknow.Atoms.Inputs (button, submitButton)
 import Incentknow.HTML.Utils (css, whenElem)
 
@@ -153,8 +154,8 @@ renderMessage successMsg state = case state of
   None -> HH.text ""
   Sending -> HH.text ""
   Changing -> HH.text ""
-  Changed -> HH.div [ css "message message-success" ] [ HH.span_ [ HH.text successMsg ] ]
-  Failed msg -> HH.div [ css "message message-error" ] [ HH.span_ [ HH.text msg ] ]
+  Changed -> HH.div [ css "message message-success" ] [ icon "fas fa-check", HH.text successMsg ]
+  Failed msg -> HH.div [ css "message message-error" ] [ icon "fas fa-exclamation-circle", HH.text msg ]
 
 renderEditButton :: forall a s m. ChangingState -> a -> H.ComponentHTML a s m
 renderEditButton state edit = case state of

@@ -40,7 +40,6 @@
             img {
                 width        : 30px;
                 height       : 30px;
-                margin-right : 10px;
                 border-radius: 50%;
             }
 
@@ -49,6 +48,20 @@
 
         >.link-selected {
             border-bottom: 3px solid white;
+        }
+
+        >.search-box {
+            display       : flex;
+            align-items   : center;
+            height        : 100%;
+            width         : 300px;
+            padding-left  : 10px;
+            padding-bottom: 3px;
+        }
+
+        >.notifications {
+            font-size: 16px;
+            padding  : 0px 15px;
         }
     }
 }
@@ -172,7 +185,7 @@
             float: right;
 
             >.item {
-                color: rgba(0, 0, 0, 0.4);
+                color  : rgba(0, 0, 0, 0.4);
                 cursor : pointer;
                 padding: 5px;
 
@@ -216,89 +229,314 @@
 }
 
 .org-listview {
-    >.item {
-        flex-basis : 120px;
-        height     : 60px;
-        cursor     : pointer;
-        padding    : 0px 25px;
-        display    : flex;
-        align-items: center;
+    >.items {
+        >.item {
+            flex-basis : 120px;
+            height     : 60px;
+            cursor     : pointer;
+            padding    : 0px 25px;
+            display    : flex;
+            align-items: center;
 
-        >.user {
-            padding-right: 10px;
-        }
+            >.user {
+                padding-right: 10px;
+            }
 
-        >.main {
-            flex-grow: 1;
-            height: 100%;
-            width: 100%;
+            >.main {
+                flex-grow: 1;
+                height   : 100%;
+                width    : 100%;
 
-            >a {
-                height: 100%;
-                width: 100%;
-                display: flex;
-                align-items: center;
+                >a {
+                    height     : 100%;
+                    width      : 100%;
+                    display    : flex;
+                    align-items: center;
 
-                >.title {
-                    margin-right: 10px;
-                    font-size   : 15px;
-                }
+                    >.title {
+                        margin-right: 10px;
+                        font-size   : 15px;
+                        flex        : 1;
+                    }
 
-                >.properties {
-                    color: rgb(99, 99, 99);
+                    >.properties {
+                        color: rgb(99, 99, 99);
+                        flex : 1;
 
-                    >.property {
-                        margin-right: 5px;
+                        >.property {
+                            margin-right: 5px;
+                        }
                     }
                 }
             }
-        }
 
-        >.timestamp {
-            flex-basis: 160px;
-            font-size: 12px;
-            color    : rgba(0, 0, 0, .4);
+            >.timestamp {
+                flex-basis: 160px;
+                font-size : 12px;
+                color     : rgba(0, 0, 0, .4);
 
-            span {
-                padding: 4px;
+                span {
+                    padding: 4px;
+                }
             }
-        }
 
-        border-top    : 1px solid rgba(0, 0, 0, 0);
-        border-bottom : 1px solid rgba(0, 0, 0, 0);
+            border-top    : 1px solid rgba(0, 0, 0, 0);
+            border-bottom : 1px solid rgba(0, 0, 0, 0);
 
-        &:hover {
-            background-color: rgba(0, 0, 0, .02);
-            border-top      : 1px solid #ebecec;
-            border-bottom   : 1px solid #ebecec;
+            &:hover {
+                background-color: rgba(0, 0, 0, .02);
+                border-top      : 1px solid #ebecec;
+                border-bottom   : 1px solid #ebecec;
+
+                &:first-child {
+                    border-top: 1px solid rgba(0, 0, 0, .02);
+                }
+
+                &:last-child {
+                    border-bottom: 1px solid rgba(0, 0, 0, .02);
+                }
+            }
         }
     }
 }
+
+.org-search-menu {
+    padding-bottom: 16px;
+
+    >.search-box {
+        height          : 32px;
+        width           : 100%;
+        border          : 0.7px solid rgba(0, 0, 0, 0.22);
+        border-radius   : 16px;
+        padding         : 0px 16px;
+        background-color: white;
+        display         : flex;
+        align-items     : center;
+        color           : black;
+
+        >i {
+            margin-right: 5px;
+        }
+
+        >textarea {
+            border        : 0px;
+            vertical-align: middle;
+            line-height   : 26px;
+            font-size     : 16px;
+            width         : 100%;
+            height        : 100%;
+            resize        : none;
+            height        : 100%;
+            padding-left  : 4px;
+
+            &:focus {
+                outline   : none;
+                box-sizing: border-box;
+            }
+        }
+    }
+}
+
+.org-focused-view {
+    >.item {}
+}
+
+.org-comments {
+    padding-top: 25px;
+
+    >.top {
+        font-size     : 16px;
+        color         : rgb(32, 33, 36);
+        padding-bottom: 10px;
+
+        >.count {
+            color: rgba(0, 0, 0, 0.5);
+        }
+    }
+
+    .org-comments-comment {
+        padding-top: 16px;
+
+        display: flex;
+
+        font-size  : 14px;
+        line-height: 22px;
+        color      : rgba(0, 0, 0, 0.8);
+
+        >.usericon {
+            padding-left : 6px;
+            padding-right: 16px;
+            padding-top  : 6px;
+        }
+
+        .new-comment-body {
+
+            >.top {
+                display: flex;
+
+                >.header {
+                    flex     : 1;
+                    font-size: 12px;
+                    color    : rgba(0, 0, 0, 0.5);
+                }
+
+                >.cancel {
+                    cursor: pointer;
+                }
+            }
+
+            >.body {
+                display: flex;
+
+                >.left {
+                    flex: 1;
+
+                    >.text {
+                        margin: 0px -2px;
+                    }
+                }
+
+                >.right {
+                    margin-top: auto;
+                }
+            }
+        }
+
+        .comment-body {
+            >.top {
+                font-size  : 12px;
+                display    : flex;
+                align-items: center;
+
+                >.username {
+                    margin-right: auto;
+                    font-weight : 500;
+                    color       : rgba(0, 0, 0, 0.7);
+
+                    &:hover {
+                        color: rgba(0, 0, 0, 0.5);
+                    }
+                }
+
+                >.time {
+                    color: rgba(0, 0, 0, 0.5);
+                }
+
+                >.reply {
+                    margin-left: 5px;
+                    cursor     : pointer;
+                    color      : rgb(0, 138, 188);
+
+                    &:hover {
+                        color: rgb(32, 190, 255);
+                    }
+                }
+            }
+
+            >.text {}
+        }
+    }
+
+    >.comments {
+        margin-top: -16px;
+
+        >.comment {
+            >.replies {
+                padding-left: 50px;
+            }
+        }
+    }
+}
+
+.org-search-view {
+    .section;
+    padding: 25px;
+
+    >.result {
+        >.item {
+            padding-top: 15px;
+
+            &:first-child {
+                padding-top: 0px;
+            }
+
+            >.top {
+                display    : flex;
+                align-items: center;
+
+                >.user {
+                    padding-right: 15px;
+                }
+
+                >.title {
+                    flex     : 1;
+                    color    : #008abc;
+                    font-size: 18px;
+
+                    &:hover {
+                        color: #20beff;
+                    }
+                }
+
+                >.format {}
+            }
+
+            >.info {
+                display: flex;
+
+                >.properties {
+                    flex: 1;
+                }
+
+                >.timestamp {
+                    color    : #70757a;
+                    font-size: 14px;
+                }
+            }
+
+            >.highlight {
+                display           : -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+
+                overflow     : hidden;
+                text-overflow: ellipsis;
+                font-size    : 14px;
+
+                em {
+                    font-style : normal;
+                    font-weight: bold;
+                }
+            }
+        }
+    }
+}
+
 
 .org-format-list {
     .section;
 
     table {
-        width: 100%;
+        width : 100%;
         margin: 0px -2px;
     }
 
     td {
-        color: rgb(83, 83, 83);
+        color        : rgb(83, 83, 83);
         border-bottom: 0.7px solid rgba(0, 0, 0, .22);
-        text-align: left;
-        font-size: 15px;
-        padding: 6px;
-        padding-left: 15px;
+        text-align   : left;
+        font-size    : 15px;
+        padding      : 6px;
+        padding-left : 15px;
     }
 
     th {
-        text-align: left;
+        text-align  : left;
         padding-left: 15px;
     }
 
     .last {
-        text-align: right;
+        text-align   : right;
         padding-right: 12px;
     }
 
@@ -306,17 +544,17 @@
         .name {}
 
         .info {
-            font-size   : 14px;
-            color       : gray;
+            font-size: 14px;
+            color    : gray;
         }
 
         .timestamp {
-            font-size   : 14px;
-            color       : gray;
+            font-size: 14px;
+            color    : gray;
         }
 
         .setting {
-            width: 50px;
+            width        : 50px;
             padding-right: 10px;
         }
 
@@ -326,7 +564,7 @@
         }
 
         .creation {
-            width: 50px;
+            width        : 50px;
             padding-right: 10px;
         }
 
@@ -396,19 +634,24 @@
 
             padding: 15px 25px;
             flex   : 2;
+            display: flex;
 
-            >.title {
-                font-size: 17px;
+            .left {
+                flex: 1;
+
+                >.title {
+                    font-size: 17px;
+                }
+
+                >.info {
+                    font-size: 12px;
+                    color    : #666;
+                    float    : left;
+                }
             }
 
-            >.scope {
-                float: right;
-            }
-
-            >.info {
-                font-size: 13px;
-                color    : #666;
-                float: left;
+            .right {
+                >.scope {}
             }
         }
     }
@@ -417,25 +660,26 @@
 .org-userlist {
     >.item {
         .section;
-        padding-top   : 10px;
-        padding-bottom: 10px;
-        margin-bottom : 10px;
+        padding      : 10px 16px;
+        margin-bottom: 10px;
 
         display: flex;
 
         >.icon {
-            width : 50px;
-            height: 50px;
+            margin-top: 5px;
+            width     : 50px;
+            height    : 50px;
 
             img {
-                width : 100%;
-                height: 100%;
+                width        : 100%;
+                height       : 100%;
+                border-radius: 50%;
             }
         }
 
         >.details {
-            flex-grow: 1;
-            padding  : 0px 20px;
+            flex-grow   : 1;
+            padding-left: 16px;
 
             >.username {
                 font-size: 15px;
@@ -457,13 +701,14 @@
     //padding: 10px;
 
     a {
-        width : 40px;
-        height: 40px;
+        margin-top: 2px;
+        width     : 40px;
+        height    : 40px;
 
         img {
             width        : 100%;
             height       : 100%;
-            border-radius: 3px;
+            border-radius: 50%;
         }
     }
 
@@ -503,40 +748,175 @@
     }
 }
 
-.org-latest-contentlist {
-    .section;
-    .body {
-        padding: 5px 10px;
-    }
-
-    table {
-        width: 100%;
-    }
-
-    th {
-        text-align: left;
+.org-activity-view {
+    >.body {
+        padding: 10px 0px;
     }
 
     .item {
-        .user {}
+        padding: 5px 20px;
 
-        .format {
-            text-align: left;
+        color      : rgb(32, 33, 36);
+        display    : flex;
+        align-items: center;
+
+        >.usericon {
+            margin-right: 10px;
         }
 
-        .title {
-            font-size: 17px;
-            display: flex;
-            height: 100%;
-            width: 100%;
+        >.action {
+            flex       : 1 140px;
+            color      : rgba(0, 0, 0, 0.4);
+            display    : flex;
+            font-size  : 12px;
+            font-weight: 400;
+
+            overflow     : hidden;
+            white-space  : nowrap;
+            text-overflow: ellipsis;
+
+            >.time {
+                min-width: 80px;
+            }
+
+            >.username {
+                color: #008abc;
+
+                &:hover {
+                    color: #20beff;
+                }
+            }
         }
 
-        .timestamp {
-            font-size: 15px;
-            color    : gray;
-            display: flex;
-            height: 100%;
-            width: 100%;
+        >.content {
+            flex: 3;
+
+            overflow     : hidden;
+            white-space  : nowrap;
+            text-overflow: ellipsis;
+
+            >.title {
+                font-size    : 14px;
+                font-weight  : 500;
+                padding-right: 10px;
+            }
+
+            >.format {
+                font-size: 14px;
+            }
+        }
+    }
+}
+
+.org-conpact-content-view {
+    border-top: 0.7px solid rgba(0, 0, 0, .22);
+    border    : 1px solid rgb(222, 223, 224);
+
+    .property-type {
+        text-align   : left;
+        color        : rgb(99, 99, 99);
+        padding-right: 10px;
+    }
+
+    .property-value {
+        >.null {
+            color    : rgb(88, 96, 105);
+            font-size: 12px;
+        }
+    }
+
+    >.body {
+        display: flex;
+
+        >.left {
+            padding       : 20px;
+            padding-bottom: 8px;
+
+            background  : rgb(248, 248, 248);
+            border-right: 1px solid rgb(222, 223, 224);
+            flex        : 2;
+
+            >.user {}
+
+            >.info {
+                font-size: 14px;
+            }
+        }
+
+        >.right {
+            padding       : 20px;
+            padding-bottom: 8px;
+            flex          : 5;
+
+            >.title {
+                color      : rgba(0, 0, 0, 0.7);
+                font-size  : 20px;
+                line-height: 24px;
+                font-weight: 700;
+            }
+
+            >.materials {
+                >.material {
+                    margin-top: 15px;
+
+                    >.property {}
+
+                    >.value {
+                        font-size  : 14px;
+                        line-height: 22px;
+                        color      : rgba(0, 0, 0, 0.8);
+                        word-break : break-word;
+                    }
+                }
+            }
+        }
+
+        &.folded {
+            position  : relative;
+            max-height: 300px;
+            overflow  : hidden;
+
+            &:after {
+                content   : "";
+                position  : absolute;
+                inset     : 80px 0px 0px;
+                background: linear-gradient(rgba(255, 255, 255, 0), rgb(255, 255, 255));
+            }
+        }
+    }
+
+    >.expand {
+        text-align: center;
+        border-top: 1px solid rgb(235, 236, 236);
+        cursor    : pointer;
+        padding   : 3px 0px;
+
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+    }
+}
+
+.org-topic-view {
+    >.body {
+        padding: 20px 0px;
+    }
+
+    .topic {
+        font-size    : 16px;
+        color        : rgba(0, 0, 0, 0.7);
+        padding-top  : 20px;
+        padding-left : 20px;
+        padding-right: 20px;
+
+        &:first-child {
+            padding-top: 0px;
+        }
+
+        >.top {}
+
+        >.content {
+            padding-top: 5px;
         }
     }
 }
@@ -561,23 +941,21 @@
     }
 
     .item {
-        .user {
-
-        }
+        .user {}
 
         .title {
             font-size: 17px;
-            display: flex;
-            height: 100%;
-            width: 100%;
+            display  : flex;
+            height   : 100%;
+            width    : 100%;
         }
 
         .timestamp {
             font-size: 15px;
-            color: gray;
-            display: flex;
-            height: 100%;
-            width: 100%;
+            color    : gray;
+            display  : flex;
+            height   : 100%;
+            width    : 100%;
         }
     }
 }
@@ -585,25 +963,56 @@
 .org-draft-explorer {
     .section;
 
+    position   : sticky;
+    top        : 30px;
+    // height  : ~"min(calc(100vh - 60px), 100%)";
+    height     : ~"calc(min(100vh - 60px, 100%))";
+
     >.body {
+        overflow-y    : scroll;
+        overflow-x    : hidden;
+        // height    : calc(100vh - 60px - 36px);
+        //height      : calc(min(100vh - 60px - 36px, 100%));
+        height        : 1px;
+        min-height    : calc(100% - 36px);
+
+        >.new-draft {
+            background-color: rgba(0, 0, 0, .07);
+            padding-left    : 20px;
+        }
+
         >.box {
             >.draft-set {
                 >.item {
+                    cursor : default;
                     padding: 0px 7px;
 
                     >.creation {
                         float: right;
+
+                        >i {
+                            padding: 1px 2.5px;
+                            border : 1px solid transparent;
+
+                            &:hover {
+                                background   : rgba(0, 0, 0, 0.1);
+                                border-radius: 3px;
+                                border       : 0.5px solid rgba(0, 0, 0, 0.3);
+                            }
+                        }
                     }
                 }
 
                 >.drafts {
                     >.draft {
-                        padding-left: 20px;
+                        padding-left : 20px;
+                        padding-right: 5px;
+                        display      : flex;
 
                         >a {
                             display: flex;
-                            width: 100%;
-                            height: 100%;
+                            width  : 100%;
+                            height : 100%;
                         }
 
                         &:hover {
@@ -612,6 +1021,23 @@
 
                         &.selected {
                             background-color: rgba(0, 0, 0, .07);
+                        }
+
+                        >.name {
+                            flex    : 1;
+                            display : flex;
+                            overflow: hidden;
+
+                            >a {
+                                flex         : 1;
+                                text-overflow: ellipsis;
+                                overflow     : hidden;
+                                white-space  : nowrap;
+                            }
+                        }
+
+                        >.menu {
+                            height: 0px;
                         }
                     }
                 }
@@ -665,7 +1091,16 @@
             >.side {
                 padding: 10px 25px;
 
-                >.side-format {}
+                >.side-format {
+                    >.edit {
+                        float: right;
+                        color: #008abc;
+
+                        &:hover {
+                            color: #20beff;
+                        }
+                    }
+                }
 
                 >.side-user {}
             }
@@ -690,9 +1125,11 @@
 
     // ValueEditor
     .property-type {
-        text-align: left;
-        color     : rgb(99, 99, 99);
-        width     : 100px;
+        text-align    : left;
+        color         : rgb(99, 99, 99);
+        width         : 100px;
+        vertical-align: top;
+        padding-top   : 7px;
     }
 
     .property-value {
@@ -761,6 +1198,12 @@
     }
 }
 
-.org-datagridview {
-    
+.org-datagridview {}
+
+.org-material-viewer {
+    >.text {
+        >.line {
+
+        }
+    }
 }

@@ -28,3 +28,20 @@ services:
       - "8081:8081"
     depends_on:
       - db
+      - elasticsearch
+  
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+    environment:
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+    volumes:
+      - /mnt/hdd/elasticsearch:/usr/share/elasticsearch/data

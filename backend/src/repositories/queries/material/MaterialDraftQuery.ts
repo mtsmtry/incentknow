@@ -1,5 +1,6 @@
 import { SelectQueryBuilder } from "typeorm";
-import { ContentDraftSk } from "../../../entities/content/ContentDraft";
+import { ContentSk } from "../../../entities/content/Content";
+import { ContentDraft, ContentDraftSk } from "../../../entities/content/ContentDraft";
 import { MaterialSk } from "../../../entities/material/Material";
 import { MaterialDraft, MaterialDraftId, MaterialDraftSk } from "../../../entities/material/MaterialDraft";
 import { UserSk } from "../../../entities/user/User";
@@ -18,7 +19,19 @@ export class MaterialDraftQuery extends SelectFromSingleTableQuery<MaterialDraft
     }
 
     byUserOwn(userId: UserSk) {
-        return new MaterialDraftQuery(this.qb.where({ userId }).andWhere("x.intendedContentDraftId IS NULL AND x.currentEditingId IS NOT NULL"));
+        const query = this.qb.leftJoin("x.material", "material")
+            .where({ userId })
+            .andWhere("x.intendedContentDraftId IS NULL AND x.currentEditingId IS NOT NULL AND material.contentId IS NULL");
+        return new MaterialDraftQuery(query);
+    }
+
+    byContentDraft(draft: ContentDraft) {
+        let query = this.qb.where({ intendedContentDraftId: draft.id });
+        if (draft.contentId) {
+            query = this.qb.leftJoin("x.material", "material")
+                .andWhere("material.contentId = :contentId", { contentId: draft.contentId });
+        }
+        return new MaterialDraftQuery(query);
     }
 
     byMaterial(materialId: MaterialSk) {

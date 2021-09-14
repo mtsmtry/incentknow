@@ -9,7 +9,9 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
+import Incentknow.API.Execution (Remote)
 import Incentknow.AppM (class Behaviour, navigateRoute)
+import Incentknow.Atoms.Icon (remoteArrayWith)
 import Incentknow.Data.Entities (PropertyInfo, RelatedContent)
 import Incentknow.Data.Property (Property, mkProperties)
 import Incentknow.HTML.Utils (css)
@@ -17,11 +19,11 @@ import Incentknow.Route (Route)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
-  = { value :: Array RelatedContent
+  = { value :: Remote (Array RelatedContent)
     }
 
 type State
-  = { items :: Array RelatedContent
+  = { items :: Remote (Array RelatedContent)
     }
 
 data Action
@@ -50,19 +52,24 @@ render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action
 render state =
   HH.div
     [ css "org-datagridview" ]
-    [ HH.table_
-        [ HH.thead
-            []
-            [ HH.tr []
-                (map renderHeaderColumn properties)
-            ]
-        , HH.tbody
-            []
-            (map renderContent state.items)
+    [ remoteArrayWith state.items \items->
+        renderTable items
+    ]
+
+renderTable :: forall m. Array RelatedContent -> H.ComponentHTML Action ChildSlots m
+renderTable items = 
+  HH.table_
+    [ HH.thead
+        []
+        [ HH.tr []
+            (map renderHeaderColumn properties)
         ]
+    , HH.tbody
+        []
+        (map renderContent items)
     ]
   where
-  properties = maybe [] (\x-> x.format.currentStructure.properties) $ head state.items
+  properties = maybe [] (\x-> x.format.currentStructure.properties) $ head items
 
   renderHeaderColumn :: PropertyInfo -> H.ComponentHTML Action ChildSlots m
   renderHeaderColumn prop = HH.th [] [ HH.text prop.displayName ]

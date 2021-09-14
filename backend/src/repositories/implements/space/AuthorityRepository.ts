@@ -1,3 +1,4 @@
+import { Container } from "../../../entities/container/Container";
 import { Content } from "../../../entities/content/Content";
 import { Format } from "../../../entities/format/Format";
 import { Material } from "../../../entities/material/Material";
@@ -13,7 +14,8 @@ export class AuthorityRepository {
         private members: Repository<SpaceMember>,
         private formats: Repository<Format>,
         private contents: Repository<Content>,
-        private materials: Repository<Material>) {
+        private materials: Repository<Material>,
+        private containers: Repository<Container>) {
     }
 
     fromAuths(trx?: Transaction) {
@@ -22,6 +24,7 @@ export class AuthorityRepository {
             this.members.createQuery(trx),
             this.formats.createQuery(trx),
             this.contents.createQuery(trx),
-            this.materials.createQuery(trx))
+            this.materials.createQuery(trx),
+            this.containers.createQuery(trx))
     }
 }

@@ -7,26 +7,30 @@ import { LackOfAuthority } from "./Errors";
 import { SessionSecurity } from "./Security";
 
 export class ServiceContext {
-    private userId: UserSk | null;
+    private _userId: UserSk | null;
 
     constructor(public conn: Connection) {
-        this.userId = null;
+        this._userId = null;
     }
 
     setHeaders(headers: IncomingHttpHeaders) {
         const session = headers["session"];
         if (isString(session)) {
-            this.userId = SessionSecurity.verfyToken(session);
+            this._userId = SessionSecurity.verfyToken(session);
         } else {
-            this.userId = null;
+            this._userId = null;
         }
     }
 
+    get userId() {
+        return this._userId;
+    }
+
     getAuthorized() {
-        if (!this.userId) {
+        if (!this._userId) {
             throw new LackOfAuthority();
         }
-        return this.userId;
+        return this._userId;
     }
 
     transaction<T>(runInTransaction: (trx: Transaction) => Promise<T>): Promise<T> {

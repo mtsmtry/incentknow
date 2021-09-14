@@ -5,11 +5,14 @@ import Prelude
 
 import Data.Maybe (Maybe)
 import Data.Argonaut.Core (Json)
+import Web.File.Blob (Blob)
 import Control.Promise (Promise)
 import Incentknow.Data.Entities as E
 import Incentknow.Data.Ids as E
 import Incentknow.API.Execution (__queryAPI, __commandAPI, QueryAPI, CommandAPI)
 
+
+foreign import apiEndpoint :: String
 
 foreign import fromJsonToRelatedContainer :: Json -> E.RelatedContainer
 foreign import fromRelatedContainerToJson :: E.RelatedContainer -> Json
@@ -33,6 +36,14 @@ foreign import fromFocusedContentToJson :: E.FocusedContent -> Json
 
 foreign import fromJsonToContentRelation :: Json -> E.ContentRelation
 foreign import fromContentRelationToJson :: E.ContentRelation -> Json
+
+
+foreign import fromJsonToSearchedContent :: Json -> E.SearchedContent
+foreign import fromSearchedContentToJson :: E.SearchedContent -> Json
+
+
+foreign import fromJsonToIntactContentPage :: Json -> E.IntactContentPage
+foreign import fromIntactContentPageToJson :: E.IntactContentPage -> Json
 
 
 foreign import fromJsonToRelatedContentCommit :: Json -> E.RelatedContentCommit
@@ -115,6 +126,10 @@ foreign import fromJsonToFocusedMaterialDraft :: Json -> E.FocusedMaterialDraft
 foreign import fromFocusedMaterialDraftToJson :: E.FocusedMaterialDraft -> Json
 
 
+foreign import fromJsonToMaterialDraftUpdation :: Json -> E.MaterialDraftUpdation
+foreign import fromMaterialDraftUpdationToJson :: E.MaterialDraftUpdation -> Json
+
+
 foreign import fromJsonToIntactMaterialEditing :: Json -> E.IntactMaterialEditing
 foreign import fromIntactMaterialEditingToJson :: E.IntactMaterialEditing -> Json
 
@@ -125,6 +140,30 @@ foreign import fromRelatedMaterialSnapshotToJson :: E.RelatedMaterialSnapshot ->
 
 foreign import fromJsonToFocusedMaterialSnapshot :: Json -> E.FocusedMaterialSnapshot
 foreign import fromFocusedMaterialSnapshotToJson :: E.FocusedMaterialSnapshot -> Json
+
+
+foreign import fromJsonToIntactActivityBySpace :: Json -> E.IntactActivityBySpace
+foreign import fromIntactActivityBySpaceToJson :: E.IntactActivityBySpace -> Json
+
+
+foreign import fromJsonToIntactActivityByUser :: Json -> E.IntactActivityByUser
+foreign import fromIntactActivityByUserToJson :: E.IntactActivityByUser -> Json
+
+
+foreign import fromJsonToRelatedComment :: Json -> E.RelatedComment
+foreign import fromRelatedCommentToJson :: E.RelatedComment -> Json
+
+
+foreign import fromJsonToFocusedComment :: Json -> E.FocusedComment
+foreign import fromFocusedCommentToJson :: E.FocusedComment -> Json
+
+
+foreign import fromJsonToFocusedTreeComment :: Json -> E.FocusedTreeComment
+foreign import fromFocusedTreeCommentToJson :: E.FocusedTreeComment -> Json
+
+
+foreign import fromJsonToIntactNotification :: Json -> E.IntactNotification
+foreign import fromIntactNotificationToJson :: E.IntactNotification -> Json
 
 
 foreign import fromJsonToIntactReactor :: Json -> E.IntactReactor
@@ -141,6 +180,10 @@ foreign import fromRelatedSpaceToJson :: E.RelatedSpace -> Json
 
 foreign import fromJsonToFocusedSpace :: Json -> E.FocusedSpace
 foreign import fromFocusedSpaceToJson :: E.FocusedSpace -> Json
+
+
+foreign import fromJsonToIntactSpageHomePage :: Json -> E.IntactSpageHomePage
+foreign import fromIntactSpageHomePageToJson :: E.IntactSpageHomePage -> Json
 
 
 foreign import fromJsonToIntactSpaceMember :: Json -> E.IntactSpaceMember
@@ -204,18 +247,18 @@ createNewContentDraft x0 x1 x2 = __commandAPI "createNewContentDraft" $ __create
 
 
 foreign import __editContentDraft :: 
-  E.ContentDraftId -> Json -> Promise {}
+  E.ContentDraftId -> Json -> Array E.MaterialDraftUpdation -> Promise {}
 
-editContentDraft :: E.ContentDraftId -> Json -> CommandAPI {}
-editContentDraft x0 x1 = __commandAPI "editContentDraft" $ __editContentDraft x0 x1
+editContentDraft :: E.ContentDraftId -> Json -> Array E.MaterialDraftUpdation -> CommandAPI {}
+editContentDraft x0 x1 x2 = __commandAPI "editContentDraft" $ __editContentDraft x0 x1 x2
 
 
 
 foreign import __commitContent :: 
-  E.ContentDraftId -> Json -> Promise E.ContentId
+  E.ContentDraftId -> Json -> Array E.MaterialDraftUpdation -> Promise E.ContentId
 
-commitContent :: E.ContentDraftId -> Json -> CommandAPI E.ContentId
-commitContent x0 x1 = __commandAPI "commitContent" $ __commitContent x0 x1
+commitContent :: E.ContentDraftId -> Json -> Array E.MaterialDraftUpdation -> CommandAPI E.ContentId
+commitContent x0 x1 x2 = __commandAPI "commitContent" $ __commitContent x0 x1 x2
 
 
 
@@ -227,11 +270,11 @@ getContent x0 = __queryAPI "getContent" $ __getContent x0
 
 
 
-foreign import __getContentRelations :: 
-  E.ContentId -> Promise (Array E.ContentRelation)
+foreign import __getContentPage :: 
+  E.ContentId -> Promise E.IntactContentPage
 
-getContentRelations :: E.ContentId -> QueryAPI (Array E.ContentRelation)
-getContentRelations x0 = __queryAPI "getContentRelations" $ __getContentRelations x0
+getContentPage :: E.ContentId -> QueryAPI E.IntactContentPage
+getContentPage x0 = __queryAPI "getContentPage" $ __getContentPage x0
 
 
 
@@ -251,14 +294,6 @@ getContents x0 x1 = __queryAPI "getContents" $ __getContents x0 x1
 
 
 
-foreign import __getContentsByProperty :: 
-  E.SpaceId -> E.FormatId -> E.PropertyId -> String -> Promise (Array E.RelatedContent)
-
-getContentsByProperty :: E.SpaceId -> E.FormatId -> E.PropertyId -> String -> QueryAPI (Array E.RelatedContent)
-getContentsByProperty x0 x1 x2 x3 = __queryAPI "getContentsByProperty" $ __getContentsByProperty x0 x1 x2 x3
-
-
-
 foreign import __getContentsByDisplayId :: 
   E.SpaceDisplayId -> E.FormatDisplayId -> Promise (Array E.RelatedContent)
 
@@ -267,11 +302,19 @@ getContentsByDisplayId x0 x1 = __queryAPI "getContentsByDisplayId" $ __getConten
 
 
 
-foreign import __getMyContentDrafts :: 
-  Promise (Array E.RelatedContentDraft)
+foreign import __getFocusedContentsByDisplayId :: 
+  E.SpaceDisplayId -> E.FormatDisplayId -> Promise (Array E.FocusedContent)
 
-getMyContentDrafts :: QueryAPI (Array E.RelatedContentDraft)
-getMyContentDrafts  = __queryAPI "getMyContentDrafts" $ __getMyContentDrafts 
+getFocusedContentsByDisplayId :: E.SpaceDisplayId -> E.FormatDisplayId -> QueryAPI (Array E.FocusedContent)
+getFocusedContentsByDisplayId x0 x1 = __queryAPI "getFocusedContentsByDisplayId" $ __getFocusedContentsByDisplayId x0 x1
+
+
+
+foreign import __getMyContentDrafts :: 
+  Unit -> Promise (Array E.RelatedContentDraft)
+
+getMyContentDrafts :: Unit -> QueryAPI (Array E.RelatedContentDraft)
+getMyContentDrafts x0 = __queryAPI "getMyContentDrafts" $ __getMyContentDrafts x0
 
 
 
@@ -280,6 +323,14 @@ foreign import __getContentDraft ::
 
 getContentDraft :: E.ContentDraftId -> QueryAPI E.FocusedContentDraft
 getContentDraft x0 = __queryAPI "getContentDraft" $ __getContentDraft x0
+
+
+
+foreign import __cancelContentDraft :: 
+  E.ContentDraftId -> Promise {}
+
+cancelContentDraft :: E.ContentDraftId -> CommandAPI {}
+cancelContentDraft x0 = __commandAPI "cancelContentDraft" $ __cancelContentDraft x0
 
 
 
@@ -299,11 +350,19 @@ getContentCommit x0 = __queryAPI "getContentCommit" $ __getContentCommit x0
 
 
 
-foreign import __getSpaceLatestContents :: 
-  E.SpaceId -> Promise (Array E.RelatedContent)
+foreign import __getSearchedAllContents :: 
+  String -> Promise (Array E.SearchedContent)
 
-getSpaceLatestContents :: E.SpaceId -> QueryAPI (Array E.RelatedContent)
-getSpaceLatestContents x0 = __queryAPI "getSpaceLatestContents" $ __getSpaceLatestContents x0
+getSearchedAllContents :: String -> QueryAPI (Array E.SearchedContent)
+getSearchedAllContents x0 = __queryAPI "getSearchedAllContents" $ __getSearchedAllContents x0
+
+
+
+foreign import __getSearchedContentsInContainer :: 
+  E.SpaceDisplayId -> E.FormatDisplayId -> String -> Promise (Array E.SearchedContent)
+
+getSearchedContentsInContainer :: E.SpaceDisplayId -> E.FormatDisplayId -> String -> QueryAPI (Array E.SearchedContent)
+getSearchedContentsInContainer x0 x1 x2 = __queryAPI "getSearchedContentsInContainer" $ __getSearchedContentsInContainer x0 x1 x2
 
 
 
@@ -477,10 +536,10 @@ getMaterial x0 = __queryAPI "getMaterial" $ __getMaterial x0
 
 
 foreign import __getMyMaterialDrafts :: 
-  Promise (Array E.RelatedMaterialDraft)
+  Unit -> Promise (Array E.RelatedMaterialDraft)
 
-getMyMaterialDrafts :: QueryAPI (Array E.RelatedMaterialDraft)
-getMyMaterialDrafts  = __queryAPI "getMyMaterialDrafts" $ __getMyMaterialDrafts 
+getMyMaterialDrafts :: Unit -> QueryAPI (Array E.RelatedMaterialDraft)
+getMyMaterialDrafts x0 = __queryAPI "getMyMaterialDrafts" $ __getMyMaterialDrafts x0
 
 
 
@@ -489,6 +548,14 @@ foreign import __getMaterialDraft ::
 
 getMaterialDraft :: E.MaterialDraftId -> QueryAPI E.FocusedMaterialDraft
 getMaterialDraft x0 = __queryAPI "getMaterialDraft" $ __getMaterialDraft x0
+
+
+
+foreign import __cancelMaterialDraft :: 
+  E.MaterialDraftId -> Promise {}
+
+cancelMaterialDraft :: E.MaterialDraftId -> CommandAPI {}
+cancelMaterialDraft x0 = __commandAPI "cancelMaterialDraft" $ __cancelMaterialDraft x0
 
 
 
@@ -521,6 +588,92 @@ foreign import __getMaterialCommit ::
 
 getMaterialCommit :: E.MaterialCommitId -> QueryAPI E.FocusedMaterialCommit
 getMaterialCommit x0 = __queryAPI "getMaterialCommit" $ __getMaterialCommit x0
+
+
+
+---------------------------------------------------------
+--  ReactionService
+---------------------------------------------------------
+
+
+
+foreign import __commentContent :: 
+  E.ContentId -> String -> Promise E.FocusedTreeComment
+
+commentContent :: E.ContentId -> String -> CommandAPI E.FocusedTreeComment
+commentContent x0 x1 = __commandAPI "commentContent" $ __commentContent x0 x1
+
+
+
+foreign import __replyToComment :: 
+  E.CommentId -> String -> Promise E.FocusedComment
+
+replyToComment :: E.CommentId -> String -> CommandAPI E.FocusedComment
+replyToComment x0 x1 = __commandAPI "replyToComment" $ __replyToComment x0 x1
+
+
+
+foreign import __modifyComment :: 
+  E.CommentId -> String -> Promise {}
+
+modifyComment :: E.CommentId -> String -> CommandAPI {}
+modifyComment x0 x1 = __commandAPI "modifyComment" $ __modifyComment x0 x1
+
+
+
+foreign import __likeComment :: 
+  E.CommentId -> Promise {}
+
+likeComment :: E.CommentId -> CommandAPI {}
+likeComment x0 = __commandAPI "likeComment" $ __likeComment x0
+
+
+
+foreign import __unlikeComment :: 
+  E.CommentId -> Promise {}
+
+unlikeComment :: E.CommentId -> CommandAPI {}
+unlikeComment x0 = __commandAPI "unlikeComment" $ __unlikeComment x0
+
+
+
+foreign import __getNotifications :: 
+  Unit -> Promise (Array E.IntactNotification)
+
+getNotifications :: Unit -> QueryAPI (Array E.IntactNotification)
+getNotifications x0 = __queryAPI "getNotifications" $ __getNotifications x0
+
+
+
+foreign import __getActivitiesBySpace :: 
+  E.SpaceId -> Promise (Array E.IntactActivityBySpace)
+
+getActivitiesBySpace :: E.SpaceId -> QueryAPI (Array E.IntactActivityBySpace)
+getActivitiesBySpace x0 = __queryAPI "getActivitiesBySpace" $ __getActivitiesBySpace x0
+
+
+
+foreign import __getActivitiesByUser :: 
+  E.SpaceId -> Promise (Array E.IntactActivityByUser)
+
+getActivitiesByUser :: E.SpaceId -> QueryAPI (Array E.IntactActivityByUser)
+getActivitiesByUser x0 = __queryAPI "getActivitiesByUser" $ __getActivitiesByUser x0
+
+
+
+foreign import __getNotReadNotificationCount :: 
+  Unit -> Promise Int
+
+getNotReadNotificationCount :: Unit -> QueryAPI Int
+getNotReadNotificationCount x0 = __queryAPI "getNotReadNotificationCount" $ __getNotReadNotificationCount x0
+
+
+
+foreign import __readAllNotifications :: 
+  Unit -> Promise {}
+
+readAllNotifications :: Unit -> CommandAPI {}
+readAllNotifications x0 = __commandAPI "readAllNotifications" $ __readAllNotifications x0
 
 
 
@@ -588,34 +741,34 @@ getAvailableSpaceDisplayId x0 = __queryAPI "getAvailableSpaceDisplayId" $ __getA
 
 
 foreign import __getCandidateSpaces :: 
-  Promise (Array E.RelatedSpace)
+  Unit -> Promise (Array E.RelatedSpace)
 
-getCandidateSpaces :: QueryAPI (Array E.RelatedSpace)
-getCandidateSpaces  = __queryAPI "getCandidateSpaces" $ __getCandidateSpaces 
+getCandidateSpaces :: Unit -> QueryAPI (Array E.RelatedSpace)
+getCandidateSpaces x0 = __queryAPI "getCandidateSpaces" $ __getCandidateSpaces x0
 
 
 
 foreign import __getMySpaces :: 
-  Promise (Array E.FocusedSpace)
+  Unit -> Promise (Array E.RelatedSpace)
 
-getMySpaces :: QueryAPI (Array E.FocusedSpace)
-getMySpaces  = __queryAPI "getMySpaces" $ __getMySpaces 
+getMySpaces :: Unit -> QueryAPI (Array E.RelatedSpace)
+getMySpaces x0 = __queryAPI "getMySpaces" $ __getMySpaces x0
 
 
 
 foreign import __getFollowingSpaces :: 
-  Promise (Array E.FocusedSpace)
+  Unit -> Promise (Array E.RelatedSpace)
 
-getFollowingSpaces :: QueryAPI (Array E.FocusedSpace)
-getFollowingSpaces  = __queryAPI "getFollowingSpaces" $ __getFollowingSpaces 
+getFollowingSpaces :: Unit -> QueryAPI (Array E.RelatedSpace)
+getFollowingSpaces x0 = __queryAPI "getFollowingSpaces" $ __getFollowingSpaces x0
 
 
 
 foreign import __getPublishedSpaces :: 
-  Promise (Array E.FocusedSpace)
+  Unit -> Promise (Array E.RelatedSpace)
 
-getPublishedSpaces :: QueryAPI (Array E.FocusedSpace)
-getPublishedSpaces  = __queryAPI "getPublishedSpaces" $ __getPublishedSpaces 
+getPublishedSpaces :: Unit -> QueryAPI (Array E.RelatedSpace)
+getPublishedSpaces x0 = __queryAPI "getPublishedSpaces" $ __getPublishedSpaces x0
 
 
 
@@ -667,6 +820,22 @@ setSpaceDisplayName x0 x1 = __commandAPI "setSpaceDisplayName" $ __setSpaceDispl
 
 
 
+foreign import __setSpaceDescription :: 
+  E.SpaceId -> String -> Promise {}
+
+setSpaceDescription :: E.SpaceId -> String -> CommandAPI {}
+setSpaceDescription x0 x1 = __commandAPI "setSpaceDescription" $ __setSpaceDescription x0 x1
+
+
+
+foreign import __uploadSpaceHeaderImage :: 
+  { spaceId :: E.SpaceId, blob :: Blob } -> Promise {}
+
+uploadSpaceHeaderImage :: { spaceId :: E.SpaceId, blob :: Blob } -> CommandAPI {}
+uploadSpaceHeaderImage x0 = __commandAPI "uploadSpaceHeaderImage" $ __uploadSpaceHeaderImage x0
+
+
+
 foreign import __setSpaceDisplayId :: 
   E.SpaceId -> E.SpaceDisplayId -> Promise {}
 
@@ -684,9 +853,9 @@ setSpacePublished x0 x1 = __commandAPI "setSpacePublished" $ __setSpacePublished
 
 
 foreign import __setSpaceDefaultAuthority :: 
-  E.SpaceId -> E.SpaceAuth -> Promise {}
+  E.SpaceId -> E.SpaceAuthority -> Promise {}
 
-setSpaceDefaultAuthority :: E.SpaceId -> E.SpaceAuth -> CommandAPI {}
+setSpaceDefaultAuthority :: E.SpaceId -> E.SpaceAuthority -> CommandAPI {}
 setSpaceDefaultAuthority x0 x1 = __commandAPI "setSpaceDefaultAuthority" $ __setSpaceDefaultAuthority x0 x1
 
 
@@ -696,6 +865,14 @@ foreign import __getSpaceContainers ::
 
 getSpaceContainers :: E.SpaceId -> QueryAPI (Array E.RelatedContainer)
 getSpaceContainers x0 = __queryAPI "getSpaceContainers" $ __getSpaceContainers x0
+
+
+
+foreign import __getSpaceHomePage :: 
+  E.SpaceId -> Promise E.IntactSpageHomePage
+
+getSpaceHomePage :: E.SpaceId -> QueryAPI E.IntactSpageHomePage
+getSpaceHomePage x0 = __queryAPI "getSpaceHomePage" $ __getSpaceHomePage x0
 
 
 
@@ -723,18 +900,18 @@ createUser x0 = __commandAPI "createUser" $ __createUser x0
 
 
 foreign import __getMyUser :: 
-  Promise E.FocusedUser
+  Unit -> Promise E.FocusedUser
 
-getMyUser :: QueryAPI E.FocusedUser
-getMyUser  = __queryAPI "getMyUser" $ __getMyUser 
+getMyUser :: Unit -> QueryAPI E.FocusedUser
+getMyUser x0 = __queryAPI "getMyUser" $ __getMyUser x0
 
 
 
 foreign import __getMyAccount :: 
-  Promise E.IntactAccount
+  Unit -> Promise E.IntactAccount
 
-getMyAccount :: QueryAPI E.IntactAccount
-getMyAccount  = __queryAPI "getMyAccount" $ __getMyAccount 
+getMyAccount :: Unit -> QueryAPI E.IntactAccount
+getMyAccount x0 = __queryAPI "getMyAccount" $ __getMyAccount x0
 
 
 
@@ -758,6 +935,14 @@ authenticate ::
   }
   -> CommandAPI E.AuthInfo
 authenticate x0 = __commandAPI "authenticate" $ __authenticate x0
+
+
+
+foreign import __activateAccount :: 
+  String -> Promise E.AuthInfo
+
+activateAccount :: String -> CommandAPI E.AuthInfo
+activateAccount x0 = __commandAPI "activateAccount" $ __activateAccount x0
 
 
 
@@ -816,11 +1001,11 @@ setMyEmail x0 = __commandAPI "setMyEmail" $ __setMyEmail x0
 
 
 
-foreign import __setMyIcon :: 
-  String -> Promise {}
+foreign import __uploadMyIcon :: 
+  { blob :: Blob } -> Promise {}
 
-setMyIcon :: String -> CommandAPI {}
-setMyIcon x0 = __commandAPI "setMyIcon" $ __setMyIcon x0
+uploadMyIcon :: { blob :: Blob } -> CommandAPI {}
+uploadMyIcon x0 = __commandAPI "uploadMyIcon" $ __uploadMyIcon x0
 
 
 

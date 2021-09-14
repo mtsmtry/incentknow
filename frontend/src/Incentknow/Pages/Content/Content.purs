@@ -2,7 +2,7 @@ module Incentknow.Pages.Content where
 
 import Prelude
 
-import Data.Array (head)
+import Data.Array (head, length)
 import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Maybe.Utils (flatten)
@@ -13,13 +13,14 @@ import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getContent, getContentRelations)
+import Incentknow.API (getContentPage)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forItem, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute, pushState)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Data.Entities (ContentRelation, FocusedContent)
+import Incentknow.Data.Entities (ContentRelation, FocusedContent, IntactContentPage)
 import Incentknow.Data.Ids (FormatId)
 import Incentknow.HTML.Utils (css, maybeElem, whenElem)
+import Incentknow.Organisms.Comments as Comments
 import Incentknow.Organisms.Content.Viewer as Content
 import Incentknow.Organisms.ContentList as ContentList
 import Incentknow.Route (ContentSpec(..), Route)
@@ -33,19 +34,18 @@ type Input
 
 type State
   = { contentSpec :: ContentSpec
-    , content :: Remote FocusedContent
+    , page :: Remote IntactContentPage
     , tab :: FormatId
-    , contentRelations :: Remote (M.Map FormatId ContentRelation)
+    , relations :: Remote (M.Map FormatId ContentRelation)
     }
 
 data Action
   = Initialize
-  | ChangeContent (Fetch FocusedContent)
+  | FetchedContentPage (Fetch IntactContentPage)
   | HandleInput Input
   | Navigate MouseEvent Route
   | NavigateRoute Route
   | ChangeRelationTab FormatId
-  | FetchedContentRelations (Fetch (Array ContentRelation))
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -53,6 +53,7 @@ type Slot p
 type ChildSlots
   = ( content :: Content.Slot Unit
     , contentList :: ContentList.Slot Unit
+    , comments :: Comments.Slot Unit
     )
 
 component :: forall q o m. Behaviour m => MonadAff m => H.Component HH.HTML q Input o m
@@ -72,36 +73,39 @@ component =
 initialState :: Input -> State
 initialState input =
   { contentSpec: input.contentSpec
-  , content: Loading
+  , page: Loading
   , tab: wrap ""
-  , contentRelations: Loading
+  , relations: Loading
   }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  remoteWith state.content \content->
-    centerLayout { leftSide: [], rightSide: [] }
-      [ HH.div [ css "page-content" ]
-        [ HH.slot (SProxy :: SProxy "content") unit Content.component { content } absurd
-        , remoteWith state.contentRelations \relations->
-            whenElem (not $ M.isEmpty relations) \_->
-              HH.div [ css "relations" ]
-                [ upperTabPage
-                    { tabs: S.toUnfoldable $ M.keys relations
-                    , currentTab: state.tab
-                    , onChangeTab: ChangeRelationTab
-                    , showTab: \x-> HH.text $ fromMaybe "Error" $ flatten $ map (\y-> map _.format.displayName $ head y.contents) $ M.lookup state.tab relations
-                    }
-                    []
-                    [ maybeElem (M.lookup state.tab relations) \relation->
-                        HH.slot (SProxy :: SProxy "contentList") unit ContentList.component 
-                          { value: relation.contents
-                          }
-                          absurd
-                    ]
+  centerLayout { css: "page-content", leftSide: [], rightSide: [] }
+    [ remoteWith state.page \page->
+        HH.slot (SProxy :: SProxy "content") unit Content.component { content: page.content } absurd
+    , remoteWith state.relations \relations->
+        whenElem (not $ M.isEmpty relations) \_->
+          HH.div [ css "page-content-relations" ]
+            [ upperTabPage
+                { tabs: S.toUnfoldable $ M.keys relations
+                , currentTab: state.tab
+                , onChangeTab: ChangeRelationTab
+                , showTab: \x-> HH.text $ fromMaybe "Error" $ flatten $ map (\y-> map _.format.displayName $ head y.contents) $ M.lookup state.tab relations
+                }
+                []
+                [ maybeElem (M.lookup state.tab relations) \relation->
+                    HH.slot (SProxy :: SProxy "contentList") unit ContentList.component 
+                      { value: Holding relation.contents
+                      , query: Nothing
+                      }
+                      absurd
                 ]
-        ]
-      ]
+            ]
+    , HH.slot (SProxy :: SProxy "comments") unit Comments.component 
+        { value: map _.comments state.page
+        , contentId: toMaybe $ map _.content.contentId state.page
+        } absurd
+    ]
 
 handleAction :: forall o m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
@@ -109,21 +113,23 @@ handleAction = case _ of
     state <- H.get
     case state.contentSpec of
       ContentSpecContentId contentId -> do
-        callbackQuery ChangeContent $ getContent contentId
-        callbackQuery FetchedContentRelations $ getContentRelations contentId
+        callbackQuery FetchedContentPage $ getContentPage contentId
        -- H.modify_ _ { contentSubId = Just contentSubId }
       ContentSpecSemanticId formatId semanticId -> do
         pure unit -- TODO
         -- callbackQuery ChangeContent $ onLoadContentBySemanticId formatId semanticId
-  ChangeContent fetch -> do
+  FetchedContentPage fetch -> do
     state <- H.get
-    forItem fetch \content-> do
+    forItem fetch \page-> do
       case state.contentSpec of
         ContentSpecSemanticId formatId semanticId -> do
-          pushState $ R.Content content.contentId
+          pushState $ R.Content page.content.contentId
         ContentSpecContentId contentId -> pure unit
-    forRemote fetch \content->
-      H.modify_ _ { content = content }
+    forRemote fetch \page-> do
+      let 
+        relations = map (M.fromFoldable <<< map (\x-> Tuple x.relation.formatId x)) $ map _.relations page
+        tab = fromMaybe (wrap "") $ flatten $ map (M.keys >>> S.toUnfoldable >>> head) $ toMaybe relations
+      H.modify_ _ { page = page, relations = relations, tab = tab }
   HandleInput input -> do
     state <- H.get 
     when (input.contentSpec /= state.contentSpec) do
@@ -131,11 +137,6 @@ handleAction = case _ of
       handleAction Initialize
   Navigate event route -> navigateRoute event route
   NavigateRoute route -> navigate route
-  FetchedContentRelations fetch ->
-    forRemote fetch \contents -> do
-      let 
-        relations = map (M.fromFoldable <<< map (\x-> Tuple x.relation.formatId x)) contents
-      H.modify_ _ { contentRelations = relations, tab = fromMaybe (wrap "") $ flatten $ map (M.keys >>> S.toUnfoldable >>> head) $ toMaybe relations }
   ChangeRelationTab tab -> do
     H.modify_ _ { tab = tab }
     

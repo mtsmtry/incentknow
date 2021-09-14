@@ -202,6 +202,62 @@ derive instance newtypeMaterialSnapshotId :: Newtype MaterialSnapshotId _
 
 
 
+newtype ActivitySk = ActivitySk Int
+derive instance eqActivitySk :: Eq ActivitySk
+derive instance ordActivitySk :: Ord ActivitySk
+derive instance newtypeActivitySk :: Newtype ActivitySk _
+
+
+
+newtype ActivityId = ActivityId String
+derive instance eqActivityId :: Eq ActivityId
+derive instance ordActivityId :: Ord ActivityId
+derive instance newtypeActivityId :: Newtype ActivityId _
+
+
+
+newtype CommentSk = CommentSk Int
+derive instance eqCommentSk :: Eq CommentSk
+derive instance ordCommentSk :: Ord CommentSk
+derive instance newtypeCommentSk :: Newtype CommentSk _
+
+
+
+newtype CommentId = CommentId String
+derive instance eqCommentId :: Eq CommentId
+derive instance ordCommentId :: Ord CommentId
+derive instance newtypeCommentId :: Newtype CommentId _
+
+
+
+newtype CommentLikeSk = CommentLikeSk Int
+derive instance eqCommentLikeSk :: Eq CommentLikeSk
+derive instance ordCommentLikeSk :: Ord CommentLikeSk
+derive instance newtypeCommentLikeSk :: Newtype CommentLikeSk _
+
+
+
+newtype ContentLikeSk = ContentLikeSk Int
+derive instance eqContentLikeSk :: Eq ContentLikeSk
+derive instance ordContentLikeSk :: Ord ContentLikeSk
+derive instance newtypeContentLikeSk :: Newtype ContentLikeSk _
+
+
+
+newtype NotificationSk = NotificationSk Int
+derive instance eqNotificationSk :: Eq NotificationSk
+derive instance ordNotificationSk :: Ord NotificationSk
+derive instance newtypeNotificationSk :: Newtype NotificationSk _
+
+
+
+newtype NotificationId = NotificationId String
+derive instance eqNotificationId :: Eq NotificationId
+derive instance ordNotificationId :: Ord NotificationId
+derive instance newtypeNotificationId :: Newtype NotificationId _
+
+
+
 newtype ReactorSk = ReactorSk Int
 derive instance eqReactorSk :: Eq ReactorSk
 derive instance ordReactorSk :: Ord ReactorSk

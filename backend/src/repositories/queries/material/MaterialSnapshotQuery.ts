@@ -23,4 +23,8 @@ export class MaterialSnapshotQuery extends SelectFromSingleTableQuery<MaterialSn
         const query = this.qb.addSelect("x.data");
         return mapQuery(query, toFocusedMaterialSnapshot);
     }
+
+    joinEditingAndDraft() {
+        return new MaterialSnapshotQuery(this.qb.leftJoinAndSelect("x.editing", "editing").leftJoinAndSelect("editing.draft", "draft"))
+    }
 }

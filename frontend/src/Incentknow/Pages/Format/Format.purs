@@ -81,11 +81,11 @@ render state =
     , onChangeTab: ChangeTab
     , showTab:
         case _ of
-          FormatMain -> "Structure"
-          FormatPage -> "Page"
-          FormatVersions -> "Versions"
-          FormatSetting -> "Setting"
-          FormatReactor -> "Reactor"
+          FormatMain -> [ HH.text "Structure" ]
+          FormatPage -> [ HH.text "Page" ]
+          FormatVersions -> [ HH.text "Versions" ]
+          FormatSetting -> [ HH.text "Setting" ]
+          FormatReactor -> [ HH.text "Reactor" ]
     }
     [ remoteWith state.format \x ->
         HH.text x.displayName

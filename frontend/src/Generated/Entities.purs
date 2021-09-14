@@ -6,7 +6,7 @@ import Prelude
 import Data.Maybe (Maybe)
 import Data.Argonaut.Core (Json)
 
-import Incentknow.Data.Ids (ContainerSk, ContainerId, ContentSk, ContentId, ContentCommitSk, ContentCommitId, ContentDraftSk, ContentDraftId, FormatSk, FormatId, FormatDisplayId, SemanticId, MetaPropertySk, MetaPropertyId, PropertySk, PropertyId, StructureSk, StructureId, MaterialSk, MaterialId, MaterialCommitSk, MaterialCommitId, MaterialDraftSk, MaterialDraftId, MaterialEditingSk, MaterialEditingId, MaterialSnapshotSk, MaterialSnapshotId, ReactorSk, ReactorId, SpaceSk, SpaceId, SpaceDisplayId, SpaceFollowSk, SpaceMemberSk, SpaceMembershipApplicationSk, UserSk, UserId, UserDisplayId, DocumentBlockId)
+import Incentknow.Data.Ids (ContainerSk, ContainerId, ContentSk, ContentId, ContentCommitSk, ContentCommitId, ContentDraftSk, ContentDraftId, FormatSk, FormatId, FormatDisplayId, SemanticId, MetaPropertySk, MetaPropertyId, PropertySk, PropertyId, StructureSk, StructureId, MaterialSk, MaterialId, MaterialCommitSk, MaterialCommitId, MaterialDraftSk, MaterialDraftId, MaterialEditingSk, MaterialEditingId, MaterialSnapshotSk, MaterialSnapshotId, ActivitySk, ActivityId, CommentSk, CommentId, CommentLikeSk, ContentLikeSk, NotificationSk, NotificationId, ReactorSk, ReactorId, SpaceSk, SpaceId, SpaceDisplayId, SpaceFollowSk, SpaceMemberSk, SpaceMembershipApplicationSk, UserSk, UserId, UserDisplayId, DocumentBlockId)
 
 
 type Date = String
@@ -118,6 +118,34 @@ derive instance ordMaterialEditingState :: Ord MaterialEditingState
 
 
 
+data ActivityType
+  = ActivityTypeContentCreated
+  | ActivityTypeContentUpdated
+  | ActivityTypeContentCommented
+
+derive instance eqActivityType :: Eq ActivityType
+derive instance ordActivityType :: Ord ActivityType
+
+
+
+data CommentState
+  = CommentStateNormal
+  | CommentStateDeleted
+
+derive instance eqCommentState :: Eq CommentState
+derive instance ordCommentState :: Ord CommentState
+
+
+
+data NotificationType
+  = NotificationTypeContentCommented
+  | NotificationTypeCommentReplied
+
+derive instance eqNotificationType :: Eq NotificationType
+derive instance ordNotificationType :: Ord NotificationType
+
+
+
 data ReactorState
   = Invaild
 
@@ -135,20 +163,20 @@ derive instance ordMembershipMethod :: Ord MembershipMethod
 
 
 
-data SpaceAuth
-  = SpaceAuthNone
-  | SpaceAuthVisible
-  | SpaceAuthReadable
-  | SpaceAuthWritable
+data SpaceAuthority
+  = SpaceAuthorityNone
+  | SpaceAuthorityVisible
+  | SpaceAuthorityReadable
+  | SpaceAuthorityWritable
 
-derive instance eqSpaceAuth :: Eq SpaceAuth
-derive instance ordSpaceAuth :: Ord SpaceAuth
+derive instance eqSpaceAuthority :: Eq SpaceAuthority
+derive instance ordSpaceAuthority :: Ord SpaceAuthority
 
 
 
 data MemberType
-  = Normal
-  | Owner
+  = MemberTypeNormal
+  | MemberTypeOwner
 
 derive instance eqMemberType :: Eq MemberType
 derive instance ordMemberType :: Ord MemberType
@@ -161,6 +189,7 @@ type RelatedContainer
     , format :: RelatedFormat
     , createdAt :: Number
     , updatedAt :: Number
+    , contentCount :: Int
     , generator :: Maybe ContentGenerator
     }
 
@@ -187,6 +216,16 @@ type FocusedContainer
 
 
 
+data Authority
+  = AuthorityNone
+  | AuthorityReadable
+  | AuthorityWritable
+
+derive instance eqAuthority :: Eq Authority
+derive instance ordAuthority :: Ord Authority
+
+
+
 type RelatedContent
   = { contentId :: ContentId
     , createdAt :: Number
@@ -195,8 +234,10 @@ type RelatedContent
     , updaterUser :: RelatedUser
     , updateCount :: Int
     , viewCount :: Int
+    , commentCount :: Int
     , format :: FocusedFormat
     , data :: Json
+    , authority :: Authority
     }
 
 
@@ -207,10 +248,11 @@ type FocusedContent
     , updatedAt :: Number
     , creatorUser :: RelatedUser
     , updaterUser :: RelatedUser
-    , updateCount :: Number
-    , viewCount :: Number
+    , updateCount :: Int
+    , viewCount :: Int
+    , commentCount :: Int
     , format :: FocusedFormat
-    , draft :: Maybe RelatedContentDraft
+    , authority :: Authority
     , data :: Json
     }
 
@@ -219,6 +261,23 @@ type FocusedContent
 type ContentRelation
   = { contents :: Array RelatedContent
     , relation :: Relation
+    }
+
+
+
+type SearchedContent
+  = { content :: RelatedContent
+    , highlights :: Array String
+    , score :: Number
+    }
+
+
+
+type IntactContentPage
+  = { content :: FocusedContent
+    , draft :: Maybe RelatedContentDraft
+    , comments :: Array FocusedTreeComment
+    , relations :: Array ContentRelation
     }
 
 
@@ -477,6 +536,13 @@ type FocusedMaterialDraft
 
 
 
+type MaterialDraftUpdation
+  = { draftId :: MaterialDraftId
+    , data :: MaterialData
+    }
+
+
+
 type IntactMaterialEditing
   = { materialEditingId :: MaterialEditingId
     , createdAt :: Number
@@ -502,6 +568,84 @@ type FocusedMaterialSnapshot
 
 
 
+data ActivityAction
+  = ContentCreatedActivityAction RelatedContent
+  | ContentUpdatedActivityAction RelatedContent
+  | ContentCommentedActivityAction RelatedContent RelatedComment
+
+derive instance eqActivityAction :: Eq ActivityAction
+
+
+
+type IntactActivityBySpace
+  = { activityId :: ActivityId
+    , action :: ActivityAction
+    , actorUser :: RelatedUser
+    , timestamp :: Number
+    }
+
+
+
+type IntactActivityByUser
+  = { activityId :: ActivityId
+    , action :: ActivityAction
+    , space :: RelatedSpace
+    , timestamp :: Number
+    }
+
+
+
+type RelatedComment
+  = { commentId :: CommentId
+    , user :: RelatedUser
+    , text :: String
+    , createdAt :: Number
+    , updatedAt :: Number
+    }
+
+
+
+type FocusedComment
+  = { commentId :: CommentId
+    , user :: RelatedUser
+    , text :: String
+    , createdAt :: Number
+    , updatedAt :: Number
+    , likeCount :: Int
+    }
+
+
+
+type FocusedTreeComment
+  = { commentId :: CommentId
+    , user :: RelatedUser
+    , text :: String
+    , createdAt :: Number
+    , updatedAt :: Number
+    , likeCount :: Int
+    , replies :: Array FocusedComment
+    }
+
+
+
+data NotificationAction
+  = ContentCommentedNotificationAction RelatedContent RelatedComment
+  | CommentRepliedNotificationAction RelatedContent RelatedComment
+
+derive instance eqNotificationAction :: Eq NotificationAction
+
+
+
+type IntactNotification
+  = { notificationId :: NotificationId
+    , action :: NotificationAction
+    , notifiedFromUser :: RelatedUser
+    , timestamp :: Number
+    , isRead :: Boolean
+    }
+
+
+
 type IntactReactor
   = { reactorId :: ReactorId
     , container :: RelatedContainer
@@ -514,9 +658,8 @@ type IntactReactor
 
 
 type AdditionalSpaceInfo
-  = { containerCount :: Int
+  = { containerCount :: Number
     , memberCount :: Number
-    , contentCount :: Number
     , formatCount :: Number
     }
 
@@ -528,10 +671,10 @@ type RelatedSpace
     , displayName :: String
     , description :: String
     , createdAt :: Number
-    , homeUrl :: Maybe String
+    , headerImage :: Maybe String
     , published :: Boolean
     , membershipMethod :: MembershipMethod
-    , defaultAuthority :: SpaceAuth
+    , defaultAuthority :: SpaceAuthority
     }
 
 
@@ -543,14 +686,23 @@ type FocusedSpace
     , description :: String
     , creatorUser :: RelatedUser
     , createdAt :: Number
-    , homeUrl :: Maybe String
+    , headerImage :: Maybe String
     , published :: Boolean
     , membershipMethod :: MembershipMethod
-    , defaultAuthority :: SpaceAuth
+    , defaultAuthority :: SpaceAuthority
     , containerCount :: Int
     , memberCount :: Int
     , contentCount :: Int
     , formatCount :: Int
+    , containers :: Array RelatedContainer
+    }
+
+
+
+type IntactSpageHomePage
+  = { activities :: Array IntactActivityBySpace
+    , topics :: Array FocusedContent
+    , members :: Array IntactSpaceMember
     }
 
 
@@ -574,7 +726,7 @@ type IntactAccount
   = { userId :: UserId
     , displayId :: UserDisplayId
     , displayName :: String
-    , iconUrl :: Maybe String
+    , iconImage :: Maybe String
     , createdAt :: Number
     , email :: String
     }
@@ -585,7 +737,7 @@ type RelatedUser
   = { userId :: UserId
     , displayId :: UserDisplayId
     , displayName :: String
-    , iconUrl :: Maybe String
+    , iconImage :: Maybe String
     , createdAt :: Number
     }
 
@@ -595,7 +747,7 @@ type FocusedUser
   = { userId :: UserId
     , displayId :: UserDisplayId
     , displayName :: String
-    , iconUrl :: Maybe String
+    , iconImage :: Maybe String
     , createdAt :: Number
     }
 

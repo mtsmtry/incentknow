@@ -1,4 +1,4 @@
-import { MembershipMethod, Space, SpaceAuth, SpaceDisplayId, SpaceSk } from "../../../entities/space/Space";
+import { MembershipMethod, Space, SpaceAuthority, SpaceDisplayId, SpaceSk } from "../../../entities/space/Space";
 import { SpaceFollow } from "../../../entities/space/SpaceFollow";
 import { MemberType, SpaceMember } from "../../../entities/space/SpaceMember";
 import { SpaceMembershipApplication, SpaceMembershipApplicationSk } from "../../../entities/space/SpaceMembershipApplication";
@@ -64,15 +64,23 @@ export class SpaceCommand implements BaseCommand {
         member = await this.members.save(member);
     }
 
+    async setSpaceDescription(spaceId: SpaceSk, description: string) {
+        await this.spaces.update(spaceId, { description });
+    }
+
     async setSpaceDisplayId(spaceId: SpaceSk, displayId: SpaceDisplayId) {
         await this.spaces.update(spaceId, { displayId });
+    }
+
+    async setSpaceHeaderImage(spaceId: SpaceSk, headerImage: string | null) {
+        await this.spaces.update(spaceId, { headerImage });
     }
 
     async setSpaceDisplayName(spaceId: SpaceSk, displayName: string) {
         await this.spaces.update(spaceId, { displayName });
     }
 
-    async setSpaceDefaultAuthority(spaceId: SpaceSk, defaultAuthority: SpaceAuth) {
+    async setSpaceDefaultAuthority(spaceId: SpaceSk, defaultAuthority: SpaceAuthority) {
         await this.spaces.update(spaceId, { defaultAuthority });
     }
 

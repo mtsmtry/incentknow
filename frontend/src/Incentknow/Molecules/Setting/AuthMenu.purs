@@ -10,7 +10,7 @@ import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (SpaceAuth)
+import Incentknow.Data.Entities (SpaceAuthority)
 import Incentknow.Molecules.AuthMenu as AuthMenu
 import Incentknow.Molecules.Setting (SettingOutput, SettingQuery)
 import Incentknow.Molecules.Setting as Setting
@@ -22,9 +22,9 @@ component :: forall t3.
   MonadAff t3 => Behaviour t3 => H.Component HH.HTML SettingQuery
                                    { desc :: String
                                    , disabled :: Boolean
-                                   , submit :: Maybe SpaceAuth -> Aff (Either String (Record ()))
+                                   , submit :: Maybe SpaceAuthority -> Aff (Either String (Record ()))
                                    , title :: String
-                                   , value :: Maybe SpaceAuth
+                                   , value :: Maybe SpaceAuthority
                                    }
                                    SettingOutput
                                    t3

@@ -55,4 +55,4 @@ mysql -u docker -h 34.146.76.189 -p21280712 incentknow < dbdump.sql
 
 # APIテスト
 curl -sS -w '\n' -X POST 'localhost:8081/getPublishedSpaces' --data '[]' -XPOST
-curl -sS -w '\n' -X POST '0.0.0.0:8081/getPublishedSpaces' --data '[]' -XPOST
+curl -sS -w '\n' -X POST '34.146.76.189:8081/getPublishedSpaces' --data '[]' -XPOST

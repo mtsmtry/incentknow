@@ -9,35 +9,35 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (SpaceAuth(..))
+import Incentknow.Data.Entities (SpaceAuthority(..))
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
 
 type Input
-  = { value :: Maybe SpaceAuth
+  = { value :: Maybe SpaceAuthority
     , disabled :: Boolean
     }
 
 type State
-  = { auth :: Maybe SpaceAuth
+  = { auth :: Maybe SpaceAuthority
     , disabled :: Boolean
     }
 
 data Action
   = Initialize
   | HandleInput Input
-  | Change (Maybe SpaceAuth)
+  | Change (Maybe SpaceAuthority)
 
 type Slot p
   = forall q. H.Slot q Output p
 
 type ChildSlots
-  = ( selectMenu :: SelectMenu.Slot SpaceAuth Unit
+  = ( selectMenu :: SelectMenu.Slot SpaceAuthority Unit
     )
 
 type Output
-  = Maybe SpaceAuth
+  = Maybe SpaceAuthority
 
 component :: forall q m. Behaviour m => MonadAff m => H.Component HH.HTML q Input Output m
 component =
@@ -54,20 +54,20 @@ component =
     }
 
 type Item
-  = { id :: SpaceAuth
+  = { id :: SpaceAuthority
     , name :: String
     , desc :: String
     }
 
 authItems :: Array Item
 authItems =
-  [ { id: SpaceAuthNone, name: "None", desc: "なし" }
-  , { id: SpaceAuthVisible, name: "Visible", desc: "スペースの名前や説明を閲覧できます" }
-  , { id: SpaceAuthVisible, name: "Readable", desc: "コンテンツやメンバーの一覧を閲覧できます" }
-  , { id: SpaceAuthWritable, name: "Writable", desc: "コンテンツを投稿できます" }
+  [ { id: SpaceAuthorityNone, name: "None", desc: "なし" }
+  , { id: SpaceAuthorityVisible, name: "Visible", desc: "スペースの名前や説明を閲覧できます" }
+  , { id: SpaceAuthorityReadable, name: "Readable", desc: "コンテンツやメンバーの一覧を閲覧できます" }
+  , { id: SpaceAuthorityWritable, name: "Writable", desc: "コンテンツを投稿できます" }
   ]
 
-toSelectMenuItem :: Item -> SelectMenuItem SpaceAuth
+toSelectMenuItem :: Item -> SelectMenuItem SpaceAuthority
 toSelectMenuItem item =
   { id: item.id
   , name: item.name

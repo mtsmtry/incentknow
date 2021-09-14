@@ -67,7 +67,7 @@ regulation_ = SProxy :: SProxy "regulation"
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  centerLayout { leftSide: [], rightSide: [] }
+  centerLayout { css: "", leftSide: [], rightSide: [] }
     [ creationPage { title: "新しいスペースを作成", desc: "スペースは、コンテンツとフォーマットを保持します。また、スペースではコンテンツとフォーマットの閲覧および編集の権限を管理するメンバーを保持します。" }
       [ defineText { label: "表示名", value: state.displayName, onChange: ChangeDisplayName }
       , define "ID"

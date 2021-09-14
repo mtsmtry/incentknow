@@ -1,12 +1,68 @@
 import { SelectQueryBuilder } from "typeorm";
 import { isNumber } from "util";
+import { Container } from "../../../entities/container/Container";
 import { Content, ContentId, ContentSk } from "../../../entities/content/Content";
 import { Format, FormatId, FormatSk } from "../../../entities/format/Format";
 import { Material, MaterialId, MaterialSk } from "../../../entities/material/Material";
-import { Space, SpaceAuth, SpaceId, SpaceSk } from "../../../entities/space/Space";
+import { Space, SpaceAuthority, SpaceId, SpaceSk } from "../../../entities/space/Space";
 import { SpaceMember } from "../../../entities/space/SpaceMember";
 import { UserSk } from "../../../entities/user/User";
-import { InternalError, NotFoundEntity } from "../../../services/Errors";
+import { Authority } from "../../../interfaces/content/Content";
+import { LackOfAuthority, NotFoundEntity } from "../../../services/Errors";
+
+export function getAuthority(auth: SpaceAuthority) {
+    switch (auth) {
+        case SpaceAuthority.NONE:
+            return Authority.NONE;
+        case SpaceAuthority.VISIBLE:
+            return Authority.NONE;
+        case SpaceAuthority.READABLE:
+            return Authority.READABLE;
+        case SpaceAuthority.WRITABLE:
+            return Authority.WRITABLE;
+    }
+}
+
+export function checkAuthority(target: Authority, auth: Authority) {
+    if (auth == Authority.NONE) {
+        return;
+    }
+    switch (target) {
+        case Authority.NONE:
+            throw new LackOfAuthority();
+            break;
+        case Authority.READABLE:
+            if (auth == Authority.WRITABLE) {
+                throw new LackOfAuthority();
+            }
+            break;
+        case Authority.WRITABLE:
+            break;
+    }
+}
+
+export function checkSpaceAuthority(target: SpaceAuthority, auth: SpaceAuthority) {
+    if (auth == SpaceAuthority.NONE) {
+        return;
+    }
+    switch (target) {
+        case SpaceAuthority.NONE:
+            throw new LackOfAuthority();
+            break;
+        case SpaceAuthority.VISIBLE:
+            if (auth == SpaceAuthority.READABLE || auth == SpaceAuthority.WRITABLE) {
+                throw new LackOfAuthority();
+            }
+            break;
+        case SpaceAuthority.READABLE:
+            if (auth == SpaceAuthority.WRITABLE) {
+                throw new LackOfAuthority();
+            }
+            break;
+        case SpaceAuthority.WRITABLE:
+            break;
+    }
+}
 
 export class AuthorityQuery {
     constructor(
@@ -14,66 +70,36 @@ export class AuthorityQuery {
         private members: SelectQueryBuilder<SpaceMember>,
         private formats: SelectQueryBuilder<Format>,
         private contents: SelectQueryBuilder<Content>,
-        private materials: SelectQueryBuilder<Material>) {
+        private materials: SelectQueryBuilder<Material>,
+        private containers: SelectQueryBuilder<Container>) {
     }
 
-    async getSpaceAuthByEntity(auth: SpaceAuth, userId: UserSk | null, space: Space) {
-        const belongSpace = async () => {
-            if (!userId) {
-                return false;
-            }
-            const member = await this.members.where({ userId, spaceId: space.id }).getOne();
-            return Boolean(member);
-        };
-
-        switch (auth) {
-            case SpaceAuth.NONE:
-                return true;
-
-            case SpaceAuth.VISIBLE:
-                switch (space.defaultAuthority) {
-                    case SpaceAuth.NONE:
-                        return await belongSpace();
-                    case SpaceAuth.VISIBLE:
-                    case SpaceAuth.READABLE:
-                    case SpaceAuth.WRITABLE:
-                        return true;
-                }
-
-            case SpaceAuth.READABLE:
-                switch (space.defaultAuthority) {
-                    case SpaceAuth.NONE:
-                    case SpaceAuth.VISIBLE:
-                        return await belongSpace();
-                    case SpaceAuth.READABLE:
-                    case SpaceAuth.WRITABLE:
-                        return true;
-                }
-
-            case SpaceAuth.WRITABLE:
-                switch (space.defaultAuthority) {
-                    case SpaceAuth.NONE:
-                    case SpaceAuth.VISIBLE:
-                    case SpaceAuth.READABLE:
-                        return await belongSpace();
-                    case SpaceAuth.WRITABLE:
-                        return true;
-                }
-        }
+    async getReadableContainers(userId: UserSk) {
+        const containers = await this.members
+            .where({ userId })
+            .leftJoinAndSelect("x.space", "space")
+            .leftJoinAndSelect("space.containers", "containers")
+            .getMany();
+        return containers.map(x => x.space.containers).reduce((p, x) => { p.push(...x); return p });
     }
 
-    async getSpaceAuth(auth: SpaceAuth, userId: UserSk | null, spaceId: SpaceSk | SpaceId): Promise<[boolean, Space]> {
+    async getSpaceAuthority(userId: UserSk | null, spaceId: SpaceSk | SpaceId): Promise<[SpaceAuthority, Space]> {
         const where = isNumber(spaceId) ? { id: spaceId } : { entityId: spaceId };
         const space = await this.spaces.where(where).getOne();
         if (!space) {
             throw new NotFoundEntity();
         }
-        const result = await this.getSpaceAuthByEntity(auth, userId, space);
-        return [result, space];
+        if (userId) {
+            const member = await this.members.where({ userId, spaceId: space.id }).getOne();
+            if (member) {
+                return [SpaceAuthority.WRITABLE, space];
+            }
+        }
+        return [space.defaultAuthority, space];
     }
 
-    async getFormatAuth(auth: SpaceAuth, userId: UserSk | null, formatId: FormatSk | FormatId): Promise<[boolean, Format]> {
-        const where = isNumber(formatId) ? { id: formatId } : { entityId: formatId };
+    async getFormatAuthority(userId: UserSk | null, contentId: FormatSk | FormatId): Promise<[Authority, Format]> {
+        const where = isNumber(contentId) ? { id: contentId } : { entityId: contentId };
         const format = await this.formats
             .where(where)
             .leftJoinAndSelect("x.space", "space")
@@ -81,11 +107,16 @@ export class AuthorityQuery {
         if (!format) {
             throw new NotFoundEntity();
         }
-        const result = await this.getSpaceAuthByEntity(auth, userId, format.space);
-        return [result, format];
+        if (userId) {
+            const member = await this.members.where({ userId, spaceId: format.space.id }).getOne();
+            if (member) {
+                return [Authority.WRITABLE, format];
+            }
+        }
+        return [getAuthority(format.space.defaultAuthority), format];
     }
 
-    async getContentAuth(auth: SpaceAuth, userId: UserSk | null, contentId: ContentSk | ContentId): Promise<[boolean, Content]> {
+    async getContentAuthority(userId: UserSk | null, contentId: ContentSk | ContentId): Promise<[Authority, Content]> {
         const where = isNumber(contentId) ? { id: contentId } : { entityId: contentId };
         const content = await this.contents
             .where(where)
@@ -95,11 +126,16 @@ export class AuthorityQuery {
         if (!content) {
             throw new NotFoundEntity();
         }
-        const result = await this.getSpaceAuthByEntity(auth, userId, content.container.space);
-        return [result, content];
+        if (userId) {
+            const member = await this.members.where({ userId, spaceId: content.container.space.id }).getOne();
+            if (member) {
+                return [Authority.WRITABLE, content];
+            }
+        }
+        return [getAuthority(content.container.space.defaultAuthority), content];
     }
 
-    async getMaterialAuth(auth: SpaceAuth, userId: UserSk | null, materialId: MaterialSk | MaterialId): Promise<[boolean, Material]> {
+    async getMaterialAuthority(userId: UserSk | null, materialId: MaterialSk | MaterialId): Promise<[Authority, Material]> {
         const where = isNumber(materialId) ? { id: materialId } : { entityId: materialId };
         const material = await this.materials
             .where(where)
@@ -111,14 +147,16 @@ export class AuthorityQuery {
         if (!material) {
             throw new NotFoundEntity();
         }
-        let result = false;
-        if (material.content?.container.space) {
-            result = await this.getSpaceAuthByEntity(auth, userId, material.content?.container.space);
-        } else if (material.space) {
-            result = await this.getSpaceAuthByEntity(auth, userId, material.space);
-        } else {
-            throw new InternalError();
+        const space = material.content?.container.space || material.space;
+        if (!space) {
+            return [Authority.NONE, material];
         }
-        return [result, material];
+        if (userId) {
+            const member = await this.members.where({ userId, spaceId: space.id }).getOne();
+            if (member) {
+                return [Authority.WRITABLE, material];
+            }
+        }
+        return [getAuthority(space.defaultAuthority), material];
     }
 }

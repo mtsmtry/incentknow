@@ -12,9 +12,8 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Icon (formatWithIcon)
-import Incentknow.Atoms.Inputs (menuPositiveButton)
 import Incentknow.Data.Content (getContentSemanticData)
-import Incentknow.Data.Entities (FocusedContent, Type(..))
+import Incentknow.Data.Entities (Authority(..), FocusedContent, Type(..))
 import Incentknow.Data.Property (Property, mkProperties, toPropertyComposition, toTypedValue)
 import Incentknow.HTML.Utils (css, link, maybeElem, whenElem)
 import Incentknow.Organisms.Content.ValueViewer as Value
@@ -73,7 +72,10 @@ render state =
                     [ link NavigateRoute (Container state.content.format.space.displayId state.content.format.displayId)
                         []
                         [ formatWithIcon state.content.format ]
-                    , menuPositiveButton "編集" (Navigate $ EditDraft $ ContentTarget $ TargetContent state.content.contentId)
+                    , whenElem (state.content.authority == AuthorityWritable) \_->
+                        link NavigateRoute (EditDraft $ ContentTarget $ TargetContent state.content.contentId)
+                          [ css "edit" ]
+                          [ HH.text "編集" ]
                     ]
                 , HH.div [ css "side-user" ]
                     [ HH.slot (SProxy :: SProxy "userCard") unit UserCard.component 

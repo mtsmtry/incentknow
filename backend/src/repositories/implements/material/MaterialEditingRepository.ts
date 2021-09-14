@@ -211,10 +211,12 @@ export class MaterialEditingCommand implements BaseCommand {
         if (state == MaterialEditingState.EDITING) {
             throw "Editing is not closed state";
         }
-        await Promise.all([
-            this.drafts.update(draft.id, { currentEditingId: null }),
-            this.editings.update(draft.currentEditingId, { state })
-        ]);
+        if (draft.currentEditingId) {
+            await Promise.all([
+                this.drafts.update(draft.id, { currentEditingId: null }),
+                this.editings.update(draft.currentEditingId, { state })
+            ]);
+        }
     }
 
     async makeDraftContent(draftId: MaterialDraftSk, materialId: MaterialSk) {

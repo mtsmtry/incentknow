@@ -1,9 +1,10 @@
-import { MaterialId, MaterialType } from '../../entities/material/Material';
+import { MaterialId } from '../../entities/material/Material';
 import { MaterialCommitId } from '../../entities/material/MaterialCommit';
 import { MaterialDraftId } from '../../entities/material/MaterialDraft';
 import { MaterialEditingState } from '../../entities/material/MaterialEditing';
 import { MaterialSnapshotId } from '../../entities/material/MaterialSnapshot';
-import { SpaceAuth, SpaceId } from '../../entities/space/Space';
+import { SpaceAuthority, SpaceId } from '../../entities/space/Space';
+import { Authority } from '../../interfaces/content/Content';
 import { FocusedMaterial, MaterialData, toMaterialData } from '../../interfaces/material/Material';
 import { FocusedMaterialCommit, RelatedMaterialCommit } from '../../interfaces/material/MaterialCommit';
 import { FocusedMaterialDraft, RelatedMaterialDraft } from '../../interfaces/material/MaterialDraft';
@@ -15,6 +16,7 @@ import { MaterialEditingRepository } from '../../repositories/implements/materia
 import { MaterialRepository } from '../../repositories/implements/material/MaterialRepository';
 import { AuthorityRepository } from '../../repositories/implements/space/AuthorityRepository';
 import { SpaceRepository } from '../../repositories/implements/space/SpaceRepository';
+import { checkAuthority, checkSpaceAuthority } from '../../repositories/queries/space/AuthorityQuery';
 import { BaseService } from '../BaseService';
 import { InternalError, LackOfAuthority, NotFoundEntity, WrongTargetState } from '../Errors';
 import { ServiceContext } from '../ServiceContext';
@@ -33,6 +35,9 @@ export class MaterialService extends BaseService {
 
     async startMaterialEditing(materialId: MaterialId, basedCommitId: MaterialCommitId | null): Promise<RelatedMaterialDraft> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const [auth] = await this.auth.fromAuths().getMaterialAuthority(this.ctx.userId, materialId);
+            checkAuthority(auth, Authority.WRITABLE);
+
             const material = await this.mat.fromMaterials(trx).byEntityId(materialId).joinCommitAndSelectData().getNeededOne();
             const basedCommit = basedCommitId ? await this.mat.fromCommits(trx).byEntityId(basedCommitId).getNeededOne() : null;
             const draft = await this.edit.createCommand(trx).getOrCreateActiveDraft(userId, material.id, toMaterialData(material.materialType, material.commit.data), basedCommit);
@@ -42,6 +47,11 @@ export class MaterialService extends BaseService {
 
     async createNewMaterialDraft(spaceId: SpaceId | null, materialData: MaterialData): Promise<RelatedMaterialDraft> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            if (spaceId) {
+                const [auth] = await this.auth.fromAuths().getSpaceAuthority(userId, spaceId);
+                checkSpaceAuthority(auth, SpaceAuthority.WRITABLE);
+            }
+
             const spaceSk = spaceId ? await this.spaces.fromSpaces(trx).byEntityId(spaceId).selectId().getNeededOne() : null;
             const draft = await this.edit.createCommand(trx).createActiveBlankDraft(userId, spaceSk, materialData);
             return await draft.getRelated();
@@ -54,6 +64,10 @@ export class MaterialService extends BaseService {
             const draft = await this.edit.fromDrafts().byEntityId(materialDraftId).joinSnapshotAndSelectData().getNeededOne();
             if (!draft.currentEditingId) {
                 throw new WrongTargetState("The state of this material draft is not editing");
+            }
+
+            if (draft.userId != userId) {
+                throw new LackOfAuthority();
             }
 
             // update content draft
@@ -74,13 +88,12 @@ export class MaterialService extends BaseService {
             if (!currentEditing) {
                 throw new WrongTargetState();
             }
-            const editing = await this.edit.fromEditings().byId(currentEditing.id).getNeededOne();
+            const editing = await this.edit.fromEditings(trx).byId(currentEditing.id).getNeededOne();
 
             if (draft.materialId) {
-                const [auth, material] = await this.auth.fromAuths(trx).getMaterialAuth(SpaceAuth.WRITABLE, userId, draft.materialId);
-                if (!auth) {
-                    throw new LackOfAuthority();
-                }
+                const [auth, material] = await this.auth.fromAuths(trx).getMaterialAuthority(this.ctx.userId, draft.materialId);
+                checkAuthority(auth, Authority.WRITABLE);
+
                 if (material.contentId) {
                     await this.contents.createCommand(trx).updateContentTimestamp(material.contentId);
                 }
@@ -91,10 +104,8 @@ export class MaterialService extends BaseService {
                 ]);
 
             } else if (draft.intendedSpaceId) {
-                const [auth, _] = await this.auth.fromAuths(trx).getSpaceAuth(SpaceAuth.WRITABLE, userId, draft.intendedSpaceId);
-                if (!auth) {
-                    throw new LackOfAuthority();
-                }
+                const [auth] = await this.auth.fromAuths(trx).getSpaceAuthority(userId, draft.intendedSpaceId);
+                checkSpaceAuthority(auth, SpaceAuthority.WRITABLE);
 
                 const material = await this.mat.createCommand(trx).createMaterialInSpace(draft.intendedSpaceId, userId, toMaterialData(draft.intendedMaterialType, currentEditing.snapshot.data), editing.id);
                 await Promise.all([
@@ -107,9 +118,11 @@ export class MaterialService extends BaseService {
     }
 
     async getMaterial(materialId: MaterialId): Promise<FocusedMaterial> {
-        const userId = this.ctx.getAuthorized();
+        const [auth] = await this.auth.fromAuths().getMaterialAuthority(this.ctx.userId, materialId);
+        checkAuthority(auth, Authority.WRITABLE);
+
         const [buildMaterial, rawMaterial] = await this.mat.fromMaterials().byEntityId(materialId).selectFocused().getNeededOneWithRaw();
-        const draft = await this.edit.fromDrafts().byUser(userId).byMaterial(rawMaterial.id).selectRelated().getNeededOne();
+        const draft = this.ctx.userId ? await this.edit.fromDrafts().byUser(this.ctx.userId).byMaterial(rawMaterial.id).selectRelated().getNeededOne() : null;
         return buildMaterial(draft);
     }
 
@@ -127,13 +140,22 @@ export class MaterialService extends BaseService {
         return material;
     }
 
+    async cancelMaterialDraft(draftId: MaterialDraftId): Promise<{}> {
+        return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const draft = await this.edit.fromDrafts().byEntityId(draftId).getNeededOne();
+            if (draft.userId != userId) {
+                throw new LackOfAuthority();
+            }
+            await this.edit.createCommand(trx).closeEditing(draft, MaterialEditingState.CANCELD);
+            return {};
+        });
+    }
+
     async getMaterialCommits(materialId: MaterialId): Promise<RelatedMaterialCommit[]> {
-        const userId = this.ctx.getAuthorized();
+        const [auth] = await this.auth.fromAuths().getMaterialAuthority(this.ctx.userId, materialId);
+        checkAuthority(auth, Authority.READABLE);
+
         const material = await this.mat.fromMaterials().byEntityId(materialId).getNeededOne();
-        if (material.spaceId) {
-            const space = await this.spaces.fromSpaces().byId(material.spaceId).getNeededOne();
-            await this.auth.fromAuths().getSpaceAuthByEntity(SpaceAuth.READABLE, userId, space);
-        }
         return await this.mat.fromCommits().byMaterial(material.id).selectRelated().getMany();
     }
 
@@ -147,14 +169,22 @@ export class MaterialService extends BaseService {
     }
 
     async getMaterialSnapshot(snapshotId: MaterialSnapshotId): Promise<FocusedMaterialSnapshot> {
-        const snapshot = await this.edit.fromSnapshots().byEntityId(snapshotId).selectFocused().getNeededOne();
+        const userId = this.ctx.getAuthorized();
+        const [snapshot, raw] = await this.edit.fromSnapshots().byEntityId(snapshotId).joinEditingAndDraft().selectFocused().getNeededOneWithRaw();
         if (!snapshot) {
             throw new NotFoundEntity();
+        }
+        if (raw.editing.draft.userId != userId) {
+            throw new LackOfAuthority();
         }
         return snapshot;
     }
 
     async getMaterialCommit(commitId: MaterialCommitId): Promise<FocusedMaterialCommit> {
-        return await this.mat.fromCommits().byEntityId(commitId).selectFocused().getNeededOne();
+        const [commit, raw] = await this.mat.fromCommits().byEntityId(commitId).selectFocused().getNeededOneWithRaw();
+
+        const [auth] = await this.auth.fromAuths().getMaterialAuthority(this.ctx.userId, raw.materialId);
+        checkAuthority(auth, Authority.READABLE);
+        return commit;
     }
 }

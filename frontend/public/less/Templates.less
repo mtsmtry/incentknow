@@ -123,6 +123,12 @@
 
 .tmp-tab-page {
     >.header {
+        >i {
+            margin-right: 5px;
+        }
+    }
+
+    >.header {
         .section;
         padding: 0px;
 
@@ -135,25 +141,46 @@
 
             >.tab-item {
                 .unselectable;
-                color        : #000;
-                cursor       : pointer;
-                text-align   : center;
-                padding      : 8px 10px;
+                color     : #000;
+                cursor    : pointer;
+                text-align: center;
+
+                padding-top   : 9.5px;
+                padding-bottom: 6.5px;
+                padding-left  : 10px;
+                padding-right : 10px;
+
                 margin-left  : 5px;
                 margin-right : 5px;
                 margin-top   : auto;
                 border-bottom: 3px solid transparent;
+
                 font-size    : 15px;
+                line-height  : 17px;
+
+                &.alphabet {
+                    padding-top   : 8px;
+                    padding-bottom: 8px;
+                }
 
                 &:hover:not(.selected) {
                     border-bottom: 3px solid #d1d5da;
                     transition   : .2s ease;
                 }
-            }
 
-            >.selected {
-                border-bottom: 3px solid #008abc;
-                color        : #008abc;
+                >.count {
+                    padding-left: 5px;
+                    color       : rgba(0, 0, 0, 0.5);
+                }
+
+                &.selected {
+                    border-bottom: 3px solid #008abc;
+                    color        : #008abc;
+
+                    >.count {
+                        color: rgba(0, 0, 0, 0.5);
+                    }
+                }
             }
 
             >.space {
@@ -172,13 +199,18 @@
 }
 
 .tmp-upper-tab-page {
+    >.header {
+        >i {
+            margin-right: 5px;
+        }
+    }
 
     >.header {
         .section;
-        border-bottom-left-radius: 0px;
+        border-bottom-left-radius : 0px;
         border-bottom-right-radius: 0px;
-        border-bottom-width: 0px;
-        padding: 0px;
+        border-bottom-width       : 0px;
+        padding                   : 0px;
 
         >.top {}
 
@@ -207,7 +239,7 @@
 
             >.selected {
                 border-top: 3px solid #008abc;
-                color        : #008abc;
+                color     : #008abc;
             }
 
             >.space {
@@ -224,6 +256,12 @@
 }
 
 .tmp-vertical-tab-page {
+    >.header {
+        >i {
+            margin-right: 5px;
+        }
+    }
+
     >.body {
         display: flex;
 
@@ -237,7 +275,7 @@
                 .unselectable;
                 color        : #000;
                 cursor       : pointer;
-                text-align   : center;
+                text-align   : left;
                 padding      : 8px 10px;
                 border-bottom: 3px solid transparent;
                 font-size    : 15px;
@@ -246,11 +284,20 @@
                     border-bottom: 3px solid #d1d5da;
                     transition   : .2s ease;
                 }
-            }
 
-            >.selected {
-                border-bottom: 3px solid #008abc;
-                color        : #008abc;
+                >.count {
+                    padding-left: 5px;
+                    color       : rgba(0, 0, 0, 0.5);
+                }
+
+                &.selected {
+                    border-bottom: 3px solid #008abc;
+                    color        : #008abc;
+
+                    >.count {
+                        color: rgba(0, 0, 0, 0.5);
+                    }
+                }
             }
 
             >.space {

@@ -1,5 +1,6 @@
 import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { NewTypeInt, NewTypeString } from "../../Implication";
+import { Container } from "../container/Container";
 import { User, UserSk } from "../user/User";
 import { CreatedAt, createDisplayId, createEntityId, DisplayId, DisplayName, EntityId } from '../Utils';
 import { SpaceFollow } from "./SpaceFollow";
@@ -10,7 +11,7 @@ export enum MembershipMethod {
     APP = "app"
 }
 
-export enum SpaceAuth {
+export enum SpaceAuthority {
     NONE = "none",
     VISIBLE = "visible",
     READABLE = "readable",
@@ -51,7 +52,7 @@ export class Space {
     description: string;
 
     @Column("varchar", { length: 100, nullable: true })
-    homeUrl: string | null;
+    headerImage: string | null;
 
     @Column({
         type: "enum",
@@ -65,16 +66,19 @@ export class Space {
 
     @Column({
         type: "enum",
-        enum: SpaceAuth,
-        default: SpaceAuth.NONE
+        enum: SpaceAuthority,
+        default: SpaceAuthority.NONE
     })
-    defaultAuthority: SpaceAuth;
+    defaultAuthority: SpaceAuthority;
 
-    @OneToMany(type => SpaceFollow, s => s.space, { onDelete: "CASCADE" })
+    @OneToMany(type => SpaceFollow, s => s.space)
     followers: SpaceFollow[];
 
-    @OneToMany(type => SpaceMember, s => s.space, { onDelete: "CASCADE" })
+    @OneToMany(type => SpaceMember, s => s.space)
     members: SpaceMember[];
+
+    @OneToMany(type => Container, s => s.space)
+    containers: Container[];
 
     @BeforeInsert()
     onInsert() {

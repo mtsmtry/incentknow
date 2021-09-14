@@ -11,7 +11,7 @@ import Halogen.HTML as HH
 import Incentknow.API (getSpaceMembers)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigateRoute)
-import Incentknow.Atoms.Icon (remoteWith)
+import Incentknow.Atoms.Icon (remoteArrayWith, remoteWith)
 import Incentknow.Data.Entities (IntactSpaceMember)
 import Incentknow.Data.Ids (SpaceId)
 import Incentknow.HTML.Utils (css, whenElem)
@@ -50,7 +50,7 @@ initialState input = { spaceId: input.spaceId, isAdmin: input.isAdmin, members: 
 render :: forall m. MonadAff m => Behaviour m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div [ css "page-space-member-list" ]
-    [ remoteWith state.members $ renderMembers state ]
+    [ remoteArrayWith state.members $ renderMembers state ]
 
 renderMembers :: forall m. MonadAff m => Behaviour m => State -> Array IntactSpaceMember -> H.ComponentHTML Action ChildSlots m
 renderMembers state members =

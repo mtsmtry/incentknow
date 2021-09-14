@@ -1,3 +1,4 @@
+import { Express } from "express";
 
 export function Data() {
     return (fnc: Function) => { };
@@ -18,6 +19,8 @@ class NewTypeIdentity<T extends string> {
 type NewType<T, Identity extends string> = NewTypeIdentity<Identity> & T;
 
 export type Int = number;
+
+export type Blob = Express.Multer.File;
 
 export type NewTypeInt<Identity extends string> = NewType<number, Identity>;
 

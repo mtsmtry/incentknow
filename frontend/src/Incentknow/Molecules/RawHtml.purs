@@ -57,7 +57,9 @@ component =
             Just el -> do
               liftEffect $ setHTML el state.html
       pure unit
-    Receive input -> H.put $ initialState input
+    Receive input -> do
+      H.put $ initialState input
+      handleAction Initialize
 
   render :: State -> H.ComponentHTML Action () m
   render state =

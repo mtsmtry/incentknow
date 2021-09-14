@@ -12,9 +12,9 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Incentknow.API (getContainers, getFormats)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote, zip)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
-import Incentknow.Atoms.Icon (formatWithIcon, icon, iconButton, remoteWith)
+import Incentknow.Atoms.Icon (formatWithIcon, icon, iconButton, remoteArrayWith, remoteWith)
 import Incentknow.Atoms.Inputs (menuPositiveButton)
 import Incentknow.Data.Entities (FocusedContainer, RelatedFormat)
 import Incentknow.Data.Ids (FormatDisplayId, SpaceDisplayId, SpaceId)
@@ -89,9 +89,8 @@ render state =
                     [ css "creation" ] [ HH.text "新しいフォーマット ", icon "fas fa-plus-circle" ]
                 ]
             ]
-        , remoteWith state.containers \containers->
-            remoteWith state.formats \formats->
-              HH.tbody [] (map renderItem $ zipContainerAndFormat containers formats)
+        , remoteArrayWith (map (\(Tuple containers formats)-> zipContainerAndFormat containers formats) $ zip state.containers state.formats) \items->
+            HH.tbody [] (map renderItem items)
         ]
     ]
   where

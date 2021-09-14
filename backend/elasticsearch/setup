@@ -1,0 +1,28 @@
+curl -X PUT 'localhost:9200/contents' -H "Content-type: application/json" -d '{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "default": {
+          "type": "custom",
+          "tokenizer": "kuromoji_tokenizer"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "containerId" : {
+        "type": "keyword"
+      },
+      "formatId" : {
+        "type": "keyword"
+      },
+      "isPublic" : {
+        "type": "boolean"
+      },
+      "text" : {
+        "type": "text"
+      }
+    }
+  }
+}'

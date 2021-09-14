@@ -165,7 +165,7 @@ render state =
           HH.div_
             [ --whenElem (isNothing state.typeOptions.format) \_ ->
                 HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
-                  { value: state.selectedSpaceId, disabled: false }
+                  { value: state.selectedSpaceId, disabled: state.disabled }
                   (Just <<< ChangeSpace)
             , HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component
                 { value: map _.formatId state.typeOptions.format, filter: maybe FormatMenu.None FormatMenu.SpaceBy state.selectedSpaceId, disabled: state.disabled }
@@ -175,7 +175,7 @@ render state =
           HH.div_
             [ --whenElem (isNothing state.typeOptions.format) \_ ->
                 HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
-                  { value: state.selectedSpaceId, disabled: false }
+                  { value: state.selectedSpaceId, disabled: state.disabled }
                   (Just <<< ChangeSpace)
             , HH.slot (SProxy :: SProxy "formatMenu") unit FormatMenu.component
                 { value: map _.formatId state.typeOptions.format, filter: maybe FormatMenu.None FormatMenu.SpaceByAndHasSemanticId state.selectedSpaceId, disabled: state.disabled }

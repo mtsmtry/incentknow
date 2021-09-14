@@ -1,5 +1,6 @@
+import * as uuid from "uuid";
 import { User, UserDisplayId, UserSk } from "../../../entities/user/User";
-import { UserQuery, UserQueryFromEntity } from "../../queries/user/UserQuery";
+import { UserQuery } from "../../queries/user/UserQuery";
 import { BaseCommand, BaseRepository, Command, Repository } from "../../Repository";
 import { Transaction } from "../../Transaction";
 
@@ -24,10 +25,19 @@ export class UserCommand implements BaseCommand {
 
     async createUser(email: string, displayName: string, passwordHash: string) {
         let user = this.users.create({
-            email, displayName, passwordHash
+            email, displayName, passwordHash, certificationToken: uuid.v4()
         });
         user = await this.users.save(user);
-        return new UserQueryFromEntity(user);
+        return user;
+    }
+
+    async activateUser(certificationToken: string) {
+        const user = await this.users.findOne({ certificationToken });
+        if (!user) {
+            throw new Error("Wrong certification token");
+        }
+        await this.users.update(user.id, { certificationToken: null });
+        return user;
     }
 
     async setUserDisplayName(userId: UserSk, displayName: string) {
@@ -46,7 +56,10 @@ export class UserCommand implements BaseCommand {
         await this.users.update(userId, { email });
     }
 
-    async setUserIcon(userId: UserSk, iconUrl: string) {
-        await this.users.update(userId, { iconUrl });
+    async setUserIcon(userId: UserSk, iconImage: string) {
+        await this.users.update(userId, { iconImage });
+    }
+    async deleteUser(userId: UserSk) {
+        await this.users.delete(userId);
     }
 }

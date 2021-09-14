@@ -7,19 +7,20 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
+import Incentknow.API.Static (getHeaderImageUrl)
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Atoms.Icon (spaceScopeIcon)
-import Incentknow.Data.Entities (FocusedSpace)
+import Incentknow.Data.Entities (RelatedSpace)
 import Incentknow.HTML.Utils (css, link, whenElem)
 import Incentknow.Route (Route(..), SpaceTab(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
-  = { value :: Array FocusedSpace
+  = { value :: Array RelatedSpace
     }
 
 type State
-  = { spaces :: Array FocusedSpace
+  = { spaces :: Array RelatedSpace
     }
 
 data Action
@@ -50,20 +51,22 @@ render state =
     [ css "org-space-cardview" ]
     (map renderItem state.spaces)
   where
-  renderItem :: FocusedSpace -> H.ComponentHTML Action ChildSlots m
+  renderItem :: RelatedSpace -> H.ComponentHTML Action ChildSlots m
   renderItem space =
     link Navigate (Space space.displayId SpaceHome)
       [ css "item" ]
       [ HH.div [ css "upper"]
-        [ HH.img [ HP.src "/assets/imgs/default.jpg" ]
+        [ HH.img [ HP.src $ getHeaderImageUrl space.headerImage ]
         ]
       , HH.div [ css "lower" ]
-        [ HH.span [ css "title" ] [ HH.text space.displayName ]
-        , HH.span [ css "scope" ] [ spaceScopeIcon space ]
-        , HH.span [ css "info" ] 
-            [ whenElem (space.memberCount > 1) \_->
-                HH.text $ show space.memberCount <> "人のメンバー "
-            , HH.text $ show space.contentCount <> "件のコンテンツ"
+        [ HH.div [ css "left" ]
+            [ HH.div [ css "title" ] [ HH.text space.displayName ]
+            , HH.div [ css "info" ] 
+                [ HH.text space.description
+                ]
+            ]
+        , HH.div [ css "right" ]
+            [ HH.div [ css "scope" ] [ spaceScopeIcon space ]
             ]
         ]
       ]

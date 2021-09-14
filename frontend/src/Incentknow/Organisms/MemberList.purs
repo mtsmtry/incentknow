@@ -1,6 +1,7 @@
 module Incentknow.Organisms.MemberList where
 
 import Prelude
+
 import Data.DateTime.Utils (fromTimestampToString)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Effect.Aff.Class (class MonadAff)
@@ -8,8 +9,10 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
+import Incentknow.API.Static (getIconUrl)
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Data.Entities (IntactSpaceMember, MemberType(..))
+import Incentknow.HTML.DateTime (elapsedTime)
 import Incentknow.HTML.Utils (css, link)
 import Incentknow.Route (Route)
 import Incentknow.Route as R
@@ -51,9 +54,9 @@ initialState input = { members: input.members, isAdmin: input.isAdmin }
 
 showMemberType :: IntactSpaceMember -> String
 showMemberType member = case member.type of
-  Owner -> "オーナー"
+  MemberTypeOwner -> "オーナー"
   -- "admin" -> "管理者"
-  Normal -> "メンバー"
+  MemberTypeNormal -> "メンバー"
 
 -- "pending" -> "メンバー申請保留中"
 -- _ -> "エラー"
@@ -66,11 +69,12 @@ render state =
   renderItem :: IntactSpaceMember -> H.ComponentHTML Action ChildSlots m
   renderItem member =
     HH.div [ css "item" ]
-      [ linkUser [ css "icon" ] [ HH.img [ HP.src $ fromMaybe "" member.user.iconUrl ] ] -- TODO
+      [ linkUser [ css "icon" ] [ HH.img [ HP.src $ getIconUrl member.user.iconImage ] ] -- TODO
       , HH.div [ css "details" ]
           [ linkUser [ css "username" ] [ HH.text member.user.displayName ]
           , HH.div [ css "info" ] [ HH.text $ showMemberType member ]
-          , HH.text $ fromTimestampToString member.joinedAt <> "に加入しました"
+          , elapsedTime member.joinedAt
+          , HH.text "に加わりました"
           --, whenElem (member.type == "pending" && state.isAdmin) \_->
           --    HH.div []
           --      [ HH.text "メンバーに申請しています"

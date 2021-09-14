@@ -1,16 +1,19 @@
-import { MembershipMethod, Space, SpaceAuth } from "../../entities/space/Space";
+import { MembershipMethod, Space, SpaceAuthority } from "../../entities/space/Space";
 import { Int } from "../../Implication";
+import { RelatedContainer } from "../container/Container";
+import { FocusedContent } from "../content/Content";
+import { IntactActivityBySpace } from "../reactions/Activity";
 import { RelatedUser, toRelatedUser } from "../user/User";
 import { toTimestamp } from "../Utils";
+import { IntactSpaceMember } from "./SpaceMember";
 
 export type SpaceId = string;
 
 export type SpaceDisplayId = string;
 
 export interface AdditionalSpaceInfo {
-    containerCount: Int;
+    containerCount: number;
     memberCount: number;
-    contentCount: number;
     formatCount: number;
 };
 
@@ -20,10 +23,10 @@ export interface RelatedSpace {
     displayName: string;
     description: string;
     createdAt: number;
-    homeUrl: string | null;
+    headerImage: string | null;
     published: boolean;
     membershipMethod: MembershipMethod;
-    defaultAuthority: SpaceAuth;
+    defaultAuthority: SpaceAuthority;
 }
 
 export function toRelatedSpace(space: Space): RelatedSpace {
@@ -33,7 +36,7 @@ export function toRelatedSpace(space: Space): RelatedSpace {
         displayName: space.displayName,
         description: space.description,
         createdAt: toTimestamp(space.createdAt),
-        homeUrl: space.homeUrl,
+        headerImage: space.headerImage,
         published: space.published,
         membershipMethod: space.membershipMethod,
         defaultAuthority: space.defaultAuthority
@@ -47,17 +50,18 @@ export interface FocusedSpace {
     description: string;
     creatorUser: RelatedUser,
     createdAt: number;
-    homeUrl: string | null;
+    headerImage: string | null;
     published: boolean;
     membershipMethod: MembershipMethod;
-    defaultAuthority: SpaceAuth;
+    defaultAuthority: SpaceAuthority;
     containerCount: Int;
     memberCount: Int;
     contentCount: Int;
     formatCount: Int;
+    containers: RelatedContainer[];
 }
 
-export function toFocusedSpace(space: Space, additional: AdditionalSpaceInfo): FocusedSpace {
+export function toFocusedSpace(space: Space, additional: AdditionalSpaceInfo, containers: RelatedContainer[]): FocusedSpace {
     return {
         spaceId: space.entityId,
         displayId: space.displayId,
@@ -65,13 +69,20 @@ export function toFocusedSpace(space: Space, additional: AdditionalSpaceInfo): F
         description: space.description,
         creatorUser: toRelatedUser(space.creatorUser),
         createdAt: toTimestamp(space.createdAt),
-        homeUrl: space.homeUrl,
+        headerImage: space.headerImage,
         published: space.published,
         membershipMethod: space.membershipMethod,
         defaultAuthority: space.defaultAuthority,
         containerCount: additional.containerCount,
         memberCount: additional.memberCount,
-        contentCount: additional.contentCount,
-        formatCount: additional.formatCount
+        contentCount: containers.map(x => x.contentCount).reduce((x, y) => x + y, 0),
+        formatCount: additional.formatCount,
+        containers
     };
+}
+
+export interface IntactSpageHomePage {
+    activities: IntactActivityBySpace[];
+    topics: FocusedContent[];
+    members: IntactSpaceMember[];
 }

@@ -1,26 +1,30 @@
-module Incentknow.Organisms.BoxView where
+module Incentknow.Organisms.FocusedView where
 
 import Prelude
 
 import Data.Array (head, mapWithIndex)
 import Data.Maybe (Maybe(..), maybe)
+import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour, navigateRoute)
-import Incentknow.Data.Entities (RelatedContent)
+import Incentknow.Data.Entities (RelatedContent, FocusedContent)
+import Incentknow.Data.Ids (ContainerId, ContentId)
+import Incentknow.HTML.Utils (css)
+import Incentknow.Organisms.ConpactContentView as ConpactContentView
 import Incentknow.Organisms.Content.Viewer as ContentViewer
 import Incentknow.Route (Route)
 import Incentknow.Templates.Page (section)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
-  = { items :: Array RelatedContent
+  = { value :: Array FocusedContent
     }
 
 type State
-  = { items :: Array RelatedContent
+  = { items :: Array FocusedContent
     }
 
 data Action
@@ -32,7 +36,7 @@ type Slot p
   = forall q. H.Slot q Void p
 
 type ChildSlots
-  = ( contentViewer :: ContentViewer.Slot Int )
+  = ( content :: ConpactContentView.Slot ContentId )
 
 component :: forall q o m. Behaviour m => MonadAff m => MonadEffect m => H.Component HH.HTML q Input o m
 component =
@@ -43,21 +47,21 @@ component =
     }
 
 initialState :: Input -> State
-initialState input = { items: input.items }
+initialState input = { items: input.value }
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div
-    [ ]
-    (mapWithIndex renderContent state.items)
+    [ css "org-focused-view" ]
+    (map renderContent state.items)
   where
-  properties = maybe [] (\x-> x.format.currentStructure.properties) $ head state.items
-
-  renderContent :: Int -> RelatedContent -> H.ComponentHTML Action ChildSlots m
-  renderContent index item =
-    section "page-content"
-      [ --HH.slot (SProxy :: SProxy "contentViewer") index ContentViewer.component 
-        --  { format: item.format, value: item.data } absurd
+  renderContent :: FocusedContent -> H.ComponentHTML Action ChildSlots m
+  renderContent content =
+    HH.div [ css "item" ]
+      [ HH.slot (SProxy :: SProxy "content") content.contentId ConpactContentView.component
+          { value: content
+          }
+          absurd
       ]
 
 handleAction :: forall o m. Behaviour m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit

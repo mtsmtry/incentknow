@@ -7,6 +7,7 @@ import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
 import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
+import Halogen (liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getRelatedFormat, getRelatedStructure, getStructures)
@@ -20,6 +21,7 @@ import Incentknow.Molecules.FormatMenu as FormatMenu
 import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
+import Test.Unit.Console (consoleLog)
 
 type Input
   = { value :: Maybe StructureId
@@ -79,6 +81,7 @@ setInput state input =
     { structureId = input.value
     , filter = input.filter
     , disabled = input.disabled
+    , formatId = if isNothing input.value then Nothing else state.formatId
     }
 
 toSelectMenuItem :: RelatedStructure -> SelectMenuItem StructureId
@@ -127,29 +130,35 @@ handleAction = case _ of
   Initialize -> do
     handleAction Load
   HandleInput input -> do
+    liftEffect $ consoleLog $ "HandleInput"
     state <- H.get
     H.modify_ $ (flip setInput) input
     when (isJust input.value && input.value /= state.structureId) do
       handleAction Load
   Load -> do
+    liftEffect $ consoleLog $ "Load"
     state <- H.get
     for_ state.structureId \structureId->
       callbackQuery GetStructure $ getRelatedStructure structureId
   ChangeFormat maybeFormatId -> do
+    liftEffect $ consoleLog $ "ChangeFormat" <> (fromMaybe "" $ map unwrap maybeFormatId)
     H.modify_ _ { formatId = maybeFormatId }
     when (isNothing maybeFormatId) do
       H.modify_ _  { structureId = Nothing }
     for_ maybeFormatId \formatId ->
       callbackQuery GetFormat $ getRelatedFormat formatId
   ChangeStructure structureId -> do
+    liftEffect $ consoleLog $ "ChangeStructure" <> (fromMaybe "" $ map unwrap structureId)
     H.modify_ _ { structureId = structureId }
     H.raise structureId
   GetFormat fetch -> do
+    liftEffect $ consoleLog $ "GetFormat"
     forRemote fetch \format->
       H.modify_ _ { format = format }
     forItem fetch \format-> do
       H.modify_ _ { structureId = Just format.currentStructureId }
       H.raise $ Just format.currentStructureId
   GetStructure fetch -> do
+    liftEffect $ consoleLog $ "GetStructure"
     forRemote fetch \structure->
       H.modify_ _ { structure = structure, formatId = map _.formatId $ R.toMaybe structure }

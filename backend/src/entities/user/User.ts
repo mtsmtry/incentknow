@@ -34,7 +34,10 @@ export class User {
     email: string;
 
     @Column("varchar", { length: 100, nullable: true })
-    iconUrl: string | null;
+    iconImage: string | null;
+
+    @Column("varchar", { length: 100, nullable: true })
+    certificationToken: string | null;
 
     @CreatedAt()
     createdAt: Date;

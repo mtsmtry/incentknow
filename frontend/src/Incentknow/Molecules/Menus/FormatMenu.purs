@@ -2,11 +2,11 @@ module Incentknow.Molecules.FormatMenu where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getFormats, getRelatedFormat)
@@ -19,6 +19,7 @@ import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
+import Test.Unit.Console (consoleLog)
 
 {- 
   A component for selecting a format on the specified constraint

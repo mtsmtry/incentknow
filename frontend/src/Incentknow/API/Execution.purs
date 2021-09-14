@@ -6,6 +6,7 @@ import Control.Promise (Promise, toAff)
 import Data.Either (Either(..), either)
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff, attempt)
 import Effect.Aff.Class (class MonadAff, liftAff)
@@ -68,10 +69,16 @@ data Fetch a
   | FailedCache String
   | FailedServer String
 
-foreign import showError :: forall a. a -> String
+zip :: forall a b. Remote a -> Remote b -> Remote (Tuple a b)
+zip a b = case a, b of
+  Holding c, Holding d -> Holding $ Tuple c d
+  Missing m, _ -> Missing m
+  _, Missing m -> Missing m
+  LoadingForServer, _ -> LoadingForServer
+  _, LoadingForServer -> LoadingForServer
+  _, _ -> Loading
 
-defaultIconUrl :: String
-defaultIconUrl = ""
+foreign import showError :: forall a. a -> String
 
 foreign import makeQueryCallback :: forall a. String -> Promise a -> Callback { result :: a, from :: String } 
 

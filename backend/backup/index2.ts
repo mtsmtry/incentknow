@@ -1,15 +1,8 @@
+import { PubSub } from '@google-cloud/pubsub';
+import axios from 'axios';
+import * as crypto from 'crypto';
 import * as firebase_functions from 'firebase-functions';
 import { stringify } from 'querystring';
-import * as crypto from 'crypto';
-import { PubSub } from '@google-cloud/pubsub';
-
-import * as DB from '../src/client_sql';
-import axios from 'axios';
-
-import * as Ajv from 'ajv';
-
-const functions = firebase_functions.region("asia-northeast1");
-
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
 //
@@ -17,10 +10,14 @@ const functions = firebase_functions.region("asia-northeast1");
 //   functions.logger.info("Hello logs!", {structuredData: true});
 //   response.send("Hello from Firebase!");
 // });
-
 // The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
-
 import { PS } from '../purescript-index.js';
+import * as DB from '../src/client_sql';
+
+
+
+const functions = firebase_functions.region("asia-northeast1");
+
 
 
 const ref = new DB.Reference();
@@ -768,7 +765,7 @@ export const setSpacePublished = onCall<{
     return {};
 });
 
-export const setSpaceAuthority = onCall<{
+export const setSpaceAuthorityority = onCall<{
     spaceId: string,
     authority: any
 }>(async (data, context) => {

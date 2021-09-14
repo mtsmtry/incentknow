@@ -10,8 +10,9 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
+import Incentknow.API.Execution (Remote)
 import Incentknow.AppM (class Behaviour, navigateRoute)
-import Incentknow.Atoms.Icon (propertyIcon, userIcon)
+import Incentknow.Atoms.Icon (propertyIcon, remoteArrayWith, userPlate)
 import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (RelatedContent)
 import Incentknow.Data.Property (MaterialObject(..), Property, ReferenceValue(..), TypedValue(..), fromJsonToMaterialObject, mkProperties, toTypedValue)
@@ -21,11 +22,11 @@ import Incentknow.Route (Route(..), UserTab(..))
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type Input
-  = { value :: Array RelatedContent
+  = { value :: Remote (Array RelatedContent)
     }
 
 type State
-  = { items :: Array RelatedContent
+  = { items :: Remote (Array RelatedContent)
     }
 
 data Action
@@ -58,7 +59,10 @@ render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action
 render state =
   HH.div
     [ css "org-listview" ]
-    (map renderItem state.items)
+    [ remoteArrayWith state.items \items->
+        HH.div [ css "items" ]
+          (map renderItem items)
+    ]
   where
   renderItem :: RelatedContent -> H.ComponentHTML Action ChildSlots m
   renderItem item =
@@ -66,7 +70,7 @@ render state =
       [ HH.div [ css "user" ]
           [ link Navigate (User item.creatorUser.displayId UserMain) 
               []
-              [ userIcon item.creatorUser ]
+              [ userPlate item.creatorUser ]
           ]
       , HH.div [ css "main" ]
           [ link Navigate (Content item.contentId)

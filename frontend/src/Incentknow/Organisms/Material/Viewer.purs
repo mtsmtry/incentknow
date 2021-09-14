@@ -4,6 +4,7 @@ import Prelude
 
 import Data.Argonaut.Core (Json)
 import Data.Maybe (Maybe(..))
+import Data.String (Pattern(..), split)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
@@ -68,9 +69,15 @@ render state =
         Just (DocumentMaterialData doc) ->
           HH.slot (SProxy :: SProxy "document") unit Document.component { value: doc } absurd    
         Just (PlaintextMaterialData text) ->
-          HH.text text
+          renderText text
         _ -> HH.text "Error"
     ]
+
+renderText :: forall m. String -> H.ComponentHTML Action ChildSlots m
+renderText text =
+  HH.div [ css "text" ] (map renderLine $ split (Pattern "\n") text)
+  where
+  renderLine line = HH.div [ css "line" ] [ HH.text line ]
 
 changeRoute :: forall o m. Behaviour m => Route -> H.HalogenM State Action ChildSlots o m Unit
 changeRoute route = do

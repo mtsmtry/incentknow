@@ -3,7 +3,7 @@ module Incentknow.Molecules.SelectMenuImpl where
 import Prelude
 
 import Data.Foldable (traverse_)
-import Data.Maybe (Maybe(..), fromMaybe, isNothing)
+import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing)
 import Data.String (Pattern(..), Replacement(..), replaceAll)
 import Effect.Aff.Class (class MonadAff)
 import Halogen (RefLabel(..), getHTMLElementRef, liftEffect)
@@ -177,11 +177,15 @@ handleAction = case _ of
   MouseLeaveListBox -> H.modify_ _ { isMouseEnterListBox = false }
   Initialize -> pure unit
   ClickItem item -> do
+    state <- H.get
     H.modify_ _ { selectedItem = Just item, isFocused = false, isMouseEnterListBox = false }
-    H.raise $ ChangeValue $ Just item.id
+    when (map _.id state.selectedItem /= Just item.id) do
+      H.raise $ ChangeValue $ Just item.id
   Unselect -> do
-    H.modify_ _ { selectedItem = Nothing }
-    H.raise $ ChangeValue Nothing
+    state <- H.get
+    when (isJust state.selectedItem) do
+      H.modify_ _ { selectedItem = Nothing }
+      H.raise $ ChangeValue Nothing
   ChangeFilter word -> do
     H.raise $ ChangeSearchWord $ if word == "" then Nothing else Just word
   HandleInput input -> do

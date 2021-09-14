@@ -74,7 +74,7 @@ usage_ = SProxy :: SProxy "usage"
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  centerLayout { leftSide: [], rightSide: [] }
+  centerLayout { css: "", leftSide: [], rightSide: [] }
     [ creationPage { title: "新しいフォーマットを作成する", desc: "フォーマットは、コンテンツの形式を定義します。また、そのコンテンツのページの形式やコンテンツの他の媒体からのインポートについて定義します。" }
       [ defineText { label: "名前", value: state.displayName, onChange: ChangeDisplayName }
       --, defineText { label: "ID", value: state.displayId, onChange: ChangeDisplayId }

@@ -131,7 +131,7 @@ type Commit
     , version :: Int
     }
 
-type SpaceAuthority
+type SpaceAuthorityority
   = { base :: String
     }
 
@@ -148,7 +148,7 @@ type Space
     , published :: Boolean
     , homeUrl :: Nullable String
     , published :: Boolean
-    , authority :: SpaceAuthority
+    , authority :: SpaceAuthorityority
     , membershipMethod :: String
     , myStatus :: String -- follow, membership, none
     , myMember :: Nullable SpaceMember
@@ -391,7 +391,7 @@ foreign import setSpacePublished :: SpaceId -> Boolean -> Promise {}
 
 foreign import setSpaceDisplayId :: SpaceId -> String -> Promise {}
 
-foreign import setSpaceAuthority :: SpaceId -> SpaceAuthority -> Promise {}
+foreign import setSpaceAuthorityority :: SpaceId -> SpaceAuthorityority -> Promise {}
 
 foreign import checkSpaceDisplayId :: String -> Promise Boolean
 

@@ -8,8 +8,9 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getMyAccount, setMyDisplayName, setMyEmail, setMyPassword)
+import Incentknow.API (getMyAccount, setMyDisplayName, setMyEmail, uploadMyIcon, setMyPassword)
 import Incentknow.API.Execution (Fetch, Remote(..), callCommand, callbackQuery, forRemote)
+import Incentknow.API.Static (getFullsizeIconUrl, getIconUrl)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (IntactAccount)
@@ -76,12 +77,12 @@ render state =
           , disabled: false
           }
           (Just <<< Edit)
-      --, HH.slot icon_ unit SettingImage.component
-      --    { submit: callAPI <<< 
-      --    , value: Just account.user.iconUrl
-      --    , disabled: false
-      --    }
-      --    (Just <<< Edit)
+      , HH.slot icon_ unit SettingImage.component
+          { submit: \blob-> callCommand $ uploadMyIcon { blob }
+          , value: Just $ getFullsizeIconUrl account.iconImage
+          , disabled: false
+          }
+          (Just <<< Edit)
       , HH.slot password_ unit SettingPassword.component
           { submit: callCommand <<< setMyPassword }
           (Just <<< Edit)
@@ -98,7 +99,7 @@ render state =
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
-    callbackQuery ChangeAccount getMyAccount
+    callbackQuery ChangeAccount $ getMyAccount unit
   ChangeAccount fetch -> do
     forRemote fetch \account ->
       H.modify_ _ { account = account }

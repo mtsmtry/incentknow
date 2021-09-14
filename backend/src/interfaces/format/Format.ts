@@ -18,7 +18,6 @@ export interface RelatedFormat {
 }
 
 export function toRelatedFormat(format: Format): RelatedFormat {
-    format.currentStructure.format = format;
     return {
         formatId: format.entityId,
         displayId: format.displayId,

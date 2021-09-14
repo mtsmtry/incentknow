@@ -10,7 +10,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API.Execution (Fetch, Remote(..), forRemote)
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Atoms.Icon (remoteWith)
+import Incentknow.Atoms.Icon (remoteArrayWith, remoteWith)
 import Incentknow.Data.Entities (RelatedContent)
 import Incentknow.Data.Ids (SpaceId)
 import Incentknow.Organisms.ContentList as ContentList
@@ -45,9 +45,8 @@ initialState input = { spaceId: input.spaceId, contents: Loading }
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  centerLayout { leftSide: [], rightSide: [] }
-    [ remoteWith state.contents \contents ->
-      HH.slot (SProxy :: SProxy "contentList") unit ContentList.component { value: contents } absurd
+  centerLayout { css: "", leftSide: [], rightSide: [] }
+    [ HH.slot (SProxy :: SProxy "contentList") unit ContentList.component { value: state.contents, query: Nothing } absurd
     ]
 
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit

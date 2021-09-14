@@ -1,7 +1,7 @@
 import { SelectQueryBuilder } from "typeorm";
 import { ContentSk } from "../../../entities/content/Content";
 import { ContentDraft, ContentDraftId, ContentDraftSk } from "../../../entities/content/ContentDraft";
-import { TypeName } from "../../../entities/format/Property";
+import { isMaterialType, TypeName } from "../../../entities/format/Property";
 import { StructureSk } from "../../../entities/format/Structure";
 import { UserSk } from "../../../entities/user/User";
 import { toFocusedContentDraft, toRelatedContentDraft } from "../../../interfaces/content/ContentDraft";
@@ -57,7 +57,7 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
             if (!value) {
                 return;
             }
-            if (prop.type.name == TypeName.DOCUMENT || prop.type.name == TypeName.TEXT) {
+            if (isMaterialType(prop.type.name)) {
                 const matDraft = isFocused
                     ? await matRep.fromDrafts().byEntityId(value).selectFocused().getOne()
                     : await matRep.fromDrafts().byEntityId(value).selectRelated().getOne();
@@ -114,13 +114,16 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
         const structMap = mapBy(structs, x => x.id);
 
         // Build
-        const focusedDrafts = drafts.map(x => x.result(structMap[x.raw.structureId].format));
+        const focusedDrafts = drafts.map(x => {
+            const format = structMap[x.raw.structureId].format;
+            return { draft: x.result(format), format, raw: x.raw }
+        });
 
         // Related contents
         await Promise.all(focusedDrafts.map(async x => {
             await Promise.all([
-                ContentQuery.locateContents(rep, x.data, x.format),
-                ContentDraftQuery.locateMaterialDrafts(x.data, x.format, matRep, true)
+                ContentQuery.locateContents(rep, x.draft.data, x.format),
+                ContentDraftQuery.locateMaterialDrafts(x.draft.data, x.format, matRep, true)
             ]);
         }));
 

@@ -18,7 +18,7 @@ export interface IntactReactor {
 function toIntactReactor(reactor: Reactor): IntactReactor {
     return {
         reactorId: reactor.entityId,
-        container: toRelatedContainer(reactor.container),
+        container: toRelatedContainer(reactor.container, 0),
         state: reactor.state,
         definitionId: reactor.definition?.entityId || null,
         createdAt: toTimestamp(reactor.createdAt),

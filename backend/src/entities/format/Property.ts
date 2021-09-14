@@ -19,6 +19,10 @@ export enum TypeName {
     ENTITY = "entity"
 }
 
+export function isMaterialType(type: TypeName) {
+    return type == TypeName.DOCUMENT || type == TypeName.TEXT;
+}
+
 export enum Language {
     PYTHON = "python",
     JAVASCRIPT = "javascript"

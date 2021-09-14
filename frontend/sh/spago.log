@@ -94,7 +94,7 @@ Warning 7 of 32:
 
     It could be replaced with:
 
-      import Incentknow.Atoms.Icon (formatWithIcon, remoteWith, userIcon)
+      import Incentknow.Atoms.Icon (formatWithIcon, remoteWith, userPlate)
 
 
 
@@ -148,7 +148,7 @@ Warning 10 of 32:
 
     It could be replaced with:
 
-      import Incentknow.Atoms.Icon (formatWithIcon, iconButton, remoteWith, userIcon)
+      import Incentknow.Atoms.Icon (formatWithIcon, iconButton, remoteWith, userPlate)
 
 
 

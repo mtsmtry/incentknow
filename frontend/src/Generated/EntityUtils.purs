@@ -72,6 +72,44 @@ defaultMaterialDataOptions =
 
 
 
+foreign import buildActivityAction :: E.ActivityType -> ActivityActionOptions -> Maybe E.ActivityAction
+foreign import getActivityType :: E.ActivityAction -> E.ActivityType
+foreign import getActivityActionOptions :: E.ActivityAction -> ActivityActionOptions
+
+
+
+type ActivityActionOptions
+  = { content :: Maybe E.RelatedContent
+    , comment :: Maybe E.RelatedComment
+    }
+
+defaultActivityActionOptions :: ActivityActionOptions
+defaultActivityActionOptions =
+  { content: Nothing
+  , comment: Nothing
+  }
+
+
+
+foreign import buildNotificationAction :: E.NotificationType -> NotificationActionOptions -> Maybe E.NotificationAction
+foreign import getNotificationType :: E.NotificationAction -> E.NotificationType
+foreign import getNotificationActionOptions :: E.NotificationAction -> NotificationActionOptions
+
+
+
+type NotificationActionOptions
+  = { content :: Maybe E.RelatedContent
+    , comment :: Maybe E.RelatedComment
+    }
+
+defaultNotificationActionOptions :: NotificationActionOptions
+defaultNotificationActionOptions =
+  { content: Nothing
+  , comment: Nothing
+  }
+
+
+
 foreign import buildMaterialComposition :: E.MaterialCompositionType -> MaterialCompositionOptions -> Maybe E.MaterialComposition
 foreign import getMaterialCompositionType :: E.MaterialComposition -> E.MaterialCompositionType
 foreign import getMaterialCompositionOptions :: E.MaterialComposition -> MaterialCompositionOptions

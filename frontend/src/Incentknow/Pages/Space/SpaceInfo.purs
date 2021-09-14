@@ -9,12 +9,14 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Incentknow.API.Static (getFullsizeHeaderImageUrl)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Icon (spaceScopeIcon)
 import Incentknow.Atoms.Inputs (menuPositiveButton)
 import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..))
-import Incentknow.HTML.DateTime (dateTime)
+import Incentknow.HTML.DateTime (dateTime, elapsedTime)
 import Incentknow.HTML.Utils (css, whenElem)
 import Incentknow.Molecules.DangerChange as DangerChange
 import Incentknow.Pages.Space.FormatList as FormatList
@@ -91,28 +93,46 @@ render state =
     --  [ SpacePages, SpaceSetting ]
     , currentTab: state.tab
     , onChangeTab: ChangeTab
+    , isTabAlphabet: true
     , showTab:
         case _ of
         --  SpacePages -> if readable then "Pages" else "Caption"
-          SpaceHome -> HH.text  "Home"
-          SpaceContainers -> HH.text $ "Containers(" <> show state.space.containerCount <> ")"
-          SpaceMembers -> HH.text $ "Members(" <> show state.space.memberCount <> ")"
-          SpaceSetting -> HH.text if isAdmin then "Setting" else "Information"
-          _ -> HH.text ""
+          SpaceHome -> 
+            [ HH.text "Home" ]
+          SpaceContainers -> 
+            [ HH.text "Containers"
+            , HH.span [ css "count" ] [ HH.text $ "(" <> show state.space.containerCount <> ")" ]
+            ]
+          SpaceMembers -> 
+            [ HH.text "Members"
+            , HH.span [ css "count" ] [ HH.text $ "(" <> show state.space.memberCount <> ")" ]
+            ]
+          SpaceSetting -> 
+            [ HH.text if isAdmin then "Setting" else "Information" ]
+          _ -> []
     }
     [ --whenElem writable \_ ->
       --  menuPositiveButton "コンテンツを追加" (Navigate $ EditDraft $ ContentTarget $ TargetBlank (Just state.space.spaceId) Nothing)
     ]
-    [ HH.div [ css "page-space-header page-space-header-info" ]
-        [ HH.div [ css "backward" ] [ HH.img [ HP.src "/assets/imgs/default.jpg" ] ]
+    [ HH.div 
+        [ css "page-space-header page-space-header-info"
+        , HE.onDoubleClick $ \_-> Just $ Navigate $ ContainerList state.space.displayId
+        ]
+        [ HH.div 
+            [ css "backward" ] 
+            [ HH.img [ HP.src $ getFullsizeHeaderImageUrl state.space.headerImage ] ]
         , HH.div [ css "forward" ]
-            [ renderMode true state.space.displayId NavigateRoute
-            , HH.div [ css "name" ] [ HH.text state.space.displayName ]
-            , HH.div [ css "description" ] [ HH.text state.space.description ]
-            , HH.div [ css "attributes" ] 
-                [ HH.span [ css "created" ] [ dateTime state.space.createdAt, HH.text "に作成" ]
-                , HH.span [ css "scope" ] [ spaceScopeIcon state.space ]
-                ] 
+            [ HH.div [ css "left" ]
+                [ HH.div [ css "name" ] [ HH.text state.space.displayName ]
+                , HH.div [ css "description" ] [ HH.text state.space.description ]
+                ]
+            , HH.div [ css "right" ]
+                [ renderMode true state.space.displayId NavigateRoute
+                , HH.div [ css "attributes" ] 
+                    [ HH.span [ css "created" ] [ elapsedTime state.space.createdAt, HH.text "に作成" ]
+                    , HH.span [ css "scope" ] [ spaceScopeIcon state.space ]
+                    ]
+                ]
             ]
         ]
     ]

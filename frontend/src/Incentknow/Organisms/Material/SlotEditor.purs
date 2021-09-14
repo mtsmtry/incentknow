@@ -5,12 +5,13 @@ import Prelude
 import Data.Argonaut.Core (Json)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
+import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (MaterialType)
+import Incentknow.Data.Entities (MaterialData, MaterialType)
 import Incentknow.Data.Ids (MaterialDraftId)
 import Incentknow.Data.Property (MaterialObject(..), fromJsonToMaterialObject, fromMaterialObjectToJson, getMaterialObjectId, toMaterialObjectFromDraftId)
 import Incentknow.Organisms.Material.EditorFromDraft as EditorFromDraft
@@ -32,13 +33,16 @@ data Action
   | ChangeDraftId MaterialDraftId
 
 type Slot p
-  = forall q. H.Slot q Output p
+  = H.Slot Query Output p
 
 type ChildSlots
   = ( editor :: EditorFromDraft.Slot Unit
     )
 
-component :: forall q m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q Input Output m
+data Query a
+  = GetUpdation (Tuple MaterialDraftId MaterialData -> a)
+
+component :: forall m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML Query Input Output m
 component =
   H.mkComponent
     { initialState
@@ -48,6 +52,7 @@ component =
           H.defaultEval
             { initialize = Just Initialize
             , handleAction = handleAction
+            , handleQuery = handleQuery
             , receive = Just <<< HandleInput
             }
     }
@@ -79,4 +84,10 @@ handleAction = case _ of
   ChangeDraftId draftId -> do
     -- H.modify_ _ { materialObject = Just draftId }
     H.raise $ Just $ fromMaterialObjectToJson $ toMaterialObjectFromDraftId draftId
+  
+handleQuery :: forall o m a. Query a -> H.HalogenM State Action ChildSlots o m (Maybe a)
+handleQuery = case _ of
+  GetUpdation k -> do
+    result <- H.query (SProxy :: SProxy "editor") unit $ H.request EditorFromDraft.GetUpdation
+    pure $ map k result
   

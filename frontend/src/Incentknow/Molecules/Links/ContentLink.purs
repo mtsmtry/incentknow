@@ -53,27 +53,15 @@ initialState input =
   { content: input.value
   }
 
+foreign import log :: forall a. a -> a
+
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state =
   link Navigate (Content state.content.contentId)
     []
     [ HH.text common.title ]
   where
-  common = getContentSemanticData state.content.data state.content.format
-
-toSelectMenuItem :: FocusedContent -> SelectMenuItem ContentId
-toSelectMenuItem content =
-  { id: content.contentId
-  , name: unwrap content.contentId
-  , searchWord: unwrap content.contentId
-  , html: html
-  }
-  where
-  html :: forall a s m. H.ComponentHTML a s m
-  html =
-    HH.div []
-      [ HH.text $ unwrap content.contentId
-      ]
+  common = getContentSemanticData (log state.content).data state.content.format
 
 handleAction :: forall m o. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of

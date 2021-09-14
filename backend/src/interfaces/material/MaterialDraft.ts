@@ -1,5 +1,3 @@
-import { ContentDraftId } from "../../entities/content/ContentDraft";
-import { MaterialType } from "../../entities/material/Material";
 import { MaterialCommitId } from "../../entities/material/MaterialCommit";
 import { MaterialDraft, MaterialDraftId } from "../../entities/material/MaterialDraft";
 import { toTimestamp } from "../Utils";
@@ -42,7 +40,12 @@ export function toFocusedMaterialDraft(draft: MaterialDraft, data: string): Focu
         updatedAt: toTimestamp(draft.updatedAt),
         material: draft.material ? toRelatedMaterial(draft.material) : null,
         basedCommitId: draft.currentEditing?.basedCommit?.entityId || null,
-        data: toMaterialData(MaterialType.DOCUMENT, data),
+        data: toMaterialData(draft.intendedMaterialType, data),
         isEditing: draft.currentEditingId != null
     };
+}
+
+export interface MaterialDraftUpdation {
+    draftId: MaterialDraftId;
+    data: MaterialData;
 }

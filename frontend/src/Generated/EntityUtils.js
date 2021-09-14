@@ -221,6 +221,86 @@ exports.getMaterialType = src => {if (src instanceof E.PlaintextMaterialData) {
                     }
                     };
 
+exports.getActivityType = src => {if (src instanceof E.ContentCreatedActivityAction) {
+                    return E.ActivityTypeContentCreated.value;
+
+                }if (src instanceof E.ContentUpdatedActivityAction) {
+                    return E.ActivityTypeContentUpdated.value;
+
+                }if (src instanceof E.ContentCommentedActivityAction) {
+                    return E.ActivityTypeContentCommented.value;
+
+                }};exports.buildActivityAction = type => { return options => { if (type instanceof E.ActivityTypeContentCreated) {if (options.content instanceof Data_Maybe.Nothing) {
+                            return Data_Maybe.Nothing.value;
+                    }
+                    const result = new E.ContentCreatedActivityAction(options.content.value0);
+                    return new Data_Maybe.Just(result);
+                } if (type instanceof E.ActivityTypeContentUpdated) {if (options.content instanceof Data_Maybe.Nothing) {
+                            return Data_Maybe.Nothing.value;
+                    }
+                    const result = new E.ContentUpdatedActivityAction(options.content.value0);
+                    return new Data_Maybe.Just(result);
+                } if (type instanceof E.ActivityTypeContentCommented) {if (options.content instanceof Data_Maybe.Nothing) {
+                            return Data_Maybe.Nothing.value;
+                    }if (options.comment instanceof Data_Maybe.Nothing) {
+                            return Data_Maybe.Nothing.value;
+                    }
+                    const result = new E.ContentCommentedActivityAction(options.content.value0,options.comment.value0);
+                    return new Data_Maybe.Just(result);
+                }}};exports.getActivityActionOptions = src => {
+                    if (src instanceof E.ContentCreatedActivityAction) {
+                        return {
+                            content: new Data_Maybe.Just(src.value0),comment: Data_Maybe.Nothing.value
+                        }
+                    }
+                    
+                    if (src instanceof E.ContentUpdatedActivityAction) {
+                        return {
+                            content: new Data_Maybe.Just(src.value0),comment: Data_Maybe.Nothing.value
+                        }
+                    }
+                    
+                    if (src instanceof E.ContentCommentedActivityAction) {
+                        return {
+                            content: new Data_Maybe.Just(src.value0),comment: new Data_Maybe.Just(src.value1)
+                        }
+                    }
+                    };
+
+exports.getNotificationType = src => {if (src instanceof E.ContentCommentedNotificationAction) {
+                    return E.NotificationTypeContentCommented.value;
+
+                }if (src instanceof E.CommentRepliedNotificationAction) {
+                    return E.NotificationTypeCommentReplied.value;
+
+                }};exports.buildNotificationAction = type => { return options => { if (type instanceof E.NotificationTypeContentCommented) {if (options.content instanceof Data_Maybe.Nothing) {
+                            return Data_Maybe.Nothing.value;
+                    }if (options.comment instanceof Data_Maybe.Nothing) {
+                            return Data_Maybe.Nothing.value;
+                    }
+                    const result = new E.ContentCommentedNotificationAction(options.content.value0,options.comment.value0);
+                    return new Data_Maybe.Just(result);
+                } if (type instanceof E.NotificationTypeCommentReplied) {if (options.content instanceof Data_Maybe.Nothing) {
+                            return Data_Maybe.Nothing.value;
+                    }if (options.comment instanceof Data_Maybe.Nothing) {
+                            return Data_Maybe.Nothing.value;
+                    }
+                    const result = new E.CommentRepliedNotificationAction(options.content.value0,options.comment.value0);
+                    return new Data_Maybe.Just(result);
+                }}};exports.getNotificationActionOptions = src => {
+                    if (src instanceof E.ContentCommentedNotificationAction) {
+                        return {
+                            content: new Data_Maybe.Just(src.value0),comment: new Data_Maybe.Just(src.value1)
+                        }
+                    }
+                    
+                    if (src instanceof E.CommentRepliedNotificationAction) {
+                        return {
+                            content: new Data_Maybe.Just(src.value0),comment: new Data_Maybe.Just(src.value1)
+                        }
+                    }
+                    };
+
 exports.getMaterialCompositionType = src => {if (src instanceof E.CreationMaterialComposition) {
                     return E.Creation.value;
 

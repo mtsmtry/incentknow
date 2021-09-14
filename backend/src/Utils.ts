@@ -31,3 +31,11 @@ export function mapByString<T>(array: T[], getKey: (obj: T) => string | null): {
         return map;
     }, {});
 }
+
+export const sleep = (time: number) => {
+    return new Promise((resolve: any, reject) => {
+        setTimeout(() => {
+            resolve()
+        }, time);
+    })
+};

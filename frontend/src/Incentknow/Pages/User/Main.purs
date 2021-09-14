@@ -8,6 +8,7 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
+import Incentknow.API.Execution (Remote(..))
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (RelatedContent)
 import Incentknow.Data.Ids (UserId)
@@ -40,7 +41,7 @@ initialState :: Input -> State
 initialState input = { userId: input.userId, list: [] }
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
-render state = HH.slot (SProxy :: SProxy "contentList") unit ContentList.component { value: state.list } absurd
+render state = HH.slot (SProxy :: SProxy "contentList") unit ContentList.component { value: Holding [], query: Nothing } absurd
 
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of

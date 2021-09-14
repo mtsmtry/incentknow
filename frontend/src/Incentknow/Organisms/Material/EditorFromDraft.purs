@@ -5,10 +5,11 @@ import Prelude
 import Control.Monad.Rec.Class (forever)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Symbol (SProxy(..))
+import Data.Tuple (Tuple(..))
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error)
 import Halogen as H
 import Halogen.HTML as HH
@@ -25,6 +26,7 @@ import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.Material.Editor as Editor
 import Incentknow.Organisms.Material.Utils (createNewMaterialData)
 import Incentknow.Route (Route)
+import Test.Unit.Console (consoleLog)
 
 type Input 
   = { value :: Maybe FocusedMaterialDraft, materialType :: MaterialType }
@@ -46,19 +48,21 @@ type State
 
 data Action
   = Initialize
-  | Finalize
   | HandleInput Input
   | ChangeData MaterialData
   | CheckChange
 
 type Slot p
-  = forall q. H.Slot q Output p
+  = H.Slot Query Output p
 
 type ChildSlots
   = ( editor :: Editor.Slot Unit
     )
 
-component :: forall q m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q Input Output m
+data Query a
+  = GetUpdation (Tuple MaterialDraftId MaterialData -> a)
+
+component :: forall m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML Query Input Output m
 component =
   H.mkComponent
     { initialState
@@ -67,8 +71,8 @@ component =
         H.mkEval
           H.defaultEval
             { initialize = Just Initialize
-            , finalize = Just Finalize
             , handleAction = handleAction
+            , handleQuery = handleQuery
             , receive = Just <<< HandleInput
             }
     }
@@ -111,7 +115,6 @@ changeRoute route = do
 handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
   HandleInput input -> handleAction Initialize
-  Finalize -> handleAction CheckChange
   Initialize -> do
     state <- H.get
     -- Subscrive a interval save timer
@@ -128,6 +131,8 @@ handleAction = case _ of
     case state.saveState of
       Saving -> H.modify_ _ { data = data2, saveState = SavingButChanged }
       _ -> H.modify_ _ { data = data2, saveState = NotSaved }
+    when (isNothing state.draftId) do
+      handleAction CheckChange
   -- Save changes if they happened
   CheckChange -> do
     state <- H.get
@@ -155,3 +160,12 @@ handleAction = case _ of
     state <- H.get
     when (state.saveState == Saving) do
       H.modify_ _ { saveState = Saved }
+
+handleQuery :: forall o m a. Query a -> H.HalogenM State Action ChildSlots o m (Maybe a)
+handleQuery = case _ of
+  GetUpdation k -> do
+    state <- H.get
+    if state.saveState == NotSaved then
+      pure $ map (\draftId-> k $ Tuple draftId state.data) state.draftId
+    else
+      pure Nothing

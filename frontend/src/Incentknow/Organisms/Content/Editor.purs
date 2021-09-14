@@ -3,16 +3,19 @@ module Incentknow.Organisms.Content.Editor where
 import Prelude
 
 import Data.Argonaut.Core (Json)
+import Data.Array (catMaybes)
+import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
+import Data.Traversable (foldr, for)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (FocusedFormat, Type(..))
-import Incentknow.Data.Ids (PropertyId)
+import Incentknow.Data.Entities (FocusedFormat, MaterialData, Type(..))
+import Incentknow.Data.Ids (MaterialDraftId, PropertyId)
 import Incentknow.Data.Property (Property, TypedValue, assignJson, insertJson, mkProperties, toJsonFromTypedValue, toPropertyComposition, toTypedValue)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.Content.Common (EditEnvironment, EditorInput)
@@ -31,7 +34,7 @@ data Action
   | ChangeSection PropertyId TypedValue
 
 type Slot p
-  = forall q. H.Slot q Output p
+  = H.Slot Query Output p
 
 type Output
   = Json
@@ -40,7 +43,10 @@ type ChildSlots
   = ( value :: Value.Slot String
     )
 
-component :: forall q m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q EditorInput Output m
+data Query a
+  = GetMaterialUpdations (M.Map MaterialDraftId MaterialData -> a)
+
+component :: forall m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML Query EditorInput Output m
 component =
   H.mkComponent
     { initialState
@@ -49,6 +55,7 @@ component =
         H.mkEval
           H.defaultEval
             { handleAction = handleAction
+            , handleQuery = handleQuery
             , receive = Just <<< HandleInput
             }
     }
@@ -96,3 +103,16 @@ handleAction = case _ of
     let newValue = insertJson (unwrap id) (toJsonFromTypedValue section) state.value
     H.modify_ _ { value = newValue }
     H.raise newValue
+
+handleQuery :: forall o m a. Query a -> H.HalogenM State Action ChildSlots o m (Maybe a)
+handleQuery = case _ of
+  GetMaterialUpdations k -> do
+    state <- H.get
+    let
+      comp = toPropertyComposition true $ mkProperties state.value state.format.currentStructure.properties
+
+    results <- for comp.sections $ \prop-> H.query (SProxy :: SProxy "value") (unwrap prop.info.id) $ H.request Value.GetMaterialUpdations
+    let
+      result = foldr M.union M.empty $ catMaybes results
+    pure $ Just $ k result
+  

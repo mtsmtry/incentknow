@@ -1,8 +1,13 @@
 
+import * as nodemailer from "nodemailer";
+import * as sharp from "sharp";
+import * as uuid from "uuid";
+import * as fs from "fs";
 import { UserDisplayId, UserId } from "../../entities/user/User";
+import { Blob } from "../../Implication";
 import { AuthInfo, FocusedUser, IntactAccount, RelatedUser } from "../../interfaces/user/User";
 import { AuthorityRepository } from "../../repositories/implements/space/AuthorityRepository";
-import { UserRepository } from '../../repositories/implements/user/UserDto';
+import { UserRepository } from '../../repositories/implements/user/UserRepository';
 import { BaseService } from "../BaseService";
 import { PasswordSecurity, SessionSecurity } from "../Security";
 import { ServiceContext } from "../ServiceContext";
@@ -17,9 +22,44 @@ export class UserService extends BaseService {
 
     async createUser(email: string, displayName: string, password: string): Promise<UserId> {
         return await this.ctx.transaction(async trx => {
+            const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+            if (!email.match(emailRegex) || displayName.length < 4 || password.length < 8) {
+                throw Error("Wrong arguments");
+            }
+
+            // check email
+            const alreadyUser = await this.users.fromUsers().byEmail(email).getOne();
+            if (alreadyUser) {
+                if (alreadyUser.certificationToken) {
+                    await this.users.createCommand(trx).deleteUser(alreadyUser.id);
+                } else {
+                    throw Error("このメールアドレスは既に使われています");
+                }
+            }
+
+            // create user
             const passwordHash = PasswordSecurity.getHash(password);
             const user = await this.users.createCommand(trx).createUser(email, displayName, passwordHash);
-            return user.raw.entityId;
+
+            // send email
+            const smtpData = {
+                host: 'smtp.gmail.com', // Gmailのサーバ
+                port: 465,              // Gmailの場合　SSL: 465 / TLS: 587
+                secure: true,           // true = SSL
+                auth: {
+                    user: 'incentknow@gmail.com',  // メールアドレス（自身のアドレスを指定）
+                    pass: 'nvbrtsgnpqsbgpyk'          // パスワード（自身のパスワードを指定）
+                }
+            };
+            const transporter = nodemailer.createTransport(smtpData);
+            await transporter.sendMail({
+                from: '"Incentknow" <' + smtpData.auth.user + '>',
+                to: email,
+                subject: 'Incentknow メールアドレス確認のお知らせ',
+                text: "こちらのURLからログインし、メールアドレスを認証してください。\nhttps://www.incentknow.com/activate?token=" + user.certificationToken,
+            });
+
+            return user.entityId;
         });
     }
 
@@ -39,11 +79,22 @@ export class UserService extends BaseService {
 
     async authenticate(email: string, password: string): Promise<AuthInfo> {
         const user = await this.users.fromUsers().byEmail(email).getNeededOne();
+        if (user.certificationToken) {
+            throw new Error("メールアドレスの確認が完了していません");
+        }
         if (!PasswordSecurity.compare(password, user.passwordHash)) {
-            throw "Wrong password";
+            throw new Error("Wrong password");
         }
         const session = SessionSecurity.getToken(user.id);
         return { session, userId: user.entityId };
+    }
+
+    async activateAccount(token: string): Promise<AuthInfo> {
+        return await this.ctx.transaction(async trx => {
+            const user = await this.users.createCommand(trx).activateUser(token);
+            const session = SessionSecurity.getToken(user.id);
+            return { session, userId: user.entityId };
+        });
     }
 
     async getFocusedUser(userId: UserId): Promise<FocusedUser> {
@@ -87,11 +138,35 @@ export class UserService extends BaseService {
         });
     }
 
-    async setMyIcon(icon: string): Promise<{}> {
+    async uploadMyIcon(args: { blob: Blob }): Promise<{}> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
-            await this.users.createCommand(trx).setUserIcon(userId, icon);
+            const user = await this.users.fromUsers(trx).byId(userId).getNeededOne();
+            if (user.iconImage) {
+                fs.unlinkSync("public/uploaded/" + user.iconImage + ".jpg");
+                fs.unlinkSync("public/uploaded/" + user.iconImage + ".full.jpg");
+            }
+
+            const filename = uuid.v4();
+            sharp(args.blob.buffer)
+                .resize({
+                    width: 80,
+                    height: 80,
+                    fit: sharp.fit.cover,
+                    position: sharp.gravity.center
+                })
+                .jpeg()
+                .toFile("public/uploaded/" + filename + ".jpg");
+            sharp(args.blob.buffer)
+                .resize({
+                    width: 360,
+                    height: 360,
+                    fit: sharp.fit.cover,
+                    position: sharp.gravity.center
+                })
+                .jpeg()
+                .toFile("public/uploaded/" + filename + ".full.jpg");
+            await this.users.createCommand(trx).setUserIcon(userId, filename);
             return {};
         });
     }
 }
-

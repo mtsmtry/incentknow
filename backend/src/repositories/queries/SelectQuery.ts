@@ -15,6 +15,10 @@ export class SelectFromSingleTableQuery<Entity, T, TSk, TEntityId, TDIsplayId> {
         return new this.cstr(this.qb.where({ entityId }));
     }
 
+    inEntityId(entityIds: TEntityId[]) {
+        return new this.cstr(this.qb.where("x.entityId IN (:...ids)", { ids: entityIds }));
+    }
+
     byDisplayId(displayId: TDIsplayId) {
         return new this.cstr(this.qb.where({ displayId }));
     }
@@ -27,6 +31,10 @@ export class SelectFromSingleTableQuery<Entity, T, TSk, TEntityId, TDIsplayId> {
         return this.qb.getOne();
     }
 
+    limit(count: number) {
+        return new this.cstr(this.qb.limit(count));
+    }
+
     async getNeededOne() {
         const one = await this.qb.getOne();
         if (!one) {
@@ -37,6 +45,10 @@ export class SelectFromSingleTableQuery<Entity, T, TSk, TEntityId, TDIsplayId> {
 
     getMany() {
         return this.qb.getMany();
+    }
+
+    getCount() {
+        return this.qb.getCount();
     }
 }
 

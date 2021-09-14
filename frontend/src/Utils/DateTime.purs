@@ -12,6 +12,8 @@ import Data.Time.Duration (Milliseconds(..))
 
 foreign import getDateTimeNow :: Number
 
+foreign import fromTimestampToElapsedTimeString :: Number -> String
+
 fromTimestampToDateTime :: Number -> Maybe DateTime
 fromTimestampToDateTime utcTimestamp = map toDateTime $ instant $ Milliseconds $ (utcTimestamp + 9.0 * 3600.0) * 1000.0
 
@@ -34,29 +36,3 @@ toString dt =
   hour = toStr $ DateTime.hour time
   minute = toStr $ DateTime.minute time
   addZero x = if length x == 1 then "0" <> x else x
-
-fromTimestampToElapsedTimeString :: Number -> String
-fromTimestampToElapsedTimeString dt =
-  if year > 0 then
-    show year <> "年前"
-  else if month > 0 then
-    show month <> "ヶ月前"
-  else if day > 0 then
-    show day <> "日前"
-  else if hour > 0 then
-    show hour <> "時間前"
-  else if minute > 0 then
-    show minute <> "分前"
-  else
-    "さっき"
-  where
-  elapsed = map toDateTime $ instant $ Milliseconds $ (getDateTimeNow - dt - 9.0 * 3600.0) * 1000.0
-
-  date = map DateTime.date elapsed
-  time = map DateTime.time elapsed
-  
-  year = (fromMaybe 0 $ map (fromEnum <<< DateTime.year) date) - 1970
-  month = (fromMaybe 0 $ map (fromEnum <<< DateTime.month) date) - 1
-  day = (fromMaybe 0 $ map (fromEnum <<< DateTime.day) date) - 1
-  hour = fromMaybe 0 $ map (fromEnum <<< DateTime.hour) time
-  minute = fromMaybe 0 $ map (fromEnum <<< DateTime.minute) time

@@ -63,11 +63,10 @@ initialState input =
   , tab: input.tab
   }
 
-
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   remoteWith state.space \space ->
-    centerLayout { leftSide: [], rightSide: [] }
+    centerLayout { css: "", leftSide: [], rightSide: [] }
       [ case state.tab of
           Left tab -> HH.slot (SProxy :: SProxy "spaceInfo") unit SpaceInfo.component { space, tab } absurd
           Right formatId -> HH.slot (SProxy :: SProxy "spaceContainers") unit SpaceContainers.component { space, formatId } absurd

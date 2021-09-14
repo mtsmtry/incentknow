@@ -9,10 +9,11 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getAvailableSpaceDisplayId, setSpaceDefaultAuthority, setSpaceDisplayId, setSpaceDisplayName, setSpaceMembershipMethod, setSpacePublished)
+import Incentknow.API (getAvailableSpaceDisplayId, setSpaceDefaultAuthority, setSpaceDescription, setSpaceDisplayId, setSpaceDisplayName, setSpaceMembershipMethod, setSpacePublished, uploadSpaceHeaderImage)
 import Incentknow.API.Execution (callCommand, callQuery)
+import Incentknow.API.Static (getHeaderImageUrl)
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..), SpaceAuth(..))
+import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..), SpaceAuthority(..))
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.DisplayId as DisplayId
 import Incentknow.Molecules.Setting (SettingOutput)
@@ -94,12 +95,20 @@ render state =
         , disabled: state.disabled
         }
         (Just <<< Edit)
-    --, HH.slot homeImage_ unit SettingImage.component
-    --    { submit: callAPI <<< setSpace state.space.spaceId
-    --    , value: toMaybe state.space.homeUrl
-    --    , disabled: state.disabled
-    --    }
-    --    (Just <<< Edit)
+    , HH.slot displayName_ unit SettingText.component
+        { submit: callCommand <<< setSpaceDescription state.space.spaceId
+        , value: state.space.description
+        , title: "説明"
+        , desc: ""
+        , disabled: state.disabled
+        }
+        (Just <<< Edit)
+    , HH.slot homeImage_ unit SettingImage.component
+        { submit: callCommand <<< \blob-> uploadSpaceHeaderImage { spaceId: state.space.spaceId, blob }
+        , value: Just $ getHeaderImageUrl state.space.headerImage
+        , disabled: state.disabled
+        }
+        (Just <<< Edit)
     , HH.slot published_ unit (SettingCheckbox.component "公開する")
         { submit: callCommand <<< setSpacePublished state.space.spaceId
         , value: state.space.published
@@ -109,7 +118,7 @@ render state =
         }
         (Just <<< Edit)
     , HH.slot authMenu_ unit SettingAuthMenu.component
-        { submit: callCommand <<< \x -> setSpaceDefaultAuthority state.space.spaceId $ fromMaybe SpaceAuthNone x
+        { submit: callCommand <<< \x -> setSpaceDefaultAuthority state.space.spaceId $ fromMaybe SpaceAuthorityNone x
         , value: Just state.space.defaultAuthority
         , title: "標準権限"
         , desc: "スペースのメンバー以外の人を含む全ての人に適用される権限を設定します"

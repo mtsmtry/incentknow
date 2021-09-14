@@ -13,7 +13,7 @@ import Incentknow.API (getPublishedSpaces)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (remoteWith)
-import Incentknow.Data.Entities (FocusedSpace)
+import Incentknow.Data.Entities (FocusedSpace, RelatedSpace)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.SpaceCardView as SpaceCardView
 import Incentknow.Pages.Content as Content
@@ -25,12 +25,12 @@ type Input
   = {}
 
 type State
-  = { publishedSpaces :: Remote (Array FocusedSpace) }
+  = { publishedSpaces :: Remote (Array RelatedSpace) }
 
 data Action
   = Initialize
   | HandleInput Input
-  | FetchedPublishedSpaces (Fetch (Array FocusedSpace))
+  | FetchedPublishedSpaces (Fetch (Array RelatedSpace))
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -51,6 +51,10 @@ component =
 
 initialState :: Input -> State
 initialState input = { publishedSpaces: Loading }
+
+-- 知的生産性を向上させるためのSNS
+-- この世で最も柔軟なSNSです
+-- さあ、今すぐクリーンでクリアでストレスレスなIncentknowの世界に飛び込みましょう！
 
 render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action ChildSlots m
 render state =
@@ -81,7 +85,7 @@ render state =
         [ HH.div [ css "header" ]
             [ HH.text "チームで整理し、公開できる" ]
         , HH.div [ css "desc" ]
-            [ HH.text "今のたくさんの整理された情報が公開されています。" ]
+            [ HH.text "たくさんの整理された情報が公開されています。" ]
         , HH.div [ css "example" ]
             [ remoteWith state.publishedSpaces \spaces ->
                 HH.slot (SProxy :: SProxy "cardview") unit SpaceCardView.component { value: spaces } absurd
@@ -92,7 +96,7 @@ render state =
 handleAction :: forall o m. Behaviour m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> do
-   callbackQuery FetchedPublishedSpaces getPublishedSpaces
+   callbackQuery FetchedPublishedSpaces $ getPublishedSpaces unit
   HandleInput input -> handleAction Initialize
   FetchedPublishedSpaces fetch ->
     forRemote fetch \spaces ->

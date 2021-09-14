@@ -7,7 +7,7 @@ import Data.Either (Either(..))
 import Data.Foldable (oneOf)
 import Data.List (List(..))
 import Data.Map as M
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap, wrap)
 import Data.String (joinWith)
 import Data.Tuple (Tuple(..))
@@ -76,11 +76,13 @@ data Route
   | User UserDisplayId UserTab
   | DraftList
   | Content ContentId
+  | ActivateAccount String
   | ContentBySemanticId FormatId SemanticId
   | EditDraft EditTarget
   | SpaceList
   | Container SpaceDisplayId FormatDisplayId
   | ContainerList SpaceDisplayId
+  | SearchAll (Maybe String)
   -- | Composition SpaceId FormatId String
   -- | ContentList (Maybe SpaceId) (Maybe FormatId) (Array (Tuple String (Maybe String)))
   | Public
@@ -96,6 +98,7 @@ data Route
  -- | NewCrawler
  -- | Crawler CrawlerId CrawlerTab
   | NotFound
+  | Notifications
 
 derive instance eqFormatTab :: Eq FormatTab
 
@@ -135,8 +138,11 @@ paramsToUrl = arrayToList >>> paramsToUrl' >>> addHead
 routeToPath :: Route -> String
 routeToPath = case _ of
   Home -> "/"
+  SearchAll query -> "/search" <> paramsToUrl [ Tuple "q" query ]
   Sign -> "/sign"
   Public -> "/public"
+  Notifications -> "/notifications"
+  ActivateAccount token -> "/activate" <> paramsToUrl [ Tuple "token" $ Just token ]
   User id UserMain -> "/users/" <> unwrap id
   User id UserSetting -> "/users/" <> unwrap id <> "/setting"
   Content id -> "/contents/" <> unwrap id
@@ -212,6 +218,9 @@ matchRoute =
         [ Home <$ end
         , Sign <$ (lit "sign" <* end)
         , Public <$ (lit "public" <* end)
+        , Notifications <$ (lit "notifications" <* end)
+        , SearchAll <$> (lit "search" *> matchParam "q" <* end)
+        , (ActivateAccount <<< fromMaybe "") <$> (lit "activate" *> matchParam "token" <* end)
         -- user
         , (flip User UserMain) <$> (map wrap $ lit "users" *> str <* end)
         , (flip User UserSetting) <$> (map wrap $ lit "users" *> str <* lit "setting" <* end)

@@ -24,9 +24,10 @@ export class ContainerQuery extends SelectFromSingleTableQuery<Container, Contai
         let query = this.qb
             .leftJoinAndSelect("x.space", "space")
             .leftJoinAndSelect("x.format", "format")
-            .leftJoinAndSelect("format.space", "space");
-
-        return mapQuery(query, toRelatedContainer);
+            .leftJoinAndSelect("format.space", "space2")
+            .leftJoinAndSelect("format.currentStructure", "currentStructure")
+            .addSelect("(SELECT COUNT(*) FROM content AS c WHERE c.containerId = x.id)", "contentCount")
+        return mapQuery(query, (x, raw) => toRelatedContainer(x, raw.contentCount));
     }
 
     selectFocused() {

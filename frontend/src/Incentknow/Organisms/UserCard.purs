@@ -1,12 +1,13 @@
 module Incentknow.Organisms.UserCard where
 
 import Prelude
+
 import Data.Maybe (Maybe(..), fromMaybe)
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Incentknow.API.Execution (defaultIconUrl)
+import Incentknow.API.Static (getIconUrl)
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Data.Entities (RelatedUser)
 import Incentknow.HTML.DateTime (dateTime)
@@ -46,7 +47,7 @@ initialState input = { user: input.user, timestamp: input.timestamp }
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div [ css "org-usercard" ]
-    [ link_ Navigate (R.User state.user.displayId UserMain) [ HH.img [ HP.src $ fromMaybe defaultIconUrl $ state.user.iconUrl ] ]
+    [ link_ Navigate (R.User state.user.displayId UserMain) [ HH.img [ HP.src $ getIconUrl state.user.iconImage ] ]
     , HH.div [ css "info" ]
         [ link Navigate (R.User state.user.displayId UserMain) [ css "username" ] [ HH.text $ state.user.displayName ]
         , HH.div [ css "timestamp" ] [ dateTime state.timestamp ]

@@ -11,7 +11,7 @@ import Halogen.HTML as HH
 import Incentknow.API (getContents)
 import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
-import Incentknow.Atoms.Icon (formatWithIcon, icon, iconButton, remoteWith, userIcon)
+import Incentknow.Atoms.Icon (formatWithIcon, icon, iconButton, remoteWith, userPlate)
 import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (RelatedContent, RelatedFormat)
 import Incentknow.Data.Ids (SpaceDisplayId, SpaceId)
@@ -94,7 +94,7 @@ render state =
       [ HH.th []
           [ link Navigate (User content.updaterUser.displayId UserMain)
               [ css "user" ]
-              [ userIcon content.updaterUser ]
+              [ userPlate content.updaterUser ]
           ]
       , HH.th []
           [ link Navigate (Content content.contentId)

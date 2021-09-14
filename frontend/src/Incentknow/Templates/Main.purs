@@ -47,13 +47,14 @@ main input =
 
 centerLayout :: 
   forall a s m.
-    { leftSide :: Array (H.ComponentHTML a s m)
+    { css :: String
+    , leftSide :: Array (H.ComponentHTML a s m)
     , rightSide :: Array (H.ComponentHTML a s m)
     }
     -> Array (H.ComponentHTML a s m)
     -> H.ComponentHTML a s m
 centerLayout input body =
-  HH.div [ css "tmp-center-layout" ]
+  HH.div [ css $ "tmp-center-layout " <> input.css ]
     [ HH.div [ css "side leftside" ] input.leftSide 
     , HH.div [ css "main" ]
         [ HH.div [ css "tmp-main_section" ] body

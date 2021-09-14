@@ -59,7 +59,7 @@ export class MaterialData {
     text?: string;
 }
 
-export function encodeMaterialData(mat: MaterialData): { data: string, textCount: number, beginning: string } {
+export function extractTextMaterialData(mat: MaterialData) {
     switch (mat.type) {
         case MaterialType.DOCUMENT:
             let text = "";
@@ -68,16 +68,26 @@ export function encodeMaterialData(mat: MaterialData): { data: string, textCount
                     text += block.data.text + " ";
                 }
             });
+            return text.trim();
+        case MaterialType.PLAINTEXT:
+            return mat.text?.trim() || "";
+    }
+}
+
+export function encodeMaterialData(mat: MaterialData): { data: string, textCount: number, beginning: string } {
+    const text = extractTextMaterialData(mat);
+    switch (mat.type) {
+        case MaterialType.DOCUMENT:
             return {
                 data: JSON.stringify(mat.document),
-                beginning: text.substring(0, 140),
+                beginning: text.substring(0, 140).trim(),
                 textCount: text.length
             };
         case MaterialType.PLAINTEXT:
             return {
                 data: mat.text || "",
-                beginning: mat.text?.substring(0, 140) || "",
-                textCount: mat.text?.length || 0
+                beginning: text.substring(0, 140).trim(),
+                textCount: text.length
             };
     }
 }

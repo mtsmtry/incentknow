@@ -409,10 +409,10 @@ exports.setSpaceDisplayId = spaceId => {
     };
 };
 
-exports.setSpaceAuthority = spaceId => {
+exports.setSpaceAuthorityority = spaceId => {
     return authority => {
         const req = { spaceId, authority };
-        return functions.httpsCallable("setSpaceAuthority")(req).then(receive);
+        return functions.httpsCallable("setSpaceAuthorityority")(req).then(receive);
     };
 };
 
@@ -472,7 +472,7 @@ exports.getContent = contentId => {
         const formatRef = db.collection("formats").doc(junction.formatId);
         const structureRef = formatRef.collection("structures").doc(junction.structureId);
 
-        const [contentSnap, formatSnap, structureSnap, containerSnap] = 
+        const [contentSnap, formatSnap, structureSnap, containerSnap] =
             await Promise.all([contentRef.get(options), formatRef.get(options), structureRef.get(options), containerRef.get(options)]);
         return mkContent(contentSnap, formatSnap, structureSnap, containerSnap);
     };
@@ -608,7 +608,7 @@ exports.getContentsByFormat = formatId => {
 exports.getAllSpaceContents = spaceId => {
     return async options => {
         const containersSnap = await db.collection("containers").where("spaceId", "==", spaceId).get(options);
-     //   const containerDict = containersSnap.docs.reduce((m, x) => { m[x.data().formatId] = x; return m; }, {});
+        //   const containerDict = containersSnap.docs.reduce((m, x) => { m[x.data().formatId] = x; return m; }, {});
         const gets = containersSnap.docs.map(container => container.ref.collection("items").limit(100).get(options));
         const contentsSnapLists = await Promise.all(gets);
         const contents = contentsSnapLists.map((contentsSnap, index) => {
@@ -1044,7 +1044,7 @@ function mkCrawlerTask(crawlerId, operationId, taskSnap) {
     task.crawlerId = crawlerId;
     task.oprationId = operationId;
     return task;
-} 
+}
 
 exports.onSnapshotCrawlerTasks = crawlerId => {
     return operationId => {
@@ -1107,8 +1107,8 @@ exports.applyFirestoreCondition = conds => {
         }
 
         function matchFilters(content) {
-            for(const filter in conds.filters) {
-                if(!matchFilter(content, filter)) {
+            for (const filter in conds.filters) {
+                if (!matchFilter(content, filter)) {
                     return false;
                 }
             }

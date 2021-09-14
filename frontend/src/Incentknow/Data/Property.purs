@@ -16,7 +16,7 @@ import Data.Newtype (unwrap)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Tuple (Tuple(..), uncurry)
 import Foreign.Object as Object
-import Incentknow.API (fromJsonToFocusedMaterial, fromJsonToFocusedMaterialDraft, fromJsonToRelatedMaterial)
+import Incentknow.API (fromJsonToFocusedMaterial, fromJsonToFocusedMaterialDraft, fromJsonToRelatedContent, fromJsonToRelatedMaterial)
 import Incentknow.Data.Entities (FocusedFormat, FocusedMaterial, FocusedMaterialDraft, PropertyInfo, RelatedContent, RelatedMaterial, Type(..))
 import Incentknow.Data.Ids (ContentId, MaterialDraftId, MaterialId)
 
@@ -243,14 +243,14 @@ fromMaterialObjectToJson = case _ of
     MaterialObjectFocused material -> forceConvert { materialId: material.materialId }
     MaterialObjectRelated material -> forceConvert { materialId: material.materialId }
 
-toReferenceValue :: forall a. Json -> ReferenceValue a 
+toReferenceValue :: Json -> ReferenceValue Json
 toReferenceValue value = 
   if toString value == Just "deleted" then 
     DeletedReference 
   else if isNull value then
     NullReference
   else 
-    JustReference $ forceConvert value
+    JustReference value
 
 data ReferenceValue a
   = DeletedReference
@@ -274,7 +274,7 @@ toTypedValue value ty = case ty of
   IntType -> IntTypedValue $ flatten $ map fromNumber $ J.toNumber value
   BoolType -> BoolTypedValue $ toBoolean value
   StringType -> StringTypedValue $ toString value
-  ContentType format -> ContentTypedValue format $ toReferenceValue value
+  ContentType format -> ContentTypedValue format $ map fromJsonToRelatedContent $ toReferenceValue value
   UrlType -> UrlTypedValue $ toString value
   ObjectType props -> ObjectTypedValue $ map (\x-> { value: toTypedValue x.value x.info.type, info: x.info }) $ mkProperties value props
   TextType -> TextTypedValue $ toReferenceValue value
@@ -282,7 +282,7 @@ toTypedValue value ty = case ty of
   EnumType enums -> EnumTypedValue enums $ toString value
   DocumentType -> DocumentTypedValue $ toReferenceValue value
   ImageType -> ImageTypedValue $ toString value
-  EntityType format -> EntityTypedValue format $ toReferenceValue value
+  EntityType format -> EntityTypedValue format $ map fromJsonToRelatedContent $ toReferenceValue value
 
 toJsonFromTypedValue :: TypedValue -> Json
 toJsonFromTypedValue = case _ of

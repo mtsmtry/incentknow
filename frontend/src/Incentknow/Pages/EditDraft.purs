@@ -11,6 +11,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Inputs (button)
+import Incentknow.Data.Ids (ContentDraftId, MaterialDraftId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Organisms.DraftExplorer as DraftExplorer
 import Incentknow.Organisms.DraftHistory as DraftHistory
@@ -27,6 +28,8 @@ data Action
   = Initialize
   | HandleInput EditTarget
   | Navigate Route
+  | ContentEvent EditContent.Output
+  | MaterialEvent EditMaterial.Output
 
 type Slot p
   = forall q. H.Slot q Void p
@@ -58,7 +61,8 @@ initialState target = { target }
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
   centerLayout 
-    { leftSide: 
+    { css: "page-edit-draft"
+    , leftSide: 
         [ HH.slot (SProxy :: SProxy "draftExplorer") unit DraftExplorer.component 
             { selectedDraftId:
                 case state.target of
@@ -77,17 +81,15 @@ render state =
           --  } absurd
         ]
     }
-    [ HH.div [ css "page-new-content" ]
-      [ section ("selector" <> if isContent then " selector-content" else " selector-material")
+    [ section ("page-edit-draft-selector" <> if isContent then " selector-content" else " selector-material")
           [ button "New" (Navigate $ EditDraft $ ContentTarget $ TargetBlank Nothing Nothing)
          --, button "Material" (Navigate $ EditDraft $ MaterialTarget $ MaterialTargetBlank Nothing)
           ]
       , case state.target of
           ContentTarget target ->
-            HH.slot (SProxy :: SProxy "editContent") unit EditContent.component target absurd
+            HH.slot (SProxy :: SProxy "editContent") unit EditContent.component target (Just <<< ContentEvent)
           MaterialTarget target ->
-            HH.slot (SProxy :: SProxy "editMaterial") unit EditMaterial.component target absurd
-      ]
+            HH.slot (SProxy :: SProxy "editMaterial") unit EditMaterial.component target (Just <<< MaterialEvent)
     ]
   where
   isContent = 
@@ -98,5 +100,18 @@ render state =
 handleAction :: forall o m. Behaviour m => MonadAff m => MonadEffect m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   Initialize -> pure unit
-  HandleInput target -> H.modify_ _ { target = target }
+  HandleInput target -> do
+    H.modify_ _ { target = target }
+  ContentEvent (EditContent.UpdatedDraft draftId data2) -> do
+    _ <- H.query (SProxy :: SProxy "draftExplorer") unit $ H.tell $ DraftExplorer.UpdateContentDraft draftId data2
+    pure unit
+  MaterialEvent (EditMaterial.UpdatedDraft draftId data2) -> do
+    _ <- H.query (SProxy :: SProxy "draftExplorer") unit $ H.tell $ DraftExplorer.UpdateMaterialDraft draftId data2
+    pure unit
+  ContentEvent (EditContent.CreatedDraft draftId) -> do
+    _ <- H.query (SProxy :: SProxy "draftExplorer") unit $ H.tell $ DraftExplorer.SelectItem $ Left draftId
+    pure unit
+  MaterialEvent (EditMaterial.CreatedDraft draftId) -> do
+    _ <- H.query (SProxy :: SProxy "draftExplorer") unit $ H.tell $ DraftExplorer.SelectItem $ Right draftId
+    pure unit
   Navigate route -> navigate route

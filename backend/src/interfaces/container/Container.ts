@@ -13,18 +13,19 @@ export interface RelatedContainer {
     format: RelatedFormat;
     createdAt: number;
     updatedAt: number;
+    contentCount: Int;
     generator: ContentGenerator | null;
 }
 
-export function toRelatedContainer(container: Container): RelatedContainer {
-    container.format.space = container.space;
+export function toRelatedContainer(container: Container, contentCount: Int): RelatedContainer {
     return {
         containerId: container.entityId,
         space: toRelatedSpace(container.space),
         format: toRelatedFormat(container.format),
         createdAt: toTimestamp(container.createdAt),
         updatedAt: toTimestamp(container.updatedAt),
-        generator: container.generator
+        generator: container.generator,
+        contentCount
     }
 }
 

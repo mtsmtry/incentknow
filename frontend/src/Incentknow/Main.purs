@@ -5,6 +5,7 @@ import Prelude
 import Control.Coroutine as CR
 import Control.Coroutine.Aff (emit)
 import Control.Coroutine.Aff as CoroutineAff
+import Data.Either (Either(..))
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
@@ -15,6 +16,8 @@ import Effect.Console (log)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
+import Incentknow.API (getMyAccount)
+import Incentknow.API.Execution (callQuery)
 import Incentknow.AppM (runAppM)
 import Incentknow.Router as Router
 import Routing.PushState (makeInterface)
@@ -51,12 +54,17 @@ popStateConsumer query = CR.consumer \event -> do
   pure Nothing
 
 main :: Effect Unit
-main = HA.runHalogenAff do
-  globalMessage <- AVar.empty
-  pushStateInterface <- H.liftEffect $ makeInterface
-  let
-    environment = { globalMessage, pushStateInterface }
-    component = H.hoist (runAppM environment) Router.component
-  body <- HA.awaitBody
-  io <- runUI component unit body
-  CR.runProcess (popStateProducer CR.$$ popStateConsumer io.query)
+main = 
+  HA.runHalogenAff do
+    result <- callQuery $ getMyAccount unit
+    globalMessage <- AVar.empty
+    pushStateInterface <- H.liftEffect $ makeInterface
+    let
+      account = case result of
+        Left _ -> Nothing
+        Right x -> Just x
+      environment = { globalMessage, pushStateInterface, account }
+      component = H.hoist (runAppM environment) Router.component
+    body <- HA.awaitBody
+    io <- runUI component unit body
+    CR.runProcess (popStateProducer CR.$$ popStateConsumer io.query)

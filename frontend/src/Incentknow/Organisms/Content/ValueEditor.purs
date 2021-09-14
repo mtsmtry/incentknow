@@ -5,8 +5,10 @@ import Prelude
 import Data.Argonaut.Core (toString)
 import Data.Array (deleteAt, mapWithIndex)
 import Data.Either (Either(..))
+import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Symbol (SProxy(..))
+import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
@@ -14,8 +16,8 @@ import Halogen.HTML as HH
 import Incentknow.AppM (class Behaviour, navigateRoute)
 import Incentknow.Atoms.Icon (propertyIcon)
 import Incentknow.Atoms.Inputs (button, checkbox, numberarea, textarea)
-import Incentknow.Data.Entities (FormatUsage(..), MaterialType(..))
-import Incentknow.Data.Ids (PropertyId)
+import Incentknow.Data.Entities (FormatUsage(..), MaterialData, MaterialType(..))
+import Incentknow.Data.Ids (MaterialDraftId, PropertyId)
 import Incentknow.Data.Property (Enumerator, ReferenceValue(..), TypedProperty, TypedValue(..), toMaybeFromReferenceValue, toRelatedContentFromContentId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.AceEditor as AceEditor
@@ -51,7 +53,10 @@ type Output
   = TypedValue
 
 type Slot p
-  = forall q. H.Slot q Output p
+  = H.Slot Query Output p
+
+data Query a
+  = GetMaterialUpdations (M.Map MaterialDraftId MaterialData -> a)
 
 type ChildSlots
   = ( aceEditor :: AceEditor.Slot Unit
@@ -65,7 +70,7 @@ type ChildSlots
     , entityMenu :: EntityMenu.Slot Unit
     )
 
-component :: forall q m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q Input Output m
+component :: forall m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML Query Input Output m
 component =
   H.mkComponent
     { initialState
@@ -75,6 +80,7 @@ component =
           H.defaultEval
             { initialize = Just Initialize
             , handleAction = handleAction
+            , handleQuery = handleQuery
             , receive = Just <<< HandleInput
             }
     }
@@ -225,3 +231,20 @@ handleAction = case _ of
   HandleInput input -> do
     H.put $ initialState input
   Navigate e route -> navigateRoute e route
+
+handleQuery :: forall o m a. Query a -> H.HalogenM State Action ChildSlots o m (Maybe a)
+handleQuery = case _ of
+  GetMaterialUpdations k -> do
+    state <- H.get
+    let 
+      isMaterial = case state.value of
+        DocumentTypedValue _ -> true
+        TextTypedValue _ -> true
+        _ -> false
+    case isMaterial, state.value of
+      true, _ -> do
+        result <- H.query (SProxy :: SProxy "material") unit $ H.request Material.GetUpdation
+        pure $ map (\(Tuple id d)-> k $ M.singleton id d) result
+      _, _ -> do
+        pure $ Just $ k M.empty
+  

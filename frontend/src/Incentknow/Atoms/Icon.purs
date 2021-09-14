@@ -2,13 +2,15 @@ module Incentknow.Atoms.Icon where
 
 import Prelude
 
+import Data.Array (length)
 import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.API.Execution (Remote(..))
-import Incentknow.Data.Entities (FocusedSpace, MembershipMethod(..), PropertyInfo, RelatedUser, SpaceAuth(..), Type(..), TypeName(..))
+import Incentknow.API.Static (getIconUrl)
+import Incentknow.Data.Entities (MembershipMethod(..), PropertyInfo, RelatedUser, SpaceAuthority(..), Type(..), TypeName(..))
 import Incentknow.Data.EntityUtils (getTypeName)
 import Incentknow.HTML.Utils (css, maybeElem)
 
@@ -27,9 +29,21 @@ loadingWith msg =
 
 remoteWith :: forall a w i. Remote a -> (a -> HH.HTML w i) -> HH.HTML w i
 remoteWith remote body = case remote of
-  Loading -> HH.text ""
-  LoadingForServer -> HH.div [ css "atom-remote-loading" ] [ HH.div [ css "loaderNormal" ] [] ]
+  Loading -> HH.div [ css "atom-remote-with" ] [ HH.div [ css "loaderCircle" ] [] ]
+  LoadingForServer -> HH.div [ css "atom-remote-with" ] [ HH.div [ css "loaderCircle" ] [] ]
   Holding item -> body item
+  Missing error -> HH.text error
+
+remoteArrayWith :: forall a w i. Remote (Array a) -> ((Array a) -> HH.HTML w i) -> HH.HTML w i
+remoteArrayWith remote body = case remote of
+  Loading -> HH.div [ css "atom-remote-with" ] [ HH.div [ css "loaderCircle" ] [] ]
+  LoadingForServer -> HH.div [ css "atom-remote-with" ] [ HH.div [ css "loaderCircle" ] [] ]
+  Holding items -> 
+    if length items == 0 then 
+      HH.div 
+        [ css "atom-remote-with" ] 
+        [ HH.div [ css "no-result" ] [ HH.text "結果はありません" ] ] 
+    else body items
   Missing error -> HH.text error
 
 iconButton :: forall a s m. String -> a -> H.ComponentHTML a s m
@@ -39,26 +53,32 @@ icon :: forall w i. String -> HH.HTML w i
 icon cls = HH.i [ css cls ] []
 
 iconSolid :: forall w i. String -> HH.HTML w i
-iconSolid label = HH.i [ css $ "fas fa-" <> label ] []
+iconSolid label = HH.i [ css $ "far fa-" <> label ] []
 
-spaceScopeIcon :: forall w i. FocusedSpace -> HH.HTML w i
+spaceScopeIcon :: forall a w i. { defaultAuthority ∷ SpaceAuthority, membershipMethod ∷ MembershipMethod | a } -> HH.HTML w i
 spaceScopeIcon space =
   HH.span [ css "atom-space-scope" ]
-    if space.defaultAuthority == SpaceAuthNone && space.membershipMethod == MembershipMethodNone then
+    if space.defaultAuthority == SpaceAuthorityNone && space.membershipMethod == MembershipMethodNone then
       [ HH.span [ css "icon private" ] [ icon "fas fa-lock", HH.text "Private" ]
       ]
-    else if space.defaultAuthority == SpaceAuthNone then
+    else if space.defaultAuthority == SpaceAuthorityNone then
       [ HH.span [ css "icon group" ] [ icon "fas fa-users", HH.text "Group" ]
       ]
     else 
       [ HH.span [ css "icon public" ] [ icon "fas fa-globe-americas", HH.text "Public" ]
       ]
   
-userIcon :: forall w i. RelatedUser -> HH.HTML w i
-userIcon user =
+userPlate :: forall w i. RelatedUser -> HH.HTML w i
+userPlate user =
   HH.span [ css "atom-user-icon" ]
-    [ HH.img [ HP.src "/assets/imgs/default_icon.jpg" ]
+    [ HH.img [ HP.src $ getIconUrl user.iconImage ]
     , HH.span [ css "username" ] [ HH.text user.displayName ]
+    ]
+
+userIcon :: forall w i. Maybe String -> HH.HTML w i
+userIcon iconImage =
+  HH.span [ css "atom-user-icon" ]
+    [ HH.img [ HP.src $ getIconUrl iconImage ]
     ]
 
 formatWithIcon :: forall w i a. { displayName :: String, icon :: Maybe String | a } -> HH.HTML w i

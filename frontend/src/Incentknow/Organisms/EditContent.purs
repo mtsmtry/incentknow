@@ -4,13 +4,17 @@ import Prelude
 
 import Control.Monad.Rec.Class (forever)
 import Data.Argonaut.Core (Json, jsonNull)
+import Data.Array (length)
 import Data.Foldable (for_)
+import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe, isJust, isNothing, maybe)
+import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
+import Data.Tuple (Tuple(..))
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error)
 import Halogen as H
 import Halogen.HTML as HH
@@ -25,7 +29,7 @@ import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Atoms.Message (SaveState(..))
 import Incentknow.Data.Entities (FocusedFormat, FocusedContentDraft)
-import Incentknow.Data.Ids (SpaceId, StructureId)
+import Incentknow.Data.Ids (ContentDraftId, SpaceId, StructureId)
 import Incentknow.Data.Property (getDefaultValue)
 import Incentknow.HTML.Utils (css, maybeElem)
 import Incentknow.Molecules.FormatMenu as FormatMenu
@@ -49,6 +53,8 @@ type State
     , timerSubId :: Maybe SubscriptionId
     , target :: EditContentTarget
     , draft :: Remote FocusedContentDraft
+    , draftInfo :: Maybe (Tuple (Maybe SpaceId) StructureId)
+    , committed :: Boolean
     }
 
 data Action
@@ -59,13 +65,17 @@ data Action
   | ChangeSpace (Maybe SpaceId)
   | ChangeStructure (Maybe StructureId)
   | ChangeValue Json
-  | CheckChange
+  | CheckChange Boolean
   | FetchedFormat (Fetch FocusedFormat)
   | FetchedDraft (Fetch FocusedContentDraft)
   | Commit
 
 type Slot p
-  = forall q. H.Slot q Void p
+  = forall q. H.Slot q Output p
+
+data Output 
+  = CreatedDraft ContentDraftId
+  | UpdatedDraft ContentDraftId Json
 
 type ChildSlots
   = ( editor :: Editor.Slot Unit
@@ -73,7 +83,7 @@ type ChildSlots
     , structureMenu :: StructureMenu.Slot Unit
     )
 
-component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q EditContentTarget o m
+component :: forall q m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q EditContentTarget Output m
 component =
   H.mkComponent
     { initialState
@@ -97,6 +107,8 @@ initialState input =
   , loading: false
   , timerSubId: Nothing
   , draft: Loading
+  , draftInfo: Nothing
+  , committed: false
   }
 
 editor_ = SProxy :: SProxy "editor"
@@ -107,8 +119,8 @@ render state =
       [ -- HH.div [ css "save-state" ] [ saveState state.saveState ]
         section ("top" <> if isJust state.format then " top-with-info" else "")
           [ HH.div [ css "header" ]
-            [ case state.target of
-                TargetBlank spaceId structureId ->
+            [ case state.target, state.draftInfo of
+                TargetBlank spaceId structureId, _ ->
                     HH.div [ css "createto createto-blank" ]
                       [ HH.tr [ ]
                           [ HH.td [ css "type" ] [ HH.text "スペース" ]
@@ -127,16 +139,43 @@ render state =
                               ]
                           ]
                       ]
-                _ ->
+                _, Just (Tuple spaceId structureId) ->
+                  HH.div [ css "createto createto-draft" ]
+                    [ HH.tr [ ] 
+                        [ HH.td [ css "type" ] [ HH.text "スペース" ]
+                        , HH.td [ css "value" ]
+                            [ HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
+                                { value: spaceId, disabled: true }
+                                (Just <<< ChangeSpace)
+                            ]
+                        ]
+                    , HH.tr [ ] 
+                        [ HH.td [ css "type" ] [ HH.text "フォーマット" ]
+                        , HH.td [ css "value" ]
+                            [ HH.slot (SProxy :: SProxy "structureMenu") unit StructureMenu.component
+                                { value: Just structureId, filter: maybe FormatMenu.None FormatMenu.SpaceBy spaceId, disabled: true }
+                                (Just <<< ChangeStructure)
+                            ]
+                        ]
+                    ]
+                _, _ ->
                   remoteWith state.draft \draft->
                     HH.div [ css "createto createto-draft" ]
                       [ HH.tr [ ] 
-                          [ HH.td [ css "type" ] [ HH.text "フォーマット" ]
-                          , HH.td [ css "value" ] [ HH.text draft.format.space.displayName ]
+                          [ HH.td [ css "type" ] [ HH.text "スペース" ]
+                          , HH.td [ css "value" ]
+                              [ HH.slot (SProxy :: SProxy "spaceMenu") unit SpaceMenu.component
+                                  { value: Just draft.format.space.spaceId, disabled: true }
+                                  (Just <<< ChangeSpace)
+                              ]
                           ]
                       , HH.tr [ ] 
-                          [ HH.td [ css "type" ] [ HH.text "スペース" ]
-                          , HH.td [ css "value" ] [ HH.text draft.format.displayName ]
+                          [ HH.td [ css "type" ] [ HH.text "フォーマット" ]
+                          , HH.td [ css "value" ]
+                              [ HH.slot (SProxy :: SProxy "structureMenu") unit StructureMenu.component
+                                  { value: Just draft.format.currentStructure.structureId, filter: FormatMenu.SpaceBy draft.format.space.spaceId, disabled: true }
+                                  (Just <<< ChangeStructure)
+                              ]
                           ]
                       ]
             ]
@@ -197,7 +236,7 @@ timer =
       Aff.forkAff
         $ forever do
             Aff.delay $ Milliseconds 2000.0
-            EventSource.emit emitter CheckChange
+            EventSource.emit emitter $ CheckChange false
     pure
       $ EventSource.Finalizer do
           Aff.killFiber (error "Event source finalized") fiber
@@ -206,17 +245,19 @@ changeRoute :: forall o m. Behaviour m => Route -> H.HalogenM State Action Child
 changeRoute route = do
   navigate route
 
-handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
   HandleInput input -> do
+    liftEffect $ consoleLog "EditContent.HandleInput"
     state <- H.get
-    -- Load resources
     when (state.target /= input) do
+      handleAction $ CheckChange true
       H.put $ initialState input
       handleAction Load
   Finalize -> do
-    handleAction CheckChange
-    H.liftEffect $ consoleLog "EditContent.Finalize"
+    H.liftEffect $ consoleLog "EditContent.Finalize start"
+    handleAction $ CheckChange true
+    H.liftEffect $ consoleLog "EditContent.Finalize end"
   Initialize -> do
     state <- H.get
     -- Load resources
@@ -240,8 +281,9 @@ handleAction = case _ of
       TargetContent contentId -> do
         -- get or create a draft of the specified content and fetch the draft id
         maybeDraftId <- executeCommand $ startContentEditing contentId Nothing
-        for_ maybeDraftId \draftId ->
+        for_ maybeDraftId \draftId -> do
           navigate $ EditDraft $ ContentTarget $ TargetDraft draftId
+          H.raise $ CreatedDraft draftId
   -- Fetch
   FetchedFormat fetch -> do
     forRemote fetch \format ->
@@ -265,6 +307,7 @@ handleAction = case _ of
     case state.target of
       TargetBlank spaceId oldStructureId -> do
         H.modify_ _ { target = TargetBlank spaceId structureId }
+        liftEffect $ consoleLog $ "EditContent.ChangeStructure.modify" <> (fromMaybe "" $ map (unwrap >>> show) spaceId) <> "," <> (fromMaybe "" $ map (unwrap >>> show) structureId)
         when (structureId /= oldStructureId) do
           navigate $ EditDraft $ ContentTarget $ TargetBlank spaceId structureId
       _ -> pure unit
@@ -278,44 +321,58 @@ handleAction = case _ of
     case state.saveState of
       Saving -> H.modify_ _ { value = value, saveState = SavingButChanged }
       _ -> H.modify_ _ { value = value, saveState = NotSaved }
+    case state.target of
+      TargetDraft draftId -> H.raise $ UpdatedDraft draftId value
+      _ -> pure unit
   -- Save changes if they happened
-  CheckChange -> do
+  CheckChange includeMaterials -> do
     state <- H.get
     -- when active state for save
-    when (state.saveState == NotSaved && not state.loading) do
-      for_ state.format \format -> do
-        -- Set the save state
-        H.modify_ _ { saveState = Saving }
-        case state.target of
-          TargetBlank spaceId structureId -> do
-            for_ structureId \structureId2 -> do
-              result <- executeCommand $ createNewContentDraft structureId2 spaceId state.value
+    when (not state.committed) do
+      materials <- if includeMaterials then getMaterials else pure []
+      when ((state.saveState == NotSaved && not state.loading) || length materials > 0) do
+        for_ state.format \format -> do
+          -- Set the save state
+          H.modify_ _ { saveState = Saving }
+          case state.target of
+            TargetBlank spaceId structureId -> do
+              for_ structureId \structureId2 -> do
+                result <- executeCommand $ createNewContentDraft structureId2 spaceId state.value
+                case result of
+                  Just draftId -> do
+                    pushState $ EditDraft $ ContentTarget $ TargetDraft draftId
+                    H.modify_ _ { target = TargetDraft draftId, draftInfo = Just (Tuple spaceId structureId2) }
+                    makeSaveStateSaved
+                    H.raise $ CreatedDraft draftId
+                  Nothing -> H.modify_ _ { saveState = NotSaved }
+            TargetDraft draftId -> do
+              result <- executeCommand $ editContentDraft draftId state.value materials
               case result of
-                Just draftId -> do
-                  pushState $ EditDraft $ ContentTarget $ TargetDraft draftId
-                  H.modify_ _ { target = TargetDraft draftId }
-                  makeSaveStateSaved
+                Just _ -> makeSaveStateSaved
                 Nothing -> H.modify_ _ { saveState = NotSaved }
-          TargetDraft draftId -> do
-            -- result <- executeAPI $ edit { structureId: format.defaultStructureId, workId, spaceId: toNullable state.spaceId, formatId, data: state.value }
-            result <- executeCommand $ editContentDraft draftId state.value
-            case result of
-              Just _ -> makeSaveStateSaved
-              Nothing -> H.modify_ _ { saveState = NotSaved }
-          TargetContent _ -> pure unit
+            TargetContent _ -> pure unit
   Commit -> do
     state <- H.get
     case state.target of
       TargetDraft draftId -> do
-        H.modify_ _ { loading = true }
-        maybeContentId <- executeCommand $ commitContent draftId state.value
+        H.modify_ _ { loading = true, committed = true }
+        materials <- getMaterials
+        maybeContentId <- executeCommand $ commitContent draftId state.value materials
         for_ maybeContentId \contentId->
           navigate $ Content contentId
         --H.modify_ _ { loading = false }
       _ -> pure unit
   where
-  makeSaveStateSaved :: H.HalogenM State Action ChildSlots o m Unit
+  makeSaveStateSaved :: H.HalogenM State Action ChildSlots Output m Unit
   makeSaveStateSaved = do
     state <- H.get
     when (state.saveState == Saving) do
       H.modify_ _ { saveState = Saved }
+
+  getMaterials = do
+    maybeMaterialMap <- H.query editor_ unit $ H.request Editor.GetMaterialUpdations
+    let 
+      materialMap = fromMaybe M.empty maybeMaterialMap
+      materials = map (\(Tuple id d)-> { draftId: id, data: d }) $ M.toUnfoldable materialMap
+    pure materials
+    

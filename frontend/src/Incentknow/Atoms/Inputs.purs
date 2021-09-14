@@ -10,8 +10,9 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties (InputType(..))
 import Halogen.HTML.Properties as HP
-import Incentknow.Atoms.Icon (loadingWith)
+import Incentknow.Atoms.Icon (icon, iconSolid, loadingWith)
 import Incentknow.HTML.Utils (css)
+import Web.UIEvent.KeyboardEvent (KeyboardEvent)
 
 submitButton ::
   forall a s m.
@@ -85,6 +86,8 @@ dangerButton text onClick =
     ]
     [ HH.text text ]
 
+foreign import cancelReturn :: forall i. KeyboardEvent -> Maybe i
+
 textarea ::
   forall a s m.
   { value :: String
@@ -98,11 +101,27 @@ textarea input =
     , HP.spellcheck false
     --, HP.autocomplete false
     , HP.placeholder input.placeholder
-    , HP.value $ removeReturn input.value
-    , HE.onValueInput $ Just <<< input.onChange <<< removeReturn -- onValueChangeは正しくイベントが発火しないので使用しない
+    , HP.value input.value
+    , HE.onValueInput $ Just <<< input.onChange -- onValueChangeは正しくイベントが発火しないので使用しない
+    , HE.onKeyDown cancelReturn
     ]
-  where
-  removeReturn = replaceAll (Pattern "\n") (Replacement "") <<< replaceAll (Pattern "\r") (Replacement "")
+
+searchBox ::
+  forall a s m.
+  { value :: String
+  , onChange :: String -> a
+  } ->
+  H.ComponentHTML a s m
+searchBox input =
+  HH.div [ css "atom-search-box" ]
+    [ icon "fas fa-search"
+    , HH.textarea
+        [ HP.spellcheck false
+        , HP.value input.value
+        , HE.onValueInput $ Just <<< input.onChange
+        , HE.onKeyDown cancelReturn
+        ]
+    ]
 
 numberarea ::
   forall a s m.

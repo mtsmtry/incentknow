@@ -20,6 +20,7 @@ type ContentSemanticData
     , semanticId :: Maybe SemanticId
     , image :: Maybe String
     }
+foreign import log :: forall a. a -> a
 
 getContentSemanticData :: Json -> FocusedFormat -> ContentSemanticData
 getContentSemanticData contentData format = { title, semanticId: map wrap semanticId, titleProperty, image }
@@ -32,11 +33,11 @@ getContentSemanticData contentData format = { title, semanticId: map wrap semant
           (\id -> head $ catMaybes $ map (\x -> if unwrap x.info.id == id then toString x.value else Nothing) props)
           (format.semanticId)
 
-  title = fromMaybe "" $ head $ catMaybes $ map (\x -> toString x.value) props
+  title = fromMaybe "無題" $ map _.text titleProperty
 
   image = head $ catMaybes $ map (\x -> if x.info.type == ImageType then toString x.value else Nothing) props
 
-  titleProperty = map (\x-> { text: fromMaybe "" $ toString x.value, info: x.info }) $ head $ filter isString props
+  titleProperty = map (\x-> { text: fromMaybe "" $ toString x.value, info: x.info }) $ head $ filter isString (log props)
     where
     isString :: Property -> Boolean
     isString prop = case prop.info.type of

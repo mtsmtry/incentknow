@@ -23,7 +23,7 @@ import Incentknow.AppM (class Behaviour, navigate, pushState)
 import Incentknow.Atoms.Inputs (submitButton)
 import Incentknow.Atoms.Message (SaveState(..))
 import Incentknow.Data.Entities (BlockData(..), FocusedMaterialDraft, MaterialData(..), MaterialType(..))
-import Incentknow.Data.Ids (SpaceId)
+import Incentknow.Data.Ids (MaterialDraftId, SpaceId)
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SpaceMenu as SpaceMenu
 import Incentknow.Organisms.Material.Editor as Editor
@@ -58,14 +58,18 @@ data Action
   | Commit
 
 type Slot p
-  = forall q. H.Slot q Void p
+  = forall q. H.Slot q Output p
 
 type ChildSlots
   = ( editor :: Editor.Slot Unit
     , spaceMenu :: SpaceMenu.Slot Unit
     )
 
-component :: forall q o m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q EditMaterialTarget o m
+data Output
+  = CreatedDraft MaterialDraftId
+  | UpdatedDraft MaterialDraftId MaterialData
+
+component :: forall q m. Behaviour m => MonadEffect m => MonadAff m => H.Component HH.HTML q EditMaterialTarget Output m
 component =
   H.mkComponent
     { initialState
@@ -159,7 +163,7 @@ changeRoute :: forall o m. Behaviour m => Route -> H.HalogenM State Action Child
 changeRoute route = do
   navigate route
 
-handleAction :: forall o m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall m. Behaviour m => MonadEffect m => MonadAff m => Action -> H.HalogenM State Action ChildSlots Output m Unit
 handleAction = case _ of
   HandleInput input -> do
     state <- H.get
@@ -191,8 +195,9 @@ handleAction = case _ of
       MaterialTargetMaterial materialId -> do
         -- get or create a draft of the specified content and fetch the draft id
         maybeDraft <- executeCommand $ startMaterialEditing materialId Nothing
-        for_ maybeDraft \draft ->
+        for_ maybeDraft \draft -> do
           navigate $ EditDraft $ MaterialTarget $ MaterialTargetDraft draft.draftId
+          H.raise $ CreatedDraft draft.draftId
   -- Fetch
   FetchedDraft fetch -> do
     forRemote fetch \draft ->
@@ -213,6 +218,9 @@ handleAction = case _ of
     case state.saveState of
       Saving -> H.modify_ _ { data = data2, saveState = SavingButChanged }
       _ -> H.modify_ _ { data = data2, saveState = NotSaved }
+    case state.target of
+      MaterialTargetDraft draftId -> H.raise $ UpdatedDraft draftId data2
+      _ -> pure unit
   -- Save changes if they happened
   CheckChange -> do
     state <- H.get
@@ -228,6 +236,7 @@ handleAction = case _ of
               pushState $ EditDraft $ MaterialTarget $ MaterialTargetDraft draft.draftId
               H.modify_ _ { target = MaterialTargetDraft draft.draftId }
               makeSaveStateSaved
+              H.raise $ CreatedDraft draft.draftId
             Nothing -> H.modify_ _ { saveState = NotSaved }
         MaterialTargetDraft draftId -> do
           result <- executeCommand $ editMaterialDraft draftId state.data
@@ -246,7 +255,7 @@ handleAction = case _ of
         H.modify_ _ { loading = false }
       _ -> pure unit
   where
-  makeSaveStateSaved :: H.HalogenM State Action ChildSlots o m Unit
+  makeSaveStateSaved :: H.HalogenM State Action ChildSlots Output m Unit
   makeSaveStateSaved = do
     state <- H.get
     when (state.saveState == Saving) do

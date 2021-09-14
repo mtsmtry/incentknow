@@ -11,8 +11,9 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Incentknow.API (getUser)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, defaultIconUrl, forRemote, toMaybe)
-import Incentknow.API.Session (getMyUserId, logout)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, forRemote, toMaybe)
+import Incentknow.API.Session (getMyUserId, logout, reloadPage)
+import Incentknow.API.Static (getFullsizeIconUrl)
 import Incentknow.AppM (class Behaviour, navigate)
 import Incentknow.Atoms.Icon (remoteWith)
 import Incentknow.Data.Entities (FocusedUser)
@@ -65,38 +66,37 @@ initialState input = { userId: input.userId, tab: input.tab, user: Loading, myUs
 
 render :: forall m. Behaviour m => MonadAff m => MonadEffect m => State -> H.ComponentHTML Action ChildSlots m
 render state =
-  centerLayout { leftSide: [], rightSide: [] }
-    [ HH.div [ css "page-user" ]
-      [ tabPage
-          { tabs: [ UserMain ] <> if userId == state.myUserId then [ UserSetting ] else []
-          , currentTab: state.tab
-          , onChangeTab: ChangeTab
-          , showTab:
-              case _ of
-                UserMain -> HH.text "Home"
-                UserSetting -> HH.text "Setting"
-          }
-          ( if userId == state.myUserId then
-              [ HH.div [ css "page-user-logout", HE.onClick $ \_ -> Just Logout ] [ HH.text "Logout" ] ]
-            else
-              []
-          )
-          [ remoteWith state.user \user ->
-              HH.div [ css "page-user-header" ]
-                [ HH.div [ css "left" ]
-                    [ HH.img [ HP.src $ fromMaybe defaultIconUrl user.iconUrl ] ]
-                , HH.div [ css "right" ]
-                    [ HH.div [ css "name" ] [ HH.text user.displayName ]
-                    ]
-                ]
-          ]
-          [ case state.tab of
-              UserMain ->
-                maybeElem userId \x ->
-                  HH.slot (SProxy :: SProxy "main") unit Main.component { userId: x } absurd
-              UserSetting -> HH.slot (SProxy :: SProxy "setting") unit Setting.component {} absurd
-          ]
-      ]
+  centerLayout { css: "page-user", leftSide: [], rightSide: [] }
+    [ tabPage
+        { tabs: [ UserMain ] <> if userId == state.myUserId then [ UserSetting ] else []
+        , currentTab: state.tab
+        , onChangeTab: ChangeTab
+        , isTabAlphabet: true
+        , showTab:
+            case _ of
+              UserMain -> [ HH.text "Home" ]
+              UserSetting -> [ HH.text "Setting" ]
+        }
+        ( if userId == state.myUserId then
+            [ HH.div [ css "page-user-logout", HE.onClick $ \_ -> Just Logout ] [ HH.text "Logout" ] ]
+          else
+            []
+        )
+        [ remoteWith state.user \user ->
+            HH.div [ css "page-user-header" ]
+              [ HH.div [ css "left" ]
+                  [ HH.img [ HP.src $ getFullsizeIconUrl user.iconImage ] ]
+              , HH.div [ css "right" ]
+                  [ HH.div [ css "name" ] [ HH.text user.displayName ]
+                  ]
+              ]
+        ]
+        [ case state.tab of
+            UserMain ->
+              maybeElem userId \x ->
+                HH.slot (SProxy :: SProxy "main") unit Main.component { userId: x } absurd
+            UserSetting -> HH.slot (SProxy :: SProxy "setting") unit Setting.component {} absurd
+        ]
     ]
   where
   userId = map _.userId $ toMaybe state.user
@@ -124,5 +124,4 @@ handleAction = case _ of
   Navigate route -> navigate route
   Logout -> do
     H.liftEffect logout
-    H.modify_ _ { myUserId = Nothing }
-    pure unit
+    H.liftEffect reloadPage

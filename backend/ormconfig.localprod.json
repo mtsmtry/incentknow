@@ -1,0 +1,24 @@
+{
+   "type": "mysql",
+   "database": "incentknow",
+   "host": "34.146.76.189",
+   "port": 3306,
+   "username": "docker",
+   "password": "21280712",
+   "logging": [],
+   "synchronize": false,
+   "entities": [
+      "dist/src/entities/**/*.js"
+   ],
+   "migrations": [
+      "dist/migration/**/*.js"
+   ],
+   "subscribers": [
+      "dist/subscriber/**/*.js"
+   ],
+   "cli": {
+      "entitiesDir": "src/entity",
+      "migrationsDir": "src/migration",
+      "subscribersDir": "src/subscriber"
+   }
+}

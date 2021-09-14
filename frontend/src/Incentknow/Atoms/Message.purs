@@ -2,15 +2,24 @@ module Incentknow.Atoms.Message where
 
 import Prelude
 
+import Halogen.HTML as H
 import Halogen.HTML as HH
-import Incentknow.Atoms.Icon (icon)
+import Incentknow.Atoms.Icon (icon, iconSolid)
 import Incentknow.HTML.Utils (css)
 
 error :: forall w i. String -> HH.HTML w i
-error msg = HH.div [ css "atom-error" ] [ HH.span_ [ HH.text msg ] ]
+error msg = 
+  HH.div [ css "atom-error" ] 
+    [ icon "fas fa-exclamation-circle"
+    , HH.text msg
+    ]
 
 success :: forall w i. String -> HH.HTML w i
-success msg = HH.div [ css "atom-success" ] [ HH.span_ [ HH.text msg ] ]
+success msg = 
+  HH.div [ css "atom-success" ] 
+    [ icon "fas fa-check"
+    , HH.text msg
+    ]
 
 data SaveState
   = HasNotChange
@@ -30,4 +39,11 @@ saveState state =
         Saving -> icon "fas fa-edit"
         SavingButChanged -> icon "fas fa-edit"
         Saved -> icon "fas fa-save"
+    ]
+
+commentBox :: forall a s m. String -> Array (H.ComponentHTML a s m) -> H.ComponentHTML a s m
+commentBox cls body =
+  HH.div [ css "atom-comment-box" ]
+    [ HH.div [ css "triangle" ] [ HH.div [ css "inner" ] [] ]
+    , HH.div [ css "body" ] [ HH.div [ css cls ] body ]
     ]

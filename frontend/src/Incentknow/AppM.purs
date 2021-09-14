@@ -2,18 +2,21 @@ module Incentknow.AppM where
 
 import Prelude
 
-import Control.Monad.Reader.Trans (class MonadAsk, ReaderT, asks, runReaderT)
+import Control.Monad.State (class MonadState, StateT(..), gets, modify_, runStateT)
 import Control.Monad.Trans.Class (lift)
+import Data.Maybe (Maybe)
+import Data.Tuple (Tuple(..))
 import Effect.AVar (AVar)
 import Effect.Aff (Aff)
 import Effect.Aff.AVar (put)
+import Effect.Aff.AVar as AVar
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect)
-import Effect.Console as Console
 import Halogen as H
+import Incentknow.Data.Entities (IntactAccount)
 import Incentknow.Route (Route)
 import Routing.PushState (PushStateInterface)
-import Type.Equality (class TypeEquals, from)
+import Type.Equality (class TypeEquals, from, to)
 import Web.Event.Event (preventDefault)
 import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
 
@@ -32,13 +35,16 @@ data GlobalMessage
 type Env
   = { globalMessage :: AVar GlobalMessage
     , pushStateInterface :: PushStateInterface
+    , account :: Maybe IntactAccount
     }
 
 newtype AppM a
-  = AppM (ReaderT Env Aff a)
+  = AppM (StateT Env Aff a)
 
-runAppM :: Env -> AppM ~> Aff
-runAppM env (AppM m) = runReaderT m env
+runAppM :: forall a. Env -> AppM a -> Aff a
+runAppM env (AppM m) = do
+  (Tuple a _) <- runStateT m env
+  pure a
 
 derive newtype instance functorAppM :: Functor AppM
 
@@ -54,8 +60,11 @@ derive newtype instance monadEffectAppM :: MonadEffect AppM
 
 derive newtype instance monadAffAppM :: MonadAff AppM
 
-instance monadAskAppM :: TypeEquals e Env => MonadAsk e AppM where
-  ask = AppM $ asks from
+-- AppM a = AppM (StateT Env Aff a) = AppM(StateT (Env -> Aff (Tuple a Env)))
+instance monadStateAppM :: TypeEquals e Env => MonadState e AppM where
+  -- state :: forall a. (e -> (Tuple a e)) -> AppM a
+  -- state :: forall a. (e -> (Tuple a e)) -> AppM(StateT (Env -> Aff (Tuple a Env)))
+  state f = AppM $ StateT $ \env-> let (Tuple a newEnv) = f (from env) in pure $ Tuple a $ to newEnv
 
 class
   MonadEffect m <= Behaviour m where
@@ -65,6 +74,10 @@ class
   resetMessage :: m Unit
   startLoading :: m Unit
   stopLoading :: m Unit
+  setAccount :: Maybe IntactAccount -> m Unit
+  getAccount :: m (Maybe IntactAccount)
+  getPushStateInterface :: m PushStateInterface
+  takeGlobalMessage :: m GlobalMessage
 
 -- instance aaa :: Behaviour m => MonadEffect m
 
@@ -75,30 +88,39 @@ instance behaviourHalogenM :: Behaviour m => Behaviour (H.HalogenM st act slots 
   resetMessage = lift resetMessage
   startLoading = lift startLoading
   stopLoading = lift stopLoading
+  setAccount = lift <<< setAccount
+  getAccount = lift getAccount
+  getPushStateInterface = lift getPushStateInterface
+  takeGlobalMessage = lift takeGlobalMessage
 
 instance behaviourAppM :: Behaviour AppM where
   pushState route = do
-    globalMessage <- asks _.globalMessage
+    globalMessage <- gets _.globalMessage
     liftAff $ put ResetMesssageG globalMessage
     liftAff $ put (PushStateG route) globalMessage
   navigate route = do
-    globalMessage <- asks _.globalMessage
+    globalMessage <- gets _.globalMessage
     liftAff $ put ResetMesssageG globalMessage
     liftAff $ put (NavigateG route) globalMessage
   resetMessage = do
-    globalMessage <- asks _.globalMessage
+    globalMessage <- gets _.globalMessage
     liftAff $ put ResetMesssageG globalMessage
   message msg = do
-    globalMessage <- asks _.globalMessage
+    globalMessage <- gets _.globalMessage
     liftAff $ put (MessageG msg) globalMessage
   startLoading = do
-    H.liftEffect $ Console.log "start &&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
-    globalMessage <- asks _.globalMessage
+    globalMessage <- gets _.globalMessage
     liftAff $ put StartLoadingG globalMessage
   stopLoading = do
-    H.liftEffect $ Console.log "stop!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    globalMessage <- asks _.globalMessage
+    globalMessage <- gets _.globalMessage
     liftAff $ put StopLoadingG globalMessage
+  setAccount x = modify_ _ { account = x }
+  getAccount = gets _.account
+  getPushStateInterface = gets _.pushStateInterface
+  takeGlobalMessage = do
+    globalMessage <- gets _.globalMessage
+    query <- H.liftAff $ AVar.take globalMessage
+    pure query
 
 navigateRoute :: forall m. Behaviour m => MouseEvent -> Route -> m Unit
 navigateRoute event route = do

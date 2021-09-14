@@ -6,7 +6,7 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getCandidateSpaces, getRelatedSpace)
@@ -18,6 +18,7 @@ import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.SelectMenu (emptyCandidateSet)
 import Incentknow.Molecules.SelectMenu as SelectMenu
 import Incentknow.Molecules.SelectMenuImpl (SelectMenuItem)
+import Test.Unit.Console (consoleLog)
 
 type Input
   = { value :: Maybe SpaceId
@@ -67,10 +68,10 @@ render :: forall m. Behaviour m => MonadAff m => State -> H.ComponentHTML Action
 render state =
   HH.slot (SProxy :: SProxy "selectMenu") unit SelectMenu.component
     { value: state.spaceId
-    , disabled: false
+    , disabled: state.disabled
     , fetchMultiple: case _ of
         Just word -> Nothing
-        Nothing -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) getCandidateSpaces
+        Nothing -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) $ getCandidateSpaces unit
     , fetchSingle: Just $ \x-> toQueryCallback $ map toSelectMenuItem $ getRelatedSpace x
     , fetchId: ""
     , initial: emptyCandidateSet
