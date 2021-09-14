@@ -9,7 +9,7 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getNotifications, readAllNotifications)
-import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeCommand, forRemote)
+import Incentknow.API.Execution (Fetch, Remote(..), callbackQuery, executeCommand, forRemote, toMaybe)
 import Incentknow.AppM (class Behaviour, navigate, navigateRoute)
 import Incentknow.Atoms.Icon (iconSolid, remoteArrayWith, remoteWith, userIcon)
 import Incentknow.Atoms.Message (commentBox)
@@ -17,7 +17,7 @@ import Incentknow.Data.Content (getContentSemanticData)
 import Incentknow.Data.Entities (FocusedComment, IntactNotification, NotificationAction(..), NotificationType(..), RelatedComment, RelatedContent)
 import Incentknow.Data.EntityUtils (getNotificationType)
 import Incentknow.HTML.DateTime (elapsedTime)
-import Incentknow.HTML.Utils (css, link, whenElem)
+import Incentknow.HTML.Utils (css, link, maybeElem, whenElem)
 import Incentknow.Route (Route(..), UserTab(..))
 import Incentknow.Templates.Main (centerLayout)
 import Incentknow.Templates.Page (verticalTabPage)
@@ -97,7 +97,7 @@ render state =
   
   countElement :: Remote Int -> H.ComponentHTML Action ChildSlots m
   countElement remote =
-    remoteWith remote \x->
+    maybeElem (toMaybe remote) \x->
       whenElem (x > 0) \_->
         HH.span [ css "count" ] [ HH.text $ "(" <> show x <> ")" ]
 

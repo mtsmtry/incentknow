@@ -39533,7 +39533,7 @@ exports.toCallbackApi = fetch => {
                       })())(x));
                   };
                   var countElement = function (remote) {
-                      return Incentknow_Atoms_Icon.remoteWith(remote)(function (x) {
+                      return Incentknow_HTML_Utils.maybeElem(Incentknow_API_Execution.toMaybe(remote))(function (x) {
                           return Incentknow_HTML_Utils.whenElem(x > 0)(function (v) {
                               return Halogen_HTML_Elements.span([ Incentknow_HTML_Utils.css("count") ])([ Halogen_HTML_Core.text("(" + (Data_Show.show(Data_Show.showInt)(x) + ")")) ]);
                           });
