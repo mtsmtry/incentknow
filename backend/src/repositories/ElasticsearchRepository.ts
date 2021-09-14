@@ -50,7 +50,8 @@ export class ElasticsearchRepository {
     client: Client;
 
     constructor() {
-        this.client = new Client({ node: 'http://localhost:9200' });
+        const node = process.env.ELASTICSEARCH_NODE || 'http://localhost:9200';
+        this.client = new Client({ node });
     }
 
     async indexContent(

@@ -26,3 +26,5 @@ curl -X PUT '0.0.0.0:9200/contents' -H "Content-type: application/json" -d '{
     }
   }
 }'
+
+curl -X GET '0.0.0.0:9200/contents'
