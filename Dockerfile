@@ -10,7 +10,7 @@ RUN apk add alpine-sdk
 COPY /backend/package.json /tmp/package.json
 RUN cd /tmp && npm install
 RUN mkdir -p /code/backend
-RUN cp -a /tmp/node_modules /code/backend/
+RUN move /tmp/node_modules /code/backend/
 
 # ソースコードコピー
 COPY ./ /code
