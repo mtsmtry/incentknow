@@ -61,7 +61,7 @@ export class ReactionService extends BaseService {
             checkAuthority(auth, Authority.WRITABLE);
 
             // Notificate
-            const mentionedUsers = await this.comments.fromComments(trx).getMentionedUsers(comment);
+            const mentionedUsers = await this.comments.fromComments(trx).getMentionedUsers(replyToComment);
             const promises = mentionedUsers.map(async mentionedUserId => {
                 await this.notif.createCommand(trx).createOnCommentReplied(mentionedUserId, userId, replyToComment.content.container.spaceId, content.id, comment.id);
             });

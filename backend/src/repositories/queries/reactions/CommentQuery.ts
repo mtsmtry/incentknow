@@ -41,7 +41,7 @@ export class CommentQuery extends SelectFromSingleTableQuery<Comment, CommentQue
         const results = await this.qb.where({ replyToCommentId: comment.id }).groupBy("x.userId").select("x.userId").getRawMany();
         const users = results.map(x => x["x_userId"] as UserSk);
         if (!users.includes(comment.userId)) {
-            users.push(comment.userId)
+            users.push(comment.userId);
         }
         return users;
     }
