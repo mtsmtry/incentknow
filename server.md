@@ -37,6 +37,9 @@ sudo nano /etc/apache2/sites-available/incentknow.com.conf
 sudo a2ensite incentknow.com.conf
 - 再起動
 sudo systemctl restart apache2
+-- 文法チェック
+apachectl configtest
+
 
 # GitHub SSH接続
 https://blog.katsubemakito.net/git/github-ssh-keys
@@ -56,3 +59,32 @@ mysql -u docker -h 34.146.76.189 -p21280712 incentknow < dbdump.sql
 # APIテスト
 curl -sS -w '\n' -X POST 'localhost:8081/getPublishedSpaces' --data '[]' -XPOST
 curl -sS -w '\n' -X POST '34.146.76.189:8081/getPublishedSpaces' --data '[]' -XPOST
+
+# SPAのルーティング
+https://qiita.com/mugrow/items/3d89e836b29c0b3d2534
+publicフォルダに以下.htaccessを追加
+```
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [QSA,L]
+```
+
+```
+<Directory /var/www/>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+</Directory>
+```
+.htaccessを有効にするために/etc/apache2/apache2.conf上記を以下に変更
+```
+<Directory /var/www/>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+</Directory>
+```
+
+sudo a2enmod rewrite
+sudo systemctl restart apache2

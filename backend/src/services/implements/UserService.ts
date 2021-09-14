@@ -56,7 +56,7 @@ export class UserService extends BaseService {
                 from: '"Incentknow" <' + smtpData.auth.user + '>',
                 to: email,
                 subject: 'Incentknow メールアドレス確認のお知らせ',
-                text: "こちらのURLからログインし、メールアドレスを認証してください。\nhttps://www.incentknow.com/activate?token=" + user.certificationToken,
+                text: "こちらのURLからログインし、メールアドレスを認証してください。\nhttp://www.incentknow.com/activate?token=" + user.certificationToken,
             });
 
             return user.entityId;
