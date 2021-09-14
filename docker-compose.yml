@@ -20,7 +20,7 @@ services:
   api:
     environment:
       ENV_SETTINGS: production
-      ELASTICSEARCH_NODE: 'http://elasticsearch:9200'
+      ELASTICSEARCH_NODE: "http://elasticsearch:9200"
       PORT: 8081
     build:
       context: .
