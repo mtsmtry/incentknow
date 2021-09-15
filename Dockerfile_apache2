@@ -5,5 +5,8 @@ RUN apt-get update -y && \
     apt-get install -y apache2
 
 EXPOSE 80
+
+COPY /server/apache2 /etc/apache2
+
 CMD ["a2ensite", "incentknow.com.conf"]
 CMD ["apachectl", "-D", "FOREGROUND"]
