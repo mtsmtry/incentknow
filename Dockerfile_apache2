@@ -23,7 +23,7 @@ RUN mv public/assets dist/assets
 RUN mv public/index.dist.html dist/index.html
 RUN mv public/index.js dist/index.js
 
-RUN VERSION=(`date "+%s"`)
+RUN VERSION=`date "+%s"`
 RUN sed -i "s/VERSION/$VERSION/" dist/index.html
 
 # RUN spago bundle-app --main Incentknow.Main --to dist/index.js
