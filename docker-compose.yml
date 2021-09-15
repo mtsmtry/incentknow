@@ -12,7 +12,7 @@ services:
     command: "mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --skip-name-resolve"
     volumes:
       - /mnt/incentknow/mysql:/var/lib/mysql
-      - ./db/conf.d:/etc/mysql/conf.d
+      - ./server/mysql/conf.d:/etc/mysql/conf.d
     ports:
       - "3306:3306"
     restart: always
@@ -51,3 +51,20 @@ services:
       - 9200:9200
     volumes:
       - /mnt/incentknow/elasticsearch:/usr/share/elasticsearch/data
+
+  apache2:
+    environment:
+      APACHE_RUN_USER: www-data
+      APACHE_RUN_GROUP: www-data
+      APACHE_PID_FILE: /var/apache2/apache2.pid
+      APACHE_RUN_DIR: /var/apache2/run
+      APACHE_LOG_DIR: /var/apache2/log
+      APACHE_LOCK_DIR: /var/apache2/lock
+    build:
+      context: .
+      dockerfile: Dockerfile_apache2
+    volumes:
+      - /mnt/incentknow/apache2:/var/apache2
+      - ./server/apache2:/etc/apache2
+    ports:
+      - "80:80"

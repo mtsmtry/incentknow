@@ -1,1 +1,0 @@
-functions start subscribeCrawlingTask --trigger-topic crawling --runtime python3

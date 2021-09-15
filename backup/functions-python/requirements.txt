@@ -1,6 +1,0 @@
-flask==1.1.2
-google-cloud-error-reporting==1.0.0
-
-requests
-bs4
-firebase-admin

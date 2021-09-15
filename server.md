@@ -1,5 +1,6 @@
 # 接続
 ssh 34.146.76.189
+scp 34.146.76.189:/etc/apache2/apache2.conf ./remote
 
 # MySQLインストール
 sudo apt-get update
