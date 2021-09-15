@@ -26,7 +26,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - /mnt/hdd/files:code/backend/public/uploaded
+      - /mnt/hdd/files:/code/backend/public/uploaded
     ports:
       - "8081:8081"
     depends_on:
