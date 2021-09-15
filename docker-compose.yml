@@ -11,7 +11,7 @@ services:
       TZ: 'Asia/Tokyo'
     command: "mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --skip-name-resolve"
     volumes:
-      - /mnt/hdd/incentknow:/var/lib/mysql
+      - /mnt/incentknow/mysql:/var/lib/mysql
       - ./db/conf.d:/etc/mysql/conf.d
     ports:
       - "3306:3306"
@@ -26,7 +26,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - /mnt/hdd/files:/code/backend/public/uploaded
+      - /mnt/incentknow/files:/code/backend/public/uploaded
     ports:
       - "8081:8081"
     depends_on:
@@ -50,4 +50,4 @@ services:
     ports:
       - 9200:9200
     volumes:
-      - /mnt/hdd/elasticsearch:/usr/share/elasticsearch/data
+      - /mnt/incentknow/elasticsearch:/usr/share/elasticsearch/data
