@@ -17,7 +17,7 @@ COPY /server/apache2 /etc/apache2
 COPY ./ /code
 WORKDIR /code/frontend
 
-RUN ls
+RUN ls public
 
 RUN mv public/.htaccess dist/.htaccess
 RUN mv public/assets dist/assets
