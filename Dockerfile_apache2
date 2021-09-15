@@ -2,14 +2,13 @@ FROM ubuntu
 
 RUN apt-get update -y && \
     apt-get install -y tzdata && \
-    apt-get install -y apache2
+    apt-get install -y apache2 && \
+    a2enmod rewrite
+# mod_rewrite を有効にする
+# .htaccess内のRewriteEngineを使用可能にする
 
 EXPOSE 80
 
 COPY /server/apache2 /etc/apache2
-
-# mod_rewrite を有効にする
-# .htaccess内のRewriteEngineを使用可能にする
-CMD ["a2enmod", "rewrite"]
 
 CMD ["apachectl", "-D", "FOREGROUND"]
