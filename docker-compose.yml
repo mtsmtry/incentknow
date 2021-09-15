@@ -64,6 +64,6 @@ services:
       context: .
       dockerfile: Dockerfile_apache2
     volumes:
-      - ./frontend/public:/var/www/incentknow
+      - ./frontend/public:/var/www/incentknow.com
     ports:
       - "80:80"
