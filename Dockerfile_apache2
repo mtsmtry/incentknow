@@ -17,8 +17,8 @@ COPY /server/apache2 /etc/apache2
 COPY ./ /code
 WORKDIR /code/frontend
 
-RUN cp public/assets dist/assets
-RUN cp public/index.dist.html dist/index.html
+RUN mv public/assets dist/assets
+RUN mv public/index.dist.html dist/index.html
 RUN sed -i "" "s/VERSION/$RANDOM/" dist/index.html
 
 RUN spago bundle-app --main Incentknow.Main --to dist/index.js
