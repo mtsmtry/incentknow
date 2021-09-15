@@ -10,7 +10,7 @@ RUN apt-get update -y && \
 
 # ビルド環境
 RUN apt install -y nodejs npm
-RUN npm install -g --unsafe-perm=true purescript spago uglify-js less 
+RUN npm install -g --unsafe-perm=true purescript@0.13.6 spago uglify-js less 
 
 COPY /server/apache2 /etc/apache2
 
