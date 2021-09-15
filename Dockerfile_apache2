@@ -14,7 +14,7 @@ RUN npm install -g --unsafe-perm=true purescript spago uglify-js less
 
 COPY /server/apache2 /etc/apache2
 
-COPY /. /code
+COPY /frontend /code
 
 WORKDIR /code
 
