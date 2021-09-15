@@ -10,7 +10,7 @@ RUN apt-get update -y && \
 
 # ビルド環境
 RUN apt install -y nodejs npm
-RUN npm install -g purescript spago uglifyjs less 
+RUN npm install -g --unsafe-perm=true purescript spago uglify-js less 
 
 COPY /server/apache2 /etc/apache2
 
@@ -29,7 +29,6 @@ RUN sed -i "" "s/VERSION/$RANDOM/" dist/index.html
 RUN spago bundle-app --main Incentknow.Main --to dist/index.js
 RUN uglifyjs --compress --mangle -b beautify=false,ascii_only=true -o dist/index.js -- dist/index.js
 RUN lessc -x public/less/Main.less dist/index.css
-RUN rmdir public/less
 RUN mv /dist /var/www/incentknow.com
 
 EXPOSE 80
