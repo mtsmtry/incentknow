@@ -21,6 +21,11 @@ COPY /frontend/packages.dhall /code
 
 WORKDIR /code
 
+RUN cp public/.htaccess dist/.htaccess
+RUN cp public/assets dist/assets
+RUN cp public/index.dist.html dist/index.html
+RUN sed -i "" "s/VERSION/$RANDOM/" dist/index.html
+
 RUN spago bundle-app --main Incentknow.Main --to dist/index.js
 RUN uglifyjs --compress --mangle -b beautify=false,ascii_only=true -o dist/index.js -- dist/index.js
 RUN lessc -x public/less/Main.less dist/index.css
