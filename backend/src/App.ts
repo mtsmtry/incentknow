@@ -1,4 +1,3 @@
-import * as AWS from "aws-sdk";
 import * as bodyParser from "body-parser";
 import * as express from "express";
 import Router from 'express-promise-router';
@@ -10,8 +9,6 @@ import { ServiceContext } from "./services/ServiceContext";
 
 const app = express();
 const router = Router();
-
-AWS.config.loadFromPath('./aws-config.json');
 
 app.use(express.static('public'));
 

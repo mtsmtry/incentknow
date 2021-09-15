@@ -8,5 +8,4 @@ EXPOSE 80
 
 COPY /server/apache2 /etc/apache2
 
-CMD ["a2ensite", "incentknow.com.conf"]
 CMD ["apachectl", "-D", "FOREGROUND"]
