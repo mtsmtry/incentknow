@@ -1,3 +1,0 @@
-tsc
-export ENV_SETTINGS=local
-node dist/test/Main.js

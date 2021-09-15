@@ -1,4 +1,0 @@
-tsc
-typeorm migration:generate -n index
-tsc
-typeorm migration:run

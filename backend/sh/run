@@ -1,2 +1,0 @@
-export ENV_SETTINGS=local
-node dist/src/App.js

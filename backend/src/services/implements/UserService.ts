@@ -133,7 +133,7 @@ export class UserService extends BaseService {
 
     async setMyEmail(email: string): Promise<{}> {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
-            await this.users.createCommand(trx).setUserEmail(userId, email);
+            // await this.users.createCommand(trx).setUserEmail(userId, email);
             return {};
         });
     }

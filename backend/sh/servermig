@@ -1,3 +1,0 @@
-tsc
-export ENV_SETTINGS=production-migration
-node dist/src/App.js

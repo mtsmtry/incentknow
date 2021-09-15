@@ -58,10 +58,10 @@ iconSolid label = HH.i [ css $ "far fa-" <> label ] []
 spaceScopeIcon :: forall a w i. { defaultAuthority ∷ SpaceAuthority, membershipMethod ∷ MembershipMethod | a } -> HH.HTML w i
 spaceScopeIcon space =
   HH.span [ css "atom-space-scope" ]
-    if space.defaultAuthority == SpaceAuthorityNone && space.membershipMethod == MembershipMethodNone then
+    if (space.defaultAuthority == SpaceAuthorityNone || space.defaultAuthority == SpaceAuthorityVisible) && space.membershipMethod == MembershipMethodNone then
       [ HH.span [ css "icon private" ] [ icon "fas fa-lock", HH.text "Private" ]
       ]
-    else if space.defaultAuthority == SpaceAuthorityNone then
+    else if space.defaultAuthority == SpaceAuthorityNone || space.defaultAuthority == SpaceAuthorityVisible then
       [ HH.span [ css "icon group" ] [ icon "fas fa-users", HH.text "Group" ]
       ]
     else 
