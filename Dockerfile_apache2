@@ -8,4 +8,8 @@ EXPOSE 80
 
 COPY /server/apache2 /etc/apache2
 
+# mod_rewrite を有効にする
+# .htaccess内のRewriteEngineを使用可能にする
+CMD ["a2enmod", "rewrite"]
+
 CMD ["apachectl", "-D", "FOREGROUND"]
