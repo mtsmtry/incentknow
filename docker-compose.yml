@@ -65,5 +65,6 @@ services:
       dockerfile: Dockerfile_apache2
     volumes:
       - ./frontend/public:/var/www/incentknow.com
+      - /mnt/incentknow/apache2/log:/var/log/apache2
     ports:
       - "80:80"
