@@ -355,12 +355,13 @@ export class ContentService extends BaseService {
         return contents[0].content;
     }
 
-    private async _getContentRelations(spaceId: SpaceSk, formatId: FormatSk, contentId: ContentSk) {
+    private async _getContentRelations(spaceId: SpaceSk, formatId: FormatSk, contentId: ContentId) {
         const relations = await this.formats.getRelations(formatId);
         const promises = relations.map(async x => {
             const container = await this.containers.fromContainers().bySpaceAndFormat(spaceId, x.format.id).getOne();
             if (container) {
                 const contents = await this.con.fromContents().byProperty(container.id, x.property.id, contentId).getRelatedMany(this.con, this.formats, Authority.READABLE);
+                console.log(contents);
                 if (contents.length > 0) {
                     return { relation: { contentCount: x.contentCount, property: x.property, formatId: x.format.entityId }, contents };
                 } else {
@@ -387,7 +388,7 @@ export class ContentService extends BaseService {
         const [makeDraft, comments, relations] = await Promise.all([
             this.ctx.userId ? this.edit.fromDrafts().byUser(this.ctx.userId).byContent(content.raw.id).selectRelated().getOne() : null,
             this.com.fromComments().byContent(content.raw.id).getFocusedTreeMany(),
-            this._getContentRelations(content.formatRaw.space.id, content.formatRaw.id, content.raw.id)
+            this._getContentRelations(content.formatRaw.space.id, content.formatRaw.id, content.content.contentId)
         ]);
         return {
             content: content.content,
