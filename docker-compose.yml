@@ -56,16 +56,14 @@ services:
     environment:
       APACHE_RUN_USER: www-data
       APACHE_RUN_GROUP: www-data
-      APACHE_PID_FILE: /var/apache2/apache2.pid
-      APACHE_RUN_DIR: /var/apache2/run
-      APACHE_LOG_DIR: /var/apache2/log
-      APACHE_LOCK_DIR: /var/apache2/lock
+      APACHE_PID_FILE: /var/run/apache2.pid
+      APACHE_RUN_DIR: /var/run/apache2
+      APACHE_LOG_DIR: /var/log/apache2
+      APACHE_LOCK_DIR: /var/lock/apache2
     build:
       context: .
       dockerfile: Dockerfile_apache2
     volumes:
-      - /mnt/incentknow/apache2:/var/apache2
       - ./frontend/public:/var/www/incentknow
-      - ./server/apache2:/etc/apache2
     ports:
       - "80:80"
