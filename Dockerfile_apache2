@@ -14,16 +14,13 @@ RUN npm install -g --unsafe-perm=true purescript spago uglify-js less
 
 COPY /server/apache2 /etc/apache2
 
-COPY /frontend/src /code
-COPY /frontend/public /code/dist
-COPY /frontend/spago.dhall /code
-COPY /frontend/packages.dhall /code
+COPY /. /code
 
 WORKDIR /code
 
-RUN cp public/.htaccess dist/.htaccess
-RUN cp public/assets dist/assets
-RUN cp public/index.dist.html dist/index.html
+RUN mv public/.htaccess dist/.htaccess
+RUN mv public/assets dist/assets
+RUN mv public/index.dist.html dist/index.html
 RUN sed -i "" "s/VERSION/$RANDOM/" dist/index.html
 
 RUN spago bundle-app --main Incentknow.Main --to dist/index.js
