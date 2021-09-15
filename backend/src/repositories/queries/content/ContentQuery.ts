@@ -31,7 +31,7 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
     }
 
     byProperty(containerId: ContainerSk, propertyId: PropertyId, value: any) {
-        const query = this.qb.where({ containerId }).andWhere(`commit.data->>"$.${propertyId}" = :value`, { value });
+        const query = this.qb.where({ containerId }).andWhere(`commit.data->>'$."${propertyId}"' = :value`, { value });
         return new ContentQuery(query);
     }
 

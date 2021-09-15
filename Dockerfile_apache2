@@ -27,7 +27,7 @@ RUN sed -i "s/VERSION/`date '+%s'`/" dist/index.html
 
 # RUN spago bundle-app --main Incentknow.Main --to dist/index.js
 
-# RUN uglifyjs --compress --mangle -b beautify=false,ascii_only=true -o dist/index.js -- dist/index.js
+RUN uglifyjs --compress --mangle -b beautify=false,ascii_only=true -o dist/index.js -- dist/index.js
 RUN lessc -x public/less/Main.less dist/index.css
 RUN mv dist /var/www/incentknow.com
 

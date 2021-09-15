@@ -14093,7 +14093,7 @@ var PS = {};
   const Data_Maybe = PS["Data.Maybe"]; 
   const E = PS["Incentknow.Data.Entities"] || {};
   PS["Incentknow.Data.Entities"] = E;
-  const endpoint = "http://34.146.76.189:8081";
+  const endpoint = "http://localhost:8080";
 
   exports.apiEndpoint = endpoint;
 
