@@ -21,7 +21,7 @@ RUN mkdir dist
 RUN mv public/.htaccess dist/.htaccess
 RUN mv public/assets dist/assets
 RUN mv public/index.dist.html dist/index.html
-RUN sed -i "" "s/VERSION/$RANDOM/" dist/index.html
+RUN sed -i "s/VERSION/$RANDOM/" dist/index.html
 
 RUN spago bundle-app --main Incentknow.Main --to dist/index.js
 RUN uglifyjs --compress --mangle -b beautify=false,ascii_only=true -o dist/index.js -- dist/index.js
