@@ -33,7 +33,8 @@ fromTimestampToElapsedTimeString utcTimestamp =
     (show $ floor $ seconds / hour) <> "時間前"
   else if seconds > minute then
     (show $ floor $ seconds / minute) <> "分前"
-  else "さっき"
+  else
+   (show $ floor seconds) <> "秒前"
   where
   year = 365.0 * 3600.0 * 24.0
   month = 30.0 * 3600.0 * 24.0
