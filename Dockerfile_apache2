@@ -9,7 +9,7 @@ RUN apt-get update -y && \
 # .htaccess内のRewriteEngineを使用可能にする
 
 # ビルド環境
-RUN apt install -y nodejs
+RUN apt install -y nodejs npm
 RUN npm install -g purescript spago uglifyjs less 
 
 COPY /server/apache2 /etc/apache2
