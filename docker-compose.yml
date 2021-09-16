@@ -14,7 +14,7 @@ services:
       - /mnt/incentknow/mysql:/var/lib/mysql
       - ./server/mysql/conf.d:/etc/mysql/conf.d
     ports:
-      - "3306:3306"
+      - 3306:3306
     restart: always
 
   api:
@@ -28,7 +28,7 @@ services:
     volumes:
       - /mnt/incentknow/files:/code/backend/public/uploaded
     ports:
-      - "8081:8081"
+      - 8081:8081
     depends_on:
       - db
       - elasticsearch
@@ -67,4 +67,4 @@ services:
       - /mnt/incentknow/apache2/log:/var/log/apache2
       - ../codestar:/var/www/codestar.dev
     ports:
-      - "80:80"
+      - 80:80
