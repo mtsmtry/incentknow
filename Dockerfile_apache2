@@ -24,7 +24,7 @@ RUN mv public/index.dist.html dist/index.html
 RUN mv public/index.js dist/index.js
 
 RUN sed -i "s/VERSION/`date '+%s'`/g" dist/index.html
-RUN sed -i "s@http://localhost:8080@http://api.incentknow.com@g" dist/index.js
+RUN sed -i "s@http://localhost:8080@https://api.incentknow.com@g" dist/index.js
 
 # RUN spago bundle-app --main Incentknow.Main --to dist/index.js
 

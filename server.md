@@ -89,3 +89,17 @@ RewriteRule ^ index.html [QSA,L]
 
 sudo a2enmod rewrite
 sudo systemctl restart apache2
+
+# SSL 
+https://certbot.open-code.club/
+
+sudo apt install certbot
+
+# 
+dig @1.1.1.1 incentknow.com
+dig @1.1.1.1 codestar.dev
+
+email='メールアドレス'
+domains='ドメインを複数なら,区切りで'
+
+sudo certbot certonly --standalone --non-interactive --agree-tos --keep --expand --email $email --no-eff-email --domains $domains
