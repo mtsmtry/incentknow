@@ -34,6 +34,7 @@ RUN mv dist /var/www/incentknow.com
 
 EXPOSE 80
 
-RUN a2enmod ssl
 RUN a2enmod proxy_http
+RUN a2enmod ssl
+RUN a2ensite default-ssl
 CMD ["apachectl", "-D", "FOREGROUND"]
