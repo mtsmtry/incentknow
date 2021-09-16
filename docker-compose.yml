@@ -69,3 +69,4 @@ services:
       - ../codestar:/var/www/codestar.dev
     ports:
       - 80:80
+      - 443:443
