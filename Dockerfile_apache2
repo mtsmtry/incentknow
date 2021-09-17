@@ -12,6 +12,8 @@ RUN apt-get update -y && \
 RUN apt install -y nodejs npm
 RUN npm install -g --unsafe-perm=true uglify-js less 
 
+RUN apt-get install libapache2-mod-proxy-html libxml2-dev
+
 COPY /server/incentknow/apache2 /etc/apache2
 
 COPY ./ /code
@@ -35,7 +37,6 @@ RUN mv dist /var/www/incentknow.com
 EXPOSE 80
 EXPOSE 443
 
-RUN a2enmod proxy_http
-RUN a2enmod ssl
+RUN a2enmod ssl proxy proxy_http proxy_html
 RUN a2ensite default-ssl
 CMD ["apachectl", "-D", "FOREGROUND"]
