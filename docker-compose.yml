@@ -79,6 +79,7 @@ services:
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wordpress
       MYSQL_PASSWORD: wordpress
+      MYSQL_TCP_PORT: 3307
     volumes:
       - /mnt/codestar/mysql:/var/lib/mysql
       - ./server/codestar/mysql:/etc/mysql
