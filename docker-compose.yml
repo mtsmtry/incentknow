@@ -98,6 +98,8 @@ services:
         define('WP_ALLOW_REPAIR', true );
         define('WP_HOME','https://materials.codestar.dev');
         define('WP_SITEURL','https://materials.codestar.dev');
+        define('FORCE_SSL_LOGIN', true);
+        define('FORCE_SSL_ADMIN', true);
         $$_SERVER['HTTP_HOST'] = $$_SERVER['HTTP_X_FORWARDED_HOST'];
         $$_SERVER['REMOTE_ADDR'] = $$_SERVER['HTTP_X_FORWARDED_FOR'];
         $$_SERVER[‘HTTPS’]=on;
