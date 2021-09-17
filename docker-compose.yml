@@ -71,27 +71,27 @@ services:
       - 80:80
       - 443:443
 
-    wordpress_db:
-      image: mysql:5.7
-      restart: always
-      environment:
-        MYSQL_ROOT_PASSWORD: codestar
-        MYSQL_DATABASE: wordpress
-        MYSQL_USER: wordpress
-        MYSQL_PASSWORD: wordpress
-      volumes:
-        - /mnt/codestar/mysql:/var/lib/mysql
-      ports:
-        - 3306:3307
+  wordpress_db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: codestar
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    volumes:
+      - /mnt/codestar/mysql:/var/lib/mysql
+    ports:
+      - 3306:3307
 
-    wordpress:
-      depends_on:
-        - wordpress_db
-      image: wordpress:latest
-      restart: always
-      environment:
-        WORDPRESS_DB_HOST: wordpress_db:3306
-        WORDPRESS_DB_USER: wordpress
-        WORDPRESS_DB_PASSWORD: wordpress
-      ports:
-        - 8000:8082
+  wordpress:
+    depends_on:
+      - wordpress_db
+    image: wordpress:latest
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: wordpress_db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+    ports:
+      - 8000:8082
