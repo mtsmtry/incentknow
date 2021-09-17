@@ -89,12 +89,16 @@ services:
     depends_on:
       - wordpress_db
     image: wordpress:latest
-    command: cp ./server/wordpress /mnt/codestar/wordpress
     restart: always
     environment:
       WORDPRESS_DB_HOST: wordpress_db:3306
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_ALLOW_REPAIR', true );
+        define('WP_HOME','https://materials.codestar.dev');
+        define('WP_SITEURL','https://materials.codestar.dev');
+        $_SERVER['REQUEST_URI'] = '/blog' . $_SERVER['REQUEST_URI'];
     volumes:
       - /mnt/codestar/wordpress:/var/www/html
     ports:
