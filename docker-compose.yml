@@ -74,11 +74,11 @@ services:
     wordpress_db:
       image: mysql:5.7
       restart: always
-        environment:
-          MYSQL_ROOT_PASSWORD: codestar
-          MYSQL_DATABASE: wordpress
-          MYSQL_USER: wordpress
-          MYSQL_PASSWORD: wordpress
+      environment:
+        MYSQL_ROOT_PASSWORD: codestar
+        MYSQL_DATABASE: wordpress
+        MYSQL_USER: wordpress
+        MYSQL_PASSWORD: wordpress
       volumes:
         - /mnt/codestar/mysql:/var/lib/mysql
       ports:
