@@ -100,7 +100,7 @@ services:
         define('WP_SITEURL','https://materials.codestar.dev');
         define('FORCE_SSL_LOGIN', true);
         define('FORCE_SSL_ADMIN', false);
-        $_SERVER['HTTPS']='on';
+        $$_SERVER['HTTPS']='on';
     volumes:
       - /mnt/codestar/wordpress:/var/www/html
     ports:
