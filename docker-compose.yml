@@ -12,7 +12,7 @@ services:
     command: "mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --skip-name-resolve"
     volumes:
       - /mnt/incentknow/mysql:/var/lib/mysql
-      - ./server/mysql/conf.d:/etc/mysql/conf.d
+      - ./server/incentknow/mysql:/etc/mysql
     ports:
       - 3306:3306
     restart: always
@@ -81,8 +81,9 @@ services:
       MYSQL_PASSWORD: wordpress
     volumes:
       - /mnt/codestar/mysql:/var/lib/mysql
+      - ./server/codestar/mysql:/etc/mysql
     ports:
-      - 3306:3307
+      - 3307:3307
 
   wordpress:
     depends_on:
@@ -90,7 +91,7 @@ services:
     image: wordpress:latest
     restart: always
     environment:
-      WORDPRESS_DB_HOST: wordpress_db:3306
+      WORDPRESS_DB_HOST: wordpress_db:3307
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
     ports:

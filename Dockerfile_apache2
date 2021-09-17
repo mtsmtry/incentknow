@@ -12,7 +12,7 @@ RUN apt-get update -y && \
 RUN apt install -y nodejs npm
 RUN npm install -g --unsafe-perm=true uglify-js less 
 
-COPY /server/apache2 /etc/apache2
+COPY /server/incentknow/apache2 /etc/apache2
 
 COPY ./ /code
 WORKDIR /code/frontend
