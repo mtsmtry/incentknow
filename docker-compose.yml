@@ -95,11 +95,11 @@ services:
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
       WORDPRESS_CONFIG_EXTRA: |
-        define('WP_ALLOW_REPAIR', true );
         define('WP_HOME','https://materials.codestar.dev');
         define('WP_SITEURL','https://materials.codestar.dev');
-        define('FORCE_SSL_LOGIN', true);
+        // wp-adminでのリダイレクトループを防ぐ
         define('FORCE_SSL_ADMIN', false);
+        // cssやjsや画像のURLをHTTPからhTTPSにする
         $$_SERVER['HTTPS']='on';
     volumes:
       - /mnt/codestar/wordpress:/var/www/html
