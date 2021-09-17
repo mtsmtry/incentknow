@@ -85,7 +85,7 @@ services:
     ports:
       - 3307:3306
 
-  wordpress232:
+  wordpress:
     depends_on:
       - wordpress_db
     image: wordpress:latest
@@ -99,6 +99,7 @@ services:
         define('WP_HOME','https://materials.codestar.dev');
         define('WP_SITEURL','https://materials.codestar.dev');
         $$_SERVER[‘HTTP_HOST’]='https://materials.codestar.dev';
+        $$_SERVER[SERVER_NAME]='materials.codestar.dev';
     volumes:
       - /mnt/codestar/wordpress:/var/www/html
     ports:
