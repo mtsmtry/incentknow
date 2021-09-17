@@ -12,7 +12,7 @@ RUN apt-get update -y && \
 RUN apt install -y nodejs npm
 RUN npm install -g --unsafe-perm=true uglify-js less 
 
-RUN apt-get install libapache2-mod-proxy-html libxml2-dev
+RUN apt-get install -y libapache2-mod-proxy-html libxml2-dev
 
 COPY /server/incentknow/apache2 /etc/apache2
 
