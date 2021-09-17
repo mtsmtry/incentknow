@@ -98,7 +98,7 @@ services:
         define('WP_ALLOW_REPAIR', true );
         define('WP_HOME','https://materials.codestar.dev');
         define('WP_SITEURL','https://materials.codestar.dev');
-        $_SERVER[‘HTTP_HOST’]='https://materials.codestar.dev';
+        $$_SERVER[‘HTTP_HOST’]='https://materials.codestar.dev';
     volumes:
       - /mnt/codestar/wordpress:/var/www/html
     ports:
