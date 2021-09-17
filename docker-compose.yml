@@ -83,7 +83,7 @@ services:
       - /mnt/codestar/mysql:/var/lib/mysql
       - ./server/codestar/mysql:/etc/mysql
     ports:
-      - 3307:3307
+      - 3307:3306
 
   wordpress:
     depends_on:
@@ -91,7 +91,7 @@ services:
     image: wordpress:latest
     restart: always
     environment:
-      WORDPRESS_DB_HOST: wordpress_db:3307
+      WORDPRESS_DB_HOST: wordpress_db:3306
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
     ports:
