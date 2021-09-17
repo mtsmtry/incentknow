@@ -85,7 +85,7 @@ services:
     ports:
       - 3307:3306
 
-  wordpress:
+  wordpress232:
     depends_on:
       - wordpress_db
     image: wordpress:latest
