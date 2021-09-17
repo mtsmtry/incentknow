@@ -94,5 +94,9 @@ services:
       WORDPRESS_DB_HOST: wordpress_db:3306
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_CONFIG_EXTRA:
+        define('WP_ALLOW_REPAIR', true );
+        define('WP_HOME','https://materials.codestar.dev');
+        define('WP_SITEURL','https://materials.codestar.dev');
     ports:
       - 8000:8082
