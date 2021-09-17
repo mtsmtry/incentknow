@@ -11,7 +11,7 @@ sudo apt install apache2
 
 # ファイアーウォールの設定
 https://www.digitalocean.com/community/tutorials/how-to-install-the-apache-web-server-on-ubuntu-20-04-ja
-sudo ufw app list 
+sudo ufw app list  
 sudo ufw allow 'Apache'
 sudo ufw enable
 sudo ufw status
@@ -51,6 +51,8 @@ git clone git@github.com:mtsmtry/incentknow.git
 mysql -u docker --port 3306 -h 34.146.76.189 -p21280712 incentknow
 - サーバー内で接続する
 mysql -u docker --port 3306 -h 0.0.0.0 -p21280712
+
+mysql -u wordpress --port 3307 -h 0.0.0.0 -pwordpress
 
 # データベースのコピー
 mysqldump -u root -ppassword incentknow > dbdump.sql
