@@ -14,3 +14,5 @@ dist/
 /ts2ps/
 
 .DS_Store
+
+wordpress/

@@ -1,6 +1,7 @@
 # 接続
 ssh 34.146.76.189
 scp 34.146.76.189:/etc/apache2/apache2.conf ./remote
+scp -r 34.146.76.189:/mnt/codestar/wordpress .
 
 # MySQLインストール
 sudo apt-get update

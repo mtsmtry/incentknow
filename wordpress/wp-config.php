@@ -131,10 +131,3 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /** Sets up WordPress vars and included files. */
 require_once ABSPATH . 'wp-settings.php';
-
-
-// これを追加
-define('WP_SITE_URL', 'https://materials.codestar.dev');
-define('WP_HOME', 'https://materials.codestar.dev');
-
-$_SERVER['REQUEST_URI'] = '/blog' . $_SERVER['REQUEST_URI'];
