@@ -98,7 +98,9 @@ services:
         define('WP_ALLOW_REPAIR', true );
         define('WP_HOME','https://materials.codestar.dev');
         define('WP_SITEURL','https://materials.codestar.dev');
+        define('FORCE_SSL_LOGIN', true);
         define('FORCE_SSL_ADMIN', false);
+        $_SERVER['HTTPS']='on';
     volumes:
       - /mnt/codestar/wordpress:/var/www/html
     ports:
