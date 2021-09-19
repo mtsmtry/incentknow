@@ -5,6 +5,7 @@
    "port": 3306,
    "username": "docker",
    "password": "21280712",
+   "charset": "utf8mb4",
    "logging": [],
    "synchronize": true,
    "entities": [

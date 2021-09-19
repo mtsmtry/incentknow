@@ -1,5 +1,6 @@
 import { BeforeInsert, Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { NewTypeInt, NewTypeString } from "../../Implication";
+import { MaterialType } from "../material/Material";
 import { CreatedAt, createEntityId, DisplayName, UpdatedAt } from '../Utils';
 import { Format, FormatSk } from "./Format";
 import { MetaProperty } from "./MetaProperty";
@@ -19,8 +20,14 @@ export enum TypeName {
     ENTITY = "entity"
 }
 
-export function isMaterialType(type: TypeName) {
-    return type == TypeName.DOCUMENT || type == TypeName.TEXT;
+export function getMaterialType(type: TypeName) {
+    if (type == TypeName.DOCUMENT) {
+        return MaterialType.DOCUMENT;
+    } else if (type == TypeName.TEXT) {
+        return MaterialType.PLAINTEXT;
+    } else {
+        return null;
+    }
 }
 
 export enum Language {

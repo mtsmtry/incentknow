@@ -42,6 +42,10 @@ export class StructureQuery extends SelectFromSingleTableQuery<Structure, Struct
         return new StructureQuery(this.qb.where({ formatId }));
     }
 
+    byFormatAndVersion(formatId: FormatSk, version: number) {
+        return new StructureQuery(this.qb.where({ formatId, version }));
+    }
+
     selectPropertiesJoined() {
         return new StructureQuery(joinProperties("x", this.qb));
     }
@@ -60,7 +64,8 @@ export class StructureQuery extends SelectFromSingleTableQuery<Structure, Struct
             .leftJoinAndSelect("format.space", "space")
             .leftJoinAndSelect("format.creatorUser", "creatorUser")
             .leftJoinAndSelect("format.updaterUser", "updaterUser")
-            .leftJoinAndSelect("format.currentStructure", "currentStructure");
+            .leftJoinAndSelect("format.currentStructure", "currentStructure")
+            .leftJoinAndSelect("format.semanticId", "semanticId");;
         query = joinProperties("x", query);
         return mapQuery(query, toFocusedFormatFromStructure);
     }

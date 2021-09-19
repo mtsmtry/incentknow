@@ -9,16 +9,17 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getAvailableFormatDisplayId, setFormatDisplayId, setFormatDisplayName, setFormatIcon)
+import Incentknow.API (getAvailableFormatDisplayId, setFormatDisplayId, setFormatDisplayName, setFormatIcon, setFormatSemanticId)
 import Incentknow.API.Execution (callCommand, callQuery)
 import Incentknow.AppM (class Behaviour)
-import Incentknow.Data.Entities (FocusedFormat)
+import Incentknow.Data.Entities (FocusedFormat, Type(..))
 import Incentknow.HTML.Utils (css)
 import Incentknow.Molecules.DisplayId as DisplayId
 import Incentknow.Molecules.Setting (SettingOutput)
 import Incentknow.Molecules.Setting.DisplayId as SettingDisplayId
 import Incentknow.Molecules.Setting.GeneratorMenu as GeneratorMenu
 import Incentknow.Molecules.Setting.IconMenu as SettingIconMenu
+import Incentknow.Molecules.Setting.Property as PropertyMenu
 import Incentknow.Molecules.Setting.Text as SettingText
 
 type Input
@@ -44,6 +45,7 @@ type ChildSlots
     , displayId :: SettingDisplayId.Slot Unit
     , icon :: SettingIconMenu.Slot Unit
     , generatorMenu :: GeneratorMenu.Slot Unit
+    , property :: PropertyMenu.Slot Unit
     )
 
 component :: forall q o m. Behaviour m => MonadAff m => MonadEffect m => H.Component HH.HTML q Input o m
@@ -89,6 +91,14 @@ render state =
         { submit: callCommand <<< \x -> setFormatIcon state.format.formatId x
         , value: state.format.icon
         , title: "アイコン"
+        , desc: ""
+        , disabled: state.disabled
+        }
+        (Just <<< Edit)
+    , HH.slot (SProxy :: SProxy "property") unit (PropertyMenu.component { formatId: state.format.formatId, type: Nothing })
+        { submit: callCommand <<< \x -> setFormatSemanticId state.format.formatId (map wrap x)
+        , value: state.format.semanticId
+        , title: "意味ID"
         , desc: ""
         , disabled: state.disabled
         }

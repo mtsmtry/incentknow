@@ -3,7 +3,7 @@ import { NewTypeInt, NewTypeString } from "../../Implication";
 import { Space, SpaceSk } from "../space/Space";
 import { User, UserSk } from "../user/User";
 import { CreatedAt, createDisplayId, createEntityId, DisplayId, DisplayName, EntityId, UpdatedAt } from '../Utils';
-import { Property } from "./Property";
+import { Property, PropertySk } from "./Property";
 import { Structure, StructureSk } from "./Structure";
 
 export enum FormatUsage {
@@ -79,8 +79,11 @@ export class Format {
     @OneToMany(type => Property, prop => prop.format, { onDelete: "CASCADE", cascade: ["insert"] })
     properties: Property[];
 
-    @Column("char", { length: 2, nullable: true })
-    semanticId: SemanticId | null;
+    @ManyToOne(type => Property, { onDelete: "CASCADE" })
+    @JoinColumn({ name: "semanticIdId" })
+    semanticId: Property | null;
+    @Column("int", { nullable: true })
+    semanticIdId: PropertySk | null;
 
     @Column()
     latestVersion: number;

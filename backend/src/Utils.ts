@@ -39,3 +39,19 @@ export const sleep = (time: number) => {
         }, time);
     })
 };
+
+export function splitArray<T extends any[]>(arr: T, size: number): T[] {
+    return arr.reduce(
+        (newarr, _, i) => (i % size ? newarr : [...newarr, arr.slice(i, i + size)]),
+        [] as T[][]
+    )
+}
+
+export function zip<T, U>(array1: T[], array2: U[]): [T, U][] {
+    const length = Math.min(array1.length, array2.length);
+    const result: [T, U][] = [];
+    for (let i = 0; i < length; i++) {
+        result.push([array1[i], array2[i]]);
+    }
+    return result;
+}

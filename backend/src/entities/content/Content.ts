@@ -1,4 +1,4 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { NewTypeInt, NewTypeString } from "../../Implication";
 import { Container, ContainerSk } from "../container/Container";
 import { Structure, StructureSk } from "../format/Structure";
@@ -20,6 +20,7 @@ export type ContentId = NewTypeString<"ContentId">;
 */
 
 @Entity()
+// @Unique(["container", "semanticId"])
 export class Content {
 
     @PrimaryGeneratedColumn()
@@ -73,6 +74,9 @@ export class Content {
 
     @Column({ default: 0 })
     viewCount: number;
+
+    @Column("varchar", { nullable: true })
+    semanticId: string | null;
 
     @OneToMany(type => ContentCommit, strc => strc.content)
     commits: ContentCommit[];

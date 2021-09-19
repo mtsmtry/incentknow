@@ -1,14 +1,15 @@
 import { SelectQueryBuilder } from "typeorm";
 import { ContainerSk } from "../../../entities/container/Container";
 import { Content, ContentId, ContentSk } from "../../../entities/content/Content";
-import { isMaterialType, PropertyId, TypeName } from "../../../entities/format/Property";
-import { StructureSk } from "../../../entities/format/Structure";
+import { Format, FormatSk } from "../../../entities/format/Format";
+import { getMaterialType, PropertyId, TypeName } from "../../../entities/format/Property";
+import { Structure, StructureSk } from "../../../entities/format/Structure";
 import { Material } from "../../../entities/material/Material";
 import { SpaceSk } from "../../../entities/space/Space";
 import { Authority, toFocusedContent, toRelatedContent } from "../../../interfaces/content/Content";
 import { FocusedFormat } from "../../../interfaces/format/Format";
 import { toFocusedMaterial, toRelatedMaterial } from "../../../interfaces/material/Material";
-import { mapBy, mapByString } from "../../../Utils";
+import { mapBy, mapByString, zip } from "../../../Utils";
 import { ContentRepository } from "../../implements/content/ContentRepository.";
 import { FormatRepository } from "../../implements/format/FormatRepository";
 import { mapQuery } from "../MappedQuery";
@@ -35,6 +36,14 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         return new ContentQuery(query);
     }
 
+    bySemanticId(containerId: ContainerSk, semanticId: string) {
+        return new ContentQuery(this.qb.where({ containerId, semanticId }));
+    }
+
+    bySemanticIdWithSpaceAndFormat(spaceId: SpaceSk, formatId: FormatSk, semanticId: string) {
+        return new ContentQuery(this.qb.leftJoinAndSelect("x.container", "container").where({ semanticId }).andWhere("container.spaceId = :spaceId AND container.formatId = :formatId", { spaceId, formatId }));
+    }
+
     joinStructureAndFormat() {
         return new ContentQuery(this.qb.leftJoinAndSelect("x.structure", "structure").leftJoinAndSelect("structure.format", "format"));
     }
@@ -51,8 +60,9 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         return new ContentQuery(this.qb.orderBy("x.viewCount", "DESC"));
     }
 
-    static async locateContents(rep: ContentRepository, data: any, format: FocusedFormat) {
-        const promises = format.currentStructure.properties.map(async prop => {
+    static async locateContents(rep: ContentRepository, data: any, format: FocusedFormat, structRaw: Structure) {
+        const promises = zip(format.currentStructure.properties, structRaw.properties).map(async propTuple => {
+            const [prop, propRaw] = propTuple;
             const value = data[prop.id];
             if (value == null) {
                 return;
@@ -60,6 +70,9 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
             if (prop.type.name == TypeName.CONTENT && prop.type.format) {
                 const [buildContent, raw] = await rep.fromContents().byEntityId(value).selectRelated().getOneWithRaw();
                 data[prop.id] = buildContent ? buildContent(prop.type.format, Authority.READABLE) : "deleted";
+            } else if (prop.type.name == TypeName.ENTITY && prop.type.format && propRaw.argFormat?.id) {
+                const [buildContent, raw] = await rep.fromContents().bySemanticIdWithSpaceAndFormat(structRaw.format.space.id, propRaw.argFormat.id, value).selectRelated().getOneWithRaw();
+                data[prop.id] = buildContent ? buildContent(prop.type.format, Authority.READABLE) : value;
             }
         });
         await Promise.all(promises);
@@ -72,7 +85,7 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
             if (!value) {
                 return;
             }
-            if (isMaterialType(prop.type.name)) {
+            if (getMaterialType(prop.type.name)) {
                 const material = materialDict[value];
                 if (!material) {
                     data[prop.id] = "deleted";
@@ -129,18 +142,18 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
             const [format, struct] = await getFormat(x);
             //const relations = await formatRep.getRelations(struct.formatId);
             //const format = buildFormat(relations);
-            return { format, id: x };
+            return { format, struct, id: x };
         }));
         const structMap = mapBy(structs, x => x.id);
 
         // Build
         const focusedContents = await Promise.all(contents.map(async content => {
-            const format = structMap[content.structureId].format;
+            const struct = structMap[content.structureId];
             await Promise.all([
-                ContentQuery.locateContents(rep, content.commit.data, format),
-                ContentQuery.locateMaterials(content.commit.data, content.materials, format, false)
+                ContentQuery.locateContents(rep, content.commit.data, struct.format, struct.struct),
+                ContentQuery.locateMaterials(content.commit.data, content.materials, struct.format, false)
             ]);
-            return toRelatedContent(content, format, auth, 0);
+            return toRelatedContent(content, struct.format, auth, 0);
         }));
 
         return focusedContents;
@@ -169,10 +182,10 @@ export class ContentQuery extends SelectFromSingleTableQuery<Content, ContentQue
         const focusedContents = await Promise.all(contents.map(async content => {
             const struct = structMap[content.raw.structureId];
             await Promise.all([
-                ContentQuery.locateContents(rep, content.raw.commit.data, struct.format),
+                ContentQuery.locateContents(rep, content.raw.commit.data, struct.format, struct.structure),
                 ContentQuery.locateMaterials(content.raw.commit.data, content.raw.materials, struct.format, true)
             ]);
-            return { 
+            return {
                 content: content.result(struct.format, auth),
                 format: struct.format,
                 raw: content.raw,

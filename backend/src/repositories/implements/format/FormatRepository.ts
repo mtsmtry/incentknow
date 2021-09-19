@@ -1,13 +1,15 @@
 import { Content } from "../../../entities/content/Content";
-import { Format, FormatDisplayId, FormatSk, FormatUsage } from "../../../entities/format/Format";
+import { Format, FormatDisplayId, FormatSk, FormatUsage, SemanticId } from "../../../entities/format/Format";
 import { MetaProperty, MetaPropertyId, MetaPropertyType } from "../../../entities/format/MetaProperty";
-import { Property, PropertyId, PropertySk } from "../../../entities/format/Property";
+import { Property, PropertyId, PropertySk, TypeName } from "../../../entities/format/Property";
 import { Structure } from "../../../entities/format/Structure";
 import { SpaceSk } from "../../../entities/space/Space";
 import { UserSk } from "../../../entities/user/User";
 import { createEntityId } from "../../../entities/Utils";
+import { ContentRelation } from "../../../interfaces/content/Content";
 import { Relation } from "../../../interfaces/format/Format";
 import { PropertyInfo, toPropertyInfo, Type } from "../../../interfaces/format/Structure";
+import { NotFoundEntity } from "../../../services/Errors";
 import { mapBy, mapByString } from "../../../Utils";
 import { FormatQuery, FormatQueryFromEntity } from "../../queries/format/FormatQuery";
 import { PropertyQuery } from "../../queries/format/PropertyQuery";
@@ -43,7 +45,11 @@ export class FormatRepository implements BaseRepository<FormatCommand> {
             this.metaProps.createCommand(trx));
     }
 
-    async getRelations(formatId: FormatSk) {
+    async getRelations(formatId: FormatSk): Promise<{
+        property: PropertyInfo;
+        contentCount: number;
+        format: Format;
+    }[]> {
         let qb = this.props.createQuery().where({ argFormatId: formatId }).orderBy("x.createdAt", "ASC");
         qb = joinPropertyArguments("x", qb);
         qb = qb.innerJoinAndSelect("x.format", "format")
@@ -158,6 +164,10 @@ export class FormatCommand implements BaseCommand {
     }
 
     static hasTypeDeepChange(oldType: Type, newType: Type) {
+        const sames = [TypeName.STRING, TypeName.ENTITY];
+        if (sames.includes(oldType.name) && sames.includes(newType.name)) {
+            return false;
+        }
         return oldType.name != newType.name
             || oldType.format?.formatId != newType.format?.formatId
             || oldType.language != newType.language
@@ -207,11 +217,16 @@ export class FormatCommand implements BaseCommand {
 
     private async updateProperties(formatId: FormatSk, properties: PropertyInfo[]) {
         const promises = properties.map(async prop => {
-            await this.props.update({ formatId, entityId: prop.id }, {
+            const newProp = {
                 displayName: prop.displayName,
                 fieldName: prop.fieldName,
-                icon: prop.icon
-            });
+                icon: prop.icon,
+                optional: prop.optional,
+                semantic: prop.semantic,
+                typeName: prop.type.name
+            };
+            await this._setTypeArguments(newProp as Property, prop.type);
+            await this.props.update({ formatId, entityId: prop.id }, newProp);
         });
         await Promise.all(promises);
     }
@@ -272,6 +287,18 @@ export class FormatCommand implements BaseCommand {
 
     async setFormatDisplayId(formatId: FormatSk, displayId: FormatDisplayId) {
         await this.formats.update(formatId, { displayId });
+    }
+
+    async setFormatSemanticId(formatId: FormatSk, semanticId: SemanticId | null) {
+        if (semanticId) {
+            const property = await this.props.findOne({ formatId, entityId: semanticId });
+            if (!property) {
+                throw new NotFoundEntity();
+            }
+            await this.formats.update(formatId, { semanticIdId: property.id });
+        } else {
+            await this.formats.update(formatId, { semanticIdId: null });
+        }
     }
 
     async setFormatDisplayName(formatId: FormatSk, displayName: string) {

@@ -301,35 +301,3 @@ exports.getNotificationType = src => {if (src instanceof E.ContentCommentedNotif
                     }
                     };
 
-exports.getMaterialCompositionType = src => {if (src instanceof E.CreationMaterialComposition) {
-                    return E.Creation.value;
-
-                }if (src instanceof E.MoveMaterialComposition) {
-                    return E.Move.value;
-
-                }};exports.buildMaterialComposition = type => { return options => { if (type instanceof E.Creation) {if (options.propertyId instanceof Data_Maybe.Nothing) {
-                            return Data_Maybe.Nothing.value;
-                    }if (options.data instanceof Data_Maybe.Nothing) {
-                            return Data_Maybe.Nothing.value;
-                    }
-                    const result = new E.CreationMaterialComposition(options.propertyId.value0,options.data.value0);
-                    return new Data_Maybe.Just(result);
-                } if (type instanceof E.Move) {if (options.materialId instanceof Data_Maybe.Nothing) {
-                            return Data_Maybe.Nothing.value;
-                    }
-                    const result = new E.MoveMaterialComposition(options.materialId.value0);
-                    return new Data_Maybe.Just(result);
-                }}};exports.getMaterialCompositionOptions = src => {
-                    if (src instanceof E.CreationMaterialComposition) {
-                        return {
-                            propertyId: new Data_Maybe.Just(src.value0),data: new Data_Maybe.Just(src.value1),materialId: Data_Maybe.Nothing.value
-                        }
-                    }
-                    
-                    if (src instanceof E.MoveMaterialComposition) {
-                        return {
-                            materialId: new Data_Maybe.Just(src.value0),propertyId: Data_Maybe.Nothing.value,data: Data_Maybe.Nothing.value
-                        }
-                    }
-                    };
-

@@ -313,22 +313,30 @@
 }
 
 .atom-remote-with {
-    width  : 100%;
-    display: flex;
+    &.loading {
+        width  : 100%;
+        display: flex;
 
-    >.loaderCircle {
-        width    : 23px;
-        height   : 23px;
-        font-size: 4px;
-        margin   : 50px auto;
-
-        border: none;
+        >.loaderCircle {
+            width    : 23px;
+            height   : 23px;
+            font-size: 4px;
+            margin   : 50px auto;
+            border   : none;
+        }
     }
 
-    >.no-result {
+    &.no-result {
         margin   : 50px auto;
         font-size: 14px;
         color    : rgba(0, 0, 0, 0.7);
+        text-align: center;
+    }
+    
+    &.holding {
+        //animation: 1.2s cubic-bezier(0.535, 0.15, 0.425, 1) remote-holding-flow both;
+        max-height: 10000px;
+        transition: max-height 2.5s cubic-bezier(0.535, 0.15, 0.425, 1);
     }
 }
 

@@ -110,24 +110,3 @@ defaultNotificationActionOptions =
 
 
 
-foreign import buildMaterialComposition :: E.MaterialCompositionType -> MaterialCompositionOptions -> Maybe E.MaterialComposition
-foreign import getMaterialCompositionType :: E.MaterialComposition -> E.MaterialCompositionType
-foreign import getMaterialCompositionOptions :: E.MaterialComposition -> MaterialCompositionOptions
-
-
-
-type MaterialCompositionOptions
-  = { propertyId :: Maybe String
-    , materialId :: Maybe E.MaterialId
-    , data :: Maybe String
-    }
-
-defaultMaterialCompositionOptions :: MaterialCompositionOptions
-defaultMaterialCompositionOptions =
-  { propertyId: Nothing
-  , materialId: Nothing
-  , data: Nothing
-  }
-
-
-

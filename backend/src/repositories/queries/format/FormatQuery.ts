@@ -14,6 +14,10 @@ export class FormatQuery extends SelectFromSingleTableQuery<Format, FormatQuery,
     bySpace(spaceId: SpaceSk) {
         return new FormatQuery(this.qb.where({ spaceId }));
     }
+    
+    andWhereHasSemanticId() {
+        return new FormatQuery(this.qb.andWhere("x.semanticIdId IS NOT NULL"));
+    }
 
     joinProperties() {
         return new FormatQuery(this.qb.leftJoinAndSelect("x.properties", "allProperties"));
@@ -38,7 +42,8 @@ export class FormatQuery extends SelectFromSingleTableQuery<Format, FormatQuery,
             .leftJoinAndSelect("x.space", "space")
             .leftJoinAndSelect("x.creatorUser", "creatorUser")
             .leftJoinAndSelect("x.updaterUser", "updaterUser")
-            .leftJoinAndSelect("x.currentStructure", "currentStructure");
+            .leftJoinAndSelect("x.currentStructure", "currentStructure")
+            .leftJoinAndSelect("x.semanticId", "semanticId");
         let query2 = joinProperties("currentStructure", query);
 
         return mapQuery(query2, toFocusedFormat);

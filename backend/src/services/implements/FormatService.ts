@@ -1,4 +1,4 @@
-import { FormatDisplayId, FormatId, FormatUsage } from '../../entities/format/Format';
+import { FormatDisplayId, FormatId, FormatUsage, SemanticId } from '../../entities/format/Format';
 import { MetaPropertyId, MetaPropertyType } from '../../entities/format/MetaProperty';
 import { PropertyId } from '../../entities/format/Property';
 import { StructureId } from '../../entities/format/Structure';
@@ -10,7 +10,6 @@ import { FormatRepository } from '../../repositories/implements/format/FormatRep
 import { AuthorityRepository } from "../../repositories/implements/space/AuthorityRepository";
 import { checkAuthority, checkSpaceAuthority } from '../../repositories/queries/space/AuthorityQuery';
 import { BaseService } from "../BaseService";
-import { LackOfAuthority } from '../Errors';
 import { ServiceContext } from '../ServiceContext';
 
 export class FormatService extends BaseService {
@@ -25,7 +24,7 @@ export class FormatService extends BaseService {
         return await this.ctx.transactionAuthorized(async (trx, userId) => {
             const [auth, space] = await this.auth.fromAuths(trx).getSpaceAuthority(userId, spaceId);
             checkSpaceAuthority(auth, SpaceAuthority.WRITABLE);
-            
+
             const format = await this.formats.createCommand(trx).createFormat(userId, space.id, displayName, description, usage, properties);
             return format.raw.displayId;
         });
@@ -64,7 +63,7 @@ export class FormatService extends BaseService {
     }
 
     async getRelatedStructure(structureId: StructureId): Promise<RelatedStructure> {
-        const structure =  await this.formats.fromStructures().byEntityId(structureId).selectRelated().getNeededOne();
+        const structure = await this.formats.fromStructures().byEntityId(structureId).selectRelated().getNeededOne();
 
         const [auth] = await this.auth.fromAuths().getFormatAuthority(this.ctx.userId, structure.formatId);
         checkAuthority(auth, Authority.READABLE);
@@ -74,8 +73,15 @@ export class FormatService extends BaseService {
     async getFormats(spaceId: SpaceId): Promise<RelatedFormat[]> {
         const [auth, space] = await this.auth.fromAuths().getSpaceAuthority(this.ctx.userId, spaceId);
         checkSpaceAuthority(auth, SpaceAuthority.READABLE);
-        
+
         return await this.formats.fromFormats().bySpace(space.id).selectRelated().getMany();
+    }
+
+    async getFormatsHasSemanticId(spaceId: SpaceId): Promise<RelatedFormat[]> {
+        const [auth, space] = await this.auth.fromAuths().getSpaceAuthority(this.ctx.userId, spaceId);
+        checkSpaceAuthority(auth, SpaceAuthority.READABLE);
+
+        return await this.formats.fromFormats().bySpace(space.id).andWhereHasSemanticId().selectRelated().getMany();
     }
 
     async getStructures(formatId: FormatId): Promise<RelatedStructure[]> {
@@ -133,6 +139,16 @@ export class FormatService extends BaseService {
             checkAuthority(auth, Authority.WRITABLE);
 
             await this.formats.createCommand(trx).setFormatDisplayId(format.id, displayId);
+            return {};
+        });
+    }
+
+    async setFormatSemanticId(formatId: FormatId, semanticId: SemanticId | null): Promise<{}> {
+        return await this.ctx.transactionAuthorized(async (trx, userId) => {
+            const [auth, format] = await this.auth.fromAuths().getFormatAuthority(userId, formatId);
+            checkAuthority(auth, Authority.WRITABLE);
+
+            await this.formats.createCommand(trx).setFormatSemanticId(format.id, semanticId);
             return {};
         });
     }

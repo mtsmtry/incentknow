@@ -1,7 +1,7 @@
 import { SelectQueryBuilder } from "typeorm";
 import { ContentSk } from "../../../entities/content/Content";
 import { ContentDraft, ContentDraftId, ContentDraftSk } from "../../../entities/content/ContentDraft";
-import { isMaterialType, TypeName } from "../../../entities/format/Property";
+import { getMaterialType } from "../../../entities/format/Property";
 import { StructureSk } from "../../../entities/format/Structure";
 import { UserSk } from "../../../entities/user/User";
 import { toFocusedContentDraft, toRelatedContentDraft } from "../../../interfaces/content/ContentDraft";
@@ -57,7 +57,7 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
             if (!value) {
                 return;
             }
-            if (isMaterialType(prop.type.name)) {
+            if (getMaterialType(prop.type.name)) {
                 const matDraft = isFocused
                     ? await matRep.fromDrafts().byEntityId(value).selectFocused().getOne()
                     : await matRep.fromDrafts().byEntityId(value).selectRelated().getOne();
@@ -78,22 +78,22 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
         const structIds = Array.from(new Set(drafts.map(x => x.raw.structureId).filter(notNull)));
         const getFormat = (structId: StructureSk) => formatRep.fromStructures().byId(structId).selectFocusedFormat().getNeededOneWithRaw();
         const structs = await Promise.all(structIds.map(async x => {
-            const [format, struct] = await getFormat(x);
+            const [format, structure] = await getFormat(x);
             //const relations = await formatRep.getRelations(struct.formatId);
             //const format = buildFormat(relations);
-            return { format, id: x };
+            return { format, id: x, structure };
         }));
         const structMap = mapBy(structs, x => x.id);
 
-        // Build
-        const relatedDrafts = drafts.map(x => x.result(structMap[x.raw.structureId].format));
-
         // Related contents
-        await Promise.all(relatedDrafts.map(async x => {
+        const relatedDrafts = await Promise.all(drafts.map(async draftRaw => {
+            const struct = structMap[draftRaw.raw.structureId];
+            const draft = draftRaw.result(struct.format);
             await Promise.all([
-                ContentQuery.locateContents(rep, x.data, x.format),
-                ContentDraftQuery.locateMaterialDrafts(x.data, x.format, matRep, false)
+                ContentQuery.locateContents(rep, draft.data, draft.format, struct.structure),
+                ContentDraftQuery.locateMaterialDrafts(draft.data, draft.format, matRep, false)
             ]);
+            return draft;
         }));
 
         return relatedDrafts;
@@ -106,23 +106,23 @@ export class ContentDraftQuery extends SelectFromSingleTableQuery<ContentDraft, 
         const structIds = Array.from(new Set(drafts.map(x => x.raw.structureId).filter(notNull)));
         const getFormat = (structId: StructureSk) => formatRep.fromStructures().byId(structId).selectFocusedFormat().getNeededOneWithRaw();
         const structs = await Promise.all(structIds.map(async x => {
-            const [format, struct] = await getFormat(x);
+            const [format, structure] = await getFormat(x);
             //const relations = await formatRep.getRelations(struct.formatId);
             //const format = buildFormat(relations);
-            return { format, id: x };
+            return { format, id: x, structure };
         }));
         const structMap = mapBy(structs, x => x.id);
 
         // Build
         const focusedDrafts = drafts.map(x => {
-            const format = structMap[x.raw.structureId].format;
-            return { draft: x.result(format), format, raw: x.raw }
+            const struct = structMap[x.raw.structureId];
+            return { draft: x.result(struct.format), format: struct.format, raw: x.raw, structure: struct.structure }
         });
 
         // Related contents
         await Promise.all(focusedDrafts.map(async x => {
             await Promise.all([
-                ContentQuery.locateContents(rep, x.draft.data, x.format),
+                ContentQuery.locateContents(rep, x.draft.data, x.format, x.structure),
                 ContentDraftQuery.locateMaterialDrafts(x.draft.data, x.format, matRep, true)
             ]);
         }));

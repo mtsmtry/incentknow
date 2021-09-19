@@ -3,14 +3,13 @@ import { ContentId, ContentSk } from "../../entities/content/Content";
 import { ContentCommitId } from "../../entities/content/ContentCommit";
 import { ContentDraft, ContentDraftId, ContentDraftState } from "../../entities/content/ContentDraft";
 import { FormatDisplayId, FormatId, FormatSk } from "../../entities/format/Format";
-import { isMaterialType, TypeName } from "../../entities/format/Property";
+import { getMaterialType, TypeName } from "../../entities/format/Property";
 import { Structure, StructureId } from "../../entities/format/Structure";
 import { MaterialId } from "../../entities/material/Material";
 import { MaterialDraftId } from "../../entities/material/MaterialDraft";
 import { MaterialEditingState } from "../../entities/material/MaterialEditing";
 import { SpaceAuthority, SpaceDisplayId, SpaceId, SpaceSk } from "../../entities/space/Space";
 import { UserSk } from "../../entities/user/User";
-import { Data, DataKind, DataMember } from "../../Implication";
 import { Authority, FocusedContent, IntactContentPage, RelatedContent, SearchedContent } from "../../interfaces/content/Content";
 import { FocusedContentCommit, RelatedContentCommit } from "../../interfaces/content/ContentCommit";
 import { FocusedContentDraft, RelatedContentDraft } from "../../interfaces/content/ContentDraft";
@@ -33,26 +32,6 @@ import { mapByString, notNull } from "../../Utils";
 import { BaseService } from "../BaseService";
 import { InternalError, LackOfAuthority, NotFoundEntity, WrongTargetState } from "../Errors";
 import { ServiceContext } from "../ServiceContext";
-
-export enum MaterialCompositionType {
-    CREATION = "creation",
-    MOVE = "move"
-}
-
-@Data()
-export class MaterialComposition {
-    @DataKind()
-    type: MaterialCompositionType;
-
-    @DataMember([MaterialCompositionType.CREATION, MaterialCompositionType.CREATION])
-    propertyId: string;
-
-    @DataMember([MaterialCompositionType.MOVE])
-    materialId: MaterialId;
-
-    @DataMember([MaterialCompositionType.CREATION])
-    data: string;
-}
 
 export class ContentService extends BaseService {
     constructor(
@@ -77,7 +56,7 @@ export class ContentService extends BaseService {
         }
         for (const prop of struct.properties) {
             const matId = data[prop.entityId] as MaterialDraftId | null;
-            if (isMaterialType(prop.typeName) && matId) {
+            if (getMaterialType(prop.typeName) && matId) {
                 const matDraft = await this.matEdit.fromDrafts(trx).byEntityId(matId).getNeededOne();
                 if (matDraft.userId != userId) {
                     throw new LackOfAuthority();
@@ -113,7 +92,7 @@ export class ContentService extends BaseService {
         for (const prop of struct.properties) {
             const matId = data[prop.entityId] as MaterialDraftId | null;
 
-            if (isMaterialType(prop.typeName) && matId) {
+            if (getMaterialType(prop.typeName) && matId) {
                 const matDraft = await this.matEdit.fromDrafts(trx).byEntityId(matId).joinSnapshotAndSelectData().getNeededOne();
 
                 if (matDraft.userId != userId) {
@@ -145,10 +124,10 @@ export class ContentService extends BaseService {
                     else {
                         const material = await this.mat.createCommand(trx).createMaterialInContent(contentId, userId, materialData, currentEditing.id);
                         await Promise.all([
-                            this.matEdit.createCommand(trx).makeDraftContent(matDraft.id, material.raw.id),
+                            this.matEdit.createCommand(trx).makeDraftContent(matDraft.id, material.id),
                             this.matEdit.createCommand(trx).closeEditing(matDraft, MaterialEditingState.COMMITTED),
                         ]);
-                        data[prop.entityId] = material.raw.entityId;
+                        data[prop.entityId] = material.entityId;
                     }
                 } else if (matDraft.materialId) {
                     const mat = await this.mat.fromMaterials(trx).byId(matDraft.materialId).joinCommitAndSelectData().getNeededOne();
@@ -171,7 +150,7 @@ export class ContentService extends BaseService {
         }
         for (const prop of struct.properties) {
             const value = data[prop.entityId];
-            if (isMaterialType(prop.typeName)) {
+            if (getMaterialType(prop.typeName)) {
                 if (isDraft) {
                     if (value?.draftId) {
                         data[prop.entityId] = value.draftId;
@@ -198,7 +177,7 @@ export class ContentService extends BaseService {
         }
         for (const prop of struct.properties) {
             const matId = data[prop.entityId] as MaterialId | null;
-            if (isMaterialType(prop.typeName) && matId) {
+            if (getMaterialType(prop.typeName) && matId) {
                 const mat = await this.mat.fromMaterials(trx).byEntityId(matId).joinCommitAndSelectData().getNeededOne();
                 const matDraft = await this.matEdit.createCommand(trx).getOrCreateActiveDraft(userId, mat.id, toMaterialData(mat.materialType, mat.commit.data), null);
                 data[prop.entityId] = matDraft.raw.entityId;
@@ -316,7 +295,7 @@ export class ContentService extends BaseService {
 
                 const container = await this.containers.createCommand(trx).getOrCreate(draft.intendedSpaceId, structure.formatId);
 
-                const { content, commit } = await this.con.createCommand(trx).createContent(container.id, draft.structureId, userId, {});
+                const { content, commit } = await this.con.createCommand(trx).createContent(container.id, draft.structureId, userId, {}, null);
                 const commitMaterialsResult = await this._commitMaterials(trx, userId, content.id, draft, data, structure, materialUpdations);
                 data = commitMaterialsResult.data;
 
@@ -355,12 +334,13 @@ export class ContentService extends BaseService {
         return contents[0].content;
     }
 
-    private async _getContentRelations(spaceId: SpaceSk, formatId: FormatSk, contentId: ContentId) {
+    private async _getContentRelations(spaceId: SpaceSk, formatId: FormatSk, contentId: ContentId, semanticId: string | null) {
         const relations = await this.formats.getRelations(formatId);
         const promises = relations.map(async x => {
             const container = await this.containers.fromContainers().bySpaceAndFormat(spaceId, x.format.id).getOne();
             if (container) {
-                const contents = await this.con.fromContents().byProperty(container.id, x.property.id, contentId).getRelatedMany(this.con, this.formats, Authority.READABLE);
+                const value = x.property.type.name == TypeName.CONTENT ? contentId : semanticId;
+                const contents = await this.con.fromContents().byProperty(container.id, x.property.id, value).getRelatedMany(this.con, this.formats, Authority.READABLE);
                 console.log(contents);
                 if (contents.length > 0) {
                     return { relation: { contentCount: x.contentCount, property: x.property, formatId: x.format.entityId }, contents };
@@ -388,7 +368,7 @@ export class ContentService extends BaseService {
         const [makeDraft, comments, relations] = await Promise.all([
             this.ctx.userId ? this.edit.fromDrafts().byUser(this.ctx.userId).byContent(content.raw.id).selectRelated().getOne() : null,
             this.com.fromComments().byContent(content.raw.id).getFocusedTreeMany(),
-            this._getContentRelations(content.formatRaw.space.id, content.formatRaw.id, content.content.contentId)
+            this._getContentRelations(content.formatRaw.space.id, content.formatRaw.id, content.content.contentId, content.raw.semanticId)
         ]);
         return {
             content: content.content,
@@ -417,8 +397,11 @@ export class ContentService extends BaseService {
             await this.spaces.fromSpaces().byEntityId(spaceId).selectId().getNeededOne(),
             await this.formats.fromFormats().byEntityId(formatId).selectId().getNeededOne()
         ]);
-        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, formatSk).selectId().getNeededOne();
-        return await this.con.fromContents().byContainer(containerSk).getRelatedMany(this.con, this.formats, getAuthority(auth));
+        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, formatSk).selectId().getOne();
+        if (!containerSk) {
+            return [];
+        }
+        return await this.con.fromContents().byContainer(containerSk).limit(100).getRelatedMany(this.con, this.formats, getAuthority(auth));
     }
     /*
         async getContentsByProperty(spaceId: SpaceId, formatId: FormatId, propertyId: PropertyId, value: string): Promise<RelatedContent[]> {
@@ -443,8 +426,11 @@ export class ContentService extends BaseService {
         const [auth] = await this.auth.fromAuths().getSpaceAuthority(this.ctx.userId, spaceSk);
         checkSpaceAuthority(auth, SpaceAuthority.READABLE);
 
-        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, formatSk).selectId().getNeededOne();
-        return await this.con.fromContents().byContainer(containerSk).getRelatedMany(this.con, this.formats, getAuthority(auth));
+        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, formatSk).selectId().getOne();
+        if (!containerSk) {
+            return [];
+        }
+        return await this.con.fromContents().byContainer(containerSk).limit(100).getRelatedMany(this.con, this.formats, getAuthority(auth));
     }
 
     async getFocusedContentsByDisplayId(spaceId: SpaceDisplayId, formatId: FormatDisplayId): Promise<FocusedContent[]> {
@@ -456,8 +442,11 @@ export class ContentService extends BaseService {
         const [auth] = await this.auth.fromAuths().getSpaceAuthority(this.ctx.userId, spaceSk);
         checkSpaceAuthority(auth, SpaceAuthority.READABLE);
 
-        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, formatSk).selectId().getNeededOne();
-        const contents = await this.con.fromContents().byContainer(containerSk).getFocusedMany(this.con, this.formats, getAuthority(auth))
+        const containerSk = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, formatSk).selectId().getOne();
+        if (!containerSk) {
+            return [];
+        }
+        const contents = await this.con.fromContents().byContainer(containerSk).limit(100).getFocusedMany(this.con, this.formats, getAuthority(auth))
         return contents.map(x => x.content);
     }
 
@@ -534,7 +523,10 @@ export class ContentService extends BaseService {
             await this.spaces.fromSpaces().byDisplayId(spaceId).selectId().getNeededOne(),
             await this.formats.fromFormats().byDisplayId(formatId).selectId().getNeededOne()
         ]);
-        const container = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, formatSk).getNeededOne();
+        const container = await this.containers.fromContainers().bySpaceAndFormat(spaceSk, formatSk).getOne();
+        if (!container) {
+            return [];
+        }
         const results = await this.index.searchContentsInContainer(text, container.entityId);
         return await this.getSearchedContent(results);
     }

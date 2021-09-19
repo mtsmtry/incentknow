@@ -8,6 +8,7 @@ import { ContentCommitQuery, ContentCommitQueryFromEntity } from "../../queries/
 import { ContentQuery } from "../../queries/content/ContentQuery";
 import { BaseCommand, BaseRepository, Command, Repository } from "../../Repository";
 import { Transaction } from "../../Transaction";
+import * as uuid from "uuid";
 
 export class ContentRepository implements BaseRepository<ContentCommand> {
     constructor(
@@ -34,13 +35,14 @@ export class ContentCommand implements BaseCommand {
         private commits: Command<ContentCommit>) {
     }
 
-    async createContent(containerId: ContainerSk, structureId: StructureSk, userId: UserSk, data: ObjectLiteral) {
+    async createContent(containerId: ContainerSk, structureId: StructureSk, userId: UserSk, data: ObjectLiteral, semanticId: string | null) {
         let content = this.contents.create({
             containerId,
             structureId,
             creatorUserId: userId,
             updaterUserId: userId,
-            updatedAtOnlyData: new Date()
+            updatedAtOnlyData: new Date(),
+            semanticId: uuid.v4()
         });
         content = await this.contents.save(content);
 
@@ -53,7 +55,8 @@ export class ContentCommand implements BaseCommand {
         commit = await this.commits.save(commit);
 
         await this.contents.update(content.id, {
-            commitId: commit.id
+            commitId: commit.id,
+            semanticId: semanticId || content.entityId
         });
         return { content, commit };
     }

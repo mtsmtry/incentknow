@@ -13,8 +13,8 @@ const router = Router();
 app.use(express.static('public'));
 
 // urlencodedとjsonは別々に初期化する
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '10mb' }));
 
 async function init() {
     return await initConnection();
@@ -42,6 +42,8 @@ init().then(conn => {
                     throw "Need file";
                 }
                 body = [{ blob: req.files[0], ...JSON.parse(body.json) }];
+            } else if (!Array.isArray(body)) {
+                body = [body];
             }
             response = await service.execute(methodName, body);
         } catch (x) {

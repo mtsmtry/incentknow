@@ -29,20 +29,20 @@ loadingWith msg =
 
 remoteWith :: forall a w i. Remote a -> (a -> HH.HTML w i) -> HH.HTML w i
 remoteWith remote body = case remote of
-  Loading -> HH.div [ css "atom-remote-with" ] [ HH.div [ css "loaderCircle" ] [] ]
-  LoadingForServer -> HH.div [ css "atom-remote-with" ] [ HH.div [ css "loaderCircle" ] [] ]
+  Loading -> HH.div [ css "atom-remote-with loading" ] [ HH.div [ css "loaderCircle" ] [] ]
+  LoadingForServer -> HH.div [ css "atom-remote-with loading" ] [ HH.div [ css "loaderCircle" ] [] ]
   Holding item -> body item
   Missing error -> HH.text error
 
 remoteArrayWith :: forall a w i. Remote (Array a) -> ((Array a) -> HH.HTML w i) -> HH.HTML w i
 remoteArrayWith remote body = case remote of
-  Loading -> HH.div [ css "atom-remote-with" ] [ HH.div [ css "loaderCircle" ] [] ]
-  LoadingForServer -> HH.div [ css "atom-remote-with" ] [ HH.div [ css "loaderCircle" ] [] ]
+  Loading -> HH.div [ css "atom-remote-with loading" ] [ HH.div [ css "loaderCircle" ] [] ]
+  LoadingForServer -> HH.div [ css "atom-remote-with loading" ] [ HH.div [ css "loaderCircle" ] [] ]
   Holding items -> 
     if length items == 0 then 
       HH.div 
-        [ css "atom-remote-with" ] 
-        [ HH.div [ css "no-result" ] [ HH.text "結果はありません" ] ] 
+        [ css "atom-remote-with no-result" ] 
+        [ HH.text "結果はありません" ]
     else body items
   Missing error -> HH.text error
 

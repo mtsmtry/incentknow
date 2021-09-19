@@ -28,6 +28,10 @@ export class UserQuery extends SelectFromSingleTableQuery<User, UserQuery, UserS
         const query = this.qb;
         return mapQuery(query, toIntactAccount);
     }
+
+    authenticate() {
+        
+    }
 }
 
 export class UserQueryFromEntity extends SelectQueryFromEntity<User> {

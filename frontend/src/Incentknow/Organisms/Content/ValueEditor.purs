@@ -4,9 +4,9 @@ import Prelude
 
 import Data.Argonaut.Core (toString)
 import Data.Array (deleteAt, mapWithIndex)
-import Data.Either (Either(..))
+import Data.Either (Either(..), either)
 import Data.Map as M
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff)
@@ -140,7 +140,12 @@ render state = case state.value of
       , formatId: format.formatId
       , disabled: false }
       (Just <<< ChangeValue <<< ContentTypedValue format <<< toReferenceValueFromMaybe <<< map toRelatedContentFromContentId)
-  EntityTypedValue format content -> HH.text ""
+  EntityTypedValue format entity -> 
+    textarea
+      { onChange: ChangeValue <<< EntityTypedValue format <<< Left <<< toMaybeString
+      , placeholder: ""
+      , value: either (\x-> fromMaybe "" x) (\x-> fromMaybe "" x.semanticId) entity
+      }
     --HH.slot (SProxy :: SProxy "entityMenu") unit EntityMenu.component { value: Just $ wrap "", formatId: format.formatId, disabled: false }
     --  (Just <<< ChangeValue <<< EntityTypedValue format <<< toReferenceValueFromMaybe <<< map toForceRelatedContentFromSemanticId)
   DocumentTypedValue material ->

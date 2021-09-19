@@ -2,7 +2,7 @@ module Incentknow.Molecules.PropertyMenu where
 
 import Prelude
 
-import Data.Array (filter)
+import Data.Array (filter, length)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (unwrap)
 import Data.Symbol (SProxy(..))
@@ -11,7 +11,7 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Incentknow.API (getFocusedFormat)
-import Incentknow.API.Execution (Fetch, callbackAPI, forItem, toQueryCallback)
+import Incentknow.API.Execution (Fetch, callbackAPI, callbackQuery, forItem, toQueryCallback)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Data.Entities (FocusedFormat, PropertyInfo, Type)
 import Incentknow.Data.Ids (FormatId)
@@ -107,7 +107,7 @@ handleAction :: forall m. Behaviour m => MonadAff m => MonadEffect m => Action -
 handleAction = case _ of
   Initialize -> do
     state <- H.get
-    callbackAPI FetchedFormat $ toQueryCallback $ getFocusedFormat state.formatId
+    callbackQuery FetchedFormat $ getFocusedFormat state.formatId
   FetchedFormat fetch ->
     forItem fetch \format -> do
       H.modify_ _ { format = Just format }

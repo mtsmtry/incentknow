@@ -238,6 +238,7 @@ type RelatedContent
     , format :: FocusedFormat
     , data :: Json
     , authority :: Authority
+    , semanticId :: Maybe String
     }
 
 
@@ -254,6 +255,7 @@ type FocusedContent
     , format :: FocusedFormat
     , authority :: Authority
     , data :: Json
+    , semanticId :: Maybe String
     }
 
 
@@ -330,7 +332,6 @@ type RelatedFormat
     , icon :: Maybe String
     , space :: RelatedSpace
     , usage :: FormatUsage
-    , semanticId :: Maybe String
     , currentStructureId :: StructureId
     }
 
@@ -757,23 +758,6 @@ type AuthInfo
   = { session :: String
     , userId :: UserId
     }
-
-
-
-data MaterialCompositionType
-  = Creation
-  | Move
-
-derive instance eqMaterialCompositionType :: Eq MaterialCompositionType
-derive instance ordMaterialCompositionType :: Ord MaterialCompositionType
-
-
-
-data MaterialComposition
-  = CreationMaterialComposition String String
-  | MoveMaterialComposition MaterialId
-
-derive instance eqMaterialComposition :: Eq MaterialComposition
 
 
 

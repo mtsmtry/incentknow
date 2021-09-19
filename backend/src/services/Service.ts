@@ -37,6 +37,7 @@ import { UserRepository } from "../repositories/implements/user/UserRepository";
 import { Repository } from "../repositories/Repository";
 import { BaseService } from "./BaseService";
 import { ContainerService } from "./implements/ContainerService";
+import { ContentAPIService } from "./implements/ContentAPIService";
 import { ContentService } from "./implements/ContentService";
 import { FormatService } from "./implements/FormatService";
 import { MaterialService } from "./implements/MaterialService";
@@ -58,6 +59,7 @@ export class Service {
     spaceService: SpaceService;
     userService: UserService;
     reactionService: ReactionService;
+    contentAPIService: ContentAPIService;
 
     constructor(ctx: ServiceContext) {
         const conn = ctx.conn;
@@ -81,6 +83,7 @@ export class Service {
         this.spaceService = new SpaceService(ctx, space, user, auth, container, con, format, act);
         this.userService = new UserService(ctx, user, auth);
         this.reactionService = new ReactionService(ctx, space, con, format, user, com, act, notifi, auth);
+        this.contentAPIService = new ContentAPIService(ctx, con, conEdit, mat, matEdit, space, container, format, auth, act, com, elastic, user);
         this.services = [
             this.containerService,
             this.contentService,
@@ -88,7 +91,8 @@ export class Service {
             this.materialService,
             this.spaceService,
             this.userService,
-            this.reactionService
+            this.reactionService,
+            this.contentAPIService
         ];
     }
 

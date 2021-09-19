@@ -2,10 +2,11 @@ module Incentknow.Data.Property where
 
 import Prelude
 
-import Data.Argonaut.Core (Json, fromArray, fromObject, isNull, jsonNull, toArray, toBoolean, toString)
+import Data.Argonaut.Core (Json, fromArray, fromObject, isNull, isObject, jsonNull, toArray, toBoolean, toString)
 import Data.Argonaut.Core as J
 import Data.Argonaut.Encode (encodeJson)
 import Data.Array (concat, cons, filter, fromFoldable, length, singleton, uncons)
+import Data.Either (Either(..))
 import Data.Int (fromNumber, toNumber)
 import Data.Map (values)
 import Data.Map as M
@@ -205,7 +206,7 @@ data TypedValue
   | ContentTypedValue FocusedFormat (ReferenceValue RelatedContent)
   | DocumentTypedValue (ReferenceValue Json)
   | ImageTypedValue (Maybe String)
-  | EntityTypedValue FocusedFormat (ReferenceValue RelatedContent)
+  | EntityTypedValue FocusedFormat (Either (Maybe String) RelatedContent)
 
 foreign import forceConvert :: forall a b. a -> b
 
@@ -282,7 +283,7 @@ toTypedValue value ty = case ty of
   EnumType enums -> EnumTypedValue enums $ toString value
   DocumentType -> DocumentTypedValue $ toReferenceValue value
   ImageType -> ImageTypedValue $ toString value
-  EntityType format -> EntityTypedValue format $ map fromJsonToRelatedContent $ toReferenceValue value
+  EntityType format -> EntityTypedValue format $ if isObject value then Right $ fromJsonToRelatedContent value else Left $ toString value
 
 toJsonFromTypedValue :: TypedValue -> Json
 toJsonFromTypedValue = case _ of
@@ -299,5 +300,6 @@ toJsonFromTypedValue = case _ of
   EnumTypedValue _ (Just vl) -> J.fromString vl
   DocumentTypedValue (JustReference vl) -> vl
   ImageTypedValue (Just vl) -> J.fromString vl
-  EntityTypedValue _ (JustReference vl) -> jsonNull
+  EntityTypedValue _ (Right vl) -> J.fromString $ fromMaybe "" vl.semanticId
+  EntityTypedValue _ (Left vl) -> J.fromString $ fromMaybe "" vl
   _ -> jsonNull

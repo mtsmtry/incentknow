@@ -24,6 +24,7 @@ export interface RelatedContent {
     format: FocusedFormat;
     data: any;
     authority: Authority;
+    semanticId: string | null;
 }
 
 export function toRelatedContent(content: Content, format: FocusedFormat, authority: Authority, commentCount: number): RelatedContent {
@@ -38,7 +39,8 @@ export function toRelatedContent(content: Content, format: FocusedFormat, author
         commentCount,
         format: format,
         data: content.commit.data,
-        authority
+        authority,
+        semanticId: content.semanticId
     };
 }
 
@@ -54,6 +56,7 @@ export interface FocusedContent {
     format: FocusedFormat;
     authority: Authority;
     data: any;
+    semanticId: string | null;
 }
 
 export function toFocusedContent(content: Content, format: FocusedFormat, authority: Authority, commentCount: number): FocusedContent {
@@ -68,7 +71,8 @@ export function toFocusedContent(content: Content, format: FocusedFormat, author
         commentCount,
         authority,
         format: format,
-        data: content.commit.data
+        data: content.commit.data,
+        semanticId: content.semanticId
     };
 }
 

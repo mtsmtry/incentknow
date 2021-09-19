@@ -9,7 +9,7 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
-import Incentknow.API (getFormats, getRelatedFormat)
+import Incentknow.API (getFormats,getFormatsHasSemanticId, getRelatedFormat)
 import Incentknow.API.Execution (toQueryCallback)
 import Incentknow.AppM (class Behaviour)
 import Incentknow.Atoms.Icon (formatWithIcon)
@@ -91,7 +91,7 @@ render state =
             _ -> Nothing
         SpaceByAndHasSemanticId spaceId ->
           case maybeWord of 
-            Nothing -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) $ getFormats spaceId
+            Nothing -> Just $ toQueryCallback $ map (\items-> { items, completed: true }) $ map (map toSelectMenuItem) $ getFormatsHasSemanticId spaceId
             _ -> Nothing
         _ -> Nothing
     , fetchSingle: Just $ \x-> toQueryCallback $ map toSelectMenuItem $ getRelatedFormat x

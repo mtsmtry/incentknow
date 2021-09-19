@@ -13,7 +13,6 @@ export interface RelatedFormat {
     icon: string | null;
     space: RelatedSpace;
     usage: FormatUsage;
-    semanticId: string | null;
     currentStructureId: StructureId;
 }
 
@@ -26,7 +25,6 @@ export function toRelatedFormat(format: Format): RelatedFormat {
         icon: format.icon,
         space: toRelatedSpace(format.space),
         usage: format.usage,
-        semanticId: format.semanticId,
         currentStructureId: format.currentStructure.entityId
     }
 }
@@ -67,7 +65,7 @@ export function toFocusedFormat(format: Format): FocusedFormat {
         updatedAt: toTimestamp(format.updatedAt),
         updaterUser: toRelatedUser(format.updaterUser),
         currentStructure: toFocusedStructure(format.currentStructure),
-        semanticId: format.semanticId
+        semanticId: format.semanticId?.entityId || null
     }
 }
 
@@ -85,6 +83,6 @@ export function toFocusedFormatFromStructure(structure: Structure): FocusedForma
         updatedAt: toTimestamp(structure.format.updatedAt),
         updaterUser: toRelatedUser(structure.format.updaterUser),
         currentStructure: toFocusedStructure(structure),
-        semanticId: structure.format.semanticId
+        semanticId: structure.format.semanticId?.entityId || null
     }
 }

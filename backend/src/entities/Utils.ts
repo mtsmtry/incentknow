@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 import { Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
 
 export function DisplayId() {
-    return Column("varchar", { length: 15, unique: true });
+    return Column("varchar", { length: 30, unique: true });
 }
 
 export function EntityId(length = 12) {

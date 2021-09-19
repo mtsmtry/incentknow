@@ -3,7 +3,7 @@ import { ObjectLiteral } from "typeorm";
 import { ContainerId } from "../entities/container/Container";
 import { ContentId } from "../entities/content/Content";
 import { FormatId } from "../entities/format/Format";
-import { isMaterialType, TypeName } from "../entities/format/Property";
+import { getMaterialType, TypeName } from "../entities/format/Property";
 import { Structure } from "../entities/format/Structure";
 import { extractTextMaterialData, MaterialData } from "../interfaces/material/Material";
 
@@ -11,7 +11,7 @@ function toElasticsearchData(formatId: FormatId, structure: Structure, data: Obj
     const properties = {};
     const texts: string[] = [];
     for (const prop of structure.properties) {
-        if (isMaterialType(prop.typeName)) {
+        if (getMaterialType(prop.typeName)) {
             const materialData = materials[prop.entityId];
             if (materialData) {
                 texts.push(extractTextMaterialData(materialData));

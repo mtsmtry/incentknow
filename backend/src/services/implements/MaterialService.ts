@@ -109,7 +109,7 @@ export class MaterialService extends BaseService {
 
                 const material = await this.mat.createCommand(trx).createMaterialInSpace(draft.intendedSpaceId, userId, toMaterialData(draft.intendedMaterialType, currentEditing.snapshot.data), editing.id);
                 await Promise.all([
-                    this.edit.createCommand(trx).makeDraftContent(draft.id, material.raw.id),
+                    this.edit.createCommand(trx).makeDraftContent(draft.id, material.id),
                     this.edit.createCommand(trx).closeEditing(draft, MaterialEditingState.COMMITTED)
                 ]);
             }

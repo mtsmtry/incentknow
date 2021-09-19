@@ -6544,7 +6544,8 @@ var PS = {};
               return $foreign["_caseJson"](Data_Function["const"](d), Data_Function["const"](d), Data_Function["const"](d), Data_Function["const"](d), Data_Function["const"](d), f, j);
           };
       };
-  };                                        
+  };
+  var isObject = isJsonType(caseJsonObject);
   var toObject = toJsonType(caseJsonObject);
   var caseJsonNumber = function (d) {
       return function (f) {
@@ -6579,6 +6580,7 @@ var PS = {};
   };                                      
   var toArray = toJsonType(caseJsonArray);
   exports["isNull"] = isNull;
+  exports["isObject"] = isObject;
   exports["toBoolean"] = toBoolean;
   exports["toNumber"] = toNumber;
   exports["toString"] = toString;
@@ -14954,7 +14956,15 @@ var PS = {};
 
   obj.format = obj.format ? jsFocusedFormat(obj.format) : null;
 
-  obj.authority = obj.authority ? jsAuthority(obj.authority) : null;return obj;}                                                                         
+  obj.authority = obj.authority ? jsAuthority(obj.authority) : null;
+
+                          if (obj.semanticId instanceof Data_Maybe.Just) {
+                              obj.semanticId = obj.semanticId.value0;
+                            
+                          } else {
+                              obj.semanticId = null;
+                          }
+                      return obj;}                                                                         
 
   function psRelatedContent(obj){obj.contentId = obj.contentId ? psContentId(obj.contentId) : null;
 
@@ -14966,7 +14976,15 @@ var PS = {};
 
   obj.format = obj.format ? psFocusedFormat(obj.format) : null;
 
-  obj.authority = obj.authority ? psAuthority(obj.authority) : null;return obj;}exports.fromJsonToRelatedContent = x => psRelatedContent(_.cloneDeep(x));
+  obj.authority = obj.authority ? psAuthority(obj.authority) : null;
+
+                      if (obj.semanticId) {
+                        
+                          obj.semanticId = new Data_Maybe.Just(obj.semanticId);
+                      } else {
+                          obj.semanticId = Data_Maybe.Nothing.value;
+                      }
+                  return obj;}exports.fromJsonToRelatedContent = x => psRelatedContent(_.cloneDeep(x));
 
   function jsFocusedContent(obj){obj.contentId = obj.contentId ? jsContentId(obj.contentId) : null;
 
@@ -14978,7 +14996,15 @@ var PS = {};
 
   obj.format = obj.format ? jsFocusedFormat(obj.format) : null;
   obj.authority = obj.authority ? jsAuthority(obj.authority) : null;
-  return obj;}                                                                         
+
+
+                          if (obj.semanticId instanceof Data_Maybe.Just) {
+                              obj.semanticId = obj.semanticId.value0;
+                            
+                          } else {
+                              obj.semanticId = null;
+                          }
+                      return obj;}                                                                         
 
   function psFocusedContent(obj){obj.contentId = obj.contentId ? psContentId(obj.contentId) : null;
 
@@ -14990,7 +15016,15 @@ var PS = {};
 
   obj.format = obj.format ? psFocusedFormat(obj.format) : null;
   obj.authority = obj.authority ? psAuthority(obj.authority) : null;
-  return obj;}                                                                         
+
+
+                      if (obj.semanticId) {
+                        
+                          obj.semanticId = new Data_Maybe.Just(obj.semanticId);
+                      } else {
+                          obj.semanticId = Data_Maybe.Nothing.value;
+                      }
+                  return obj;}                                                                         
 
   function jsContentRelation(obj){
                               obj.contents = obj.contents ? obj.contents.map(x => {
@@ -15160,14 +15194,6 @@ var PS = {};
                     
   obj.space = obj.space ? jsRelatedSpace(obj.space) : null;
   obj.usage = obj.usage ? jsFormatUsage(obj.usage) : null;
-
-                          if (obj.semanticId instanceof Data_Maybe.Just) {
-                              obj.semanticId = obj.semanticId.value0;
-                            
-                          } else {
-                              obj.semanticId = null;
-                          }
-                    
   obj.currentStructureId = obj.currentStructureId ? jsStructureId(obj.currentStructureId) : null;return obj;}                                                                       
 
   function psRelatedFormat(obj){obj.formatId = obj.formatId ? psFormatId(obj.formatId) : null;
@@ -15184,14 +15210,6 @@ var PS = {};
                 
   obj.space = obj.space ? psRelatedSpace(obj.space) : null;
   obj.usage = obj.usage ? psFormatUsage(obj.usage) : null;
-
-                      if (obj.semanticId) {
-                        
-                          obj.semanticId = new Data_Maybe.Just(obj.semanticId);
-                      } else {
-                          obj.semanticId = Data_Maybe.Nothing.value;
-                      }
-                
   obj.currentStructureId = obj.currentStructureId ? psStructureId(obj.currentStructureId) : null;return obj;}                                                                       
 
   function jsRelation(obj){obj.property = obj.property ? jsPropertyInfo(obj.property) : null;
@@ -16281,47 +16299,6 @@ var PS = {};
                     
                   return result;};})();
 
-  function jsMaterialCompositionType(obj) {
-                  if(E.Creation && obj instanceof E.Creation) {
-                      return "creation";
-                  }
-            
-                  if(E.Move && obj instanceof E.Move) {
-                      return "move";
-                  }
-              }
-
-  function psMaterialCompositionType(str) {switch(str){
-  case "creation":
-  return (E.Creation || { value: null }).value;
-  case "move":
-  return (E.Move || { value: null }).value;
-  }}
-
-  function jsMaterialComposition(obj) {
-                  if(E.CreationMaterialComposition && obj instanceof E.CreationMaterialComposition) {
-                      ;
-                      return {
-                          type: "creation",
-                          propertyId: obj.value0,data: obj.value1
-                      };
-                  }
-            
-                  if(E.MoveMaterialComposition && obj instanceof E.MoveMaterialComposition) {
-                      obj.value0 = obj.value0 ? jsMaterialId(obj.value0) : null;
-                      return {
-                          type: "move",
-                          materialId: obj.value0
-                      };
-                  }
-              }
-
-  function psMaterialComposition(obj) {switch(obj.type){case "creation":
-  ;return new E.CreationMaterialComposition(obj.propertyId,obj.data);
-  case "move":
-  obj.materialId = obj.materialId ? psMaterialId(obj.materialId) : null;return new E.MoveMaterialComposition(obj.materialId);
-  }}
-
   exports.__startContentEditing = (() => {return (contentId) => {return async function (basedCommitId) {
                   let argObject = { contentId,basedCommitId };
                   argObject = _.cloneDeep(argObject);
@@ -16526,6 +16503,15 @@ var PS = {};
                   result = result ? psFocusedFormat(result) : null;
                   return result;};})();
 
+  exports.__getFocusedFormat = (() => {return async function (formatId) {
+                  let argObject = { formatId };
+                  argObject = _.cloneDeep(argObject);
+                  argObject.formatId = argObject.formatId ? jsFormatId(argObject.formatId) : null;
+                  argObject = [ argObject.formatId ];
+                  let result = await requestApi("getFocusedFormat", argObject);
+                  result = result ? psFocusedFormat(result) : null;
+                  return result;};})();
+
   exports.__getRelatedFormat = (() => {return async function (formatId) {
                   let argObject = { formatId };
                   argObject = _.cloneDeep(argObject);
@@ -16559,6 +16545,20 @@ var PS = {};
                   argObject.spaceId = argObject.spaceId ? jsSpaceId(argObject.spaceId) : null;
                   argObject = [ argObject.spaceId ];
                   let result = await requestApi("getFormats", argObject);
+                
+                          result = result ? result.map(x => {
+                              x = x ? psRelatedFormat(x) : null;
+                              return x;
+                          }) : null;
+                    
+                  return result;};})();
+
+  exports.__getFormatsHasSemanticId = (() => {return async function (spaceId) {
+                  let argObject = { spaceId };
+                  argObject = _.cloneDeep(argObject);
+                  argObject.spaceId = argObject.spaceId ? jsSpaceId(argObject.spaceId) : null;
+                  argObject = [ argObject.spaceId ];
+                  let result = await requestApi("getFormatsHasSemanticId", argObject);
                 
                           result = result ? result.map(x => {
                               x = x ? psRelatedFormat(x) : null;
@@ -16610,6 +16610,22 @@ var PS = {};
                   argObject.formatId = argObject.formatId ? jsFormatId(argObject.formatId) : null;argObject.displayId = argObject.displayId ? jsFormatDisplayId(argObject.displayId) : null;
                   argObject = [ argObject.formatId,argObject.displayId ];
                   let result = await requestApi("setFormatDisplayId", argObject);
+                
+                  return result;}};})();
+
+  exports.__setFormatSemanticId = (() => {return (formatId) => {return async function (semanticId) {
+                  let argObject = { formatId,semanticId };
+                  argObject = _.cloneDeep(argObject);
+                  argObject.formatId = argObject.formatId ? jsFormatId(argObject.formatId) : null;
+                          if (argObject.semanticId instanceof Data_Maybe.Just) {
+                              argObject.semanticId = argObject.semanticId.value0;
+                              argObject.semanticId = argObject.semanticId ? jsSemanticId(argObject.semanticId) : null;
+                          } else {
+                              argObject.semanticId = null;
+                          }
+                    
+                  argObject = [ argObject.formatId,argObject.semanticId ];
+                  let result = await requestApi("setFormatSemanticId", argObject);
                 
                   return result;}};})();
 
@@ -17723,7 +17739,7 @@ exports.toCallbackApi = fetch => {
   $PS["Incentknow.API"] = $PS["Incentknow.API"] || {};
   var exports = $PS["Incentknow.API"];
   var $foreign = $PS["Incentknow.API"];
-  var Incentknow_API_Execution = $PS["Incentknow.API.Execution"];                
+  var Incentknow_API_Execution = $PS["Incentknow.API.Execution"];
   var uploadSpaceHeaderImage = function (x0) {
       return Incentknow_API_Execution["__commandAPI"]("uploadSpaceHeaderImage")($foreign["__uploadSpaceHeaderImage"](x0));
   };
@@ -17780,6 +17796,11 @@ exports.toCallbackApi = fetch => {
   };
   var setMyDisplayName = function (x0) {
       return Incentknow_API_Execution["__commandAPI"]("setMyDisplayName")($foreign["__setMyDisplayName"](x0));
+  };
+  var setFormatSemanticId = function (x0) {
+      return function (x1) {
+          return Incentknow_API_Execution["__commandAPI"]("setFormatSemanticId")($foreign["__setFormatSemanticId"](x0)(x1));
+      };
   };
   var setFormatIcon = function (x0) {
       return function (x1) {
@@ -17865,6 +17886,9 @@ exports.toCallbackApi = fetch => {
   var getMaterialDraft = function (x0) {
       return Incentknow_API_Execution["__queryAPI"]("getMaterialDraft")($foreign["__getMaterialDraft"](x0));
   };
+  var getFormatsHasSemanticId = function (x0) {
+      return Incentknow_API_Execution["__queryAPI"]("getFormatsHasSemanticId")($foreign["__getFormatsHasSemanticId"](x0));
+  };
   var getFormats = function (x0) {
       return Incentknow_API_Execution["__queryAPI"]("getFormats")($foreign["__getFormats"](x0));
   };
@@ -17873,6 +17897,9 @@ exports.toCallbackApi = fetch => {
   };
   var getFocusedFormatByStructure = function (x0) {
       return Incentknow_API_Execution["__queryAPI"]("getFocusedFormatByStructure")($foreign["__getFocusedFormatByStructure"](x0));
+  };
+  var getFocusedFormat = function (x0) {
+      return Incentknow_API_Execution["__queryAPI"]("getFocusedFormat")($foreign["__getFocusedFormat"](x0));
   };
   var getFocusedContentsByDisplayId = function (x0) {
       return function (x1) {
@@ -17989,14 +18016,17 @@ exports.toCallbackApi = fetch => {
   exports["getSearchedContentsInContainer"] = getSearchedContentsInContainer;
   exports["createFormat"] = createFormat;
   exports["getFormat"] = getFormat;
+  exports["getFocusedFormat"] = getFocusedFormat;
   exports["getRelatedFormat"] = getRelatedFormat;
   exports["getFocusedFormatByStructure"] = getFocusedFormatByStructure;
   exports["getRelatedStructure"] = getRelatedStructure;
   exports["getFormats"] = getFormats;
+  exports["getFormatsHasSemanticId"] = getFormatsHasSemanticId;
   exports["getStructures"] = getStructures;
   exports["updateFormatStructure"] = updateFormatStructure;
   exports["setFormatDisplayName"] = setFormatDisplayName;
   exports["setFormatDisplayId"] = setFormatDisplayId;
+  exports["setFormatSemanticId"] = setFormatSemanticId;
   exports["setFormatIcon"] = setFormatIcon;
   exports["getAvailableFormatDisplayId"] = getAvailableFormatDisplayId;
   exports["startMaterialEditing"] = startMaterialEditing;
@@ -20920,10 +20950,10 @@ exports.toCallbackApi = fetch => {
   var remoteWith = function (remote) {
       return function (body) {
           if (remote instanceof Incentknow_API_Execution.Loading) {
-              return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("atom-remote-with") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("loaderCircle") ])([  ]) ]);
+              return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("atom-remote-with loading") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("loaderCircle") ])([  ]) ]);
           };
           if (remote instanceof Incentknow_API_Execution.LoadingForServer) {
-              return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("atom-remote-with") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("loaderCircle") ])([  ]) ]);
+              return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("atom-remote-with loading") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("loaderCircle") ])([  ]) ]);
           };
           if (remote instanceof Incentknow_API_Execution.Holding) {
               return body(remote.value0);
@@ -20937,15 +20967,15 @@ exports.toCallbackApi = fetch => {
   var remoteArrayWith = function (remote) {
       return function (body) {
           if (remote instanceof Incentknow_API_Execution.Loading) {
-              return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("atom-remote-with") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("loaderCircle") ])([  ]) ]);
+              return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("atom-remote-with loading") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("loaderCircle") ])([  ]) ]);
           };
           if (remote instanceof Incentknow_API_Execution.LoadingForServer) {
-              return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("atom-remote-with") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("loaderCircle") ])([  ]) ]);
+              return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("atom-remote-with loading") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("loaderCircle") ])([  ]) ]);
           };
           if (remote instanceof Incentknow_API_Execution.Holding) {
               var $5 = Data_Array.length(remote.value0) === 0;
               if ($5) {
-                  return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("atom-remote-with") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("no-result") ])([ Halogen_HTML_Core.text("\u7d50\u679c\u306f\u3042\u308a\u307e\u305b\u3093") ]) ]);
+                  return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("atom-remote-with no-result") ])([ Halogen_HTML_Core.text("\u7d50\u679c\u306f\u3042\u308a\u307e\u305b\u3093") ]);
               };
               return body(remote.value0);
           };
@@ -21308,6 +21338,7 @@ exports.toCallbackApi = fetch => {
   var Data_Argonaut_Core = $PS["Data.Argonaut.Core"];
   var Data_Argonaut_Encode_Class = $PS["Data.Argonaut.Encode.Class"];
   var Data_Array = $PS["Data.Array"];
+  var Data_Either = $PS["Data.Either"];
   var Data_Eq = $PS["Data.Eq"];
   var Data_Foldable = $PS["Data.Foldable"];
   var Data_Functor = $PS["Data.Functor"];
@@ -21614,9 +21645,9 @@ exports.toCallbackApi = fetch => {
           };
           return {
               info: Data_Array.filter((function () {
-                  var $109 = Data_HeytingAlgebra.not(Data_HeytingAlgebra.heytingAlgebraBoolean);
-                  return function ($110) {
-                      return $109(isSection($110));
+                  var $113 = Data_HeytingAlgebra.not(Data_HeytingAlgebra.heytingAlgebraBoolean);
+                  return function ($114) {
+                      return $113(isSection($114));
                   };
               })())(props),
               sections: Data_Array.filter(isSection)(props)
@@ -21633,7 +21664,7 @@ exports.toCallbackApi = fetch => {
       if (v instanceof JustReference) {
           return new Data_Maybe.Just(v.value0);
       };
-      throw new Error("Failed pattern match at Incentknow.Data.Property (line 261, column 29 - line 264, column 30): " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Incentknow.Data.Property (line 262, column 29 - line 265, column 30): " + [ v.constructor.name ]);
   };
   var toMaterialObjectFromDraftId = function (draftId) {
       return MaterialObjectDraft.create($foreign.forceConvert({
@@ -21679,8 +21710,11 @@ exports.toCallbackApi = fetch => {
       if (v instanceof ImageTypedValue && v.value0 instanceof Data_Maybe.Just) {
           return Data_Argonaut_Core.fromString(v.value0.value0);
       };
-      if (v instanceof EntityTypedValue && v.value1 instanceof JustReference) {
-          return Data_Argonaut_Core.jsonNull;
+      if (v instanceof EntityTypedValue && v.value1 instanceof Data_Either.Right) {
+          return Data_Argonaut_Core.fromString(Data_Maybe.fromMaybe("")(v.value1.value0.semanticId));
+      };
+      if (v instanceof EntityTypedValue && v.value1 instanceof Data_Either.Left) {
+          return Data_Argonaut_Core.fromString(Data_Maybe.fromMaybe("")(v.value1.value0));
       };
       return Data_Argonaut_Core.jsonNull;
   };
@@ -21705,7 +21739,7 @@ exports.toCallbackApi = fetch => {
                   return toContentProp(x)(Data_Maybe.Nothing.value);
               })(props);
           };
-          throw new Error("Failed pattern match at Incentknow.Data.Property (line 73, column 27 - line 75, column 55): " + [ v.constructor.name ]);
+          throw new Error("Failed pattern match at Incentknow.Data.Property (line 74, column 27 - line 76, column 55): " + [ v.constructor.name ]);
       };
   };
   var getDefaultValue = function (props) {
@@ -21746,7 +21780,7 @@ exports.toCallbackApi = fetch => {
           if (v instanceof Incentknow_Data_Entities.ImageType) {
               return Data_Argonaut_Core.jsonNull;
           };
-          throw new Error("Failed pattern match at Incentknow.Data.Property (line 45, column 18 - line 57, column 26): " + [ v.constructor.name ]);
+          throw new Error("Failed pattern match at Incentknow.Data.Property (line 46, column 18 - line 58, column 26): " + [ v.constructor.name ]);
       };
       return Data_Argonaut_Core.fromObject(Foreign_Object.fromFoldable(Data_Foldable.foldableArray)(Data_Functor.map(Data_Functor.functorArray)(function (x) {
           return Data_Tuple.Tuple.create(Data_Newtype.unwrap(Incentknow_Data_Ids.newtypePropertyId)(x.id))(defaultValue(x.type));
@@ -21763,7 +21797,7 @@ exports.toCallbackApi = fetch => {
           if (v instanceof JustReference) {
               return JustReference.create(f(v.value0));
           };
-          throw new Error("Failed pattern match at Incentknow.Data.Property (line 267, column 11 - line 270, column 43): " + [ v.constructor.name ]);
+          throw new Error("Failed pattern match at Incentknow.Data.Property (line 268, column 11 - line 271, column 43): " + [ v.constructor.name ]);
       };
   });
   var toTypedValue = function (value) {
@@ -21809,9 +21843,15 @@ exports.toCallbackApi = fetch => {
               return ImageTypedValue.create(Data_Argonaut_Core.toString(value));
           };
           if (ty instanceof Incentknow_Data_Entities.EntityType) {
-              return EntityTypedValue.create(ty.value0)(Data_Functor.map(functorReferenceValue)(Incentknow_API.fromJsonToRelatedContent)(toReferenceValue(value)));
+              return EntityTypedValue.create(ty.value0)((function () {
+                  var $65 = Data_Argonaut_Core.isObject(value);
+                  if ($65) {
+                      return Data_Either.Right.create(Incentknow_API.fromJsonToRelatedContent(value));
+                  };
+                  return Data_Either.Left.create(Data_Argonaut_Core.toString(value));
+              })());
           };
-          throw new Error("Failed pattern match at Incentknow.Data.Property (line 273, column 25 - line 285, column 103): " + [ ty.constructor.name ]);
+          throw new Error("Failed pattern match at Incentknow.Data.Property (line 274, column 25 - line 286, column 138): " + [ ty.constructor.name ]);
       };
   };
   var fromMaterialObjectToJson = function (v) {
@@ -21830,7 +21870,7 @@ exports.toCallbackApi = fetch => {
               materialId: v.value0.materialId
           });
       };
-      throw new Error("Failed pattern match at Incentknow.Data.Property (line 241, column 28 - line 244, column 87): " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Incentknow.Data.Property (line 242, column 28 - line 245, column 87): " + [ v.constructor.name ]);
   };
   var fromJsonToMaterialObject = function (json) {
       var v = $foreign.getMaterialObjectType(json);
@@ -21867,7 +21907,7 @@ exports.toCallbackApi = fetch => {
                   if (v instanceof Data_Maybe.Nothing) {
                       return [  ];
                   };
-                  throw new Error("Failed pattern match at Incentknow.Data.Property (line 126, column 27 - line 128, column 18): " + [ v.constructor.name ]);
+                  throw new Error("Failed pattern match at Incentknow.Data.Property (line 127, column 27 - line 129, column 18): " + [ v.constructor.name ]);
               };
           };
           var propDifference = function (bf) {
@@ -21890,14 +21930,14 @@ exports.toCallbackApi = fetch => {
                           };
                       };
                       return Data_Array.concat(Data_Functor.map(Data_Functor.functorArray)(Data_Array.fromFoldable(Data_Foldable.foldableMaybe))([ (function () {
-                          var $76 = bf.value0.value1.displayName !== af.value0.value1.displayName;
-                          if ($76) {
+                          var $80 = bf.value0.value1.displayName !== af.value0.value1.displayName;
+                          if ($80) {
                               return Data_Maybe.Just.create(mkDiff(DisplayNameItem.value)(MinorChange.value)(new Data_Maybe.Just(bf.value0.value1.displayName))(new Data_Maybe.Just(af.value0.value1.displayName)));
                           };
                           return Data_Maybe.Nothing.value;
                       })(), (function () {
-                          var $77 = Data_Eq.notEq(Data_Maybe.eqMaybe(Data_Eq.eqString))(bf.value0.value1.fieldName)(af.value0.value1.fieldName);
-                          if ($77) {
+                          var $81 = Data_Eq.notEq(Data_Maybe.eqMaybe(Data_Eq.eqString))(bf.value0.value1.fieldName)(af.value0.value1.fieldName);
+                          if ($81) {
                               return Data_Maybe.Just.create(mkDiff(FieldNameItem.value)(MinorChange.value)(bf.value0.value1.fieldName)(af.value0.value1.fieldName));
                           };
                           return Data_Maybe.Nothing.value;
@@ -21917,32 +21957,32 @@ exports.toCallbackApi = fetch => {
                           if (bf.value0.value1.type instanceof Incentknow_Data_Entities.UrlType && af.value0.value1.type instanceof Incentknow_Data_Entities.StringType) {
                               return Data_Maybe.Just.create(mkDiff(TypeItem.value)(MinorChange.value)(new Data_Maybe.Just(""))(new Data_Maybe.Just("")));
                           };
-                          var $84 = Data_Eq.notEq(Incentknow_Data_Entities.eqType)(bf.value0.value1.type)(af.value0.value1.type);
-                          if ($84) {
+                          var $88 = Data_Eq.notEq(Incentknow_Data_Entities.eqType)(bf.value0.value1.type)(af.value0.value1.type);
+                          if ($88) {
                               return Data_Maybe.Just.create(mkDiff(TypeItem.value)(MajorChange.value)(new Data_Maybe.Just(""))(new Data_Maybe.Just("")));
                           };
                           return Data_Maybe.Nothing.value;
                       })(), (function () {
-                          var $85 = Data_Eq.notEq(Data_Maybe.eqMaybe(Data_Eq.eqString))(bf.value0.value1.semantic)(af.value0.value1.semantic);
-                          if ($85) {
+                          var $89 = Data_Eq.notEq(Data_Maybe.eqMaybe(Data_Eq.eqString))(bf.value0.value1.semantic)(af.value0.value1.semantic);
+                          if ($89) {
                               return Data_Maybe.Just.create(mkDiff(SemanticItem.value)(MinorChange.value)(bf.value0.value1.semantic)(af.value0.value1.semantic));
                           };
                           return Data_Maybe.Nothing.value;
                       })(), (function () {
-                          var $86 = Data_Eq.notEq(Data_Maybe.eqMaybe(Data_Eq.eqString))(bf.value0.value1.icon)(af.value0.value1.icon);
-                          if ($86) {
+                          var $90 = Data_Eq.notEq(Data_Maybe.eqMaybe(Data_Eq.eqString))(bf.value0.value1.icon)(af.value0.value1.icon);
+                          if ($90) {
                               return Data_Maybe.Just.create(mkDiff(IconItem.value)(MinorChange.value)(bf.value0.value1.icon)(af.value0.value1.icon));
                           };
                           return Data_Maybe.Nothing.value;
                       })(), (function () {
-                          var $87 = bf.value0.value1.optional !== af.value0.value1.optional;
-                          if ($87) {
+                          var $91 = bf.value0.value1.optional !== af.value0.value1.optional;
+                          if ($91) {
                               return Data_Maybe.Just.create(mkDiff(OptionalItem.value)(MinorChange.value)(Data_Maybe.Just.create(Data_Show.show(Data_Show.showBoolean)(bf.value0.value1.optional)))(Data_Maybe.Just.create(Data_Show.show(Data_Show.showBoolean)(af.value0.value1.optional))));
                           };
                           return Data_Maybe.Nothing.value;
                       })(), (function () {
-                          var $88 = bf.value0.value0 !== af.value0.value0;
-                          if ($88) {
+                          var $92 = bf.value0.value0 !== af.value0.value0;
+                          if ($92) {
                               return Data_Maybe.Just.create(mkDiff(OrderItem.value)(MinorChange.value)(Data_Maybe.Just.create(Data_Show.show(Data_Show.showInt)(bf.value0.value0)))(Data_Maybe.Just.create(Data_Show.show(Data_Show.showInt)(af.value0.value0))));
                           };
                           return Data_Maybe.Nothing.value;
@@ -21978,18 +22018,18 @@ exports.toCallbackApi = fetch => {
                           after: Data_Maybe.Nothing.value
                       });
                   };
-                  throw new Error("Failed pattern match at Incentknow.Data.Property (line 131, column 26 - line 175, column 133): " + [ bf.constructor.name, af.constructor.name ]);
+                  throw new Error("Failed pattern match at Incentknow.Data.Property (line 132, column 26 - line 176, column 133): " + [ bf.constructor.name, af.constructor.name ]);
               };
           };
           var getChangeType = function (props) {
-              var $101 = Data_Array.length(props) === 0;
-              if ($101) {
+              var $105 = Data_Array.length(props) === 0;
+              if ($105) {
                   return NoneChange.value;
               };
-              var $102 = 0 < Data_Array.length(Data_Array.filter(function (x) {
+              var $106 = 0 < Data_Array.length(Data_Array.filter(function (x) {
                   return Data_Eq.eq(eqChangeType)(x.changeType)(MajorChange.value);
               })(props));
-              if ($102) {
+              if ($106) {
                   return MajorChange.value;
               };
               return MinorChange.value;
@@ -23739,9 +23779,9 @@ exports.toCallbackApi = fetch => {
       return function (dictMonadAff) {
           return function (state) {
               var toStringOrEmpty = (function () {
-                  var $41 = Data_Maybe.fromMaybe("");
-                  return function ($42) {
-                      return $41(Data_Argonaut_Core.toString($42));
+                  var $45 = Data_Maybe.fromMaybe("");
+                  return function ($46) {
+                      return $45(Data_Argonaut_Core.toString($46));
                   };
               })();
               var toMaybe = function (v) {
@@ -23826,14 +23866,15 @@ exports.toCallbackApi = fetch => {
                       })(Data_Void.absurd);
                   });
               };
-              if (state.value instanceof Incentknow_Data_Property.EntityTypedValue) {
-                  return referenceValueWith(state.value.value1)(function (value) {
-                      return Halogen_HTML.slot()(new Data_Symbol.IsSymbol(function () {
-                          return "contentLink";
-                      }))(Data_Ord.ordUnit)(Data_Symbol.SProxy.value)(Data_Unit.unit)(Incentknow_Molecules_ContentLink.component(dictBehaviour)(dictMonadAff)(dictBehaviour.MonadEffect0()))({
-                          value: value
-                      })(Data_Void.absurd);
-                  });
+              if (state.value instanceof Incentknow_Data_Property.EntityTypedValue && state.value.value1 instanceof Data_Either.Right) {
+                  return Halogen_HTML.slot()(new Data_Symbol.IsSymbol(function () {
+                      return "contentLink";
+                  }))(Data_Ord.ordUnit)(Data_Symbol.SProxy.value)(Data_Unit.unit)(Incentknow_Molecules_ContentLink.component(dictBehaviour)(dictMonadAff)(dictBehaviour.MonadEffect0()))({
+                      value: state.value.value1.value0
+                  })(Data_Void.absurd);
+              };
+              if (state.value instanceof Incentknow_Data_Property.EntityTypedValue && state.value.value1 instanceof Data_Either.Left) {
+                  return Halogen_HTML_Core.text(Data_Maybe.fromMaybe("")(state.value.value1.value0));
               };
               if (state.value instanceof Incentknow_Data_Property.DocumentTypedValue) {
                   return referenceValueWith(state.value.value0)(function (value) {
@@ -23885,8 +23926,8 @@ exports.toCallbackApi = fetch => {
                   "eval": Halogen_Component.mkEval({
                       handleAction: handleAction(dictBehaviour)(dictBehaviour.MonadEffect0())(dictMonadAff),
                       handleQuery: Halogen_Component.defaultEval.handleQuery,
-                      receive: function ($43) {
-                          return Data_Maybe.Just.create(HandleInput.create($43));
+                      receive: function ($47) {
+                          return Data_Maybe.Just.create(HandleInput.create($47));
                       },
                       initialize: new Data_Maybe.Just(Initialize.value),
                       finalize: Halogen_Component.defaultEval.finalize
@@ -26661,9 +26702,28 @@ exports.toCallbackApi = fetch => {
                   fetchMultiple: input.fetchMultiple,
                   fetchSingle: input.fetchSingle,
                   fetchId: input.fetchId,
-                  candidateMap: state.candidateMap,
+                  candidateMap: Data_Map_Internal.alter(Data_Maybe.ordMaybe(Data_Ord.ordString))(function (old) {
+                      var v2 = Data_Maybe.maybe(false)(function (v3) {
+                          return v3.completed;
+                      })(old);
+                      if (v2 && !input.initial.completed) {
+                          return old;
+                      };
+                      if (!v2 && input.initial.completed) {
+                          return new Data_Maybe.Just(input.initial);
+                      };
+                      if (v2 && input.initial.completed) {
+                          return new Data_Maybe.Just(input.initial);
+                      };
+                      if (!v2 && !input.initial.completed) {
+                          return old;
+                      };
+                      throw new Error("Failed pattern match at Incentknow.Molecules.SelectMenu (line 113, column 11 - line 117, column 32): " + [ v2.constructor.name, input.initial.completed.constructor.name ]);
+                  })(Data_Maybe.Nothing.value)(state.candidateMap),
                   searchWord: state.searchWord,
-                  allItems: state.allItems,
+                  allItems: Data_Foldable.foldr(Data_Foldable.foldableArray)(function (item) {
+                      return Data_Map_Internal.insert(dictOrd)(item.id)(item);
+                  })(state.allItems)(input.initial.items),
                   visibleCrossmark: state.visibleCrossmark
               };
           };
@@ -26711,14 +26771,14 @@ exports.toCallbackApi = fetch => {
                   if (maybeWord instanceof Data_Maybe.Nothing) {
                       return new Data_Maybe.Just(v1.value0);
                   };
-                  throw new Error("Failed pattern match at Incentknow.Molecules.SelectMenu (line 149, column 17 - line 151, column 26): " + [ maybeWord.constructor.name ]);
+                  throw new Error("Failed pattern match at Incentknow.Molecules.SelectMenu (line 157, column 17 - line 159, column 26): " + [ maybeWord.constructor.name ]);
               };
               if (v1 instanceof Data_Maybe.Nothing) {
                   return Data_Maybe.Nothing.value;
               };
-              throw new Error("Failed pattern match at Incentknow.Molecules.SelectMenu (line 148, column 14 - line 152, column 23): " + [ v1.constructor.name ]);
+              throw new Error("Failed pattern match at Incentknow.Molecules.SelectMenu (line 156, column 14 - line 160, column 23): " + [ v1.constructor.name ]);
           };
-          throw new Error("Failed pattern match at Incentknow.Molecules.SelectMenu (line 146, column 29 - line 152, column 23): " + [ v.constructor.name ]);
+          throw new Error("Failed pattern match at Incentknow.Molecules.SelectMenu (line 154, column 29 - line 160, column 23): " + [ v.constructor.name ]);
       };
   };
   var render = function (dictBehaviour) {
@@ -26734,8 +26794,8 @@ exports.toCallbackApi = fetch => {
                           return Data_Map_Internal.lookup(dictOrd)(value)(state.allItems);
                       })(state.value)),
                       message: (function () {
-                          var $32 = Data_Maybe.isNothing(cand);
-                          if ($32) {
+                          var $37 = Data_Maybe.isNothing(cand);
+                          if ($37) {
                               return Data_Maybe.Just.create(Halogen_HTML_Core.text("\u5019\u88dc\u306f\u3042\u308a\u307e\u305b\u3093"));
                           };
                           return Data_Maybe.Nothing.value;
@@ -26743,8 +26803,8 @@ exports.toCallbackApi = fetch => {
                       searchWord: state.searchWord,
                       disabled: state.disabled,
                       visibleCrossmark: state.visibleCrossmark
-                  })(function ($56) {
-                      return Data_Maybe.Just.create(ImplAction.create($56));
+                  })(function ($61) {
+                      return Data_Maybe.Just.create(ImplAction.create($61));
                   });
               };
           };
@@ -26785,28 +26845,28 @@ exports.toCallbackApi = fetch => {
                       if (v instanceof ImplAction) {
                           if (v.value0 instanceof Incentknow_Molecules_SelectMenuImpl.ChangeValue) {
                               return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
-                                  var $37 = {};
-                                  for (var $38 in v1) {
-                                      if ({}.hasOwnProperty.call(v1, $38)) {
-                                          $37[$38] = v1[$38];
+                                  var $42 = {};
+                                  for (var $43 in v1) {
+                                      if ({}.hasOwnProperty.call(v1, $43)) {
+                                          $42[$43] = v1[$43];
                                       };
                                   };
-                                  $37.value = v.value0.value0;
-                                  return $37;
+                                  $42.value = v.value0.value0;
+                                  return $42;
                               }))(function () {
                                   return Halogen_Query_HalogenM.raise(v.value0.value0);
                               });
                           };
                           if (v.value0 instanceof Incentknow_Molecules_SelectMenuImpl.ChangeSearchWord) {
                               return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
-                                  var $41 = {};
-                                  for (var $42 in v1) {
-                                      if ({}.hasOwnProperty.call(v1, $42)) {
-                                          $41[$42] = v1[$42];
+                                  var $46 = {};
+                                  for (var $47 in v1) {
+                                      if ({}.hasOwnProperty.call(v1, $47)) {
+                                          $46[$47] = v1[$47];
                                       };
                                   };
-                                  $41.searchWord = v.value0.value0;
-                                  return $41;
+                                  $46.searchWord = v.value0.value0;
+                                  return $46;
                               }))(function () {
                                   return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.get(Halogen_Query_HalogenM.monadStateHalogenM))(function (state) {
                                       var v1 = getAllCandidates(state.candidateMap);
@@ -26819,27 +26879,10 @@ exports.toCallbackApi = fetch => {
                                   });
                               });
                           };
-                          throw new Error("Failed pattern match at Incentknow.Molecules.SelectMenu (line 173, column 24 - line 184, column 23): " + [ v.value0.constructor.name ]);
+                          throw new Error("Failed pattern match at Incentknow.Molecules.SelectMenu (line 181, column 24 - line 192, column 23): " + [ v.value0.constructor.name ]);
                       };
                       if (v instanceof GetMultiple) {
                           return Incentknow_API_Execution.forItem(Incentknow_AppM.behaviourHalogenM(dictBehaviour))(v.value1)(function (cands) {
-                              return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (x) {
-                                  var $47 = {};
-                                  for (var $48 in x) {
-                                      if ({}.hasOwnProperty.call(x, $48)) {
-                                          $47[$48] = x[$48];
-                                      };
-                                  };
-                                  $47.candidateMap = Data_Map_Internal.insert(Data_Maybe.ordMaybe(Data_Ord.ordString))(v.value0)(cands)(x.candidateMap);
-                                  $47.allItems = Data_Foldable.foldr(Data_Foldable.foldableArray)(function (item) {
-                                      return Data_Map_Internal.insert(dictOrd)(item.id)(item);
-                                  })(x.allItems)(cands.items);
-                                  return $47;
-                              });
-                          });
-                      };
-                      if (v instanceof GetSingle) {
-                          return Incentknow_API_Execution.forItem(Incentknow_AppM.behaviourHalogenM(dictBehaviour))(v.value0)(function (item) {
                               return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (x) {
                                   var $52 = {};
                                   for (var $53 in x) {
@@ -26847,12 +26890,29 @@ exports.toCallbackApi = fetch => {
                                           $52[$53] = x[$53];
                                       };
                                   };
-                                  $52.allItems = Data_Map_Internal.insert(dictOrd)(item.id)(item)(x.allItems);
+                                  $52.candidateMap = Data_Map_Internal.insert(Data_Maybe.ordMaybe(Data_Ord.ordString))(v.value0)(cands)(x.candidateMap);
+                                  $52.allItems = Data_Foldable.foldr(Data_Foldable.foldableArray)(function (item) {
+                                      return Data_Map_Internal.insert(dictOrd)(item.id)(item);
+                                  })(x.allItems)(cands.items);
                                   return $52;
                               });
                           });
                       };
-                      throw new Error("Failed pattern match at Incentknow.Molecules.SelectMenu (line 155, column 16 - line 193, column 72): " + [ v.constructor.name ]);
+                      if (v instanceof GetSingle) {
+                          return Incentknow_API_Execution.forItem(Incentknow_AppM.behaviourHalogenM(dictBehaviour))(v.value0)(function (item) {
+                              return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (x) {
+                                  var $57 = {};
+                                  for (var $58 in x) {
+                                      if ({}.hasOwnProperty.call(x, $58)) {
+                                          $57[$58] = x[$58];
+                                      };
+                                  };
+                                  $57.allItems = Data_Map_Internal.insert(dictOrd)(item.id)(item)(x.allItems);
+                                  return $57;
+                              });
+                          });
+                      };
+                      throw new Error("Failed pattern match at Incentknow.Molecules.SelectMenu (line 163, column 16 - line 201, column 72): " + [ v.constructor.name ]);
                   };
               };
           };
@@ -26872,8 +26932,8 @@ exports.toCallbackApi = fetch => {
                       "eval": Halogen_Component.mkEval({
                           handleAction: handleAction(dictEq)(dictOrd)(dictBehaviour)(dictMonadAff),
                           handleQuery: Halogen_Component.defaultEval.handleQuery,
-                          receive: function ($57) {
-                              return Data_Maybe.Just.create(HandleInput.create($57));
+                          receive: function ($62) {
+                              return Data_Maybe.Just.create(HandleInput.create($62));
                           },
                           initialize: new Data_Maybe.Just(Initialize.value),
                           finalize: Halogen_Component.defaultEval.finalize
@@ -27008,7 +27068,7 @@ exports.toCallbackApi = fetch => {
                                       items: items,
                                       completed: true
                                   };
-                              })(Data_Functor.map(Incentknow_API_Execution.mapQueryAPI)(Data_Functor.map(Data_Functor.functorArray)(toSelectMenuItem))(Incentknow_API.getFormats(state.filter.value0)))));
+                              })(Data_Functor.map(Incentknow_API_Execution.mapQueryAPI)(Data_Functor.map(Data_Functor.functorArray)(toSelectMenuItem))(Incentknow_API.getFormatsHasSemanticId(state.filter.value0)))));
                           };
                           return Data_Maybe.Nothing.value;
                       };
@@ -27044,7 +27104,7 @@ exports.toCallbackApi = fetch => {
   var eqFormatFilter = new Data_Eq.Eq(function (x) {
       return function (y) {
           if (x instanceof Formats && y instanceof Formats) {
-              return Data_Eq.eq(Data_Eq.eqArray(Data_Eq.eqRec()(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowNil)()(new Data_Symbol.IsSymbol(function () {
+              return Data_Eq.eq(Data_Eq.eqArray(Data_Eq.eqRec()(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowNil)()(new Data_Symbol.IsSymbol(function () {
                   return "usage";
               }))(Incentknow_Data_Entities.eqFormatUsage))()(new Data_Symbol.IsSymbol(function () {
                   return "space";
@@ -27067,8 +27127,6 @@ exports.toCallbackApi = fetch => {
               }))(Incentknow_Data_Entities.eqSpaceAuthority))()(new Data_Symbol.IsSymbol(function () {
                   return "createdAt";
               }))(Data_Eq.eqNumber))))()(new Data_Symbol.IsSymbol(function () {
-                  return "semanticId";
-              }))(Data_Maybe.eqMaybe(Data_Eq.eqString)))()(new Data_Symbol.IsSymbol(function () {
                   return "icon";
               }))(Data_Maybe.eqMaybe(Data_Eq.eqString)))()(new Data_Symbol.IsSymbol(function () {
                   return "formatId";
@@ -29906,7 +29964,7 @@ exports.toCallbackApi = fetch => {
                   if (v instanceof Navigate) {
                       return Incentknow_AppM.navigateRoute(Incentknow_AppM.behaviourHalogenM(dictBehaviour))(v.value0)(v.value1);
                   };
-                  throw new Error("Failed pattern match at Incentknow.Organisms.Content.ValueEditor (line 199, column 16 - line 233, column 44): " + [ v.constructor.name ]);
+                  throw new Error("Failed pattern match at Incentknow.Organisms.Content.ValueEditor (line 204, column 16 - line 238, column 44): " + [ v.constructor.name ]);
               };
           };
       };
@@ -29935,7 +29993,7 @@ exports.toCallbackApi = fetch => {
                   if (v instanceof Data_Maybe.Nothing) {
                       return Incentknow_Data_Property.NullReference.value;
                   };
-                  throw new Error("Failed pattern match at Incentknow.Organisms.Content.ValueEditor (line 194, column 31 - line 196, column 29): " + [ v.constructor.name ]);
+                  throw new Error("Failed pattern match at Incentknow.Organisms.Content.ValueEditor (line 199, column 31 - line 201, column 29): " + [ v.constructor.name ]);
               };
               var toMaybeString = function (x) {
                   var $58 = x === "";
@@ -29951,7 +30009,7 @@ exports.toCallbackApi = fetch => {
                   if (v instanceof Data_Either.Right) {
                       return new Data_Maybe.Just(v.value0);
                   };
-                  throw new Error("Failed pattern match at Incentknow.Organisms.Content.ValueEditor (line 189, column 13 - line 191, column 22): " + [ v.constructor.name ]);
+                  throw new Error("Failed pattern match at Incentknow.Organisms.Content.ValueEditor (line 194, column 13 - line 196, column 22): " + [ v.constructor.name ]);
               };
               if (state.value instanceof Incentknow_Data_Property.StringTypedValue) {
                   return Incentknow_Atoms_Inputs.textarea({
@@ -30042,7 +30100,20 @@ exports.toCallbackApi = fetch => {
                   })());
               };
               if (state.value instanceof Incentknow_Data_Property.EntityTypedValue) {
-                  return Halogen_HTML_Core.text("");
+                  return Incentknow_Atoms_Inputs.textarea({
+                      onChange: (function () {
+                          var $91 = Incentknow_Data_Property.EntityTypedValue.create(state.value.value0);
+                          return function ($92) {
+                              return ChangeValue.create($91(Data_Either.Left.create(toMaybeString($92))));
+                          };
+                      })(),
+                      placeholder: "",
+                      value: Data_Either.either(function (x) {
+                          return Data_Maybe.fromMaybe("")(x);
+                      })(function (x) {
+                          return Data_Maybe.fromMaybe("")(x.semanticId);
+                      })(state.value.value1)
+                  });
               };
               if (state.value instanceof Incentknow_Data_Property.DocumentTypedValue) {
                   return Halogen_HTML.slot()(new Data_Symbol.IsSymbol(function () {
@@ -30050,14 +30121,14 @@ exports.toCallbackApi = fetch => {
                   }))(Data_Ord.ordUnit)(Data_Symbol.SProxy.value)(Data_Unit.unit)(Incentknow_Organisms_Material_SlotEditor.component(dictBehaviour)(dictBehaviour.MonadEffect0())(dictMonadAff))({
                       value: Incentknow_Data_Property.toMaybeFromReferenceValue(state.value.value0),
                       materialType: Incentknow_Data_Entities.MaterialTypeDocument.value
-                  })(function ($91) {
-                      return Data_Maybe.Just.create(ChangeValue.create(Incentknow_Data_Property.DocumentTypedValue.create(toReferenceValueFromMaybe($91))));
+                  })(function ($93) {
+                      return Data_Maybe.Just.create(ChangeValue.create(Incentknow_Data_Property.DocumentTypedValue.create(toReferenceValueFromMaybe($93))));
                   });
               };
               if (state.value instanceof Incentknow_Data_Property.UrlTypedValue) {
                   return Incentknow_Atoms_Inputs.textarea({
-                      onChange: function ($92) {
-                          return ChangeValue.create(Incentknow_Data_Property.UrlTypedValue.create(toMaybeString($92)));
+                      onChange: function ($94) {
+                          return ChangeValue.create(Incentknow_Data_Property.UrlTypedValue.create(toMaybeString($94)));
                       },
                       placeholder: "",
                       value: Data_Maybe.fromMaybe("")(state.value.value0)
@@ -30072,9 +30143,9 @@ exports.toCallbackApi = fetch => {
                               value: item,
                               env: state.env
                           })((function () {
-                              var $93 = ChangeItem.create(num);
-                              return function ($94) {
-                                  return Data_Maybe.Just.create($93($94));
+                              var $95 = ChangeItem.create(num);
+                              return function ($96) {
+                                  return Data_Maybe.Just.create($95($96));
                               };
                           })()), Incentknow_Atoms_Inputs.button("\u524a\u9664")(new DeleteItem(num)) ]);
                       };
@@ -30089,15 +30160,15 @@ exports.toCallbackApi = fetch => {
                           value: prop.value,
                           env: state.env
                       })((function () {
-                          var $95 = ChangeAttribute.create(prop.info.id);
-                          return function ($96) {
-                              return Data_Maybe.Just.create($95($96));
+                          var $97 = ChangeAttribute.create(prop.info.id);
+                          return function ($98) {
+                              return Data_Maybe.Just.create($97($98));
                           };
                       })()) ]) ]);
                   };
                   return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("org-value-editor-object") ])(Data_Functor.map(Data_Functor.functorArray)(renderProperty)(state.value.value0));
               };
-              throw new Error("Failed pattern match at Incentknow.Organisms.Content.ValueEditor (line 103, column 16 - line 183, column 10): " + [ state.value.constructor.name ]);
+              throw new Error("Failed pattern match at Incentknow.Organisms.Content.ValueEditor (line 103, column 16 - line 188, column 10): " + [ state.value.constructor.name ]);
           };
       };
   };
@@ -30110,8 +30181,8 @@ exports.toCallbackApi = fetch => {
                   "eval": Halogen_Component.mkEval({
                       handleAction: handleAction(dictBehaviour)(dictBehaviour.MonadEffect0())(dictMonadAff),
                       handleQuery: handleQuery,
-                      receive: function ($97) {
-                          return Data_Maybe.Just.create(HandleInput.create($97));
+                      receive: function ($99) {
+                          return Data_Maybe.Just.create(HandleInput.create($99));
                       },
                       initialize: new Data_Maybe.Just(Initialize.value),
                       finalize: Halogen_Component.defaultEval.finalize
@@ -32806,7 +32877,7 @@ exports.toCallbackApi = fetch => {
           return function (state) {
               var renderItem = function (v) {
                   var maybeFormat = (function () {
-                      var $18 = Data_Eq.eq(Data_Maybe.eqMaybe(Data_Eq.eqRec()(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowNil)()(new Data_Symbol.IsSymbol(function () {
+                      var $18 = Data_Eq.eq(Data_Maybe.eqMaybe(Data_Eq.eqRec()(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowNil)()(new Data_Symbol.IsSymbol(function () {
                           return "usage";
                       }))(Incentknow_Data_Entities.eqFormatUsage))()(new Data_Symbol.IsSymbol(function () {
                           return "space";
@@ -32829,8 +32900,6 @@ exports.toCallbackApi = fetch => {
                       }))(Incentknow_Data_Entities.eqSpaceAuthority))()(new Data_Symbol.IsSymbol(function () {
                           return "createdAt";
                       }))(Data_Eq.eqNumber))))()(new Data_Symbol.IsSymbol(function () {
-                          return "semanticId";
-                      }))(Data_Maybe.eqMaybe(Data_Eq.eqString)))()(new Data_Symbol.IsSymbol(function () {
                           return "icon";
                       }))(Data_Maybe.eqMaybe(Data_Eq.eqString)))()(new Data_Symbol.IsSymbol(function () {
                           return "formatId";
@@ -35560,6 +35629,234 @@ exports.toCallbackApi = fetch => {
 (function($PS) {
   // Generated by purs version 0.13.6
   "use strict";
+  $PS["Incentknow.Molecules.PropertyMenu"] = $PS["Incentknow.Molecules.PropertyMenu"] || {};
+  var exports = $PS["Incentknow.Molecules.PropertyMenu"];
+  var Control_Bind = $PS["Control.Bind"];
+  var Control_Monad_State_Class = $PS["Control.Monad.State.Class"];
+  var Data_Array = $PS["Data.Array"];
+  var Data_Eq = $PS["Data.Eq"];
+  var Data_Functor = $PS["Data.Functor"];
+  var Data_Maybe = $PS["Data.Maybe"];
+  var Data_Newtype = $PS["Data.Newtype"];
+  var Data_Ord = $PS["Data.Ord"];
+  var Data_Symbol = $PS["Data.Symbol"];
+  var Data_Unit = $PS["Data.Unit"];
+  var Halogen_Component = $PS["Halogen.Component"];
+  var Halogen_HTML = $PS["Halogen.HTML"];
+  var Halogen_HTML_Core = $PS["Halogen.HTML.Core"];
+  var Halogen_HTML_Elements = $PS["Halogen.HTML.Elements"];
+  var Halogen_Query_HalogenM = $PS["Halogen.Query.HalogenM"];
+  var Incentknow_API = $PS["Incentknow.API"];
+  var Incentknow_API_Execution = $PS["Incentknow.API.Execution"];
+  var Incentknow_AppM = $PS["Incentknow.AppM"];
+  var Incentknow_Data_Entities = $PS["Incentknow.Data.Entities"];
+  var Incentknow_Data_Ids = $PS["Incentknow.Data.Ids"];
+  var Incentknow_HTML_Utils = $PS["Incentknow.HTML.Utils"];
+  var Incentknow_Molecules_SelectMenu = $PS["Incentknow.Molecules.SelectMenu"];                
+  var Initialize = (function () {
+      function Initialize() {
+
+      };
+      Initialize.value = new Initialize();
+      return Initialize;
+  })();
+  var HandleInput = (function () {
+      function HandleInput(value0) {
+          this.value0 = value0;
+      };
+      HandleInput.create = function (value0) {
+          return new HandleInput(value0);
+      };
+      return HandleInput;
+  })();
+  var ChangeValue = (function () {
+      function ChangeValue(value0) {
+          this.value0 = value0;
+      };
+      ChangeValue.create = function (value0) {
+          return new ChangeValue(value0);
+      };
+      return ChangeValue;
+  })();
+  var FetchedFormat = (function () {
+      function FetchedFormat(value0) {
+          this.value0 = value0;
+      };
+      FetchedFormat.create = function (value0) {
+          return new FetchedFormat(value0);
+      };
+      return FetchedFormat;
+  })();
+  var toSelectMenuItem = function (prop) {
+      var html = Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("name") ])([ Halogen_HTML_Core.text(prop.displayName) ]);
+      return {
+          id: Data_Newtype.unwrap(Incentknow_Data_Ids.newtypePropertyId)(prop.id),
+          name: prop.displayName,
+          searchWord: prop.displayName,
+          html: html
+      };
+  };
+  var render = function (dictBehaviour) {
+      return function (dictMonadAff) {
+          return function (state) {
+              var props = Data_Maybe.maybe([  ])(function (v) {
+                  return v.currentStructure.properties;
+              })(state.format);
+              var filteredProps = Data_Maybe.maybe(props)(function (ty) {
+                  return Data_Array.filter(function (item) {
+                      return Data_Eq.eq(Incentknow_Data_Entities.eqType)(item.type)(ty);
+                  })(props);
+              })(state.type);
+              return Halogen_HTML.slot()(new Data_Symbol.IsSymbol(function () {
+                  return "selectMenu";
+              }))(Data_Ord.ordUnit)(Data_Symbol.SProxy.value)(Data_Unit.unit)(Incentknow_Molecules_SelectMenu.component(Data_Ord.ordString)(Data_Eq.eqString)(dictBehaviour)(dictMonadAff))({
+                  value: state.property,
+                  disabled: state.disabled,
+                  fetchMultiple: function (v) {
+                      return Data_Maybe.Nothing.value;
+                  },
+                  fetchSingle: Data_Maybe.Nothing.value,
+                  fetchId: "",
+                  initial: {
+                      items: Data_Functor.map(Data_Functor.functorArray)(toSelectMenuItem)(filteredProps),
+                      completed: true
+                  },
+                  visibleCrossmark: true
+              })(function ($25) {
+                  return Data_Maybe.Just.create(ChangeValue.create($25));
+              });
+          };
+      };
+  };
+  var initialState = function (input) {
+      return {
+          format: Data_Maybe.Nothing.value,
+          formatId: input.formatId,
+          property: input.value,
+          type: input.type,
+          disabled: input.disabled
+      };
+  };
+  var handleAction = function (dictBehaviour) {
+      return function (dictMonadAff) {
+          return function (dictMonadEffect) {
+              return function (v) {
+                  if (v instanceof Initialize) {
+                      return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.get(Halogen_Query_HalogenM.monadStateHalogenM))(function (state) {
+                          return Incentknow_API_Execution.callbackQuery(dictMonadAff)(FetchedFormat.create)(Incentknow_API.getFocusedFormat(state.formatId));
+                      });
+                  };
+                  if (v instanceof FetchedFormat) {
+                      return Incentknow_API_Execution.forItem(Incentknow_AppM.behaviourHalogenM(dictBehaviour))(v.value0)(function (format) {
+                          return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
+                              var $15 = {};
+                              for (var $16 in v1) {
+                                  if ({}.hasOwnProperty.call(v1, $16)) {
+                                      $15[$16] = v1[$16];
+                                  };
+                              };
+                              $15.format = new Data_Maybe.Just(format);
+                              return $15;
+                          });
+                      });
+                  };
+                  if (v instanceof HandleInput) {
+                      return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.get(Halogen_Query_HalogenM.monadStateHalogenM))(function (state) {
+                          var $19 = Data_Eq.notEq(Incentknow_Data_Ids.eqFormatId)(state.formatId)(v.value0.formatId);
+                          if ($19) {
+                              return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.put(Halogen_Query_HalogenM.monadStateHalogenM)(initialState(v.value0)))(function () {
+                                  return handleAction(dictBehaviour)(dictMonadAff)(dictBehaviour.MonadEffect0())(Initialize.value);
+                              });
+                          };
+                          return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
+                              var $20 = {};
+                              for (var $21 in v1) {
+                                  if ({}.hasOwnProperty.call(v1, $21)) {
+                                      $20[$21] = v1[$21];
+                                  };
+                              };
+                              $20.property = v.value0.value;
+                              $20.disabled = v.value0.disabled;
+                              return $20;
+                          });
+                      });
+                  };
+                  if (v instanceof ChangeValue) {
+                      return Halogen_Query_HalogenM.raise(v.value0);
+                  };
+                  throw new Error("Failed pattern match at Incentknow.Molecules.PropertyMenu (line 107, column 16 - line 121, column 37): " + [ v.constructor.name ]);
+              };
+          };
+      };
+  };
+  var component = function (dictBehaviour) {
+      return function (dictMonadAff) {
+          return function (dictMonadEffect) {
+              return Halogen_Component.mkComponent({
+                  initialState: initialState,
+                  render: render(dictBehaviour)(dictMonadAff),
+                  "eval": Halogen_Component.mkEval({
+                      handleAction: handleAction(dictBehaviour)(dictMonadAff)(dictBehaviour.MonadEffect0()),
+                      handleQuery: Halogen_Component.defaultEval.handleQuery,
+                      receive: function ($26) {
+                          return Data_Maybe.Just.create(HandleInput.create($26));
+                      },
+                      initialize: new Data_Maybe.Just(Initialize.value),
+                      finalize: Halogen_Component.defaultEval.finalize
+                  })
+              });
+          };
+      };
+  };
+  exports["component"] = component;
+})(PS);
+(function($PS) {
+  // Generated by purs version 0.13.6
+  "use strict";
+  $PS["Incentknow.Molecules.Setting.Property"] = $PS["Incentknow.Molecules.Setting.Property"] || {};
+  var exports = $PS["Incentknow.Molecules.Setting.Property"];
+  var Data_Eq = $PS["Data.Eq"];
+  var Data_Maybe = $PS["Data.Maybe"];
+  var Data_Ord = $PS["Data.Ord"];
+  var Data_Symbol = $PS["Data.Symbol"];
+  var Data_Unit = $PS["Data.Unit"];
+  var Halogen_HTML = $PS["Halogen.HTML"];
+  var Halogen_HTML_Core = $PS["Halogen.HTML.Core"];
+  var Incentknow_Molecules_PropertyMenu = $PS["Incentknow.Molecules.PropertyMenu"];
+  var Incentknow_Molecules_Setting = $PS["Incentknow.Molecules.Setting"];                
+  var component = function (dictBehaviour) {
+      return function (dictMonadAff) {
+          return function (config) {
+              return Incentknow_Molecules_Setting.component(Data_Maybe.eqMaybe(Data_Eq.eqString))(dictMonadAff)({
+                  editor: function (change) {
+                      return function (disabled) {
+                          return function (val) {
+                              return Halogen_HTML.slot()(new Data_Symbol.IsSymbol(function () {
+                                  return "edit";
+                              }))(Data_Ord.ordUnit)(Data_Symbol.SProxy.value)(Data_Unit.unit)(Incentknow_Molecules_PropertyMenu.component(dictBehaviour)(dictMonadAff)(dictBehaviour.MonadEffect0()))({
+                                  formatId: config.formatId,
+                                  type: config.type,
+                                  disabled: disabled,
+                                  value: val
+                              })(function ($2) {
+                                  return Data_Maybe.Just.create(change($2));
+                              });
+                          };
+                      };
+                  },
+                  viewer: function (val) {
+                      return Halogen_HTML_Core.text(Data_Maybe.fromMaybe("")(val));
+                  },
+                  validate: Data_Maybe.isJust
+              });
+          };
+      };
+  };
+  exports["component"] = component;
+})(PS);
+(function($PS) {
+  // Generated by purs version 0.13.6
+  "use strict";
   $PS["Incentknow.Molecules.Setting.Text"] = $PS["Incentknow.Molecules.Setting.Text"] || {};
   var exports = $PS["Incentknow.Molecules.Setting.Text"];
   var Data_Eq = $PS["Data.Eq"];
@@ -35605,6 +35902,7 @@ exports.toCallbackApi = fetch => {
   var exports = $PS["Incentknow.Pages.Format.Setting"];
   var Control_Applicative = $PS["Control.Applicative"];
   var Control_Monad_State_Class = $PS["Control.Monad.State.Class"];
+  var Data_Functor = $PS["Data.Functor"];
   var Data_Maybe = $PS["Data.Maybe"];
   var Data_Newtype = $PS["Data.Newtype"];
   var Data_Ord = $PS["Data.Ord"];
@@ -35621,6 +35919,7 @@ exports.toCallbackApi = fetch => {
   var Incentknow_Molecules_DisplayId = $PS["Incentknow.Molecules.DisplayId"];
   var Incentknow_Molecules_Setting_DisplayId = $PS["Incentknow.Molecules.Setting.DisplayId"];
   var Incentknow_Molecules_Setting_IconMenu = $PS["Incentknow.Molecules.Setting.IconMenu"];
+  var Incentknow_Molecules_Setting_Property = $PS["Incentknow.Molecules.Setting.Property"];
   var Incentknow_Molecules_Setting_Text = $PS["Incentknow.Molecules.Setting.Text"];                
   var Initialize = (function () {
       function Initialize() {
@@ -35702,6 +36001,23 @@ exports.toCallbackApi = fetch => {
                       disabled: state.disabled
                   })(function ($22) {
                       return Data_Maybe.Just.create(Edit.create($22));
+                  }), Halogen_HTML.slot()(new Data_Symbol.IsSymbol(function () {
+                      return "property";
+                  }))(Data_Ord.ordUnit)(Data_Symbol.SProxy.value)(Data_Unit.unit)(Incentknow_Molecules_Setting_Property.component(dictBehaviour)(dictMonadAff)({
+                      formatId: state.format.formatId,
+                      type: Data_Maybe.Nothing.value
+                  }))({
+                      submit: function ($23) {
+                          return Incentknow_API_Execution.callCommand((function (x) {
+                              return Incentknow_API.setFormatSemanticId(state.format.formatId)(Data_Functor.map(Data_Maybe.functorMaybe)(Data_Newtype.wrap(Incentknow_Data_Ids.newtypeSemanticId))(x));
+                          })($23));
+                      },
+                      value: state.format.semanticId,
+                      title: "\u610f\u5473ID",
+                      desc: "",
+                      disabled: state.disabled
+                  })(function ($24) {
+                      return Data_Maybe.Just.create(Edit.create($24));
                   }) ]);
               };
           };
@@ -35726,7 +36042,7 @@ exports.toCallbackApi = fetch => {
                   if (v instanceof Edit) {
                       return Control_Applicative.pure(Halogen_Query_HalogenM.applicativeHalogenM)(Data_Unit.unit);
                   };
-                  throw new Error("Failed pattern match at Incentknow.Pages.Format.Setting (line 108, column 16 - line 113, column 14): " + [ v.constructor.name ]);
+                  throw new Error("Failed pattern match at Incentknow.Pages.Format.Setting (line 118, column 16 - line 123, column 14): " + [ v.constructor.name ]);
               };
           };
       };
@@ -35740,8 +36056,8 @@ exports.toCallbackApi = fetch => {
                   "eval": Halogen_Component.mkEval({
                       handleAction: handleAction(dictBehaviour)(dictMonadAff)(dictBehaviour.MonadEffect0()),
                       handleQuery: Halogen_Component.defaultEval.handleQuery,
-                      receive: function ($23) {
-                          return Data_Maybe.Just.create(HandleInput.create($23));
+                      receive: function ($25) {
+                          return Data_Maybe.Just.create(HandleInput.create($25));
                       },
                       initialize: new Data_Maybe.Just(Initialize.value),
                       finalize: Halogen_Component.defaultEval.finalize
@@ -38341,12 +38657,12 @@ exports.toCallbackApi = fetch => {
   var render = function (dictBehaviour) {
       return function (dictMonadAff) {
           return function (state) {
-              return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("page-home") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("logo") ])([ Halogen_HTML_Core.text("Incentknow") ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("desc") ])([ Halogen_HTML_Core.text("\u60c5\u5831\u3092\u6574\u7406\u3057\u5171\u6709\u3059\u308b\u305f\u3081\u306e\u30d7\u30e9\u30c3\u30c8\u30d5\u30a9\u30fc\u30e0") ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("part") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("header") ])([ Halogen_HTML_Core.text("\u3061\u3089\u3070\u3063\u305f\u60c5\u5831\u3092\u4e00\u7b87\u6240\u306b\u6574\u7406") ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("desc") ])([ Halogen_HTML_Core.text("\u3082\u3046\u3069\u3053\u306b\u5fc5\u8981\u306a\u60c5\u5831\u304c\u3042\u308b\u306e\u304b\u63a2\u3059\u5fc5\u8981\u306f\u306a\u304f\u306a\u308a\u307e\u3059\u3002\u4e00\u7b87\u6240\u306b\u307e\u3068\u307e\u3063\u3066\u3044\u308b\u306e\u3067\u3069\u308c\u304c\u672c\u5f53\u306e\u60c5\u5831\u304b\u3092\u78ba\u304b\u3081\u308b\u5fc5\u8981\u3082\u3042\u308a\u307e\u305b\u3093\u3002") ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("example") ])([ Halogen_HTML.slot()(new Data_Symbol.IsSymbol(function () {
+              return Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("page-home") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("logo") ])([ Halogen_HTML_Core.text("Incentknow") ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("desc") ])([ Halogen_HTML_Core.text("\u60c5\u5831\u3092\u6574\u7406\u3057\u5171\u6709\u3059\u308b\u305f\u3081\u306e\u30d7\u30e9\u30c3\u30c8\u30d5\u30a9\u30fc\u30e0") ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("part") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("example") ])([ Halogen_HTML.slot()(new Data_Symbol.IsSymbol(function () {
                   return "space";
               }))(Data_Ord.ordUnit)(Data_Symbol.SProxy.value)(Data_Unit.unit)(Incentknow_Pages_Space.component(dictBehaviour)(dictMonadAff)(dictBehaviour.MonadEffect0()))({
                   spaceId: Data_Newtype.wrap(Incentknow_Data_Ids.newtypeSpaceDisplayId)("930774711778059"),
                   tab: new Data_Either.Right(Data_Maybe.Just.create(Data_Newtype.wrap(Incentknow_Data_Ids.newtypeFormatDisplayId)("135605421976660")))
-              })(Data_Void.absurd) ]) ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("part") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("header") ])([ Halogen_HTML_Core.text("\u81ea\u5728\u306b\u60c5\u5831\u3092\u95a2\u9023\u3065\u3051\u308b") ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("desc") ])([ Halogen_HTML_Core.text("\u3069\u306e\u3088\u3046\u306a\u69cb\u9020\u306e\u60c5\u5831\u3067\u3082\u6574\u7406\u3059\u308b\u3053\u3068\u304c\u3067\u304d\u307e\u3059\u3002\u60c5\u5831\u540c\u58eb\u3092\u7d10\u4ed8\u3051\u3001\u3059\u3050\u306b\u5fc5\u8981\u306a\u60c5\u5831\u306b\u30a2\u30af\u30bb\u30b9\u3067\u304d\u308b\u3088\u3046\u306b\u3059\u308b\u3053\u3068\u304c\u3067\u304d\u307e\u3059\u3002") ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("example") ])([ Halogen_HTML.slot()(new Data_Symbol.IsSymbol(function () {
+              })(Data_Void.absurd) ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("text") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("header") ])([ Halogen_HTML_Core.text("\u3061\u3089\u3070\u3063\u305f\u60c5\u5831\u3092\u4e00\u7b87\u6240\u306b\u6574\u7406") ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("desc") ])([ Halogen_HTML_Core.text("\u3082\u3046\u3069\u3053\u306b\u5fc5\u8981\u306a\u60c5\u5831\u304c\u3042\u308b\u306e\u304b\u63a2\u3059\u5fc5\u8981\u306f\u306a\u304f\u306a\u308a\u307e\u3059\u3002\u4e00\u7b87\u6240\u306b\u307e\u3068\u307e\u3063\u3066\u3044\u308b\u306e\u3067\u3069\u308c\u304c\u672c\u5f53\u306e\u60c5\u5831\u304b\u3092\u78ba\u304b\u3081\u308b\u5fc5\u8981\u3082\u3042\u308a\u307e\u305b\u3093\u3002") ]) ]) ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("part") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("text") ])([ Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("header") ])([ Halogen_HTML_Core.text("\u81ea\u5728\u306b\u60c5\u5831\u3092\u95a2\u9023\u3065\u3051\u308b") ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("desc") ])([ Halogen_HTML_Core.text("\u3069\u306e\u3088\u3046\u306a\u69cb\u9020\u306e\u60c5\u5831\u3067\u3082\u6574\u7406\u3059\u308b\u3053\u3068\u304c\u3067\u304d\u307e\u3059\u3002\u60c5\u5831\u540c\u58eb\u3092\u7d10\u4ed8\u3051\u3001\u3059\u3050\u306b\u5fc5\u8981\u306a\u60c5\u5831\u306b\u30a2\u30af\u30bb\u30b9\u3067\u304d\u308b\u3088\u3046\u306b\u3059\u308b\u3053\u3068\u304c\u3067\u304d\u307e\u3059\u3002") ]) ]), Halogen_HTML_Elements.div([ Incentknow_HTML_Utils.css("example") ])([ Halogen_HTML.slot()(new Data_Symbol.IsSymbol(function () {
                   return "content";
               }))(Data_Ord.ordUnit)(Data_Symbol.SProxy.value)(Data_Unit.unit)(Incentknow_Pages_Content.component(dictBehaviour)(dictMonadAff))({
                   contentSpec: Incentknow_Route.ContentSpecContentId.create(Data_Newtype.wrap(Incentknow_Data_Ids.newtypeContentId)("vME9fV25gHek"))
@@ -38398,7 +38714,7 @@ exports.toCallbackApi = fetch => {
                           });
                       });
                   };
-                  throw new Error("Failed pattern match at Incentknow.Pages.Home (line 97, column 16 - line 103, column 47): " + [ v.constructor.name ]);
+                  throw new Error("Failed pattern match at Incentknow.Pages.Home (line 101, column 16 - line 107, column 47): " + [ v.constructor.name ]);
               };
               while (!$tco_done) {
                   $tco_result = $tco_loop($tco_var_dictBehaviour, $tco_var_dictMonadAff, $copy_v);

@@ -41,7 +41,7 @@ export class MaterialCommand implements BaseCommand {
         await this.materials.update(materialId, { spaceId, contentId: null });
     }
 
-    async createMaterialInSpace(spaceId: SpaceSk, userId: UserSk, materialData: MaterialData, editingId: MaterialEditingSk) {
+    async createMaterialInSpace(spaceId: SpaceSk, userId: UserSk, materialData: MaterialData, editingId: MaterialEditingSk | null) {
         let material = this.materials.create({
             spaceId,
             materialType: materialData.type,
@@ -60,10 +60,10 @@ export class MaterialCommand implements BaseCommand {
 
         await this.materials.update(material.id, { commitId: commit.id });
 
-        return new MaterialQueryFromEntity(material);
+        return material;
     }
 
-    async createMaterialInContent(contentId: ContentSk, userId: UserSk, materialData: MaterialData, editingId: MaterialEditingSk) {
+    async createMaterialInContent(contentId: ContentSk, userId: UserSk, materialData: MaterialData, editingId: MaterialEditingSk | null) {
         let material = this.materials.create({
             contentId,
             materialType: materialData.type,
@@ -86,10 +86,10 @@ export class MaterialCommand implements BaseCommand {
 
         await this.materials.update(material.id, { commitId: commit.id });
 
-        return new MaterialQueryFromEntity(material);
+        return material;
     }
 
-    async commitMaterial(userId: UserSk, materialId: MaterialSk, materialData: MaterialData, editingId: MaterialEditingSk) {
+    async commitMaterial(userId: UserSk, materialId: MaterialSk, materialData: MaterialData, editingId: MaterialEditingSk | null) {
         let commit = this.commits.create({
             materialId,
             editingId,
@@ -103,6 +103,6 @@ export class MaterialCommand implements BaseCommand {
             updaterUserId: userId
         });
 
-        return new MaterialCommitQueryFromEntity(commit);
+        return commit;
     }
 }

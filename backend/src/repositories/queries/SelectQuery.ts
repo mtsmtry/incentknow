@@ -38,7 +38,7 @@ export class SelectFromSingleTableQuery<Entity, T, TSk, TEntityId, TDIsplayId> {
     async getNeededOne() {
         const one = await this.qb.getOne();
         if (!one) {
-            throw "";
+            throw new Error("getNeededOne:" + this.qb.getSql());
         }
         return one;
     }

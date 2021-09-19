@@ -225,6 +225,20 @@ getContainers x0 = __queryAPI "getContainers" $ __getContainers x0
 
 
 ---------------------------------------------------------
+--  ContentAPIService
+---------------------------------------------------------
+
+
+
+foreign import __upsertContents :: 
+  { email :: String, password :: String, space :: E.SpaceDisplayId, format :: E.FormatDisplayId, formatVersion :: Maybe Number, data :: Array Json } -> Promise {}
+
+upsertContents :: { email :: String, password :: String, space :: E.SpaceDisplayId, format :: E.FormatDisplayId, formatVersion :: Maybe Number, data :: Array Json } -> CommandAPI {}
+upsertContents x0 = __commandAPI "upsertContents" $ __upsertContents x0
+
+
+
+---------------------------------------------------------
 --  ContentService
 ---------------------------------------------------------
 
@@ -441,6 +455,14 @@ getFormats x0 = __queryAPI "getFormats" $ __getFormats x0
 
 
 
+foreign import __getFormatsHasSemanticId :: 
+  E.SpaceId -> Promise (Array E.RelatedFormat)
+
+getFormatsHasSemanticId :: E.SpaceId -> QueryAPI (Array E.RelatedFormat)
+getFormatsHasSemanticId x0 = __queryAPI "getFormatsHasSemanticId" $ __getFormatsHasSemanticId x0
+
+
+
 foreign import __getStructures :: 
   E.FormatId -> Promise (Array E.RelatedStructure)
 
@@ -470,6 +492,14 @@ foreign import __setFormatDisplayId ::
 
 setFormatDisplayId :: E.FormatId -> E.FormatDisplayId -> CommandAPI {}
 setFormatDisplayId x0 x1 = __commandAPI "setFormatDisplayId" $ __setFormatDisplayId x0 x1
+
+
+
+foreign import __setFormatSemanticId :: 
+  E.FormatId -> Maybe E.SemanticId -> Promise {}
+
+setFormatSemanticId :: E.FormatId -> Maybe E.SemanticId -> CommandAPI {}
+setFormatSemanticId x0 x1 = __commandAPI "setFormatSemanticId" $ __setFormatSemanticId x0 x1
 
 
 

@@ -78,9 +78,9 @@ render state = case state.value of
   ContentTypedValue _ maybeContent -> 
     referenceValueWith maybeContent \value->
       HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value } absurd
-  EntityTypedValue _ maybeContent -> 
-    referenceValueWith maybeContent \value->
-      HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value } absurd
+  EntityTypedValue _ (Right value) -> 
+    HH.slot (SProxy :: SProxy "contentLink") unit ContentLink.component { value } absurd
+  EntityTypedValue _ (Left str) -> HH.text $ fromMaybe "" str
   DocumentTypedValue refMaterial ->
     referenceValueWith refMaterial \value->
       HH.slot (SProxy :: SProxy "material") unit Material.component { value } absurd

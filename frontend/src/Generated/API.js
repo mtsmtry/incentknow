@@ -2,7 +2,7 @@
 const Data_Maybe = PS["Data.Maybe"]; 
 const E = PS["Incentknow.Data.Entities"] || {};
 PS["Incentknow.Data.Entities"] = E;
-const endpoint = "http://34.146.76.189:8081";
+const endpoint = "http://localhost:8080";
 
 exports.apiEndpoint = endpoint;
 
@@ -863,7 +863,15 @@ obj.updaterUser = obj.updaterUser ? jsRelatedUser(obj.updaterUser) : null;
 
 obj.format = obj.format ? jsFocusedFormat(obj.format) : null;
 
-obj.authority = obj.authority ? jsAuthority(obj.authority) : null;return obj;}exports.fromRelatedContentToJson = x => jsRelatedContent(_.cloneDeep(x));
+obj.authority = obj.authority ? jsAuthority(obj.authority) : null;
+
+                        if (obj.semanticId instanceof Data_Maybe.Just) {
+                            obj.semanticId = obj.semanticId.value0;
+                            
+                        } else {
+                            obj.semanticId = null;
+                        }
+                    return obj;}exports.fromRelatedContentToJson = x => jsRelatedContent(_.cloneDeep(x));
 
 function psRelatedContent(obj){obj.contentId = obj.contentId ? psContentId(obj.contentId) : null;
 
@@ -875,7 +883,15 @@ obj.updaterUser = obj.updaterUser ? psRelatedUser(obj.updaterUser) : null;
 
 obj.format = obj.format ? psFocusedFormat(obj.format) : null;
 
-obj.authority = obj.authority ? psAuthority(obj.authority) : null;return obj;}exports.fromJsonToRelatedContent = x => psRelatedContent(_.cloneDeep(x));
+obj.authority = obj.authority ? psAuthority(obj.authority) : null;
+
+                    if (obj.semanticId) {
+                        
+                        obj.semanticId = new Data_Maybe.Just(obj.semanticId);
+                    } else {
+                        obj.semanticId = Data_Maybe.Nothing.value;
+                    }
+                return obj;}exports.fromJsonToRelatedContent = x => psRelatedContent(_.cloneDeep(x));
 
 function jsFocusedContent(obj){obj.contentId = obj.contentId ? jsContentId(obj.contentId) : null;
 
@@ -887,7 +903,15 @@ obj.updaterUser = obj.updaterUser ? jsRelatedUser(obj.updaterUser) : null;
 
 obj.format = obj.format ? jsFocusedFormat(obj.format) : null;
 obj.authority = obj.authority ? jsAuthority(obj.authority) : null;
-return obj;}exports.fromFocusedContentToJson = x => jsFocusedContent(_.cloneDeep(x));
+
+
+                        if (obj.semanticId instanceof Data_Maybe.Just) {
+                            obj.semanticId = obj.semanticId.value0;
+                            
+                        } else {
+                            obj.semanticId = null;
+                        }
+                    return obj;}exports.fromFocusedContentToJson = x => jsFocusedContent(_.cloneDeep(x));
 
 function psFocusedContent(obj){obj.contentId = obj.contentId ? psContentId(obj.contentId) : null;
 
@@ -899,7 +923,15 @@ obj.updaterUser = obj.updaterUser ? psRelatedUser(obj.updaterUser) : null;
 
 obj.format = obj.format ? psFocusedFormat(obj.format) : null;
 obj.authority = obj.authority ? psAuthority(obj.authority) : null;
-return obj;}exports.fromJsonToFocusedContent = x => psFocusedContent(_.cloneDeep(x));
+
+
+                    if (obj.semanticId) {
+                        
+                        obj.semanticId = new Data_Maybe.Just(obj.semanticId);
+                    } else {
+                        obj.semanticId = Data_Maybe.Nothing.value;
+                    }
+                return obj;}exports.fromJsonToFocusedContent = x => psFocusedContent(_.cloneDeep(x));
 
 function jsContentRelation(obj){
                             obj.contents = obj.contents ? obj.contents.map(x => {
@@ -1069,14 +1101,6 @@ obj.displayId = obj.displayId ? jsFormatDisplayId(obj.displayId) : null;
                     
 obj.space = obj.space ? jsRelatedSpace(obj.space) : null;
 obj.usage = obj.usage ? jsFormatUsage(obj.usage) : null;
-
-                        if (obj.semanticId instanceof Data_Maybe.Just) {
-                            obj.semanticId = obj.semanticId.value0;
-                            
-                        } else {
-                            obj.semanticId = null;
-                        }
-                    
 obj.currentStructureId = obj.currentStructureId ? jsStructureId(obj.currentStructureId) : null;return obj;}exports.fromRelatedFormatToJson = x => jsRelatedFormat(_.cloneDeep(x));
 
 function psRelatedFormat(obj){obj.formatId = obj.formatId ? psFormatId(obj.formatId) : null;
@@ -1093,14 +1117,6 @@ obj.displayId = obj.displayId ? psFormatDisplayId(obj.displayId) : null;
                 
 obj.space = obj.space ? psRelatedSpace(obj.space) : null;
 obj.usage = obj.usage ? psFormatUsage(obj.usage) : null;
-
-                    if (obj.semanticId) {
-                        
-                        obj.semanticId = new Data_Maybe.Just(obj.semanticId);
-                    } else {
-                        obj.semanticId = Data_Maybe.Nothing.value;
-                    }
-                
 obj.currentStructureId = obj.currentStructureId ? psStructureId(obj.currentStructureId) : null;return obj;}exports.fromJsonToRelatedFormat = x => psRelatedFormat(_.cloneDeep(x));
 
 function jsRelation(obj){obj.property = obj.property ? jsPropertyInfo(obj.property) : null;
@@ -2190,46 +2206,26 @@ exports.__getContainers = (() => {return async function (spaceId) {
                     
                 return result;};})();
 
-function jsMaterialCompositionType(obj) {
-                if(E.Creation && obj instanceof E.Creation) {
-                    return "creation";
-                }
-            
-                if(E.Move && obj instanceof E.Move) {
-                    return "move";
-                }
-            }
-
-function psMaterialCompositionType(str) {switch(str){
-case "creation":
-return (E.Creation || { value: null }).value;
-case "move":
-return (E.Move || { value: null }).value;
-}}
-
-function jsMaterialComposition(obj) {
-                if(E.CreationMaterialComposition && obj instanceof E.CreationMaterialComposition) {
-                    ;
-                    return {
-                        type: "creation",
-                        propertyId: obj.value0,data: obj.value1
-                    };
-                }
-            
-                if(E.MoveMaterialComposition && obj instanceof E.MoveMaterialComposition) {
-                    obj.value0 = obj.value0 ? jsMaterialId(obj.value0) : null;
-                    return {
-                        type: "move",
-                        materialId: obj.value0
-                    };
-                }
-            }
-
-function psMaterialComposition(obj) {switch(obj.type){case "creation":
-;return new E.CreationMaterialComposition(obj.propertyId,obj.data);
-case "move":
-obj.materialId = obj.materialId ? psMaterialId(obj.materialId) : null;return new E.MoveMaterialComposition(obj.materialId);
-}}
+exports.__upsertContents = (() => {return async function (args) {
+                let argObject = { args };
+                argObject = _.cloneDeep(argObject);
+                argObject.args.space = argObject.args.space ? jsSpaceDisplayId(argObject.args.space) : null;argObject.args.format = argObject.args.format ? jsFormatDisplayId(argObject.args.format) : null;
+                        if (argObject.args.formatVersion instanceof Data_Maybe.Just) {
+                            argObject.args.formatVersion = argObject.args.formatVersion.value0;
+                            
+                        } else {
+                            argObject.args.formatVersion = null;
+                        }
+                    
+                            argObject.args.data = argObject.args.data ? argObject.args.data.map(x => {
+                                
+                                return x;
+                            }) : null;
+                        
+                argObject = [ argObject.args ];
+                let result = await requestApi("upsertContents", argObject);
+                
+                return result;};})();
 
 exports.__startContentEditing = (() => {return (contentId) => {return async function (basedCommitId) {
                 let argObject = { contentId,basedCommitId };
@@ -2517,6 +2513,20 @@ exports.__getFormats = (() => {return async function (spaceId) {
                     
                 return result;};})();
 
+exports.__getFormatsHasSemanticId = (() => {return async function (spaceId) {
+                let argObject = { spaceId };
+                argObject = _.cloneDeep(argObject);
+                argObject.spaceId = argObject.spaceId ? jsSpaceId(argObject.spaceId) : null;
+                argObject = [ argObject.spaceId ];
+                let result = await requestApi("getFormatsHasSemanticId", argObject);
+                
+                        result = result ? result.map(x => {
+                            x = x ? psRelatedFormat(x) : null;
+                            return x;
+                        }) : null;
+                    
+                return result;};})();
+
 exports.__getStructures = (() => {return async function (formatId) {
                 let argObject = { formatId };
                 argObject = _.cloneDeep(argObject);
@@ -2560,6 +2570,22 @@ exports.__setFormatDisplayId = (() => {return (formatId) => {return async functi
                 argObject.formatId = argObject.formatId ? jsFormatId(argObject.formatId) : null;argObject.displayId = argObject.displayId ? jsFormatDisplayId(argObject.displayId) : null;
                 argObject = [ argObject.formatId,argObject.displayId ];
                 let result = await requestApi("setFormatDisplayId", argObject);
+                
+                return result;}};})();
+
+exports.__setFormatSemanticId = (() => {return (formatId) => {return async function (semanticId) {
+                let argObject = { formatId,semanticId };
+                argObject = _.cloneDeep(argObject);
+                argObject.formatId = argObject.formatId ? jsFormatId(argObject.formatId) : null;
+                        if (argObject.semanticId instanceof Data_Maybe.Just) {
+                            argObject.semanticId = argObject.semanticId.value0;
+                            argObject.semanticId = argObject.semanticId ? jsSemanticId(argObject.semanticId) : null;
+                        } else {
+                            argObject.semanticId = null;
+                        }
+                    
+                argObject = [ argObject.formatId,argObject.semanticId ];
+                let result = await requestApi("setFormatSemanticId", argObject);
                 
                 return result;}};})();
 

@@ -8,7 +8,7 @@ import Data.Foldable (for_)
 import Data.Map (Map, union)
 import Data.Map as M
 import Data.Map as Map
-import Data.Maybe (Maybe(..), fromMaybe, isNothing)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing, maybe)
 import Data.Maybe.Utils (flatten)
 import Data.String.Utils (includes)
 import Data.Symbol (SProxy(..))
@@ -107,8 +107,16 @@ setInput state input =
     , fetchMultiple = input.fetchMultiple
     , fetchSingle = input.fetchSingle
     , fetchId = input.fetchId
-    -- , candidateMap = M.alter (Just <<< fromMaybe input.initial) Nothing state.candidateMap
-    -- , allItems = foldr (\item-> M.insert item.id item) state.allItems input.initial.items
+
+    , candidateMap = M.alter 
+        (\old-> 
+          case maybe false _.completed old, input.initial.completed of
+            true, false -> old
+            false, true -> Just input.initial
+            true, true -> Just input.initial
+            false, false -> old
+        ) Nothing state.candidateMap
+    , allItems = foldr (\item-> M.insert item.id item) state.allItems input.initial.items
     }
 
 component :: forall m a. Ord a => Eq a => Behaviour m => MonadAff m => H.Component HH.HTML (Query a) (Input a) (Output a) m
