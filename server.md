@@ -106,3 +106,17 @@ email='メールアドレス'
 domains='ドメインを複数なら,区切りで'
 
 sudo certbot certonly --standalone --non-interactive --agree-tos --keep --expand --email $email --no-eff-email --domains $domains
+
+sudo apt-get install docker-ce=<VERSION_STRING> docker-ce-cli=<VERSION_STRING> containerd.io
+
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable edge test"
+
+sudo ./setup.sh email add info@codestar.dev codestar2021ar
+sudo ./setup.sh config dkim
+
+docker exec mailserver
+
+
+
+
+scp -r 34.146.76.189:~/docker-mailserver/config/opendkim/keys/codestar.dev/mail.txt .
