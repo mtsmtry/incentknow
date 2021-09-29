@@ -105,8 +105,8 @@ services:
         $$_SERVER['HTTPS']='on';
     volumes:
       - /mnt/codestar/wordpress:/var/www/html
-    ports:
-      - 8000:8082
+    #ports:
+    #  - 8000:8082
 
   wordpress2:
     depends_on:
@@ -126,5 +126,5 @@ services:
         $$_SERVER['HTTPS']='on';
     volumes:
       - /mnt/codestar/wordpress:/var/www/html
-    ports:
-      - 8000:8083
+    #ports:
+    #  - 8001:8082
