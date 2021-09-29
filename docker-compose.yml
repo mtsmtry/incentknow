@@ -67,6 +67,7 @@ services:
       - /mnt/incentknow/apache2/log:/var/log/apache2
       - /etc/letsencrypt:/etc/letsencrypt
       - ../codestar:/var/www/codestar.dev
+      - ../neurov-hp:/var/www/neurov.org
     ports:
       - 80:80
       - 443:443
