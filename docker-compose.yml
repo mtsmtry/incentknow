@@ -108,13 +108,28 @@ services:
     #ports:
     #  - 8000:8082
 
+  wordpress_db2:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: codestar
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+      MYSQL_TCP_PORT: 3308
+    volumes:
+      - /mnt/neurov/mysql:/var/lib/mysql
+      - ./server/codestar/mysql:/etc/mysql
+    ports:
+      - 3308:3308
+
   wordpress2:
     depends_on:
       - wordpress_db
     image: wordpress:latest
     restart: always
     environment:
-      WORDPRESS_DB_HOST: wordpress_db:3307
+      WORDPRESS_DB_HOST: wordpress_db2:3308
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
       WORDPRESS_CONFIG_EXTRA: |
