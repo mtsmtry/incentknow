@@ -107,3 +107,24 @@ services:
       - /mnt/codestar/wordpress:/var/www/html
     ports:
       - 8000:8082
+
+  wordpress2:
+    depends_on:
+      - wordpress_db
+    image: wordpress:latest
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: wordpress_db:3307
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME','https://materials.neurov.org');
+        define('WP_SITEURL','https://materials.neurov.org');
+        // wp-adminでのリダイレクトループを防ぐ
+        define('FORCE_SSL_ADMIN', false);
+        // cssやjsや画像のURLをHTTPからhTTPSにする
+        $$_SERVER['HTTPS']='on';
+    volumes:
+      - /mnt/codestar/wordpress:/var/www/html
+    ports:
+      - 8000:8083
