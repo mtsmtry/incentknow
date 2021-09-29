@@ -90,7 +90,9 @@ services:
   wordpress:
     depends_on:
       - wordpress_db
-    image: wordpress:latest
+    build:
+      context: .
+      dockerfile: Dockerfile_wordpress
     restart: always
     environment:
       WORDPRESS_DB_HOST: wordpress_db:3307
