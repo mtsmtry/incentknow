@@ -140,6 +140,6 @@ services:
         // cssやjsや画像のURLをHTTPからhTTPSにする
         $$_SERVER['HTTPS']='on';
     volumes:
-      - /mnt/codestar/wordpress:/var/www/html
+      - /mnt/neurov/wordpress:/var/www/html
     #ports:
     #  - 8001:8082
