@@ -119,4 +119,15 @@ docker exec mailserver
 
 
 
-scp -r 34.146.76.189:~/docker-mailserver/config/opendkim/keys/codestar.dev/mail.txt .
+scp -r 34.146.76.189:/docker-mailserver/config/opendkim/keys/codestar.dev
+
+
+aym@codestar.dev codestar2021ar
+asa@codestar.dev codestar2021ar
+allen@codestar.dev codestar2021ar
+ryoi@codestar.dev codestar2021ar
+
+https://mtsmtry@github.com/mtsmtry/codestar-lp2
+
+git clone git@github.com:mtsmtry/codestar-lp2
+git clone git@github.com:mtsmtry/codestar-hp2
