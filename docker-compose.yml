@@ -15,7 +15,7 @@ services:
       - /mnt/incentknow/mysql:/var/lib/mysql
       - ./server/incentknow/mysql:/etc/mysql
     ports:
-      - 3308:3308
+      - 3309:3309
     restart: always
 
   api:
