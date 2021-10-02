@@ -2,7 +2,7 @@
    "type": "mysql",
    "database": "incentknow",
    "host": "db",
-   "port": 3308,
+   "port": 3309,
    "username": "docker",
    "password": "21280712",   
    "charset": "utf8mb4",

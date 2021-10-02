@@ -9,7 +9,7 @@ services:
       MYSQL_DATABASE: incentknow
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       TZ: 'Asia/Tokyo'
-      MYSQL_TCP_PORT: 3308
+      MYSQL_TCP_PORT: 3309
     command: "mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --skip-name-resolve"
     volumes:
       - /mnt/incentknow/mysql:/var/lib/mysql
